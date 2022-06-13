@@ -1,0 +1,22 @@
+call plug#begin('~/.vim/plugged')
+
+Plug 'Valloric/YouCompleteMe'
+
+Plug 'tpope/vim-fugitive'
+
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
+
+call plug#end()
+
+filetype plugin on
+
+set autoindent
+set rnu
+
+setl tabstop=4
+setl shiftwidth=4
+setl softtabstop=4
+
+# Mappings
+nnoremap <silent> <C-p> :FzfFiles<CR>
