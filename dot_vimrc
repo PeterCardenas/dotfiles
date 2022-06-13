@@ -1,11 +1,14 @@
 call plug#begin('~/.vim/plugged')
 
-Plug 'Valloric/YouCompleteMe'
+Plug 'ycm-core/YouCompleteMe'
 
 Plug 'tpope/vim-fugitive'
 
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
+
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
 
 call plug#end()
 
@@ -18,5 +21,4 @@ setl tabstop=4
 setl shiftwidth=4
 setl softtabstop=4
 
-# Mappings
-nnoremap <silent> <C-p> :FzfFiles<CR>
+nnoremap <silent> <C-p> :Files<CR>
