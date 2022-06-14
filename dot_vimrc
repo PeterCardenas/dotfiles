@@ -17,9 +17,10 @@ filetype plugin on
 set autoindent
 set rnu
 
-setl tabstop=4
-setl shiftwidth=4
-setl softtabstop=4
+set tabstop=4
+set shiftwidth=4
+set softtabstop=4
+set expandtab
 
 let g:airline_theme='fruit_punch'
 
