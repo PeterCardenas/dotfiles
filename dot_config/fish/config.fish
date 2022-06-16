@@ -24,8 +24,5 @@ set -gx FZF_ALT_C_COMMAND 'fd --type d --hidden'
 abbr -a cheznous "chezmoi git pull -- --rebase && chezmoi merge-all"
 
 # Start Starship
-set -l starship_conf "$HOME"/.config/starship/config.fish
-if test -f $starship_conf
-    source $starship_conf
-end
+source "$HOME"/.config/starship/config.fish
 starship init fish | source
