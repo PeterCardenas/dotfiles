@@ -12,6 +12,8 @@ Plug 'junegunn/fzf.vim'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 
+Plug 'sainnhe/sonokai'
+
 call plug#end()
 
 filetype plugin on
@@ -40,8 +42,19 @@ command! -nargs=1 Gcm G commit -m <args>
 command! Gp G push
 command! Ga Gwrite
 
-let g:airline_theme='fruit_punch'
-let g:airline#extensions#tabline#enabled = 1
+if has('termguicolors')
+    set termguicolors
+end
+colo sonokai
+let g:sonokai_style="atlantis"
+let g:sonokai_better_performance=1
+let g:sonokai_colors_override={"bg3": ["#181a1c", "237"]}
+
+let g:airline_theme="sonokai"
+let g:airline_powerline_fonts = 1
+let g:airline#extensions#tabline#enabled=1
+let g:airline#extensions#tabline#formatter="unique_tail_improved"
+let g:airline_section_z = "%p%% L%l C%c"
 
 let g:UltiSnipsExpandTrigger="<enter>"
 let g:UltiSnipsEditSplit="vertical"
