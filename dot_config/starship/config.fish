@@ -1,8 +1,8 @@
 # Starship setup
 # TODO Fix issue when shared and warp use the same modules
-alias using_warp="ps -p (ps -p $fish_pid -o ppid | sed -n '2 p') -o args | grep Warp"
 set -l starship_dir "$HOME"/.config/starship
-if using_warp
+# check if using warp
+if ps -p (string trim (ps -p $fish_pid -o ppid | sed -n '2 p')) -o args | grep Warp
     set -gx STARSHIP_CONFIG "$starship_dir"/config-warp.toml
     : > $STARSHIP_CONFIG
     cat "$starship_dir"/shared-globals.toml >> $STARSHIP_CONFIG
