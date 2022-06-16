@@ -1,3 +1,5 @@
+# starship non-module configuration when warp is used
+
 add_newline=false
 format="""
 $jobs\
