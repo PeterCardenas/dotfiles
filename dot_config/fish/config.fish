@@ -21,6 +21,8 @@ set -gx FZF_DEFAULT_COMMAND 'fd --type f --hidden'
 set -gx FZF_CTRL_T_COMMAND $FZF_DEFAULT_COMMAND
 set -gx FZF_ALT_C_COMMAND 'fd --type d --hidden'
 
+abbr -a cheznous "chezmoi git pull -- --rebase && chezmoi merge-all"
+
 # Start Starship
 set -l starship_conf "$HOME"/.config/starship/config.fish
 if test -f $starship_conf
