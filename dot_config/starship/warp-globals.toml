@@ -1,0 +1,9 @@
+add_newline=false
+format="""
+$jobs\
+$battery\
+$time\
+$status\
+$shell\
+$all"""
+
