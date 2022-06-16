@@ -19,7 +19,7 @@ if test $os = Linux
     if uname -a | grep -q WSL2
         set -gx BROWSER "/mnt/c/Program\ Files/Mozilla\ Firefox/firefox.exe"
     end
-else if $os = Darwin
+else if test $os = Darwin
     set -gx BROWSER /Applications/Firefox.app/Contents/MacOS/firefox
 end
 
