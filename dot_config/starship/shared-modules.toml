@@ -1,0 +1,24 @@
+[git_branch]
+format="[$symbol$branch(:$remote_branch)]($style) "
+
+[cmd_duration]
+format="[$duration]($style) "
+
+[java]
+format="[$symbol($version)]($style) "
+
+[golang]
+format="[$symbol($version)]($style) "
+
+[python]
+format="[$symbol($version)]($style) "
+
+[nodejs]
+format="[$symbol($version)]($style) "
+
+[package]
+format="[$symbol$version]($style) "
+
+[rust]
+format="[$symbol$version]($style) "
+
