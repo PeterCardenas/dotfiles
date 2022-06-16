@@ -1,3 +1,5 @@
+# starship module configuration whether or not warp is used
+
 [git_branch]
 format="[$symbol$branch(:$remote_branch)]($style) "
 
