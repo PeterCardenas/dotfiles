@@ -29,14 +29,17 @@ set expandtab
 nnoremap <silent> gb :bn<cr>
 nnoremap <silent> gB :bN<cr>
 
-let g:netrw_liststyle = 3
-let g:netrw_banner = 0
-let g:netrw_winsize = 25
-let g:netrw_keepdir = 1
-nnoremap <silent> <c-e> :25vs<cr> :execute "Ntree" expand('%:p:h')<cr>
-autocmd FileType netrw nmap <space> <cr>
-autocmd FileType netrw setl bufhidden=wipe
-let g:netrw_fastbrowse = 0
+let g:netrw_liststyle=3
+let g:netrw_banner=0
+let g:netrw_winsize=25
+let g:netrw_keepdir=1
+let g:netrw_browse_split=4
+let g:netrw_fastbrowse=0
+let g:netrw_localcopydircmd="cp -r"
+nnoremap <silent> <c-e> :Lex %:p:h<cr>
+nnoremap <silent> E :Lex <cr>
+autocmd FileType netrw nmap <buffer> <space> <cr>
+autocmd FileType netrw nmap <buffer> ff %:w<cr>:buffer #<cr>
 
 command! -nargs=1 Gcm G commit -m <args>
 command! Gp G push
@@ -45,16 +48,18 @@ command! Ga Gwrite
 if has('termguicolors')
     set termguicolors
 end
-colo sonokai
 let g:sonokai_style="atlantis"
 let g:sonokai_better_performance=1
 let g:sonokai_colors_override={"bg3": ["#181a1c", "237"]}
+let g:sonokai_enable_italic=1
+let g:sonokai_disable_italic_comment=0
+colo sonokai
 
 let g:airline_theme="sonokai"
 let g:airline_powerline_fonts = 1
 let g:airline#extensions#tabline#enabled=1
 let g:airline#extensions#tabline#formatter="unique_tail_improved"
-let g:airline_section_z = "%p%% L%l C%c"
+let g:airline_section_z = airline#section#create_right(["%p%%", "L%l","C%c"])
 
 let g:UltiSnipsExpandTrigger="<enter>"
 let g:UltiSnipsEditSplit="vertical"
