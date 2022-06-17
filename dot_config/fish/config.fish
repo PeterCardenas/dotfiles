@@ -6,6 +6,8 @@ function fish_title
     echo (fish_prompt_pwd_dir_length=1 prompt_pwd);
 end
 
+source "$HOME"/.config/fish/colors.fish
+
 set -gx GPG_TTY (tty)
 
 # OS Specific
