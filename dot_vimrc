@@ -14,6 +14,9 @@ Plug 'vim-airline/vim-airline-themes'
 
 Plug 'sainnhe/sonokai'
 
+Plug 'leafgarland/typescript-vim'
+Plug 'maxmellon/vim-jsx-pretty'
+
 call plug#end()
 
 filetype plugin on
@@ -21,14 +24,23 @@ filetype plugin on
 set autoindent
 set rnu
 
+" fix tabs
 set tabstop=4
 set shiftwidth=4
 set softtabstop=4
+function TabTwoSpace()
+    set tabstop=2
+    set shiftwidth=2
+    set softtabstop=2
+endfunction
+autocmd FileType typescriptreact,javascriptreact,javascript,typescript,json,html call TabTwoSpace()
 set expandtab
 
+" buffer shortcuts
 nnoremap <silent> gb :bn<cr>
 nnoremap <silent> gB :bN<cr>
 
+" netrw
 let g:netrw_liststyle=3
 let g:netrw_banner=0
 let g:netrw_winsize=25
@@ -41,10 +53,12 @@ nnoremap <silent> E :Lex <cr>
 autocmd FileType netrw nmap <buffer> <space> <cr>
 autocmd FileType netrw nmap <buffer> ff %:w<cr>:buffer #<cr>
 
+" vim-fugitive
 command! -nargs=1 Gcm G commit -m <args>
 command! Gp G push
 command! Ga Gwrite
 
+" sonokai
 if has('termguicolors')
     set termguicolors
 end
@@ -55,17 +69,20 @@ let g:sonokai_enable_italic=1
 let g:sonokai_disable_italic_comment=0
 colo sonokai
 
+" airline
 let g:airline_theme="sonokai"
 let g:airline_powerline_fonts = 1
 let g:airline#extensions#tabline#enabled=1
 let g:airline#extensions#tabline#formatter="unique_tail_improved"
 let g:airline_section_z = airline#section#create_right(["%p%%", "L%l","C%c"])
 
+" ultisnips
 let g:UltiSnipsExpandTrigger="<enter>"
 let g:UltiSnipsEditSplit="vertical"
 let g:UltiSnipsJumpForwardTrigger="<c-j>"
 let g:UltiSnipsJumpBackwardTrigger="<c-k>"
 
+" fzf
 nnoremap <silent> <c-p> :Files<cr>
 
 if has ('autocmd') " Remain compatible with earlier versions
