@@ -26,9 +26,9 @@ else if test $os = Darwin
 end
 
 # Use .gitignore for fzf
-set -gx FZF_DEFAULT_COMMAND 'fd --type f --hidden'
+set -gx FZF_DEFAULT_COMMAND 'fd --type f --hidden --exclude .git --follow'
 set -gx FZF_CTRL_T_COMMAND $FZF_DEFAULT_COMMAND
-set -gx FZF_ALT_C_COMMAND 'fd --type d --hidden'
+set -gx FZF_ALT_C_COMMAND 'fd --type d --hidden --exclude .git --follow'
 
 abbr -a sofi "source $HOME/.config/fish/config.fish"
 abbr -a cheznous "chezmoi git pull -- --rebase && chezmoi merge-all"
