@@ -2,7 +2,6 @@ call plug#begin('~/.vim/plugged')
 
 Plug 'ycm-core/YouCompleteMe'
 Plug 'SirVer/ultisnips'
-Plug 'honza/vim-snippets'
 
 Plug 'tpope/vim-fugitive'
 
@@ -54,7 +53,6 @@ let g:netrw_localcopydircmd="cp -r"
 nnoremap <silent> <c-e> :Lex %:p:h<cr>
 nnoremap <silent> E :Lex <cr>
 autocmd FileType netrw nmap <buffer> <space> <cr>
-autocmd FileType netrw nmap <buffer> ff %:w<cr>:buffer #<cr>
 
 " vim-fugitive
 command! -nargs=1 Gcm G commit -m <args>
@@ -87,6 +85,7 @@ let g:UltiSnipsExpandTrigger="<enter>"
 let g:UltiSnipsEditSplit="vertical"
 let g:UltiSnipsJumpForwardTrigger="<c-j>"
 let g:UltiSnipsJumpBackwardTrigger="<c-k>"
+let g:UltiSnipsSnippetDirectories=[$HOME.'/.config/snippets']
 
 " fzf
 nnoremap <silent> <c-p> :Files<cr>
