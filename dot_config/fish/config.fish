@@ -36,3 +36,6 @@ abbr -a cheznous "chezmoi git pull -- --rebase && chezmoi merge-all"
 # Start Starship
 source "$HOME"/.config/starship/config.fish
 starship init fish | source
+
+# iTerm2 Shell Integration
+source ~/.iterm2_shell_integration.fish
