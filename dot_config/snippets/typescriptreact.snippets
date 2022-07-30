@@ -1,10 +1,16 @@
 priority -50
+
 extends javascriptreact
 extends typescript
 
 priority -49
-snippet rfc "react functional component"
-interface ${1:function_name}Props {${4:props_types}}
 
-export const ${1:function_name} = (${2:props}: ${1:function_name}Props) => ${3:function_body}
+snippet rfc "react functional component" b
+interface ${1:`!p snip.rv = snip.basename`}Props {${2}}
+
+const ${1} = (${3:props}: ${1}Props) => {
+${4}
+};
+
+export default ${1};
 endsnippet
