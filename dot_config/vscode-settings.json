@@ -1,0 +1,502 @@
+{
+  "git.autofetch": true,
+  "files.exclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/bazel-out/": true,
+    "**/node_modules/*/**": true
+  },
+  "search.followSymlinks": true,
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/bazel-out/": true,
+    "**/node_modules/*/**": true
+  },
+  "search.exclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/bazel-out": true,
+    "**/node_modules/*/**": true
+  },
+  "terminal.integrated.env.osx": {
+    "FIG_NEW_SESSION": "1"
+  },
+  "editor.accessibilitySupport": "off",
+  "remote.SSH.remotePlatform": {
+    "desktop.away": "linux",
+    "desktop": "linux",
+    "windows": "windows"
+  },
+  "terminal.integrated.fontFamily": "Dank Mono",
+  "zenMode.fullScreen": false,
+  "zenMode.hideTabs": false,
+  "zenMode.hideStatusBar": false,
+  "editor.minimap.enabled": false,
+  "editor.renderWhitespace": "all",
+  "terminal.integrated.defaultProfile.linux": "fish",
+  "vim.camelCaseMotion.enable": true,
+  "vim.normalModeKeyBindings": [
+    {
+      "before": [
+        "<C-l>",
+      ],
+      "commands": [
+        "terminal.focus"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "f",
+        "w"
+      ],
+      "commands": [
+        "workbench.action.findInFiles"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "g",
+        "k"
+      ],
+      "commands": [
+        "workbench.action.editor.previousChange"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "g",
+        "j"
+      ],
+      "commands": [
+        "workbench.action.editor.nextChange"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "f",
+        "b"
+      ],
+      "commands": [
+        "workbench.action.quickOpenPreviousRecentlyUsedEditorInGroup"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "l",
+        "S"
+      ],
+      "commands": [
+        "workbench.action.showAllSymbols"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "l",
+        "s"
+      ],
+      "commands": [
+        "workbench.action.gotoSymbol"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "f",
+        "f"
+      ],
+      "commands": [
+        "workbench.action.quickOpen"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "g",
+        "r"
+      ],
+      "commands": [
+        "editor.action.goToReferences"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "l",
+        "r"
+      ],
+      "commands": [
+        "editor.action.rename"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "g",
+        "j"
+      ],
+      "commands": [
+        "workbench.action.navigateForward"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "g",
+        "k"
+      ],
+      "commands": [
+        "workbench.action.navigateBack"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "["
+      ],
+      "commands": [
+        "editor.gotoPreviousFold"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "]"
+      ],
+      "commands": [
+        "editor.gotoNextFold"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "C"
+      ],
+      "commands": [
+        "workbench.action.showCommands"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "s"
+      ],
+      "commands": [
+        "workbench.action.files.save"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "l",
+        "f"
+      ],
+      "commands": [
+        "editor.action.formatDocument",
+        "eslint.executeAutofix"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "p"
+      ],
+      "commands": [
+        "editor.action.marker.next"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "P"
+      ],
+      "commands": [
+        "editor.action.marker.prev"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "o",
+      ],
+      "commands": [
+        "workbench.view.explorer"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "l",
+        "h"
+      ],
+      "commands": [
+        "editor.action.showHover"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "c"
+      ],
+      "commands": [
+        "workbench.action.closeActiveEditor"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "s"
+      ],
+      "commands": [
+        "workbench.action.files.save"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "l",
+        "a"
+      ],
+      "commands": [
+        "editor.action.quickFix"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "L"
+      ],
+      "commands": [
+        "workbench.action.nextEditor"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "H"
+      ],
+      "commands": [
+        "workbench.action.previousEditor"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "/",
+      ],
+      "commands": [
+        "editor.action.commentLine"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "r",
+        "h"
+      ],
+      "commands": [
+        "workbench.action.moveEditorLeftInGroup"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "r",
+        "l"
+      ],
+      "commands": [
+        "workbench.action.moveEditorRightInGroup"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "d",
+      ],
+      "commands": [
+        "editor.action.addSelectionToNextFindMatch"
+      ],
+      "silent": true
+    }
+    // {
+    //   "before": ["<leader>", "g", "c"],
+    //   "commands": [
+    //     "git.checkout"
+    //   ],
+    //   "silent": true
+    // }
+  ],
+  "vim.visualModeKeyBindings": [
+    {
+      "before": [
+        "<leader>",
+        "f",
+        "f"
+      ],
+      "commands": [
+        "workbench.action.quickOpen"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        ">",
+      ],
+      "after": [
+        ">",
+        "g",
+        "v"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<",
+      ],
+      "after": [
+        "<",
+        "g",
+        "v"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "d",
+      ],
+      "commands": [
+        "editor.action.addSelectionToNextFindMatch"
+      ],
+      "silent": true
+    }
+  ],
+  "vim.insertModeKeyBindings": [
+    {
+      "before": [
+        "j",
+        "j"
+      ],
+      "after": [
+        "<Esc>"
+      ]
+    },
+    {
+      "before": [
+        "k",
+        "k"
+      ],
+      "after": [
+        "<Esc>"
+      ]
+    }
+  ],
+  "vim.leader": " ",
+  "vim.highlightedyank.enable": true,
+  "vim.visualstar": true,
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "eslint.validate": [
+    "typescript",
+    "typescriptreact"
+  ],
+  "[typescriptreact][typescript][scss]": {
+    "editor.detectIndentation": false,
+    "editor.tabSize": 2
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "vim.foldfix": true,
+  "editor.stickyScroll.enabled": true,
+  "emmet.excludeLanguages": [
+    "markdown",
+    "typescriptreact",
+    "javascriptreact"
+  ],
+  "editor.lineNumbers": "relative",
+  "python.linting.pylintEnabled": true,
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.python"
+  },
+  "python.formatting.provider": "black",
+  "workbench.quickOpen.closeOnFocusLost": false,
+  "vim.useSystemClipboard": true,
+  "zenMode.hideLineNumbers": false,
+  "editor.suggest.snippetsPreventQuickSuggestions": false,
+  "python.analysis.extraPaths": [
+    "bazel-bin"
+  ],
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "githubPullRequests.pullBranch": "never",
+  "editor.fontFamily": "Dank Mono",
+  "editor.fontSize": 15,
+  "editor.fontLigatures": true,
+  "diffEditor.ignoreTrimWhitespace": false,
+  "git.suggestSmartCommit": false,
+  "[proto3]": {
+    "editor.defaultFormatter": "zxh404.vscode-proto3",
+    "clang-format.style": "{ BasedOnStyle: google, ColumnLimit: 0, AlignTrailingComments: false, SpacesBeforeTrailingComments: 1 } "
+  },
+  "stylelint.validate": [
+    "scss"
+  ],
+  "[scss]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.stylelint": true
+    },
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "remote.SSH.connectTimeout": 120,
+  "remote.SSH.useLocalServer": false,
+  "workbench.editor.wrapTabs": true,
+  "terminal.integrated.scrollback": 10000,
+  "[yaml]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "explorer.autoRevealExclude": {
+    "**/node_modules": true,
+  },
+  "errorLens.messageBackgroundMode": "none",
+  "python.formatting.blackArgs": [
+    "--config",
+    "pyproject.toml"
+  ],
+  "git.confirmSync": true,
+  "html-css-class-completion.includeGlobPattern": "**/*.{scss}",
+  "html-css-class-completion.JavaScriptLanguages": [
+    "typescriptreact"
+  ],
+  "settingsSync.keybindingsPerPlatform": false,
+  "vim.disableExtension": false
+}
