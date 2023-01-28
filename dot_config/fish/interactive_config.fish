@@ -1,0 +1,75 @@
+function fish_greeting
+  echo
+  set_color yellow
+  fortune
+  set_color normal
+end
+
+source "$HOME"/.config/fish/colors.fish
+
+# OS Specific
+set -l os (uname -s)
+# WSL
+if uname -a | grep -q WSL2
+  set -gx BROWSER "/mnt/c/Program\ Files/Mozilla\ Firefox/firefox.exe"
+else if test $os = Darwin
+  set -gx BROWSER /Applications/Firefox.app/Contents/MacOS/firefox
+  # iTerm2 Shell Integration
+  source ~/.iterm2_shell_integration.fish
+end
+
+# Use .gitignore for fzf
+set -gx FZF_DEFAULT_COMMAND 'fd --type f --hidden --exclude .git --follow'
+set -gx FZF_CTRL_T_COMMAND $FZF_DEFAULT_COMMAND
+set -gx FZF_ALT_C_COMMAND 'fd --type d --hidden --exclude .git --follow'
+
+set -gx GPG_TTY "(tty)"
+
+set -gx RIPGREP_CONFIG_PATH $HOME/.config/ripgrep.rc
+
+# Add to PATH if not already
+contains /usr/games $fish_user_paths; or set -U fish_user_paths /usr/games $fish_user_paths
+
+# apt aliases
+abbr -a aptupd "sudo apt update -y"
+abbr -a aptupgd "sudo apt upgrade -y && sudo apt autoremove -y"
+abbr -a aptinst "sudo apt install -y"
+abbr -a aptrm "sudo apt remove -y"
+
+# git aliases
+abbr -a gpl "git pull"
+# abbr -a gpm "git pull -S origin master"
+abbr -a gpm "git pull origin master"
+# abbr -a gpo "git pull -S origin"
+abbr -a gpo "git pull origin"
+abbr -a gp "git push --no-verify"
+abbr -a gpf "git push --no-verify --force-with-lease"
+# abbr -a gcm "git commit -S -m"
+abbr -a gcm "git commit -m"
+# abbr -a gca "git commit -S --amend --no-edit"
+abbr -a gca "git commit --amend --no-edit"
+abbr -a ga "git add"
+abbr -a gst "git status --short"
+abbr -a gco "git checkout"
+abbr -a gcn "git checkout -b"
+abbr -a gbd "git branch -d"
+abbr -a gbl "git branch -l"
+abbr -a gsp "git stash push"
+abbr -a gspo "git stash pop"
+abbr -a gsl "git stash list"
+abbr -a gsd "git stash drop"
+abbr -a gsa "git stash apply"
+# abbr -a gcp "git cherry-pick -S"
+abbr -a gcp "git cherry-pick"
+abbr -a lg "lazygit"
+
+abbr -a p "starship prompt"
+
+abbr -a vim "nvim"
+
+abbr -a sofi "source $HOME/.config/fish/config.fish"
+abbr -a cheznous "chezmoi git pull -- --rebase && chezmoi merge-all"
+
+# Start Starship
+starship init fish | source
+
