@@ -1,0 +1,36 @@
+[git_branch]
+format = "[$symbol$branch(:$remote_branch)]($style) "
+
+[cmd_duration]
+format = "[$duration]($style) "
+
+[python]
+format = "[$symbol($version)]($style) "
+
+[nodejs]
+format = "[$symbol($version)]($style) "
+
+[lua]
+format = "[$symbol$version]($style) "
+
+[golang]
+format = "[$symbol$version]($style) "
+
+[c]
+format = "[$symbol$version]($style) "
+
+[cmake]
+format = "[$symbol$version]($style) "
+
+[package]
+format = "[$symbol$version]($style) "
+
+[container]
+symbol = "📦"
+format = "[$symbol]($style) "
+
+[username]
+disabled = true
+
+[hostname]
+disabled = true

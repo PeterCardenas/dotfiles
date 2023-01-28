@@ -1,0 +1,2 @@
+--type-add
+test:*{.test.tsx,.test.ts,test.py}

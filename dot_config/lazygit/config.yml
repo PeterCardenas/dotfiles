@@ -1,0 +1,11 @@
+gui:
+  splitDiff: "always"
+  scrollPastBottom: true
+  showIcons: true
+  authorColors:
+    "Peter Cardenas": "yellow"
+    "PeterPCardenas": "yellow"
+    "*": "white"
+  branchColors:
+    "pcardenas": "yellow"
+    "master": "red"
