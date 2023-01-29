@@ -4,4 +4,4 @@ git:
   autoAdd: true
 edit:
   command: /usr/bin/nvim
-
+  apply: true
