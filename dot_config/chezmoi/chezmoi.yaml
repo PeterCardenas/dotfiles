@@ -2,3 +2,5 @@ git:
   autoPush: true
   autoCommit: true
   autoAdd: true
+edit:
+  command: /usr/bin/nvim
