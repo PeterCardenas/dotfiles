@@ -76,3 +76,4 @@ and . (code --locate-shell-integration-path fish)
 
 # Start Starship
 starship init fish | source
+
