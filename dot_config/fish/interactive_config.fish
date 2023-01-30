@@ -69,7 +69,9 @@ abbr -a vim "nvim"
 
 abbr -a sofi "source $HOME/.config/fish/config.fish"
 abbr -a cheznous "chezmoi git pull -- --rebase && chezmoi merge-all"
+# VSCode shell integration
+string match -q "$TERM_PROGRAM" "vscode"
+and . (code --locate-shell-integration-path fish)
 
 # Start Starship
 starship init fish | source
-
