@@ -14,8 +14,7 @@ format = "[$symbol($version)]($style) "
 format = "[$symbol$version]($style) "
 
 [golang]
-disabled = true
-format = "[$symbol$version]($style) "
+format = "[$symbol]($style) "
 
 [c]
 format = "[$symbol$version]($style) "
