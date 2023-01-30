@@ -6,3 +6,4 @@ git:
 edit:
   command: /usr/bin/nvim
   apply: true
+  watch: true
