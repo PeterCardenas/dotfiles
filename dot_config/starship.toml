@@ -7,6 +7,7 @@ format = "[$symbol$branch(:$remote_branch)]($style) "
 format = "[$duration]($style) "
 
 [python]
+disabled = true
 format = "[$symbol($version)]($style) "
 
 [nodejs]
@@ -16,6 +17,7 @@ format = "[$symbol($version)]($style) "
 format = "[$symbol$version]($style) "
 
 [golang]
+disabled = true
 format = "[$symbol$version]($style) "
 
 [c]
