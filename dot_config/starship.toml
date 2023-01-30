@@ -1,5 +1,3 @@
-command_timeout = 1500
-
 [git_branch]
 format = "[$symbol$branch(:$remote_branch)]($style) "
 
@@ -7,7 +5,6 @@ format = "[$symbol$branch(:$remote_branch)]($style) "
 format = "[$duration]($style) "
 
 [python]
-disabled = true
 format = "[$symbol($version)]($style) "
 
 [nodejs]
