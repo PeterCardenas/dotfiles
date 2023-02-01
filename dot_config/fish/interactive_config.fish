@@ -7,6 +7,9 @@ end
 
 source "$HOME"/.config/fish/colors.fish
 
+# Fix Ctrl-Backspace
+bind \b backward-kill-word
+
 # OS Specific
 set -l os (uname -s)
 # WSL
