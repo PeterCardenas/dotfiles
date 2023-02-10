@@ -5,7 +5,7 @@ format = "[$symbol$branch(:$remote_branch)]($style) "
 format = "[$duration]($style) "
 
 [python]
-format = "[$symbol($version)]($style) "
+format = "[$symbol]($style)"
 
 [nodejs]
 format = "[$symbol($version)]($style) "

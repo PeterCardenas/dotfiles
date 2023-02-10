@@ -23,6 +23,14 @@ set BAZEL_COMMAND_LIST analyze-profile aquery build canonicalize-flags clean cov
 function __bazel_seen_subcommand -d "Checks whether the current command line contains a bazel subcommand."
     __fish_seen_subcommand_from $BAZEL_COMMAND_LIST
 end
+
+function __bazel_complete_targets --argument-names query
+    if [ (count $query) -eq 0 ]
+        set query "//..."
+    end
+    bazel query -k $query 2>/dev/null
+end
+
 complete -c bazel -n "not __bazel_seen_subcommand" -l "autodetect_server_javabase" -d "a boolean; default: \"true\""
 complete -c bazel -n "not __bazel_seen_subcommand" -l "noautodetect_server_javabase" -d "a boolean; default: \"true\""
 complete -c bazel -n "not __bazel_seen_subcommand" -l "batch" -d "a boolean; default: \"false\""
@@ -1124,7 +1132,7 @@ complete -c bazel -n "__fish_seen_subcommand_from aquery" -l "nouse_ijars" -d "a
 complete -c bazel -n "__fish_seen_subcommand_from aquery" -l "watchfs" -d "a boolean; default: \"false\""
 complete -c bazel -n "__fish_seen_subcommand_from aquery" -l "nowatchfs" -d "a boolean; default: \"false\""
 complete -c bazel -n "__fish_seen_subcommand_from aquery" -l "workspace_status_command" -d "a path; default: \"\"" -r
-complete -c bazel -n "__fish_seen_subcommand_from aquery" -fa "(bazel query -k '//...' 2>/dev/null)"
+complete -c bazel -n "__fish_seen_subcommand_from aquery" -fa "(__bazel_complete_targets)"
 
 complete -c bazel -n "not __bazel_seen_subcommand" -xa "build" -d "Builds the specified targets." -r
 complete -c bazel -n "__fish_seen_subcommand_from build" -l "distdir" -d "a path; may be used multiple times" -r
@@ -1932,7 +1940,7 @@ complete -c bazel -n "__fish_seen_subcommand_from build" -l "nouse_ijars" -d "a 
 complete -c bazel -n "__fish_seen_subcommand_from build" -l "watchfs" -d "a boolean; default: \"false\""
 complete -c bazel -n "__fish_seen_subcommand_from build" -l "nowatchfs" -d "a boolean; default: \"false\""
 complete -c bazel -n "__fish_seen_subcommand_from build" -l "workspace_status_command" -d "a path; default: \"\"" -r
-complete -c bazel -n "__fish_seen_subcommand_from build" -fa "(bazel query -k '//...' 2>/dev/null)"
+complete -c bazel -n "__fish_seen_subcommand_from build" -fa "(__bazel_complete_targets)"
 
 complete -c bazel -n "not __bazel_seen_subcommand" -xa "canonicalize-flags" -d "Canonicalizes a list of bazel options." -r
 complete -c bazel -n "__fish_seen_subcommand_from canonicalize-flags" -l "distdir" -d "a path; may be used multiple times" -r
@@ -4374,7 +4382,7 @@ complete -c bazel -n "__fish_seen_subcommand_from coverage" -l "nouse_ijars" -d 
 complete -c bazel -n "__fish_seen_subcommand_from coverage" -l "watchfs" -d "a boolean; default: \"false\""
 complete -c bazel -n "__fish_seen_subcommand_from coverage" -l "nowatchfs" -d "a boolean; default: \"false\""
 complete -c bazel -n "__fish_seen_subcommand_from coverage" -l "workspace_status_command" -d "a path; default: \"\"" -r
-complete -c bazel -n "__fish_seen_subcommand_from coverage" -fa "(bazel query -k 'tests(//...)' 2>/dev/null)"
+complete -c bazel -n "__fish_seen_subcommand_from coverage" -fa "(__bazel_complete_targets 'tests(//...)')"
 
 complete -c bazel -n "not __bazel_seen_subcommand" -xa "cquery" -d "Loads, analyzes, and queries the specified targets w/ configurations." -r
 complete -c bazel -n "__fish_seen_subcommand_from cquery" -l "distdir" -d "a path; may be used multiple times" -r
@@ -5211,7 +5219,7 @@ complete -c bazel -n "__fish_seen_subcommand_from cquery" -l "nouse_ijars" -d "a
 complete -c bazel -n "__fish_seen_subcommand_from cquery" -l "watchfs" -d "a boolean; default: \"false\""
 complete -c bazel -n "__fish_seen_subcommand_from cquery" -l "nowatchfs" -d "a boolean; default: \"false\""
 complete -c bazel -n "__fish_seen_subcommand_from cquery" -l "workspace_status_command" -d "a path; default: \"\"" -r
-complete -c bazel -n "__fish_seen_subcommand_from cquery" -fa "(bazel query -k '//...' 2>/dev/null)"
+complete -c bazel -n "__fish_seen_subcommand_from cquery" -fa "(__bazel_complete_targets)"
 
 complete -c bazel -n "not __bazel_seen_subcommand" -xa "dump" -d "Dumps the internal state of the bazel server process." -r
 complete -c bazel -n "__fish_seen_subcommand_from dump" -l "distdir" -d "a path; may be used multiple times" -r
@@ -5725,7 +5733,7 @@ complete -c bazel -n "__fish_seen_subcommand_from fetch" -l "tls_client_key" -d 
 complete -c bazel -n "__fish_seen_subcommand_from fetch" -l "ui_actions_shown" -d "an integer; default: \"8\"" -r
 complete -c bazel -n "__fish_seen_subcommand_from fetch" -l "watchfs" -d "a boolean; default: \"false\""
 complete -c bazel -n "__fish_seen_subcommand_from fetch" -l "nowatchfs" -d "a boolean; default: \"false\""
-complete -c bazel -n "__fish_seen_subcommand_from fetch" -fa "(bazel query -k '//...' 2>/dev/null)"
+complete -c bazel -n "__fish_seen_subcommand_from fetch" -fa "(__bazel_complete_targets)"
 
 complete -c bazel -n "not __bazel_seen_subcommand" -xa "help" -d "Prints help for commands, or the index." -r
 complete -c bazel -n "__fish_seen_subcommand_from help" -l "distdir" -d "a path; may be used multiple times" -r
@@ -7788,7 +7796,7 @@ complete -c bazel -n "__fish_seen_subcommand_from mobile-install" -l "nouse_ijar
 complete -c bazel -n "__fish_seen_subcommand_from mobile-install" -l "watchfs" -d "a boolean; default: \"false\""
 complete -c bazel -n "__fish_seen_subcommand_from mobile-install" -l "nowatchfs" -d "a boolean; default: \"false\""
 complete -c bazel -n "__fish_seen_subcommand_from mobile-install" -l "workspace_status_command" -d "a path; default: \"\"" -r
-complete -c bazel -n "__fish_seen_subcommand_from mobile-install" -fa "(bazel query -k '//...' 2>/dev/null)"
+complete -c bazel -n "__fish_seen_subcommand_from mobile-install" -fa "(__bazel_complete_targets)"
 
 complete -c bazel -n "not __bazel_seen_subcommand" -xa "print_action" -d "Prints the command line args for compiling a file." -r
 complete -c bazel -n "__fish_seen_subcommand_from print_action" -l "distdir" -d "a path; may be used multiple times" -r
@@ -8597,7 +8605,7 @@ complete -c bazel -n "__fish_seen_subcommand_from print_action" -l "nouse_ijars"
 complete -c bazel -n "__fish_seen_subcommand_from print_action" -l "watchfs" -d "a boolean; default: \"false\""
 complete -c bazel -n "__fish_seen_subcommand_from print_action" -l "nowatchfs" -d "a boolean; default: \"false\""
 complete -c bazel -n "__fish_seen_subcommand_from print_action" -l "workspace_status_command" -d "a path; default: \"\"" -r
-complete -c bazel -n "__fish_seen_subcommand_from print_action" -fa "(bazel query -k '//...' 2>/dev/null)"
+complete -c bazel -n "__fish_seen_subcommand_from print_action" -fa "(__bazel_complete_targets)"
 
 complete -c bazel -n "not __bazel_seen_subcommand" -xa "query" -d "Executes a dependency graph query." -r
 complete -c bazel -n "__fish_seen_subcommand_from query" -l "distdir" -d "a path; may be used multiple times" -r
@@ -8911,7 +8919,7 @@ complete -c bazel -n "__fish_seen_subcommand_from query" -l "tls_client_key" -d 
 complete -c bazel -n "__fish_seen_subcommand_from query" -l "ui_actions_shown" -d "an integer; default: \"8\"" -r
 complete -c bazel -n "__fish_seen_subcommand_from query" -l "watchfs" -d "a boolean; default: \"false\""
 complete -c bazel -n "__fish_seen_subcommand_from query" -l "nowatchfs" -d "a boolean; default: \"false\""
-complete -c bazel -n "__fish_seen_subcommand_from query" -fa "(bazel query -k '//...' 2>/dev/null)"
+complete -c bazel -n "__fish_seen_subcommand_from query" -fa "(__bazel_complete_targets)"
 
 complete -c bazel -n "not __bazel_seen_subcommand" -xa "run" -d "Runs the specified target." -r
 complete -c bazel -n "__fish_seen_subcommand_from run" -l "distdir" -d "a path; may be used multiple times" -r
@@ -9720,7 +9728,7 @@ complete -c bazel -n "__fish_seen_subcommand_from run" -l "nouse_ijars" -d "a bo
 complete -c bazel -n "__fish_seen_subcommand_from run" -l "watchfs" -d "a boolean; default: \"false\""
 complete -c bazel -n "__fish_seen_subcommand_from run" -l "nowatchfs" -d "a boolean; default: \"false\""
 complete -c bazel -n "__fish_seen_subcommand_from run" -l "workspace_status_command" -d "a path; default: \"\"" -r
-complete -c bazel -n "__fish_seen_subcommand_from run" -fa "(bazel query -k 'kind(\".*_binary\", //...)' 2>/dev/null)"
+complete -c bazel -n "__fish_seen_subcommand_from run" -fa "(__bazel_complete_targets 'kind(\".*_binary\", //...)')"
 
 complete -c bazel -n "not __bazel_seen_subcommand" -xa "shutdown" -d "Stops the bazel server." -r
 complete -c bazel -n "__fish_seen_subcommand_from shutdown" -l "distdir" -d "a path; may be used multiple times" -r
@@ -10752,7 +10760,7 @@ complete -c bazel -n "__fish_seen_subcommand_from test" -l "nouse_ijars" -d "a b
 complete -c bazel -n "__fish_seen_subcommand_from test" -l "watchfs" -d "a boolean; default: \"false\""
 complete -c bazel -n "__fish_seen_subcommand_from test" -l "nowatchfs" -d "a boolean; default: \"false\""
 complete -c bazel -n "__fish_seen_subcommand_from test" -l "workspace_status_command" -d "a path; default: \"\"" -r
-complete -c bazel -n "__fish_seen_subcommand_from test" -fa "(bazel query -k 'tests(//...)' 2>/dev/null)"
+complete -c bazel -n "__fish_seen_subcommand_from test" -fa "(__bazel_complete_targets 'tests(//...)')"
 
 complete -c bazel -n "not __bazel_seen_subcommand" -xa "version" -d "Prints version information for bazel." -r
 complete -c bazel -n "__fish_seen_subcommand_from version" -l "distdir" -d "a path; may be used multiple times" -r
