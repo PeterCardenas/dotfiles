@@ -70,7 +70,8 @@ abbr -a p "starship prompt"
 abbr -a vim "nvim"
 
 abbr -a sofi "source $HOME/.config/fish/config.fish"
-abbr -a cheznous "chezmoi git pull -- --rebase && chezmoi merge-all"
+abbr -a cheznous "chezmoi git pull -- --rebase && chezmoi --interactive merge-all"
+abbr -a ce "chezmoi edit"
 
 # VSCode shell integration
 string match -q "$TERM_PROGRAM" "vscode"
