@@ -4,7 +4,7 @@ git:
   autoAdd: true
 
 edit:
-  command: /usr/bin/nvim
+  command: nvim
   apply: true
   watch: true
 

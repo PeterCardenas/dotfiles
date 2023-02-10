@@ -39,7 +39,7 @@
   "vim.normalModeKeyBindings": [
     {
       "before": [
-        "<C-l>",
+        "<C-l>"
       ],
       "commands": [
         "terminal.focus"
@@ -237,7 +237,7 @@
     {
       "before": [
         "<leader>",
-        "o",
+        "o"
       ],
       "commands": [
         "workbench.view.explorer"
@@ -307,7 +307,7 @@
     {
       "before": [
         "<leader>",
-        "/",
+        "/"
       ],
       "commands": [
         "editor.action.commentLine"
@@ -368,7 +368,7 @@
     },
     {
       "before": [
-        ">",
+        ">"
       ],
       "after": [
         ">",
@@ -379,7 +379,7 @@
     },
     {
       "before": [
-        "<",
+        "<"
       ],
       "after": [
         "<",
@@ -391,7 +391,7 @@
     {
       "before": [
         "<leader>",
-        "d",
+        "d"
       ],
       "commands": [
         "editor.action.addSelectionToNextFindMatch"
@@ -422,6 +422,9 @@
   "vim.leader": " ",
   "vim.highlightedyank.enable": true,
   "vim.visualstar": true,
+  "vim.handleKeys": {
+    "<C-d>": false
+  },
   "javascript.preferences.importModuleSpecifier": "non-relative",
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "eslint.validate": [
@@ -472,7 +475,7 @@
   "[scss]": {
     "editor.codeActionsOnSave": {
       "source.fixAll.stylelint": true
-    },
+    }
   },
   "[jsonc]": {
     "editor.defaultFormatter": "vscode.json-language-features"
