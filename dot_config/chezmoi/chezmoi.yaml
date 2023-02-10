@@ -11,7 +11,3 @@ edit:
 merge:
   command: "nvim"
   args: ["-d", "-c", '"$wincmd w"', "-c", '"wincmd J"']
-
-diff:
-  command: "nvim"
-  args: ["-d", "-c", '"$wincmd w"', "-c", '"wincmd J"']
