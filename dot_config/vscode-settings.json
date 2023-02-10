@@ -501,5 +501,9 @@
     "typescriptreact"
   ],
   "settingsSync.keybindingsPerPlatform": false,
-  "vim.disableExtension": false
+  "workbench.activityBar.visible": false,
+  "vscode-pets.theme": "forest",
+  "vscode-pets.throwBallWithMouse": true,
+  "workbench.iconTheme": "material-icon-theme",
+  "githubPullRequests.fileListLayout": "tree"
 }
