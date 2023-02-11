@@ -63,6 +63,7 @@ abbr -a gsd "git stash drop"
 abbr -a gsa "git stash apply"
 # abbr -a gcp "git cherry-pick -S"
 abbr -a gcp "git cherry-pick"
+abbr -a nuke 'git rm --cached -r .; and GIT_LFS_SKIP_SMUDGE=1 git reset --hard'
 abbr -a lg "lazygit"
 
 abbr -a p "starship prompt"
