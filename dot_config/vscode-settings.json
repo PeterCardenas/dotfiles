@@ -505,5 +505,6 @@
   "vscode-pets.theme": "forest",
   "vscode-pets.throwBallWithMouse": true,
   "workbench.iconTheme": "material-icon-theme",
-  "githubPullRequests.fileListLayout": "tree"
+  "githubPullRequests.fileListLayout": "tree",
+  "svg.preview.mode": "svg"
 }
