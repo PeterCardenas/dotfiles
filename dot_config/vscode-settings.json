@@ -560,7 +560,7 @@
   ],
   "settingsSync.keybindingsPerPlatform": false,
   "workbench.activityBar.visible": false,
-  "vscode-pets.theme": "forest",
+  "vscode-pets.theme": "none",
   "vscode-pets.throwBallWithMouse": true,
   "workbench.iconTheme": "material-icon-theme",
   "githubPullRequests.fileListLayout": "tree",
