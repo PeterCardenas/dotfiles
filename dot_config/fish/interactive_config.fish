@@ -74,6 +74,7 @@ abbr -a sofi "source $HOME/.config/fish/config.fish"
 abbr -a cheznous "chezmoi git pull -- --rebase; and chezmoi merge-all"
 abbr -a chezvous "chezmoi git pull -- --rebase; and chezmoi --interactive apply"
 abbr -a ce "chezmoi edit"
+abbr -a ca "chezmoi re-add"
 
 # VSCode shell integration
 string match -q "$TERM_PROGRAM" "vscode"
