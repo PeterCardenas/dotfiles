@@ -1,4 +1,69 @@
 {
+  "colorInfo.languages": [
+    {
+      "selector": "css",
+      "colors": "css"
+    },
+    {
+      "selector": "sass",
+      "colors": "css"
+    },
+    {
+      "selector": "scss",
+      "colors": "css"
+    },
+    {
+      "selector": "less",
+      "colors": "css"
+    },
+    {
+      "selector": "typescriptreact",
+      "colors": [
+        "hex",
+        "hex+alpha",
+        "hsl",
+        "rgb"
+      ]
+    },
+    {
+      "selector": "typescript",
+      "colors": [
+        "hex",
+        "hex+alpha",
+        "hsl",
+        "rgb"
+      ]
+    }
+  ],
+  "colorInfo.fields": [
+    "hex",
+    "alpha",
+    "rgb",
+    "hsv",
+    "preview-xl"
+  ],
+  "colorize.languages": [
+    "css",
+    "sass",
+    "scss",
+    "less",
+    "postcss",
+    "sss",
+    "stylus",
+    "xml",
+    "svg",
+    "typescriptreact",
+    "typescript"
+  ],
+  "colorize.colorized_colors": [
+    "HEXA",
+    "RGB",
+    "HSL"
+  ],
+  "colorize.colorized_variables": [
+    "CSS",
+    "SASS"
+  ],
   "git.autofetch": true,
   "files.exclude": {
     "**/.git/objects/**": true,
@@ -445,10 +510,10 @@
     "typescriptreact",
     "javascriptreact"
   ],
-  "editor.lineNumbers": "relative",
+  "editor.lineNumbers": "on",
   "python.linting.pylintEnabled": true,
   "[python]": {
-    "editor.defaultFormatter": "ms-python.python"
+    "editor.defaultFormatter": "ms-python.python",
   },
   "python.formatting.provider": "black",
   "workbench.quickOpen.closeOnFocusLost": false,
