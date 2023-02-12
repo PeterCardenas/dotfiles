@@ -411,13 +411,6 @@
       ],
       "silent": true
     }
-    // {
-    //   "before": ["<leader>", "g", "c"],
-    //   "commands": [
-    //     "git.checkout"
-    //   ],
-    //   "silent": true
-    // }
   ],
   "vim.visualModeKeyBindings": [
     {
