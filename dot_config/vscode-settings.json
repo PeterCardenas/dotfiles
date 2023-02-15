@@ -506,7 +506,7 @@
   "editor.lineNumbers": "on",
   "python.linting.pylintEnabled": true,
   "[python]": {
-    "editor.defaultFormatter": "ms-python.python",
+    "editor.defaultFormatter": "ms-python.python"
   },
   "python.formatting.provider": "black",
   "workbench.quickOpen.closeOnFocusLost": false,
