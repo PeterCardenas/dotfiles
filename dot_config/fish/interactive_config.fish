@@ -40,7 +40,7 @@ abbr -a aptinst "sudo apt install -y"
 abbr -a aptrm "sudo apt remove -y"
 
 # git aliases
-abbr -a gcm "git checkout master"
+abbr -a gcom "git checkout master"
 # abbr -a gpm "git pull -S origin master"
 abbr -a gpm "git pull origin master"
 # abbr -a gpo "git pull -S origin"
