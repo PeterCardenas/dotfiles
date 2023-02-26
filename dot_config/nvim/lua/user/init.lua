@@ -353,6 +353,11 @@ local config = {
                 end,
             },
 
+            -- Fast motion commands
+            ["ggandor/lightspeed.nvim"] = {
+                requires = { "tpope/vim-repeat" },
+            },
+
             -- We also support a key value style plugin definition similar to NvChad:
             -- ["ray-x/lsp_signature.nvim"] = {
             --   event = "BufRead",
@@ -504,9 +509,9 @@ local config = {
                     condition = function(self)
                         self.winid = vim.api.nvim_tabpage_list_wins(0)[1]
                         return astronvim.status.condition.buffer_matches(
-                                { filetype = { "neo%-tree", "NvimTree" } },
-                                vim.api.nvim_win_get_buf(self.winid)
-                            )
+                            { filetype = { "neo%-tree", "NvimTree" } },
+                            vim.api.nvim_win_get_buf(self.winid)
+                        )
                     end,
                     provider = function(self) return string.rep(" ", vim.api.nvim_win_get_width(self.winid)) end,
                     hl = { bg = "tabline_bg" },
@@ -524,7 +529,7 @@ local config = {
                         provider = astronvim.status.provider.tabnr(),
                         hl = function(self)
                             return astronvim.status.hl.get_attributes(astronvim.status.heirline.tab_type(self, "tab"),
-                                    true)
+                                true)
                         end,
                     },
                     -- close button for current tab
@@ -602,17 +607,17 @@ local config = {
         -- Add bindings which show up as group name
         register = function(config)
             local new_config = astronvim.default_tbl({
-                    -- first key is the mode, n == normal mode
-                    n = {
-                        -- second key is the prefix, <leader> prefixes
-                        ["<leader>"] = {
-                            -- third key is the key to bring up next level and its displayed
-                            -- group name in which-key top level menu
-                            ["b"] = { name = "Buffer" },
-                            ["s"] = nil,
-                        },
+                -- first key is the mode, n == normal mode
+                n = {
+                    -- second key is the prefix, <leader> prefixes
+                    ["<leader>"] = {
+                        -- third key is the key to bring up next level and its displayed
+                        -- group name in which-key top level menu
+                        ["b"] = { name = "Buffer" },
+                        ["s"] = nil,
                     },
-                }, config)
+                },
+            }, config)
             return new_config
         end,
     },
