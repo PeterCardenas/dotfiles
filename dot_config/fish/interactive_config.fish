@@ -30,9 +30,6 @@ set -gx GPG_TTY "(tty)"
 
 set -gx RIPGREP_CONFIG_PATH $HOME/.config/ripgrep.rc
 
-# Add to PATH if not already
-contains /usr/games $fish_user_paths; or set -U fish_user_paths /usr/games $fish_user_paths
-
 # apt aliases
 abbr -a aptupd "sudo apt update -y"
 abbr -a aptupgd "sudo apt upgrade -y && sudo apt autoremove -y"
