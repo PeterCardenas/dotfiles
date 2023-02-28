@@ -13,3 +13,4 @@ customCommands:
   - key: "P"
     command: "git push --no-verify"
     description: "Push with no checks"
+    context: "global"
