@@ -14,7 +14,3 @@ customCommands:
     command: "git push --no-verify"
     description: "Push with no checks"
     context: "localBranches"
-  - key: "p"
-    command: "fish -c 'gpo {{.SelectedLocalBranch.Name}}'"
-    description: "Pull from current branch on remote"
-    context: "localBranches"
