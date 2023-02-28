@@ -9,3 +9,7 @@ gui:
   branchColors:
     "pcardenas": "yellow"
     "master": "red"
+customCommands:
+  - key: "P"
+    command: "git push --no-verify"
+    description: "Push with no checks"
