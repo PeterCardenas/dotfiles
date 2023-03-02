@@ -231,24 +231,6 @@
     },
     {
       "before": [
-        "["
-      ],
-      "commands": [
-        "editor.gotoPreviousFold"
-      ],
-      "silent": true
-    },
-    {
-      "before": [
-        "]"
-      ],
-      "commands": [
-        "editor.gotoNextFold"
-      ],
-      "silent": true
-    },
-    {
-      "before": [
         "<leader>",
         "C"
       ],
@@ -410,6 +392,30 @@
         "editor.action.addSelectionToNextFindMatch"
       ],
       "silent": true
+    },
+    {
+      "before": [
+        "s"
+      ],
+      "after": [
+        "<leader>",
+        "<leader>",
+        "2",
+        "f"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "S"
+      ],
+      "after": [
+        "<leader>",
+        "<leader>",
+        "2",
+        "F"
+      ],
+      "silent": true
     }
   ],
   "vim.visualModeKeyBindings": [
@@ -455,6 +461,17 @@
         "editor.action.addSelectionToNextFindMatch"
       ],
       "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "/"
+      ],
+      "after": [
+        "g",
+        "c"
+      ],
+      "silent": true
     }
   ],
   "vim.insertModeKeyBindings": [
@@ -478,6 +495,7 @@
     }
   ],
   "vim.leader": " ",
+  "vim.easymotion": true,
   "vim.highlightedyank.enable": true,
   "vim.visualstar": true,
   "vim.handleKeys": {
@@ -489,6 +507,9 @@
     "typescript",
     "typescriptreact"
   ],
+  "files.associations": {
+    "*.usf": "hlsl"
+  },
   "[typescriptreact][typescript][scss]": {
     "editor.detectIndentation": false,
     "editor.tabSize": 2
@@ -506,7 +527,8 @@
   "editor.lineNumbers": "on",
   "python.linting.pylintEnabled": true,
   "[python]": {
-    "editor.defaultFormatter": "ms-python.python"
+    "editor.defaultFormatter": "ms-python.python",
+    "editor.formatOnSave": true
   },
   "python.formatting.provider": "black",
   "workbench.quickOpen.closeOnFocusLost": false,
@@ -524,8 +546,7 @@
   "diffEditor.ignoreTrimWhitespace": false,
   "git.suggestSmartCommit": false,
   "[proto3]": {
-    "editor.defaultFormatter": "zxh404.vscode-proto3",
-    "clang-format.style": "{ BasedOnStyle: google, ColumnLimit: 0, AlignTrailingComments: false, SpacesBeforeTrailingComments: 1 } "
+    "editor.defaultFormatter": "zxh404.vscode-proto3"
   },
   "stylelint.validate": [
     "scss"
@@ -564,5 +585,7 @@
   "vscode-pets.throwBallWithMouse": true,
   "workbench.iconTheme": "material-icon-theme",
   "githubPullRequests.fileListLayout": "tree",
-  "svg.preview.mode": "svg"
+  "svg.preview.mode": "svg",
+  "workbench.editorLargeFileConfirmation": 20,
+  "tabnine.experimentalAutoImports": true
 }
