@@ -68,7 +68,7 @@ abbr -a p "starship prompt"
 
 abbr -a vim "nvim"
 
-abbr -a t "tmux detach-client; tmux a"
+abbr -a t "tmux detach-client; tmux a; or tmux"
 
 abbr -a sofi "source $HOME/.config/fish/config.fish"
 abbr -a cheznous "chezmoi git pull -- --rebase; and chezmoi merge-all"
