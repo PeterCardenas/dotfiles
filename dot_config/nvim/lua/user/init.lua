@@ -358,6 +358,21 @@ local config = {
                 requires = { "tpope/vim-repeat" },
             },
 
+            -- AI Autocomplete
+            ["codota/tabnine-nvim"] = {
+                run = "./dl_binaries.sh",
+                config = function()
+                    require("tabnine").setup {
+                        disable_auto_comment = true,
+                        accept_keymap = "<Tab>",
+                        dismiss_keymap = "<C-]>",
+                        debounce_ms = 800,
+                        suggestion_color = { gui = "#808080", cterm = 244 },
+                        exclude_filetypes = { "TelescopePrompt" }
+                    }
+                end,
+            }
+
             -- We also support a key value style plugin definition similar to NvChad:
             -- ["ray-x/lsp_signature.nvim"] = {
             --   event = "BufRead",
