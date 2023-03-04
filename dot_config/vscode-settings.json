@@ -416,6 +416,17 @@
         "F"
       ],
       "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "g",
+        "r"
+      ],
+      "commands": [
+        "git.revertSelectedRanges"
+      ],
+      "silent": true
     }
   ],
   "vim.visualModeKeyBindings": [
