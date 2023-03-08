@@ -54,7 +54,7 @@ function __bazel_complete_targets --argument-names query
         # Echo each file in files_changed as a bazel target
         set -l bazel_suffix (echo $file_changed | string replace -r '\.(cc|py)' '')
         set -l bazel_target "//$bazel_suffix"
-        echo $file_changed
+        echo $bazel_target
     end
 
     if [ (count $files_changed) -ne 0 ]
