@@ -56,7 +56,7 @@ function __bazel_complete_targets --argument-names query
         echo $bazel_target
     end
 
-    if [ (count $files_changed) -ne 0]
+    if [ (count $files_changed) -ne 0 ]
         # Return early to not block on bazel query command
         return 0
     end
