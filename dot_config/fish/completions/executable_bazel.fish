@@ -25,6 +25,41 @@ function __bazel_seen_subcommand -d "Checks whether the current command line con
 end
 
 function __bazel_complete_targets --argument-names query
+    set remote_branch origin/(git branch --show-current)
+    set last_common_ancestor_with_master (git merge-base HEAD origin/master)
+    set has_remote (git rev-parse --verify --quiet $remote_branch)
+    function get_files_changed
+    set cmd (commandline -opc)
+    set files_changed (git diff --name-only --diff-filter=cdrtxb $argv[1] | grep --color="never" '^.*\?_test\.\(cc\|py\)$')
+    for file_changed in $files_changed
+        if not contains $file_changed $cmd
+            echo $file_changed
+        end
+    end
+    end
+
+    if [ (count $has_remote) -eq 1 ]
+        set files_changed (get_files_changed $remote_branch)
+        if [ (count $files_changed) -eq 0 ]
+            set commit_to_compare $last_common_ancestor_with_master
+        else
+            set commit_to_compare $remote_branch
+        end
+    else
+        set commit_to_compare $last_common_ancestor_with_master
+    end
+    set files_changed (get_files_changed $commit_to_compare)
+    set files_changed (string split " " $files_changed)
+    for file_changed in files_changed
+        # Echo each file in files_changed as a bazel target
+        set -l bazel_target "//$(string replace -r '\.(cc|py)' ''  $file_changed)"
+        echo $bazel_target
+    end
+
+    if [ (count $files_changed) -ne 0]
+        # Return early to not block on bazel query command
+        return 0
+    end
     if [ (count $query) -eq 0 ]
         set query "//..."
     end
