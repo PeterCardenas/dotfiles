@@ -52,7 +52,7 @@ function __bazel_complete_targets --argument-names query
     set files_changed (string split " " $files_changed)
     for file_changed in files_changed
         # Echo each file in files_changed as a bazel target
-        set -l bazel_target "//$(string replace -r '\.(cc|py)' ''  $file_changed)"
+        set -l bazel_target "//$(string replace -r '\.(cc|py)' '' '$file_changed')"
         echo $bazel_target
     end
 
