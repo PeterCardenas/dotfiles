@@ -29,13 +29,13 @@ function __bazel_complete_targets --argument-names query
     set last_common_ancestor_with_master (git merge-base HEAD origin/master)
     set has_remote (git rev-parse --verify --quiet $remote_branch)
     function get_files_changed
-    set cmd (commandline -opc)
-    set files_changed (git diff --name-only --diff-filter=cdrtxb $argv[1] | grep --color="never" '^.*\?_test\.\(cc\|py\)$')
-    for file_changed in $files_changed
-        if not contains $file_changed $cmd
-            echo $file_changed
+        set cmd (commandline -opc)
+        set files_changed (git diff --name-only --diff-filter=cdrtxb $argv[1] | grep --color="never" '^.*\?_test\.\(cc\|py\)$')
+        for file_changed in $files_changed
+            if not contains $file_changed $cmd
+                echo $file_changed
+            end
         end
-    end
     end
 
     if [ (count $has_remote) -eq 1 ]
@@ -50,7 +50,7 @@ function __bazel_complete_targets --argument-names query
     end
     set files_changed (get_files_changed $commit_to_compare)
     set files_changed (string split " " $files_changed)
-    for file_changed in files_changed
+    for file_changed in $files_changed
         # Echo each file in files_changed as a bazel target
         set -l bazel_suffix (echo $file_changed | string replace -r '\.(cc|py)' '')
         set -l bazel_target "//$bazel_suffix"
