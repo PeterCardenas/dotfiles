@@ -1,4 +1,5 @@
 README.md
-{{- if eq .chezmoi.os "linux" }}
+# Only add fishify for linux
+{{- if ne .chezmoi.os "linux" }}
 .local/bin/fishify
 {{- end }}
