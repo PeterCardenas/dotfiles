@@ -1,19 +1,32 @@
-# Install starship
-curl -sS https://starship.rs/install.sh | sh
-# Install nvim on apt or MacPorts
+function setup_mac
+  # Setup MacPorts
+  curl https://github.com/macports/macports-base/releases/download/v2.8.1/MacPorts-2.8.1.tar.gz | tar xzvf 
+  pushd MacPorts-2.8.1
+  ./configure; and make; and make install
+  fish_add_path /opt/local/bin /opt/local/sbin
+  port -v selfupdate
+  popd
+  rm -rf MacPorts-2.8.1
 
-########################
-##     VIM SETUP      ##
-########################
-# Install vim-plug
-sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
-# Install plugs
-vim -c ":PlugInstall"
+  # Install packages
+  port install -y neovim
+end
 
-# Setup YCM for vim completion
-sudo apt install -y python3-dev
-sudo apt install -y mono-complete golang nodejs openjdk-17-jdk openjdk-17-jre npm
-pushd ~/.vim/plugged/YouCompleteMe
-python3 install.py --all
-popd
+function setup_linux
+  # Install packages
+  apt install -y neovim
+end
 
+function setup
+  # Install starship
+  curl -sS https://starship.rs/install.sh | sh
+end
+
+# OS Specific
+set -l os (uname -s)
+if test $os = Darwin
+  setup_mac
+else if test $os = Linux
+  setup_linux
+end
+setup
