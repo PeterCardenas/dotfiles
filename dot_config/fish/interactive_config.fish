@@ -4,6 +4,7 @@ function fish_greeting
   fortune
   set_color normal
 end
+fish_add_path /usr/games
 
 source "$HOME"/.config/fish/colors.fish
 
