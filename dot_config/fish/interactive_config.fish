@@ -1,4 +1,7 @@
 function fish_greeting
+  if [ ! -x fortune ]
+    return 0
+  end
   echo
   set_color yellow
   fortune
