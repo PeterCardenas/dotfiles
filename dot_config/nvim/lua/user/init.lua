@@ -554,6 +554,11 @@ local config = {
             -- return the final configuration table
             return config
         end,
+
+        session_manager = {
+            autoload_mode = require('session_manager.config').AutoloadMode.CurrentDir,
+            autosave_ignore_dirs = { '~/', '~/Downloads', '/' },
+        }
     },
     -- LuaSnip Options
     luasnip = {
