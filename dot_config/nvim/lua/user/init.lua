@@ -392,10 +392,10 @@ local config = {
             config.defaults = {
                 mappings = {
                     i = {
-                        ["<C-v>"] = require('telescope.actions.preview').toggle_preview,
+                        ["<C-v>"] = require('telescope.actions.layout').toggle_preview,
                     },
                     n = {
-                        ["<C-v>"] = require('telescope.actions.preview').toggle_preview,
+                        ["<C-v>"] = require('telescope.actions.layout').toggle_preview,
                     },
                 },
             }
