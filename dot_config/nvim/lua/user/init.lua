@@ -298,8 +298,6 @@ local config = {
         i = {
             ["<C-BS>"] = { "<C-w>", desc = "Delete previous word" },
             ["<M-BS>"] = { "<C-w>", desc = "Delete previous word" },
-            -- Map copilot completion
-            ["<C-f>"] = { '<cmd>copilot#Accept("<CR>")<cr>', desc = "Accept copilot completion" }
         },
     },
     -- Configure plugins
@@ -650,6 +648,7 @@ local config = {
                 update_on_nvim_resize = true,
             },
         }
+        vim.api.nvim_set_keymap("i", "<C-CR>", 'copilot#Accept("<CR>")', { silent = true, expr = true })
 
         -- Set up custom filetypes
         -- vim.filetype.add {
