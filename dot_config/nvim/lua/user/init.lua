@@ -85,6 +85,9 @@ local config = {
             heirline_bufferline = true,
             -- enables CamelCaseMotion package
             camelcasemotion_key = "<leader>",
+            -- disables copilot warning for tab not be mapped
+            copilot_no_tab_map = true,
+            copilot_assume_mapped = true,
             -- colorscheme config
             sonokai_style = "shusia",
             sonokai_better_performance = 1,
