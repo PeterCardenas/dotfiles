@@ -389,16 +389,8 @@ local config = {
                     filetypes = { "png", "webm", "mp4" },
                 },
             }
-            config.defaults = {
-                mappings = {
-                    i = {
-                        ["<C-v>"] = require('telescope.actions.layout').toggle_preview,
-                    },
-                    n = {
-                        ["<C-v>"] = require('telescope.actions.layout').toggle_preview,
-                    },
-                },
-            }
+            config.defaults.mappings.i["<C-v>"] = require('telescope.actions.layout').toggle_preview
+            config.defaults.mappings.n["<C-v>"] = require('telescope.actions.layout').toggle_preview
             return config
         end,
 
