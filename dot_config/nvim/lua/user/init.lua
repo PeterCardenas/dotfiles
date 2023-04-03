@@ -299,7 +299,7 @@ local config = {
             ["<C-BS>"] = { "<C-w>", desc = "Delete previous word" },
             ["<M-BS>"] = { "<C-w>", desc = "Delete previous word" },
             -- Map copilot completion
-            ["C-CR"] = { 'copilot#Accept("<CR>")', desc = "Accept copilot completion" }
+            ["<C-CR>"] = { 'copilot#Accept("<CR>")', desc = "Accept copilot completion" }
         },
     },
     -- Configure plugins
