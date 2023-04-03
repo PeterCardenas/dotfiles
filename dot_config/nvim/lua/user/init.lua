@@ -86,8 +86,8 @@ local config = {
             -- enables CamelCaseMotion package
             camelcasemotion_key = "<leader>",
             -- disables copilot warning for tab not be mapped
-            copilot_no_tab_map = true,
-            copilot_assume_mapped = true,
+            -- copilot_no_tab_map = true,
+            -- copilot_assume_mapped = true,
             -- colorscheme config
             sonokai_style = "shusia",
             sonokai_better_performance = 1,
@@ -648,7 +648,7 @@ local config = {
                 update_on_nvim_resize = true,
             },
         }
-        vim.api.nvim_set_keymap("i", "<C-CR>", 'copilot#Accept("<CR>")', { silent = true, expr = true })
+        -- vim.api.nvim_set_keymap("i", "<C-CR>", 'copilot#Accept("<CR>")', { silent = true, expr = true })
 
         -- Set up custom filetypes
         -- vim.filetype.add {
