@@ -66,6 +66,7 @@ setup(astronvim.user_plugin_opts("plugins.cmp", {
         cmp.complete()
       else
         vim.fn['copilot#Accept']('<CR>')
+        fallback()
       end
     end, {
       "i",
