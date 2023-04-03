@@ -65,7 +65,7 @@ setup(astronvim.user_plugin_opts("plugins.cmp", {
       elseif has_words_before() then
         cmp.complete()
       else
-        vim.fn['copilot#Accept']()
+        vim.fn['copilot#Accept']('<CR>')
       end
     end, {
       "i",
