@@ -416,6 +416,30 @@ local config = {
                         "json",
                     },
                 },
+                null_ls.builtins.formatting.eslint_d.with {
+                    filetypes = {
+                        "typescript",
+                        "typescriptreact",
+                        "javascript",
+                        "javascriptreact",
+                    },
+                },
+                null_ls.builtins.diagnostics.eslint_d.with {
+                    filetypes = {
+                        "typescript",
+                        "typescriptreact",
+                        "javascript",
+                        "javascriptreact",
+                    },
+                },
+                null_ls.builtins.code_actions.eslint_d.with {
+                    filetypes = {
+                        "typescript",
+                        "typescriptreact",
+                        "javascript",
+                        "javascriptreact",
+                    },
+                },
                 null_ls.builtins.formatting.stylelint.with {
                     filetypes = { "scss" },
                 },
@@ -433,15 +457,15 @@ local config = {
         -- use mason-null-ls to configure Formatters/Linter installation for null-ls sources
         ["mason-null-ls"] = { -- overrides `require("mason-null-ls").setup(...)`
             setup_handlers = {
-                eslint_d = function()
-                    require("null-ls").register(require("null-ls").builtins.diagnostics.eslint_d.with {
-                        condition = function(utils)
-                            return utils.root_has_file "package.json"
-                                or utils.root_has_file ".eslintrc.json"
-                                or utils.root_has_file ".eslintrc.js"
-                        end,
-                    })
-                end,
+                -- eslint_d = function()
+                --     require("null-ls").register(require("null-ls").builtins.diagnostics.eslint_d.with {
+                --         condition = function(utils)
+                --             return utils.root_has_file "package.json"
+                --                 or utils.root_has_file ".eslintrc.json"
+                --                 or utils.root_has_file ".eslintrc.js"
+                --         end,
+                --     })
+                -- end,
             },
             -- ensure_installed = { "prettier", "stylua" },
         },
