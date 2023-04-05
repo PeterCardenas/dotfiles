@@ -17,7 +17,7 @@ telescope.setup(astronvim.user_plugin_opts("plugins.telescope", {
       vertical = {
         mirror = false,
       },
-      width = 0.87,
+      width = 0.95,
       height = 0.80,
       preview_cutoff = 120,
     },
