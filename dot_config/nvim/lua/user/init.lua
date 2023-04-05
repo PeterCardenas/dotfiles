@@ -184,6 +184,8 @@ local config = {
                 ignore_filetypes = { -- disable format on save for specified filetypes
                     -- "python",
                     -- temporarily ignored due to eslint fighting with prettier
+                    "javascript",
+                    "javascriptreact",
                     "typescript",
                     "typescriptreact",
                     "lua",
@@ -406,16 +408,6 @@ local config = {
             -- https://github.com/jose-elias-alvarez/null-ls.nvim/tree/main/lua/null-ls/builtins/formatting
             -- https://github.com/jose-elias-alvarez/null-ls.nvim/tree/main/lua/null-ls/builtins/diagnostics
             config.sources = {
-                null_ls.builtins.formatting.prettierd.with {
-                    filetypes = {
-                        "typescript",
-                        "typescriptreact",
-                        "javascript",
-                        "javascriptreact",
-                        "yaml",
-                        "json",
-                    },
-                },
                 null_ls.builtins.formatting.eslint_d.with {
                     filetypes = {
                         "typescript",
@@ -438,6 +430,16 @@ local config = {
                         "typescriptreact",
                         "javascript",
                         "javascriptreact",
+                    },
+                },
+                null_ls.builtins.formatting.prettierd.with {
+                    filetypes = {
+                        "typescript",
+                        "typescriptreact",
+                        "javascript",
+                        "javascriptreact",
+                        "yaml",
+                        "json",
                     },
                 },
                 null_ls.builtins.formatting.stylelint.with {
