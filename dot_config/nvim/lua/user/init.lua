@@ -230,15 +230,6 @@ local config = {
             stylelint_lsp = {
                 filetypes = { "scss" },
             },
-            eslint = {
-                on_attach = function(_, bufnr)
-                    vim.api.nvim_create_autocmd("BufWritePre", {
-                        buffer = bufnr,
-                        pattern = { "*.tsx", "*.ts", "*.jsx", "*.js" },
-                        command = "silent! EslintFixAll",
-                    })
-                end,
-                },
             -- example for addings schemas to yamlls
             -- yamlls = { -- override table for require("lspconfig").yamlls.setup({...})
             --   settings = {
