@@ -290,6 +290,9 @@ local config = {
             -- nvim-ufo setup
             ["zR"] = { "<cmd>lua require'ufo'openAllFolds()<cr>", desc = "Open all folds" },
             ["zM"] = { "<cmd>lua require'ufo'closeAllFolds()<cr>", desc = "Close all folds" },
+            -- Fast tab swapping
+            ["<leader>rl"] = { function() astronvim.move_buf(vim.v.count > 0 and vim.v.count or 1) end, desc = "Move buffer tab right" },
+            ["<leader>rh"] = { function() astronvim.move_buf(-(vim.v.count > 0 and vim.v.count or 1)) end, desc = "Move buffer tab left" },
             -- quick save
             -- ["<C-s>"] = { ":w!<cr>", desc = "Save File" },  -- change description but the same command
         },
