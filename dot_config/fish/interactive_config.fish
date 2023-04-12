@@ -83,6 +83,9 @@ abbr -a ca "chezmoi re-add"
 string match -q "$TERM_PROGRAM" "vscode"
 and . (code --locate-shell-integration-path fish)
 
+# ROS setup
+bass source /opt/ros/noetic/setup.bash
+
 # Start Starship
 starship init fish | source
 
