@@ -708,6 +708,11 @@ local config = {
                                 update_on_nvim_resize = true,
                         },
                 })
+                require'telescope-lsp-handlers'.setup({
+                  reference = {
+                        fname_width = 50,
+                  },
+                })
                 -- vim.api.nvim_set_keymap("i", "<C-CR>", 'copilot#Accept("<CR>")', { silent = true, expr = true })
 
                 -- Set up custom filetypes
