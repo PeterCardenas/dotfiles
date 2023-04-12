@@ -230,6 +230,10 @@ local config = {
             stylelint_lsp = {
                 filetypes = { "scss" },
             },
+            clangd = {
+                filetypes = { "c", "cpp", "objc", "objcpp" },
+            },
+            },
             -- example for addings schemas to yamlls
             -- yamlls = { -- override table for require("lspconfig").yamlls.setup({...})
             --   settings = {
