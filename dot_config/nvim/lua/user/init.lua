@@ -341,7 +341,7 @@ local config = {
                                 config = function()
                                         require("treesitter-context").setup({
                                                 mode = "topline",
-                                                line_numbers = false,
+                                                line_numbers = nil,
                                         })
                                 end,
                         },
