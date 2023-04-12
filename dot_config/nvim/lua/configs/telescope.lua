@@ -6,7 +6,7 @@ telescope.setup(astronvim.user_plugin_opts("plugins.telescope", {
 
     prompt_prefix = string.format("%s ", astronvim.get_icon "Search"),
     selection_caret = string.format("%s ", astronvim.get_icon "Selected"),
-    path_display = { "truncate" },
+    path_display = { "absolute" },
     sorting_strategy = "ascending",
     layout_config = {
       horizontal = {
