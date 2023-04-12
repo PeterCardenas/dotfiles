@@ -181,7 +181,7 @@ astronvim.lsp.on_attach = function(client, bufnr)
     if lsp_mappings.n.gI then
       lsp_mappings.n.gI[1] = function() require("telescope.builtin").lsp_implementations() end
     end
-    if lsp_mappings.n.gr then lsp_mappings.n.gr[1] = function() require("telescope.builtin").lsp_references() end end
+    if lsp_mappings.n.gr then lsp_mappings.n.gr[1] = function() require("telescope.builtin").lsp_references({ fname_width = 50 }) end end
     if lsp_mappings.n["<leader>lR"] then
       lsp_mappings.n["<leader>lR"][1] = function() require("telescope.builtin").lsp_references() end
     end
