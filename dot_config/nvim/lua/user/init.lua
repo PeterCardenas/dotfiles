@@ -189,6 +189,7 @@ local config = {
                                         "typescript",
                                         "typescriptreact",
                                         "lua",
+                                        "yaml",
                                 },
                         },
                         disabled = { -- disable formatting capabilities for the listed language servers
