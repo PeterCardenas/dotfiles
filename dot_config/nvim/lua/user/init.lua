@@ -471,6 +471,9 @@ local config = {
                                 null_ls.builtins.formatting.stylelint.with({
                                         filetypes = { "scss" },
                                 }),
+                                null_ls.builtins.formatting.black.with({
+                                        filetypes = { "python" },
+                                }),
                         }
                         return config -- return final config table
                 end,
