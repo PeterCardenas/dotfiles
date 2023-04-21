@@ -32,6 +32,7 @@ set -gx FZF_ALT_C_COMMAND 'fd --type d --hidden --exclude .git --follow'
 set -gx GPG_TTY "(tty)"
 
 set -gx RIPGREP_CONFIG_PATH $HOME/.config/ripgrep.rc
+set -gx DISPLAY :1
 
 # apt aliases
 abbr -a aptupd "sudo apt update -y"
