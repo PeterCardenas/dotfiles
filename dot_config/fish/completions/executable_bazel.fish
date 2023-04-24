@@ -50,17 +50,18 @@ function __bazel_complete_targets --argument-names query
     end
     set files_changed (get_files_changed $commit_to_compare)
     set files_changed (string split " " $files_changed)
-    for file_changed in $files_changed
-        # Echo each file in files_changed as a bazel target
-        set -l file_no_extension (echo $file_changed | string replace -r '\.(cc|py)' '')
-        set -l bazel_target "//$(echo $file_no_extension | string replace -r '/([^/]*)$' ':$1'
-        echo $bazel_target
-    end
 
     if [ (count $files_changed) -ne 0 ]
+        for file_changed in $files_changed
+            # Echo each file in files_changed as a bazel target
+            set -l file_no_extension (echo $file_changed | string replace -r '\.(cc|py)' '')
+            set -l bazel_target "//$(echo $file_no_extension | string replace -r '/([^/]*)$' ':$1'
+            echo $bazel_target
+        end
         # Return early to not block on bazel query command
         return 0
     end
+
     if [ (count $query) -eq 0 ]
         set query "//..."
     end
