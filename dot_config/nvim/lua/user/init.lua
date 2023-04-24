@@ -422,6 +422,7 @@ local config = {
                         }
                         config.defaults.mappings.i["<C-v>"] = require("telescope.actions.layout").toggle_preview
                         config.defaults.mappings.n["<C-v>"] = require("telescope.actions.layout").toggle_preview
+                        config.defaults.mappings.n["<C-CR>"] = require("telescope.actions").send_selected_to_qflist
                         return config
                 end,
 
