@@ -44,7 +44,7 @@ require("neo-tree").setup(astronvim.user_plugin_opts("plugins.neo-tree", {
   },
   filesystem = {
     follow_current_file = true,
-    hijack_netrw_behavior = "open_current",
+    hijack_netrw_behavior = "open_default",
     use_libuv_file_watcher = true,
     window = {
       mappings = {
