@@ -413,6 +413,12 @@ local config = {
                         return config
                 end,
 
+                ["neo-tree"] = {
+                        file_system = {
+                                bind_to_cwd = true,
+                        },
+                },
+
                 telescope = function(config)
                         config.extensions = {
                                 media_files = {
