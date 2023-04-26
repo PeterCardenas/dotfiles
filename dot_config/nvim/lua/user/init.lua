@@ -414,7 +414,7 @@ local config = {
                 end,
 
                 ["neo-tree"] = {
-                        file_system = {
+                        filesystem = {
                                 bind_to_cwd = true,
                         },
                 },
