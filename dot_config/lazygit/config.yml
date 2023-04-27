@@ -13,5 +13,5 @@ gui:
     selectedLineBgColor:
       - "#A39B8F"
     selectedRangeBgColor:
-      - "#A39B8F"
+      - gray
 
