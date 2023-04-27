@@ -9,3 +9,8 @@ gui:
   branchColors:
     "pcardenas": "yellow"
     "master": "red"
+  theme:
+    selectedLineBgColor:
+      - "#2C2E2F"
+    selectedRangeBgColor:
+      - "#2C2E2F"
