@@ -12,7 +12,8 @@ gui:
   theme:
     selectedLineBgColor:
       - "#A39B8F"
+      - "#A39B8F"
     selectedRangeBgColor:
       - "#A39B8F"
-    cherryPickedCommitBgColor:
       - "#A39B8F"
+
