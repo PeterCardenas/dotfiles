@@ -10,7 +10,5 @@ gui:
     "pcardenas": "yellow"
     "master": "red"
   theme:
-    selectedLineBgColor:
-      - "#2C2E2F"
-    selectedRangeBgColor:
-      - "#2C2E2F"
+    selectedLineBgColor: "#A39B8F"
+    selectedRangeBgColor: "#A39B8F"
