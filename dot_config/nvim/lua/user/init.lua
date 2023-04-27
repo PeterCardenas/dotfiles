@@ -186,8 +186,6 @@ local config = {
                                         -- temporarily ignored due to eslint fighting with prettier
                                         "javascript",
                                         "javascriptreact",
-                                        "typescript",
-                                        "typescriptreact",
                                         "lua",
                                         "yaml",
                                         "python",
