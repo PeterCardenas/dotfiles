@@ -195,7 +195,7 @@ local config = {
                                 -- "sumneko_lua",
                                 "tsserver",
                         },
-                        timeout_ms = 1000, -- default format timeout
+                        timeout_ms = 5000, -- default format timeout
                         -- filter = function(client) -- fully override the default formatting function
                         --   return true
                         -- end
