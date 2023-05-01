@@ -293,7 +293,7 @@ local config = {
       ["<leader>sn"] = false,
       ["<leader>sr"] = false,
       ["<leader>s"] = { "<cmd>w<cr>", desc = "Save file" },
-      ["<leader>x"] = { "<cmd>wqa<cr>", desc = "Save all buffers and quit all windows" },
+      ["<leader>x"] = { "<cmd>tabclose<cr>", desc = "Close current tab" },
       -- nvim-ufo setup
       ["zR"] = { "<cmd>lua require'ufo'openAllFolds()<cr>", desc = "Open all folds" },
       ["zM"] = { "<cmd>lua require'ufo'closeAllFolds()<cr>", desc = "Close all folds" },
