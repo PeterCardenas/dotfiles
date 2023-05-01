@@ -58,7 +58,7 @@ local config = {
       autoindent = true,
       expandtab = true,
       -- nvim-ufo setup
-      foldcolumn = "1",
+      foldcolumn = 0,
       foldlevel = 99,
       foldlevelstart = 99,
       foldenable = true,
