@@ -60,6 +60,7 @@ local config = {
                         -- nvim-ufo setup
                         foldcolumn = "1",
                         foldlevel = 90,
+                        foldlevelstart = 99,
                         foldenable = true,
                         fillchars = [[eob: ,fold: ,foldopen:,foldsep: ,foldclose:]],
                 },
