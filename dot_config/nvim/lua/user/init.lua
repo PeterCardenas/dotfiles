@@ -129,7 +129,7 @@ local config = {
       bg = "#1e222a",
     },
     highlights = function(hl) -- or a function that returns a new table of colors to set
-      local C = require("default_theme.colors")
+      local C = require "default_theme.colors"
 
       hl.Normal = { fg = C.fg, bg = C.bg }
 
@@ -299,15 +299,11 @@ local config = {
       ["zM"] = { "<cmd>lua require'ufo'closeAllFolds()<cr>", desc = "Close all folds" },
       -- Fast tab swapping
       ["<leader>rl"] = {
-        function()
-          astronvim.move_buf(vim.v.count > 0 and vim.v.count or 1)
-        end,
+        function() astronvim.move_buf(vim.v.count > 0 and vim.v.count or 1) end,
         desc = "Move buffer tab right",
       },
       ["<leader>rh"] = {
-        function()
-          astronvim.move_buf(-(vim.v.count > 0 and vim.v.count or 1))
-        end,
+        function() astronvim.move_buf(-(vim.v.count > 0 and vim.v.count or 1)) end,
         desc = "Move buffer tab left",
       },
       -- quick save
@@ -343,10 +339,10 @@ local config = {
       -- Sticky scroll
       ["nvim-treesitter/nvim-treesitter-context"] = {
         config = function()
-          require("treesitter-context").setup({
+          require("treesitter-context").setup {
             mode = "topline",
             line_numbers = nil,
-          })
+          }
         end,
       },
       -- Colorscheme
@@ -355,18 +351,14 @@ local config = {
       -- Ripgrep with file name filtering
       ["nvim-telescope/telescope-live-grep-args.nvim"] = {
         after = "telescope.nvim",
-        config = function()
-          require("telescope").load_extension("live_grep_args")
-        end,
+        config = function() require("telescope").load_extension "live_grep_args" end,
       },
 
       -- Ripgrep with image/video/pdf preview, branched because of ueberzug being archived
       ["HendrikPetertje/telescope-media-files.nvim"] = {
         branch = "fix-replace-ueber-with-viu",
         after = "telescope.nvim",
-        config = function()
-          require("telescope").load_extension("media_files")
-        end,
+        config = function() require("telescope").load_extension "media_files" end,
       },
 
       -- Image viewer
@@ -381,8 +373,8 @@ local config = {
           {
             "luukvbaal/statuscol.nvim",
             config = function()
-              local builtin = require("statuscol.builtin")
-              require("statuscol").setup({
+              local builtin = require "statuscol.builtin"
+              require("statuscol").setup {
                 relculright = true,
                 segments = {
                   {
@@ -395,16 +387,14 @@ local config = {
                     click = "v:lua.ScLa",
                   },
                 },
-              })
+              }
             end,
           },
         },
         config = function()
-          require("ufo").setup({
-            provider_selector = function()
-              return { "treesitter", "indent" }
-            end,
-          })
+          require("ufo").setup {
+            provider_selector = function() return { "treesitter", "indent" } end,
+          }
         end,
       },
 
@@ -452,37 +442,37 @@ local config = {
     -- All other entries override the require("<key>").setup({...}) call for default plugins
     ["null-ls"] = function(config)
       -- config variable is the default configuration table for the setup function call
-      local null_ls = require("null-ls")
+      local null_ls = require "null-ls"
 
       -- Check supported formatters and linters
       -- https://github.com/jose-elias-alvarez/null-ls.nvim/tree/main/lua/null-ls/builtins/formatting
       -- https://github.com/jose-elias-alvarez/null-ls.nvim/tree/main/lua/null-ls/builtins/diagnostics
       config.sources = {
-        null_ls.builtins.formatting.eslint_d.with({
+        null_ls.builtins.formatting.eslint_d.with {
           filetypes = {
             "typescript",
             "typescriptreact",
             "javascript",
             "javascriptreact",
           },
-        }),
-        null_ls.builtins.diagnostics.eslint_d.with({
+        },
+        null_ls.builtins.diagnostics.eslint_d.with {
           filetypes = {
             "typescript",
             "typescriptreact",
             "javascript",
             "javascriptreact",
           },
-        }),
-        null_ls.builtins.code_actions.eslint_d.with({
+        },
+        null_ls.builtins.code_actions.eslint_d.with {
           filetypes = {
             "typescript",
             "typescriptreact",
             "javascript",
             "javascriptreact",
           },
-        }),
-        null_ls.builtins.formatting.prettierd.with({
+        },
+        null_ls.builtins.formatting.prettierd.with {
           filetypes = {
             "typescript",
             "typescriptreact",
@@ -491,13 +481,13 @@ local config = {
             "yaml",
             "json",
           },
-        }),
-        null_ls.builtins.formatting.stylelint.with({
+        },
+        null_ls.builtins.formatting.stylelint.with {
           filetypes = { "scss" },
-        }),
-        null_ls.builtins.formatting.black.with({
+        },
+        null_ls.builtins.formatting.black.with {
           filetypes = { "python" },
-        }),
+        },
       }
       return config -- return final config table
     end,
@@ -538,7 +528,7 @@ local config = {
         -- set the fg/bg of the statusline
         hl = { fg = "fg", bg = "bg" },
         -- when adding the mode component, enable the mode text with padding to the left/right of it
-        astronvim.status.component.mode({ mode_text = { padding = { left = 1, right = 1 } } }),
+        astronvim.status.component.mode { mode_text = { padding = { left = 1, right = 1 } } },
         -- add all the other components for the statusline
         astronvim.status.component.git_branch(),
         astronvim.status.component.git_diff(),
@@ -547,7 +537,7 @@ local config = {
         {
           astronvim.status.component.builder(astronvim.status.utils.setup_providers({
             file_icon = {
-              hl = astronvim.status.hl.file_icon("statusline"),
+              hl = astronvim.status.hl.file_icon "statusline",
               padding = { left = 1, right = 1 },
             },
             filetype = { padding = { right = 1 } },
@@ -571,18 +561,14 @@ local config = {
             filetype = { "NvimTree", "neo%-tree", "dashboard", "Outline", "aerial" },
           },
         },
-        init = function(self)
-          self.bufnr = vim.api.nvim_get_current_buf()
-        end,
+        init = function(self) self.bufnr = vim.api.nvim_get_current_buf() end,
         {
           condition = function(self)
             return vim.opt.diff:get() or astronvim.status.condition.buffer_matches(self.disabled or {})
           end,
-          init = function()
-            vim.opt_local.winbar = nil
-          end,
+          init = function() vim.opt_local.winbar = nil end,
         },
-        astronvim.status.component.file_info({
+        astronvim.status.component.file_info {
           file_icon = false,
           filetype = false,
           file_modified = false,
@@ -590,10 +576,10 @@ local config = {
           hl = astronvim.status.hl.get_attributes("winbarnc", true),
           padding = { left = 2 },
           surround = false,
-        }),
-        astronvim.status.component.breadcrumbs({
+        },
+        astronvim.status.component.breadcrumbs {
           hl = astronvim.status.hl.get_attributes("winbar", true),
-        }),
+        },
       }
 
       config[3] = { -- bufferline
@@ -605,37 +591,30 @@ local config = {
               vim.api.nvim_win_get_buf(self.winid)
             )
           end,
-          provider = function(self)
-            return string.rep(" ", vim.api.nvim_win_get_width(self.winid))
-          end,
+          provider = function(self) return string.rep(" ", vim.api.nvim_win_get_width(self.winid)) end,
           hl = { bg = "tabline_bg" },
         },
         -- component for each buffer tab
         astronvim.status.heirline.make_buflist(astronvim.status.component.tabline_file_info()),
         -- fill the rest of the tabline with background color
-        astronvim.status.component.fill({ hl = { bg = "tabline_bg" } }),
+        astronvim.status.component.fill { hl = { bg = "tabline_bg" } },
         -- tab list
         {
           -- only show tabs if there are more than one
-          condition = function()
-            return #vim.api.nvim_list_tabpages() >= 2
-          end,
+          condition = function() return #vim.api.nvim_list_tabpages() >= 2 end,
           -- create components for each tab page
-          astronvim.status.heirline.make_tablist({ -- component for each tab
+          astronvim.status.heirline.make_tablist { -- component for each tab
             provider = astronvim.status.provider.tabnr(),
             hl = function(self)
-              return astronvim.status.hl.get_attributes(
-                astronvim.status.heirline.tab_type(self, "tab"),
-                true
-              )
+              return astronvim.status.hl.get_attributes(astronvim.status.heirline.tab_type(self, "tab"), true)
             end,
-          }),
+          },
           -- close button for current tab
           {
-            provider = astronvim.status.provider.close_button({
+            provider = astronvim.status.provider.close_button {
               kind = "TabClose",
               padding = { left = 1, right = 1 },
-            }),
+            },
             hl = astronvim.status.hl.get_attributes("tab_close", true),
             on_click = {
               callback = astronvim.close_tab,
@@ -728,7 +707,7 @@ local config = {
   -- augroups/autocommands and custom filetypes also this just pure lua so
   -- anything that doesn't fit in the normal config locations above can go here
   polish = function()
-    require("chafa").setup({
+    require("chafa").setup {
       render = {
         min_padding = 5,
         show_label = true,
@@ -736,7 +715,7 @@ local config = {
       events = {
         update_on_nvim_resize = true,
       },
-    })
+    }
     -- vim.api.nvim_set_keymap("i", "<C-CR>", 'copilot#Accept("<CR>")', { silent = true, expr = true })
 
     -- Set up custom filetypes
