@@ -366,7 +366,7 @@ local config = {
         requires = { "nvim-lua/plenary.nvim", "m00qek/baleia.nvim" },
       },
 
-      -- Status column
+      -- Status column (hiding fold level doesn't work currently)
       ["luukvbaal/statuscol.nvim"] = {
         config = function()
           local builtin = require "statuscol.builtin"
@@ -378,6 +378,11 @@ local config = {
             },
           }
         end,
+      },
+
+      -- Nice git diff view
+      ["sindrets/diffview.nvim"] = {
+        requires = { "nvim-lua/plenary.nvim" },
       },
 
       -- Easy folding
