@@ -62,7 +62,7 @@ local config = {
                         foldlevel = 90,
                         foldlevelstart = 99,
                         foldenable = true,
-                        fillchars = [[eob: ,fold: ,foldopen:,foldsep: ,foldclose:]],
+                        fillchars = [[eob: ,foldopen:,foldsep: ,foldclose:]],
                 },
 
                 g = {
