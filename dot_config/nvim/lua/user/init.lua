@@ -59,10 +59,10 @@ local config = {
                         expandtab = true,
                         -- nvim-ufo setup
                         foldcolumn = "1",
-                        foldlevel = 90,
+                        foldlevel = 99,
                         foldlevelstart = 99,
                         foldenable = true,
-                        fillchars = [[eob: ,foldopen:,foldsep: ,foldclose:]],
+                        fillchars = [[eob: ,fold: ,foldopen:,foldsep: ,foldclose:]],
                 },
 
                 g = {
