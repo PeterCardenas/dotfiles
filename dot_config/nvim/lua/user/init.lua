@@ -195,7 +195,7 @@ local config = {
         },
       },
       disabled = { -- disable formatting capabilities for the listed language servers
-        -- "sumneko_lua",
+        "sumneko_lua",
         "tsserver",
       },
       timeout_ms = 5000, -- default format timeout
