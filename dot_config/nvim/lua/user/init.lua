@@ -366,7 +366,7 @@ local config = {
         requires = { "nvim-lua/plenary.nvim", "m00qek/baleia.nvim" },
       },
 
-      -- Status column (hiding fold level doesn't work currently)
+      -- Status column (hiding fold level doesn't work currently, need to update to v0.9+)
       ["luukvbaal/statuscol.nvim"] = {
         config = function()
           local builtin = require "statuscol.builtin"
@@ -378,6 +378,12 @@ local config = {
             },
           }
         end,
+      },
+
+      -- Get protobuf imports working in python
+      ["numine777/py-bazel.nvim"] = {
+        requires = { "nvim-lua/plenary.nvim", "neovim/nvim-lspconfig" },
+        config = function() require("py-bazel").setup() end,
       },
 
       -- Nice git diff view
