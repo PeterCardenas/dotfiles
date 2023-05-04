@@ -12,6 +12,4 @@ gui:
   theme:
     selectedLineBgColor:
       - "#A39B8F"
-    selectedRangeBgColor:
-      - "#FFFFFF"
 
