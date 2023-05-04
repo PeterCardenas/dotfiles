@@ -93,7 +93,7 @@ local config = {
       sonokai_style = "shusia",
       sonokai_better_performance = 1,
       sonokai_enable_italic = 1,
-      sonokai_colors_override = { bg3 = { "#181a1c", "237" } },
+      sonokai_colors_override = { bg0 = { "#211f21", "232" }, bg3 = { "#181a1c", "237" } },
       sonokai_disable_italic_comment = 0,
     },
   },
