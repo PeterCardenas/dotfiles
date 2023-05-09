@@ -1,4 +1,5 @@
 --type-add
-test:*{.test.tsx,.test.ts,test.py}
+test:*{.test.tsx,.test.ts,test.py,test.cc}
 --type-add
 tsx:*{.tsx}
+--smart-case
