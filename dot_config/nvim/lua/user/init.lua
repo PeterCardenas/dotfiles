@@ -426,7 +426,7 @@ local config = {
       -- config.current_line_blame_formatter = function ()
       -- end
       config.current_line_blame_opts = {
-        delay = 100,
+        delay = 10,
       }
       return config
     end,
