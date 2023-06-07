@@ -721,6 +721,14 @@ local config = {
         update_on_nvim_resize = true,
       },
     }
+    local notify = vim.notify
+    vim.notify = function(msg, ...)
+        if msg:match("warning: multiple different client offset_encodings") then
+            return
+        end
+
+        notify(msg, ...)
+    end
     -- vim.api.nvim_set_keymap("i", "<C-CR>", 'copilot#Accept("<CR>")', { silent = true, expr = true })
 
     -- Set up custom filetypes
