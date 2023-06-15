@@ -2,4 +2,6 @@
 test:*{.test.tsx,.test.ts,test.py,test.cc}
 --type-add
 tsx:*{.tsx}
+--type-add
+proto:*{.proto}
 --smart-case
