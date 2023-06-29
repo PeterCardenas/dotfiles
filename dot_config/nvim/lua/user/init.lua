@@ -411,6 +411,12 @@ local config = {
       -- AI Autocomplete
       ["github/copilot.vim"] = {},
 
+      ["neo-tree"] = {
+        filesystem = {
+          async_directory_scan = "always",
+        },
+      },
+
       -- We also support a key value style plugin definition similar to NvChad:
       -- ["ray-x/lsp_signature.nvim"] = {
       --   event = "BufRead",
