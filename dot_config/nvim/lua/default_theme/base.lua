@@ -74,7 +74,7 @@ local base = {
   TabLineSel = { fg = C.fg, bg = C.none },
   TabLineFill = { fg = C.none, bg = C.grey_3 },
   Terminal = { fg = C.fg, bg = C.grey_3 },
-  Visual = { fg = C.none, bg = C.grey_5 },
+  Visual = { fg = C.none, bg = C.grey_10 },
   VisualNOS = { fg = C.grey_5, bg = C.none },
   WarningMsg = { fg = C.yellow, bg = C.none },
   WildMenu = { fg = C.grey_3, bg = C.blue },
