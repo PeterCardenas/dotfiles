@@ -382,7 +382,7 @@ local config = {
       -- Get protobuf imports working in python
       ["numine777/py-bazel.nvim"] = {
         requires = { "nvim-lua/plenary.nvim", "neovim/nvim-lspconfig" },
-        config = function() require("py-bazel").setup() end,
+        config = function() require("py-bazel").setup { library_path_marker = "bazel-bin/" } end,
       },
 
       -- Nice git diff view
