@@ -382,7 +382,7 @@ local config = {
       -- Get protobuf imports working in python
       ["numine777/py-bazel.nvim"] = {
         requires = { "nvim-lua/plenary.nvim", "neovim/nvim-lspconfig" },
-        config = function() end,
+        config = function() require("py-bazel").setup { library_path_marker = "bazel-out/k8-fastbuild/bin/" } end,
       },
 
       -- Nice git diff view
@@ -726,7 +726,6 @@ local config = {
         update_on_nvim_resize = true,
       },
     }
-    require("py-bazel").setup { library_path_marker = "bazel-out/k8-fastbuild/bin/" }
     -- vim.api.nvim_set_keymap("i", "<C-CR>", 'copilot#Accept("<CR>")', { silent = true, expr = true })
 
     -- Set up custom filetypes
