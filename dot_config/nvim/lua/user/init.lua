@@ -726,9 +726,7 @@ local config = {
         update_on_nvim_resize = true,
       },
     }
-    vim.notify("py bazel setup")
     require("py-bazel").setup { library_path_marker = "bazel-out/k8-fastbuild/bin/" }
-    vim.notify(require("py-bazel").get_log_key())
     -- vim.api.nvim_set_keymap("i", "<C-CR>", 'copilot#Accept("<CR>")', { silent = true, expr = true })
 
     -- Set up custom filetypes
