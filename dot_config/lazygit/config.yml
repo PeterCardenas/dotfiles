@@ -16,4 +16,5 @@ gui:
       - "#A39B8F"
     cherryPickedCommitBgColor:
       - "#A39B8F"
+# TODO: Ctrl-Down and Ctrl-Up to move commits around (workaround since ctrl-k and ctrl-j are mapped in nvim)
 
