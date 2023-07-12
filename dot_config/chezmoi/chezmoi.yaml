@@ -11,3 +11,4 @@ edit:
 merge:
   command: "nvim"
   args: ["-d", "-c", '"$wincmd w"', "-c", '"wincmd J"']
+# TODO: How to name changes
