@@ -84,7 +84,9 @@ string match -q "$TERM_PROGRAM" "vscode"
 and . (code --locate-shell-integration-path fish)
 
 # ROS setup
-bass source /opt/ros/noetic/setup.bash
+if test -e /opt/ros/noetic/setup.bash
+  bass source /opt/ros/noetic/setup.bash
+end
 
 # Start Starship
 starship init fish | source
