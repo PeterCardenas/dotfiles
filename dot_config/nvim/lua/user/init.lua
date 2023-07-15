@@ -261,6 +261,7 @@ local config = {
       -- second key is the lefthand side of the map
       -- mappings seen under group name "Buffer"
       ["<leader>bb"] = { "<cmd>tabnew<cr>", desc = "New tab" },
+      ["<leader>bc"] = { function() astronvim.close_tab() end, desc = "Close tab" },
       -- Deprecated because of use of heirline_bufferline
       -- ["<leader>bc"] = { "<cmd>BufferLinePickClose<cr>", desc = "Pick to close" },
       -- ["<leader>bj"] = { "<cmd>BufferLinePick<cr>", desc = "Pick to jump" },
