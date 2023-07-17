@@ -10,8 +10,6 @@ gui:
     "pcardenas": "yellow"
     "master": "red"
   theme:
-    selectedLineBgColor:
-      - #A39B8F
     selectedRangeBgColor:
       - #A39B8F
     cherryPickedCommitBgColor:
