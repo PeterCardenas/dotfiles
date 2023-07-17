@@ -9,6 +9,9 @@ format = "[$duration]($style) "
 [python]
 format = "[$symbol]($style)"
 
+[rust]
+format = "[$symbol($version)]($style) "
+
 [nodejs]
 format = "[$symbol($version)]($style) "
 
