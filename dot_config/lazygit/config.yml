@@ -12,10 +12,13 @@ gui:
   theme:
     selectedLineBgColor:
       - "#A39B8F"
+      - bold
     selectedRangeBgColor:
       - "#A39B8F"
+      - bold
     cherryPickedCommitBgColor:
       - "#A39B8F"
+      - bold
 keybinding:
   commits:
     moveDownCommit: '<c-n>' # move commit down one
