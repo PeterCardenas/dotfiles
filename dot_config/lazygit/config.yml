@@ -10,8 +10,10 @@ gui:
     "pcardenas": "yellow"
     "master": "red"
   theme:
+    selectedLineBgColor:
+      - reverse
     selectedRangeBgColor:
-      - #A39B8F
+      - reverse
     cherryPickedCommitBgColor:
       - "#A39B8F"
 keybinding:
