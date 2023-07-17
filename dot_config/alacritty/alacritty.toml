@@ -5,3 +5,5 @@ startup_mode = "Maximized"
 [font]
 size = 14
 normal.family = "Dank Mono"
+bold.family = "Dank Mono"
+italic.family = "Dank Mono"
