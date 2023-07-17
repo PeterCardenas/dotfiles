@@ -1,4 +1,5 @@
 gui:
+  skipRewordInEditorWarning: true
   splitDiff: "always"
   scrollPastBottom: true
   showIcons: true
