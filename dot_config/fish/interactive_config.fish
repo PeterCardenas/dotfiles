@@ -29,6 +29,8 @@ set -gx FZF_DEFAULT_COMMAND 'fd --type f --hidden --exclude .git --follow'
 set -gx FZF_CTRL_T_COMMAND $FZF_DEFAULT_COMMAND
 set -gx FZF_ALT_C_COMMAND 'fd --type d --hidden --exclude .git --follow'
 
+source $HOME/.config/fish/fzf-key-bindings.fish
+
 set -gx GPG_TTY "(tty)"
 
 set -gx RIPGREP_CONFIG_PATH $HOME/.config/ripgrep.rc
