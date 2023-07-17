@@ -10,15 +10,8 @@ gui:
     "pcardenas": "yellow"
     "master": "red"
   theme:
-    selectedLineBgColor:
-      - "#FFFFFF"
-      - bold
-    selectedRangeBgColor:
-      - "#FFF"
-      - bold
     cherryPickedCommitBgColor:
       - "#A39B8F"
-      - bold
 keybinding:
   commits:
     moveDownCommit: '<c-n>' # move commit down one
