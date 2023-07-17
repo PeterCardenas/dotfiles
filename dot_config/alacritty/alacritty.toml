@@ -3,5 +3,5 @@ decorations = "none"
 startup_mode = "Maximized"
 
 [font]
+size = 14
 normal.family = "Dank Mono"
-normal.style = "14px"
