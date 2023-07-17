@@ -11,10 +11,10 @@ gui:
     "master": "red"
   theme:
     selectedLineBgColor:
-      - "#A39B8F"
+      - "#FFFFFF"
       - bold
     selectedRangeBgColor:
-      - "#A39B8F"
+      - "#FFF"
       - bold
     cherryPickedCommitBgColor:
       - "#A39B8F"
