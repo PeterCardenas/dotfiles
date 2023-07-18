@@ -17,7 +17,6 @@ function pf --description 'ssh port forward'
   end
   ssh -vfNL $ssh_args
 end
-end
 
 source "$HOME"/.config/fish/colors.fish
 
