@@ -8,6 +8,17 @@ function fish_greeting
   set_color normal
 end
 
+# Add utility for ssh port forwarding
+function pf --description 'ssh port forward'
+  ssh_args = ""
+  while test -n "$argv"
+    set ssh_args $ssh_args $argv[1]:$argv[1]
+    shift
+  end
+  ssh -vfNL $ssh_args
+end
+end
+
 source "$HOME"/.config/fish/colors.fish
 
 # Fix Ctrl-Backspace (fix currently doesn't work)
