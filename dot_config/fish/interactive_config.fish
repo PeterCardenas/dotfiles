@@ -11,9 +11,8 @@ end
 # Add utility for ssh port forwarding
 function pf --description 'ssh port forward'
   ssh_args = ""
-  while test -n "$argv"
-    set ssh_args $ssh_args $argv[1]:$argv[1]
-    shift
+  for port in $argv
+    set ssh_args $ssh_args $port:$port
   end
   ssh -vfNL $ssh_args
 end
