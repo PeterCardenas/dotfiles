@@ -2,8 +2,10 @@ prSections:
   - title: My Pull Requests
     filters: is:open author:@me
   - title: Needs My Review
-    filters: is:open review-requested:@me   
+    filters: is:open user-review-requested:@me   
 issuesSections:
+  - title: Mentioned Issues
+    filters: mentions:@me
   - title: 1.42 P1s
     filters: is:open assignee:@me milestone:1.42 label:P1
   - title: 1.42 P2s
