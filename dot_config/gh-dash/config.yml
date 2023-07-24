@@ -14,8 +14,6 @@ issuesSections:
     filters: is:open assignee:@me milestone:1.41 label:P1
   - title: 1.41 P2s
     filters: is:open assignee:@me milestone:1.41 label:P2
-  - title: 1.40 P1s
-    filters: is:open assignee:@me milestone:1.40 label:P1
 defaults:
   preview:
     open: false
