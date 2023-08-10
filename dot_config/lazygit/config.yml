@@ -2,7 +2,6 @@ gui:
   skipRewordInEditorWarning: true
   splitDiff: "always"
   scrollPastBottom: true
-  showIcons: true
   authorColors:
     "Peter Cardenas": "yellow"
     "PeterPCardenas": "yellow"
