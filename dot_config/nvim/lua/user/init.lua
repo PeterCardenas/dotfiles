@@ -261,19 +261,18 @@ local config = {
       -- second key is the lefthand side of the map
       -- mappings seen under group name "Buffer"
       ["<leader>bb"] = { "<cmd>tabnew<cr>", desc = "New tab" },
-      ["<leader>bc"] = { function() astronvim.close_tab() end, desc = "Close tab" },
+      ["<leader>x"] = { function() astronvim.close_tab() end, desc = "Close tab" },
       -- Deprecated because of use of heirline_bufferline
       -- ["<leader>bc"] = { "<cmd>BufferLinePickClose<cr>", desc = "Pick to close" },
       -- ["<leader>bj"] = { "<cmd>BufferLinePick<cr>", desc = "Pick to jump" },
       -- ["<leader>bt"] = { "<cmd>BufferLineSortByTabs<cr>", desc = "Sort by tabs" },
       ["gj"] = { "<C-i>", desc = "Go to next location" },
       ["gk"] = { "<C-o>", desc = "Go to previous location" },
+      ["<leader>C"] = { "<cmd>silent! %bwipeout!<cr>", desc = "Close all buffers" },
       ["<leader>gh"] = {
         "<cmd>lua require'telescope.builtin'.git_stash()<cr>",
         desc = "Open git stash previews",
       },
-      ["<leader>bk"] = { "<cmd>bN<cr>", desc = "Go to previous buffer" },
-      ["<leader>bj"] = { "<cmd>bn<cr>", desc = "Go to next buffer" },
       ["<leader>fw"] = {
         "<cmd>lua require'telescope'.extensions.live_grep_args.live_grep_args()<cr>",
         desc = "Find words in files",
@@ -293,7 +292,6 @@ local config = {
       ["<leader>sn"] = false,
       ["<leader>sr"] = false,
       ["<leader>s"] = { "<cmd>w<cr>", desc = "Save file" },
-      ["<leader>x"] = { "<cmd>tabclose<cr>", desc = "Close current tab" },
       -- nvim-ufo setup
       ["zR"] = { "<cmd>lua require'ufo'openAllFolds()<cr>", desc = "Open all folds" },
       ["zM"] = { "<cmd>lua require'ufo'closeAllFolds()<cr>", desc = "Close all folds" },
