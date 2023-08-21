@@ -36,7 +36,6 @@ end
 if vim.g.heirline_bufferline then
   -- Manage Buffers
   maps.n["<leader>c"] = { function() astronvim.close_buf(0) end, desc = "Close buffer" }
-  maps.n["<leader>C"] = { function() astronvim.close_buf(0, true) end, desc = "Force close buffer" }
   maps.n["<S-l>"] = { function() astronvim.nav_buf(vim.v.count > 0 and vim.v.count or 1) end, desc = "Next buffer" }
   maps.n["<S-h>"] =
   { function() astronvim.nav_buf(-(vim.v.count > 0 and vim.v.count or 1)) end, desc = "Previous buffer" }
