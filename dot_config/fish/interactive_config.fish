@@ -42,6 +42,7 @@ abbr -a aptinst "sudo apt install -y"
 abbr -a aptrm "sudo apt remove -y"
 
 # git aliases
+# TODO: Execute all commands with -S.
 abbr -a gcom "git checkout master"
 # abbr -a gpm "git pull -S origin master"
 abbr -a gpm "git fetch origin master:master && git rebase master"
@@ -71,7 +72,10 @@ abbr -a lg "lazygit"
 
 abbr -a p "starship prompt"
 
+# Don't accidentally run vim
 abbr -a vim "nvim"
+abbr -a vi "nvim"
+abbr -s v "nvim"
 
 abbr -a t "tmux detach-client; tmux a; or tmux"
 
