@@ -8,6 +8,9 @@ function fish_greeting
   set_color normal
 end
 
+# Clear all previous abbreviations
+abbr -e (abbr -a)
+
 source "$HOME"/.config/fish/colors.fish
 
 # Fix Ctrl-Backspace (fix currently doesn't work)
