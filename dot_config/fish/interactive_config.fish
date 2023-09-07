@@ -9,7 +9,7 @@ function fish_greeting
 end
 
 # Clear all previous abbreviations
-abbr -e (abbr -a)
+abbr -e (abbr -l)
 
 source "$HOME"/.config/fish/colors.fish
 
