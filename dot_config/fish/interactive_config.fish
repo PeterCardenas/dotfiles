@@ -29,7 +29,7 @@ end
 
 # Use .gitignore for fzf
 set -gx FZF_DEFAULT_COMMAND 'fd --type f --hidden --exclude .git --follow'
-set -gx FZF_CTRL_T_COMMAND "command fd \$dir --type f --hidden --exclude .git --follow"
+set -gx FZF_CTRL_T_COMMAND "command fd \$dir --type f --hidden --exclude .git --follow 2> /dev/null | sed '1d; s#^\./##'""
 set -gx FZF_ALT_C_COMMAND 'fd --type d --hidden --exclude .git --follow'
 
 source $HOME/.config/fish/fzf-key-bindings.fish
