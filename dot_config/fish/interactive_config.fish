@@ -77,6 +77,7 @@ abbr -a p "starship prompt"
 
 # Don't accidentally run vim
 abbr -a vim "nvim"
+abbr -a vi "nvim"
 abbr -a v "nvim"
 
 abbr -a t "tmux detach-client; tmux a; or tmux"
