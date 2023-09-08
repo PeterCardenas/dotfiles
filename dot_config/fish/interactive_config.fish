@@ -80,7 +80,7 @@ abbr -a vim "nvim"
 abbr -a vi "nvim"
 abbr -a v "nvim"
 
-abbr -a t "tmux attach; or tmux"
+abbr -a t "tmux detach-client; and tmux attach; or tmux"
 abbr -a ta "tmux attach -t"
 
 abbr -a sofi "source $HOME/.config/fish/config.fish"
