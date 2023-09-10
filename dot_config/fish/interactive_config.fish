@@ -29,7 +29,7 @@ end
 
 # Add hostname to DISPLAY for X11 forwarding.
 if string match -q -r "^:[0-9]\$" $DISPLAY
-  set -gx DISPLAY "$hostname$DISPLAY"
+  set -gx DISPLAY "$(hostname)$DISPLAY"
 end
 
 # Use .gitignore for fzf
@@ -96,6 +96,17 @@ abbr -a cheznous "chezmoi git pull -- --rebase; and chezmoi merge-all"
 abbr -a chezvous "chezmoi git pull -- --rebase; and chezmoi --interactive apply"
 abbr -a ce "chezmoi edit"
 abbr -a ca "chezmoi re-add"
+
+function fix_display
+  set -l tmux_display (tmux show-environment DISPLAY | cut -d= -f2)
+  # If tmux is running, set DISPLAY to tmux's value.
+  if test -n "$tmux_display"
+    set -gx DISPLAY "$tmux_display"
+  else
+    # Otherwise, set DISPLAY to hostname's value.
+    set -gx DISPLAY "$(hostname)$DISPLAY"
+  end
+end
 
 # VSCode shell integration
 string match -q "$TERM_PROGRAM" "vscode"
