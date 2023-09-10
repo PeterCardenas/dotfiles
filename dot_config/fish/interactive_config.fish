@@ -27,6 +27,7 @@ else if test $os = Darwin
   source ~/.iterm2_shell_integration.fish
 end
 
+# Add hostname to DISPLAY for X11 forwarding.
 if string match -q -r "^:[0-9]\$" $DISPLAY
   set -gx DISPLAY "$hostname$DISPLAY"
 end
