@@ -27,6 +27,10 @@ else if test $os = Darwin
   source ~/.iterm2_shell_integration.fish
 end
 
+if string match -q -r "^:[0-9]\$" $DISPLAY
+  set -gx DISPLAY "$HOSTNAME$DISPLAY"
+end
+
 # Use .gitignore for fzf
 set -gx FZF_DEFAULT_COMMAND 'fd --type f --hidden --exclude .git --follow'
 set -gx FZF_CTRL_T_COMMAND "command fd --follow \$dir --type f --hidden --exclude .git 2> /dev/null | sed '1d; s#^\./##'"
