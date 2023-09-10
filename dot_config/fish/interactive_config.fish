@@ -28,7 +28,7 @@ else if test $os = Darwin
 end
 
 if string match -q -r "^:[0-9]\$" $DISPLAY
-  set -gx DISPLAY "$HOSTNAME$DISPLAY"
+  set -gx DISPLAY "$hostname$DISPLAY"
 end
 
 # Use .gitignore for fzf
