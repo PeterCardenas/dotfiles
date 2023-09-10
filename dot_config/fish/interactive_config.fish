@@ -97,17 +97,6 @@ abbr -a chezvous "chezmoi git pull -- --rebase; and chezmoi --interactive apply"
 abbr -a ce "chezmoi edit"
 abbr -a ca "chezmoi re-add"
 
-function fix_display
-  set -l tmux_display (tmux show-environment DISPLAY | cut -d= -f2)
-  # If tmux is running, set DISPLAY to tmux's value.
-  if test -n "$tmux_display"
-    set -gx DISPLAY "$tmux_display"
-  else
-    # Otherwise, set DISPLAY to hostname's value.
-    set -gx DISPLAY "$(hostname)$DISPLAY"
-  end
-end
-
 # VSCode shell integration
 string match -q "$TERM_PROGRAM" "vscode"
 and . (code --locate-shell-integration-path fish)
