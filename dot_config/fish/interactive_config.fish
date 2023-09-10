@@ -31,9 +31,7 @@ else if test $os = Darwin
 end
 
 # Add hostname to DISPLAY for X11 forwarding.
-if string match -q -r "^:[0-9]\$" $DISPLAY
-  set -gx DISPLAY "$(hostname)$DISPLAY"
-end
+fix_display
 
 # Use .gitignore for fzf
 set -gx FZF_DEFAULT_COMMAND 'fd --type f --hidden --exclude .git --follow'
