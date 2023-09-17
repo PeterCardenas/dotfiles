@@ -1,6 +1,6 @@
 function fish_greeting
   # Only print fortune if it exists.
-  if command -s -q fortune
+  if command -q fortune
   else
     return 0
   end
