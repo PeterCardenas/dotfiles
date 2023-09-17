@@ -104,11 +104,6 @@ abbr -a ca "chezmoi re-add"
 string match -q "$TERM_PROGRAM" "vscode"
 and . (code --locate-shell-integration-path fish)
 
-# Copies the completions from ssh to ssh-et.
-# Not all commands are supported, but this is the lowest lift work.
-# Reference: https://github.com/infokiller/ssh-et
-complete -c ssh-et -c ssh
-
 # ROS setup
 if test -e /opt/ros/noetic/setup.bash
   bass source /opt/ros/noetic/setup.bash
