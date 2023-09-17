@@ -33,6 +33,8 @@ end
 
 # Add hostname to DISPLAY for X11 forwarding.
 fix_display
+# Use eternal terminal instead of ssh.
+abbr -a ssh "ssh-et"
 
 # Fix gopls install for nvim.
 # Reference: https://stackoverflow.com/questions/54415733/getting-gopath-error-go-cannot-use-pathversion-syntax-in-gopath-mode-in-ubun
