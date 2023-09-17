@@ -1,7 +1,10 @@
 function fish_greeting
-  if [ ! -x fortune ]
+  # Only print fortune if it exists.
+  if command -q fortune
+  else
     return 0
   end
+  # Print empty line for some top "padding"
   echo
   set_color yellow
   fortune
@@ -105,7 +108,4 @@ and . (code --locate-shell-integration-path fish)
 if test -e /opt/ros/noetic/setup.bash
   bass source /opt/ros/noetic/setup.bash
 end
-
-# Start Starship
-starship init fish | source
 
