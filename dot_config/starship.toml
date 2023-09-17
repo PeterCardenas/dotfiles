@@ -3,9 +3,6 @@ command_timeout = 2000
 [directory]
 truncate_to_repo = false
 
-[git_status]
-ignore_submodules = true
-
 [git_branch]
 format = "[$symbol$branch(:$remote_branch)]($style) "
 
