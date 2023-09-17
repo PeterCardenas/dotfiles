@@ -81,7 +81,9 @@ abbr -a gcp "git cherry-pick"
 abbr -a nuke 'git rm --cached -r .; and GIT_LFS_SKIP_SMUDGE=1 git reset --hard'
 abbr -a lg "lazygit"
 
+# Starship
 abbr -a p "starship prompt"
+set -gx STARSHIP_LOG error
 
 # Don't accidentally run vim
 abbr -a vim "nvim"
