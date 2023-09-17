@@ -3,7 +3,6 @@ truncate_to_repo = false
 
 [git_status]
 ignore_submodules = true
-untracked = ""
 
 [git_branch]
 format = "[$symbol$branch(:$remote_branch)]($style) "
