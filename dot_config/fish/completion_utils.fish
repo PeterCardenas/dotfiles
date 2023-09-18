@@ -1,7 +1,7 @@
 function __fish_is_token_nth
   set cmd (commandline -pc)
-  set token_str (string replace -r -a '(^|\-).+?\s+' '' -- $cmd)
-  set token_str (string replace -r -a '\s+' ' ' -- $token_str)
+  set token_str (string replace -ra '(^|\-).+?\s+' '' $cmd)
+  set token_str (string replace -ra '\s+' ' ' $token_str)
   set tokens (string split " " $token_str)
   if [ (count $tokens) -eq $argv[1] ]
     return 0
