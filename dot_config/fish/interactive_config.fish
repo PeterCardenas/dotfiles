@@ -26,13 +26,17 @@ set -l os (uname -s)
 if uname -a | grep -q WSL2
   set -gx BROWSER "/mnt/c/Program\ Files/Mozilla\ Firefox/firefox.exe"
 else if test $os = Darwin
-  set -gx BROWSER /Applications/Firefox.app/Contents/MacOS/firefox
+  set -gx BROWSER "/Applications/Arc.app/Contents/MacOS/Arc"
   # iTerm2 Shell Integration
   source ~/.iterm2_shell_integration.fish
 end
 
 # Add hostname to DISPLAY for X11 forwarding.
 fix_display
+
+# Fix gopls install for nvim.
+# Reference: https://stackoverflow.com/questions/54415733/getting-gopath-error-go-cannot-use-pathversion-syntax-in-gopath-mode-in-ubun
+set -gx GO111MODULE "on"
 
 # Use .gitignore for fzf
 set -gx FZF_DEFAULT_COMMAND 'fd --type f --hidden --exclude .git --follow'
