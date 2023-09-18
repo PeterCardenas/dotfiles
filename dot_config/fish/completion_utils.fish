@@ -1,4 +1,4 @@
-function __fish_is_token_eq_nth
+function __fish_is_arg_eq_nth
   set tokens (commandline -poc)
   set token_str (string replace -ra '(^|\-).+?\s+' '' -- $tokens)
   set token_str (string replace -ra '\s+' ' ' -- $token_str)
