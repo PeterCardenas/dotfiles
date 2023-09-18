@@ -9,6 +9,14 @@ function __fish_is_arg_eq_nth
   return 1
 end
 
+function __fish_needs_command -a command
+  set tokens (commandline -opc)
+  if [ (count $tokens) -eq 1 -a $tokens[1] = $command ]
+    return 0
+  end
+  return 1
+end
+
 function __fish_is_token_ge_nth
   set tokens (commandline -poc)
   if test (count $tokens) -ge $argv[1]
