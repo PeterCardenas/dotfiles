@@ -110,36 +110,47 @@ require('lazy').setup({
   },
 
   -- Useful plugin to show you pending keybinds.
-  { 'folke/which-key.nvim',  opts = {} },
+  'folke/which-key.nvim',
+
   {
     -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
-    opts = {
+    config = function()
       -- See `:help gitsigns.txt`
-      signs = {
-        add = { text = '+' },
-        change = { text = '~' },
-        delete = { text = '_' },
-        topdelete = { text = '‾' },
-        changedelete = { text = '~' },
-      },
-      on_attach = function(bufnr)
-        vim.keymap.set('n', '<leader>hp', require('gitsigns').preview_hunk, { buffer = bufnr, desc = 'Preview git hunk' })
+      require('gitsigns').setup {
+        signs = {
+          add = { text = '+' },
+          change = { text = '~' },
+          delete = { text = '_' },
+          topdelete = { text = '‾' },
+          changedelete = { text = '~' },
+        },
+        current_line_blame = true,
+        current_line_blame_opts = {
+          delay = 10
+        },
+        on_attach = function(bufnr)
+          vim.keymap.set({ 'n', 'v' }, '<leader>gp', require('gitsigns').preview_hunk,
+            { buffer = bufnr, desc = 'Preview git hunk' })
 
-        -- don't override the built-in and fugitive keymaps
-        local gs = package.loaded.gitsigns
-        vim.keymap.set({ 'n', 'v' }, ']c', function()
-          if vim.wo.diff then return ']c' end
-          vim.schedule(function() gs.next_hunk() end)
-          return '<Ignore>'
-        end, { expr = true, buffer = bufnr, desc = "Jump to next hunk" })
-        vim.keymap.set({ 'n', 'v' }, '[c', function()
-          if vim.wo.diff then return '[c' end
-          vim.schedule(function() gs.prev_hunk() end)
-          return '<Ignore>'
-        end, { expr = true, buffer = bufnr, desc = "Jump to previous hunk" })
-      end,
-    },
+          vim.keymap.set({ 'n', 'v' }, '<leader>gr', require('gitsigns').reset_hunk,
+            { buffer = bufnr, desc = 'Reset git hunk' })
+
+          -- don't override the built-in and fugitive keymaps
+          local gs = package.loaded.gitsigns
+          vim.keymap.set({ 'n', 'v' }, '<leader>gj', function()
+            if vim.wo.diff then return '<leader>gj' end
+            vim.schedule(function() gs.next_hunk() end)
+            return '<Ignore>'
+          end, { expr = true, buffer = bufnr, desc = "Jump to next hunk" })
+          vim.keymap.set({ 'n', 'v' }, '<leader>gk', function()
+            if vim.wo.diff then return '<leader>gk' end
+            vim.schedule(function() gs.prev_hunk() end)
+            return '<Ignore>'
+          end, { expr = true, buffer = bufnr, desc = "Jump to previous hunk" })
+        end,
+      }
+    end,
   },
 
   {
@@ -271,6 +282,77 @@ require('lazy').setup({
     end,
   },
 
+  -- File Explorer
+  {
+    "nvim-neo-tree/neo-tree.nvim",
+    branch = "v3.x",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-tree/nvim-web-devicons", -- not strictly required, but recommended
+      "MunifTanjim/nui.nvim",
+    },
+    config = function()
+      local function system_open(path)
+        path = path or vim.fn.expand "<cfile>"
+        if vim.fn.has "mac" == 1 then
+          -- if mac use the open command
+          vim.fn.jobstart({ "open", path }, { detach = true })
+        elseif vim.fn.has "unix" == 1 then
+          -- if unix then use xdg-open
+          vim.fn.jobstart({ "xdg-open", path }, { detach = true })
+        else
+          -- if any other operating system notify the user that there is currently no support
+          vim.schedule(function()
+            vim.notify("System open is not supported on this OS!", vim.log.levels.ERROR,
+              { title = "System Open" })
+          end)
+        end
+      end
+
+      require("neo-tree").setup {
+        filesystem = {
+          follow_current_file = { enabled = true },
+          async_directory_scan = "always",
+          hijack_netrw_behavior = "open_default",
+          window = {
+            mappings = {
+              O = "system_open",
+              h = "toggle_hidden",
+            },
+          },
+          commands = {
+            system_open = function(state) system_open(state.tree:get_node():get_id()) end,
+          },
+        }
+      }
+    end
+  },
+
+  -- Add Pairs Automatically
+  {
+    "windwp/nvim-autopairs",
+    event = "InsertEnter",
+    config = function()
+      require('nvim-autopairs').setup {
+        check_ts = true,
+      }
+    end
+  },
+
+  -- Tabline (Also has a winbar and statusline that are not currently used)
+  "rebelot/heirline.nvim",
+
+  -- Persists sessions based on directory.
+  {
+    "Shatur/neovim-session-manager",
+    event = "BufWritePost",
+    config = function()
+      require "session_manager".setup {
+        autoload_mode = require("session_manager.config").AutoloadMode.CurrentDir,
+        autosave_ignore_dirs = { "~/", "~/Downloads", "/" },
+      }
+    end,
+  },
 
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
   --       These are some example plugins that I've included in the kickstart repository.
@@ -302,8 +384,13 @@ vim.opt.foldlevel = 99
 vim.opt.foldlevelstart = 99
 vim.opt.foldenable = true
 
--- Set highlight on search
-vim.o.hlsearch = true
+-- Set highlight based on whether searching is done.
+vim.on_key(function(char)
+  if vim.fn.mode() == "n" then
+    local new_hlsearch = vim.tbl_contains({ "<CR>", "n", "N", "*", "#", "?", "/" }, vim.fn.keytrans(char))
+    if vim.opt.hlsearch:get() ~= new_hlsearch then vim.opt.hlsearch = new_hlsearch end
+  end
+end, vim.api.nvim_create_namespace "auto_hlsearch")
 
 -- Make line numbers default
 vim.wo.number = true
@@ -357,7 +444,7 @@ vim.keymap.set({ 'v', 'n' }, "<leader>q", "<cmd>q<cr>", { desc = "Quit split" })
 vim.keymap.set({ 'v', 'n' }, "gj", "<C-i>", { desc = "Go to next location" })
 vim.keymap.set({ 'v', 'n' }, "gk", "<C-o>", { desc = "Go to previous location" })
 
-vim.keymap.set({ 'v', 'n' }, "<leader>C", "<cmd>silent! %bwipeout!<cr>", { desc = "Close all buffers" })
+vim.keymap.set('n', "<leader>e", "<cmd>Neotree toggle<cr>", { desc = "Toggle file explorer" })
 
 -- [[ Highlight on yank ]]
 -- See `:help vim.highlight.on_yank()`
@@ -370,9 +457,13 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   pattern = '*',
 })
 
-local telescope_actions = require "telescope.actions"
+vim.keymap.set('n', "<leader>S.",
+  "<cmd>SessionManager! load_current_dir_session<cr>", { desc = "Load current directory session" })
+
 -- [[ Configure Telescope ]]
 -- See `:help telescope` and `:help telescope.setup()`
+local telescope_actions = require "telescope.actions"
+local lga_actions = require "telescope-live-grep-args.actions"
 require('telescope').setup {
   defaults = {
     mappings = {
@@ -384,8 +475,18 @@ require('telescope').setup {
         ['<C-j>'] = telescope_actions.move_selection_next,
         ['<C-k>'] = telescope_actions.move_selection_previous,
       },
+      n = { ["q"] = telescope_actions.close },
     },
   },
+  extensions = {
+    live_grep_args = {
+      mappings = { -- extend mappings
+        i = {
+          ["<C-k>"] = lga_actions.quote_prompt({ postfix = " -Ttest " }),
+        },
+      },
+    }
+  }
 }
 
 -- Enable telescope fzf native, if installed
@@ -398,7 +499,7 @@ vim.keymap.set('n', '<leader>/', function()
   -- You can pass additional configuration to telescope to change theme, layout, etc.
   require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
     winblend = 10,
-    previewer = false,
+    previewer = true,
   })
 end, { desc = '[/] Fuzzily search in current buffer' })
 
@@ -416,7 +517,7 @@ vim.keymap.set('n', '<leader>sr', require('telescope.builtin').resume, { desc = 
 require('nvim-treesitter.configs').setup {
   -- Add languages to be installed here that you want installed for treesitter
   ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript', 'vimdoc', 'vim',
-    'markdown' },
+    'markdown', 'fish' },
 
   -- Autoinstall languages that are not installed. Defaults to false (but you can change for yourself!)
   auto_install = false,
@@ -481,7 +582,7 @@ require('nvim-treesitter.configs').setup {
 -- Diagnostic keymaps
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous diagnostic message' })
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnostic message' })
-vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Open floating diagnostic message' })
+vim.keymap.set('n', '<leader>hd', vim.diagnostic.open_float, { desc = '[H]over [D]iagnostic' })
 vim.keymap.set('n', '<leader>sd', vim.diagnostic.setloclist, { desc = '[S]earch [D]iagnostics' })
 
 -- [[ Configure LSP ]]
@@ -536,11 +637,11 @@ end
 --  If you want to override the default filetypes that your language server will attach to you can
 --  define the property 'filetypes' to the map in question.
 local servers = {
-  -- clangd = {},
-  -- gopls = {},
-  -- pyright = {},
-  -- rust_analyzer = {},
-  -- tsserver = {},
+  clangd = {},
+  gopls = {},
+  pyright = {},
+  rust_analyzer = {},
+  tsserver = {},
   -- html = { filetypes = { 'html', 'twig', 'hbs'} },
 
   lua_ls = {
@@ -624,5 +725,312 @@ cmp.setup {
   },
 }
 
--- The line beneath this is called `modeline`. See `:help modeline`
--- vim: ts=2 sts=2 sw=2 et
+-- Set spaces per indent
+local function set_indent()
+  local input_avail, input = pcall(vim.fn.input, "Set indent value (>0 expandtab, <=0 noexpandtab): ")
+  if input_avail then
+    local indent = tonumber(input)
+    if not indent or indent == 0 then return end
+    vim.bo.expandtab = (indent > 0) -- local to buffer
+    indent = math.abs(indent)
+    vim.bo.tabstop = indent         -- local to buffer
+    vim.bo.softtabstop = indent     -- local to buffer
+    vim.bo.shiftwidth = indent      -- local to buffer
+    local notification_msg = string.format("indent=%d %s", indent, vim.bo.expandtab and "expandtab" or "noexpandtab")
+    vim.schedule(function() vim.notify(notification_msg) end)
+  end
+end
+vim.keymap.set({ 'n', 'v' }, "<leader>ui", function() set_indent() end, { desc = "Change indent setting" })
+
+-- [[ Configure heirline ]]
+-- See `:help heirline`
+local heirline_conditions = require("heirline.conditions")
+local heirline_utils = require("heirline.utils")
+local TablineBufnr = {
+  provider = function(self)
+    return tostring(self.bufnr) .. ". "
+  end,
+  hl = "Comment",
+}
+
+-- we redefine the filename component, as we probably only want the tail and not the relative path
+local TablineFileName = {
+  provider = function(self)
+    -- self.filename will be defined later, just keep looking at the example!
+    local filename = self.filename
+    filename = filename == "" and "[No Name]" or vim.fn.fnamemodify(filename, ":t")
+    return filename
+  end,
+  hl = function(self)
+    return { bold = self.is_active or self.is_visible, italic = true }
+  end,
+}
+
+-- this looks exactly like the FileFlags component that we saw in
+-- #crash-course-part-ii-filename-and-friends, but we are indexing the bufnr explicitly
+-- also, we are adding a nice icon for terminal buffers.
+local TablineFileFlags = {
+  {
+    condition = function(self)
+      return vim.api.nvim_buf_get_option(self.bufnr, "modified")
+    end,
+    provider = "[+]",
+    hl = { fg = "green" },
+  },
+  {
+    condition = function(self)
+      return not vim.api.nvim_buf_get_option(self.bufnr, "modifiable")
+          or vim.api.nvim_buf_get_option(self.bufnr, "readonly")
+    end,
+    provider = function(self)
+      if vim.api.nvim_buf_get_option(self.bufnr, "buftype") == "terminal" then
+        return "  "
+      else
+        return ""
+      end
+    end,
+    hl = { fg = "orange" },
+  },
+}
+
+local FileIcon = {
+  init = function(self)
+    local filename = self.filename
+    local extension = vim.fn.fnamemodify(filename, ":e")
+    self.icon, self.icon_color = require("nvim-web-devicons").get_icon_color(filename, extension, { default = true })
+  end,
+  provider = function(self)
+    return self.icon and (self.icon .. " ")
+  end,
+  hl = function(self)
+    return { fg = self.icon_color }
+  end
+}
+
+-- Here the filename block finally comes together
+local TablineFileNameBlock = {
+  init = function(self)
+    self.filename = vim.api.nvim_buf_get_name(self.bufnr)
+  end,
+  hl = function(self)
+    if self.is_active then
+      return "TabLineSel"
+      -- why not?
+      -- elseif not vim.api.nvim_buf_is_loaded(self.bufnr) then
+      --     return { fg = "gray" }
+    else
+      return "TabLine"
+    end
+  end,
+  on_click = {
+    callback = function(_, minwid, _, button)
+      if (button == "m") then -- close on mouse middle click
+        vim.schedule(function()
+          vim.api.nvim_buf_delete(minwid, { force = false })
+        end)
+      else
+        vim.api.nvim_win_set_buf(0, minwid)
+      end
+    end,
+    minwid = function(self)
+      return self.bufnr
+    end,
+    name = "heirline_tabline_buffer_callback",
+  },
+  TablineBufnr,
+  FileIcon, -- turns out the version defined in #crash-course-part-ii-filename-and-friends can be reutilized as is here!
+  TablineFileName,
+  TablineFileFlags,
+}
+
+-- a nice "x" button to close the buffer
+local TablineCloseButton = {
+  condition = function(self)
+    return not vim.api.nvim_buf_get_option(self.bufnr, "modified")
+  end,
+  { provider = " " },
+  {
+    provider = "",
+    hl = { fg = "gray" },
+    on_click = {
+      callback = function(_, minwid)
+        vim.schedule(function()
+          vim.api.nvim_buf_delete(minwid, { force = false })
+          vim.cmd.redrawtabline()
+        end)
+      end,
+      minwid = function(self)
+        return self.bufnr
+      end,
+      name = "heirline_tabline_close_buffer_callback",
+    },
+  },
+}
+
+-- The final touch!
+local TablineBufferBlock = heirline_utils.surround({ "", "" }, function(self)
+  if self.is_active then
+    return heirline_utils.get_highlight("TabLineSel").bg
+  else
+    return heirline_utils.get_highlight("TabLine").bg
+  end
+end, { TablineFileNameBlock, TablineCloseButton })
+
+-- and here we go
+local BufferLine = heirline_utils.make_buflist(
+  TablineBufferBlock,
+  { provider = "", hl = { fg = "gray" } }, -- left truncation, optional (defaults to "<")
+  { provider = "", hl = { fg = "gray" } } -- right trunctation, also optional (defaults to ...... yep, ">")
+-- by the way, open a lot of buffers and try clicking them ;)
+)
+
+local Tabpage = {
+  provider = function(self)
+    return "%" .. self.tabnr .. "T " .. self.tabpage .. " %T"
+  end,
+  hl = function(self)
+    if not self.is_active then
+      return "TabLine"
+    else
+      return "TabLineSel"
+    end
+  end,
+}
+
+local TabpageClose = {
+  provider = "%999X  %X",
+  hl = "TabLine",
+}
+
+local TabPages = {
+  -- only show this component if there's 2 or more tabpages
+  condition = function()
+    return #vim.api.nvim_list_tabpages() >= 2
+  end,
+  { provider = "%=" },
+  heirline_utils.make_tablist(Tabpage),
+  TabpageClose,
+}
+
+local TabLineOffset = {
+  condition = function(self)
+    local win = vim.api.nvim_tabpage_list_wins(0)[1]
+    local bufnr = vim.api.nvim_win_get_buf(win)
+    self.winid = win
+
+    if vim.bo[bufnr].filetype == "neo%-tree" then
+      self.title = "neo%-tree"
+      return true
+    end
+  end,
+
+  provider = function(self)
+    local title = self.title
+    local width = vim.api.nvim_win_get_width(self.winid)
+    local pad = math.ceil((width - #title) / 2)
+    return string.rep(" ", pad) .. title .. string.rep(" ", pad)
+  end,
+
+  hl = function(self)
+    if vim.api.nvim_get_current_win() == self.winid then
+      return "TablineSel"
+    else
+      return "Tabline"
+    end
+  end,
+}
+
+local TabLine = { TabLineOffset, BufferLine, TabPages }
+
+require("heirline").setup({
+  tabline = TabLine,
+})
+vim.o.showtabline = 2
+vim.cmd([[au FileType * if index(['wipe', 'delete'], &bufhidden) >= 0 | set nobuflisted | endif]])
+-- Manage Buffers
+vim.keymap.set({ 'v', 'n' }, "<leader>C", "<cmd>silent! %bwipeout!<cr>", { desc = "Close all buffers" })
+local function nav_buf(navigation_offset)
+  local current = vim.api.nvim_get_current_buf()
+  for i, v in ipairs(vim.t.bufs) do
+    if current == v then
+      vim.cmd.b(vim.t.bufs[(i + navigation_offset - 1) % #vim.t.bufs + 1])
+      break
+    end
+  end
+end
+local function close_buf()
+  local current = vim.api.nvim_get_current_buf()
+  nav_buf(-1)
+  vim.cmd(("confirm bd") .. current)
+end
+local function move_buf(move_offset)
+  if move_offset == 0 then return end               -- if n = 0 then no shifts are needed
+  local bufs = vim.t.bufs                           -- make temp variable
+  for i, bufnr in ipairs(bufs) do                   -- loop to find current buffer
+    if bufnr == vim.api.nvim_get_current_buf() then -- found index of current buffer
+      for _ = 0, (move_offset % #bufs) - 1 do       -- calculate number of right shifts
+        local new_i = i + 1                         -- get next i
+        if i == #bufs then                          -- if at end, cycle to beginning
+          new_i = 1                                 -- next i is actually 1 if at the end
+          local val = bufs[i]                       -- save value
+          table.remove(bufs, i)                     -- remove from end
+          table.insert(bufs, new_i, val)            -- insert at beginning
+        else                                        -- if not at the end,then just do an in place swap
+          bufs[i], bufs[new_i] = bufs[new_i], bufs[i]
+        end
+        i = new_i -- iterate i to next value
+      end
+      break
+    end
+  end
+  vim.t.bufs = bufs       -- set buffers
+  vim.cmd.redrawtabline() -- redraw tabline
+end
+vim.keymap.set('n', "<leader>c", function() close_buf() end, { desc = "Close buffer" })
+vim.keymap.set('n', "<S-l>", function() nav_buf(vim.v.count > 0 and vim.v.count or 1) end,
+  { desc = "Next buffer" })
+vim.keymap.set('n', "<S-h>",
+  function() nav_buf(-(vim.v.count > 0 and vim.v.count or 1)) end, { desc = "Previous buffer" })
+vim.keymap.set('n', "<leader>rl",
+  function() move_buf(vim.v.count > 0 and vim.v.count or 1) end, { desc = "Move buffer tab right" })
+vim.keymap.set('n', "<leader>rh",
+  function() move_buf(-(vim.v.count > 0 and vim.v.count or 1)) end, { desc = "Move buffer tab left" })
+-- Autocmds to make the internal buffer list state in sync with the actual buffers.
+local function is_valid_buffer(bufnr)
+  if not bufnr or bufnr < 1 then return false end
+  return vim.bo[bufnr].buflisted and vim.api.nvim_buf_is_valid(bufnr)
+end
+local bufferline_group = vim.api.nvim_create_augroup("bufferline", { clear = true })
+vim.api.nvim_create_autocmd({ "BufAdd", "BufEnter" }, {
+  desc = "Update buffers when adding new buffers",
+  group = bufferline_group,
+  callback = function(args)
+    if not vim.t.bufs then vim.t.bufs = {} end
+    local bufs = vim.t.bufs
+    if not vim.tbl_contains(bufs, args.buf) then
+      table.insert(bufs, args.buf)
+      vim.t.bufs = bufs
+    end
+    vim.t.bufs = vim.tbl_filter(is_valid_buffer, vim.t.bufs)
+  end,
+})
+vim.api.nvim_create_autocmd("BufDelete", {
+  desc = "Update buffers when deleting buffers",
+  group = bufferline_group,
+  callback = function(args)
+    for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
+      local bufs = vim.t[tab].bufs
+      if bufs then
+        for i, bufnr in ipairs(bufs) do
+          if bufnr == args.buf then
+            table.remove(bufs, i)
+            vim.t[tab].bufs = bufs
+            break
+          end
+        end
+      end
+    end
+    vim.t.bufs = vim.tbl_filter(is_valid_buffer, vim.t.bufs)
+    vim.cmd.redrawtabline()
+  end,
+})
