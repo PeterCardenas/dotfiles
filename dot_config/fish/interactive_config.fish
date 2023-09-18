@@ -15,6 +15,7 @@ end
 abbr -e (abbr -l)
 
 source "$HOME"/.config/fish/colors.fish
+source "$HOME"/.config/fish/completion_utils.fish
 
 # Fix Ctrl-Backspace (fix currently doesn't work)
 bind \b backward-kill-word
