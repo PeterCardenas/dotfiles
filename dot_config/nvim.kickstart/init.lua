@@ -43,6 +43,21 @@ P.S. You can delete this when you're done too. It's your config now :)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+-- TODO:
+-- - Fix session manager keybinding
+-- - Fix heirline colorscheme
+-- - Add heirline git signs to buffer tabs
+-- - Convert statusline to heirline
+-- - Convert status column to heirline
+-- - Prevent tsserver from formatting
+-- - Remove character encoding warning
+-- - Signature help keybinding
+-- - Get icons working
+-- - Get . to repeat commands working
+-- - Add lazygit
+-- - Add context with full path below tab bar
+-- - Clickable commit links
+
 -- Set shell to bash for tmux navigation to be fast.
 -- Reference: https://github.com/christoomey/vim-tmux-navigator/issues/72#issuecomment-873841679
 vim.opt.shell = "/bin/bash -i"
@@ -690,12 +705,16 @@ end
 --
 --  If you want to override the default filetypes that your language server will attach to you can
 --  define the property 'filetypes' to the map in question.
+
+-- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
+---@type table<string, lspconfig.Config>
 local servers = {
   clangd = {},
   gopls = {},
   pyright = {},
   rust_analyzer = {},
   tsserver = {},
+  eslint = {},
   -- html = { filetypes = { 'html', 'twig', 'hbs'} },
 
   lua_ls = {
@@ -1014,8 +1033,10 @@ local function nav_buf(navigation_offset)
 end
 local function close_buf()
   local current = vim.api.nvim_get_current_buf()
+  vim.schedule(function()
+    vim.api.nvim_buf_delete(current, { force = false })
+  end)
   nav_buf(-1)
-  vim.cmd(("confirm bd") .. current)
 end
 local function move_buf(move_offset)
   if move_offset == 0 then return end               -- if n = 0 then no shifts are needed
@@ -1040,7 +1061,7 @@ local function move_buf(move_offset)
   vim.t.bufs = bufs       -- set buffers
   vim.cmd.redrawtabline() -- redraw tabline
 end
-vim.keymap.set('n', "<leader>c", function() close_buf() end, { desc = "Close buffer" })
+vim.keymap.set('n', "<leader>c", close_buf, { desc = "Close buffer" })
 vim.keymap.set('n', "<S-l>", function() nav_buf(vim.v.count > 0 and vim.v.count or 1) end,
   { desc = "Next buffer" })
 vim.keymap.set('n', "<S-h>",
