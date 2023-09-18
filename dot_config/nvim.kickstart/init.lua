@@ -43,6 +43,10 @@ P.S. You can delete this when you're done too. It's your config now :)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+-- Set shell to bash for tmux navigation to be fast.
+-- Reference: https://github.com/christoomey/vim-tmux-navigator/issues/72#issuecomment-873841679
+vim.opt.shell = "/bin/bash -i"
+
 -- Install package manager
 --    https://github.com/folke/lazy.nvim
 --    `:help lazy.nvim.txt` for more info
@@ -354,6 +358,24 @@ require('lazy').setup({
     end,
   },
 
+  -- Easy navigation between splits.
+  {
+    'alexghergh/nvim-tmux-navigation',
+    config = function()
+      require 'nvim-tmux-navigation'.setup {
+        disable_when_zoomed = true, -- defaults to false
+        keybindings = {
+          left = "<C-h>",
+          down = "<C-j>",
+          up = "<C-k>",
+          right = "<C-l>",
+          last_active = "<C-\\>",
+          next = "<C-Space>",
+        }
+      }
+    end
+  }
+
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
   --       These are some example plugins that I've included in the kickstart repository.
   --       Uncomment any of the lines below to enable them.
@@ -372,6 +394,38 @@ require('lazy').setup({
     enabled = true,
     notify = true,
   },
+})
+
+-- [[ Neovim TMUX Integration ]]
+local function set_is_vim()
+  local tmux_socket = vim.fn.split(vim.env.TMUX, ',')[1]
+  vim.fn.system("tmux -S " .. tmux_socket .. " set-option -p @is_vim yes")
+end
+
+local function unset_is_vim()
+  local tmux_socket = vim.fn.split(vim.env.TMUX, ',')[1]
+  vim.fn.system("tmux -S " .. tmux_socket .. " set-option -p -u @is_vim")
+end
+local tmux_navigator_group = vim.api.nvim_create_augroup("tmux_navigator_is_vim", { clear = true })
+vim.api.nvim_create_autocmd("VimEnter", {
+  desc = "Tell TMUX we entered neovim",
+  group = tmux_navigator_group,
+  callback = set_is_vim
+})
+vim.api.nvim_create_autocmd("VimLeave", {
+  desc = "Tell TMUX we left neovim",
+  group = tmux_navigator_group,
+  callback = unset_is_vim
+})
+vim.api.nvim_create_autocmd("VimSuspend", {
+  desc = "Tell TMUX we suspended neovim",
+  group = tmux_navigator_group,
+  callback = unset_is_vim
+})
+vim.api.nvim_create_autocmd("VimResume", {
+  desc = "Tell TMUX we resumed neovim",
+  group = tmux_navigator_group,
+  callback = set_is_vim
 })
 
 -- [[ Setting options ]]
