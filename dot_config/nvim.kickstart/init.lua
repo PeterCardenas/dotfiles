@@ -43,22 +43,6 @@ P.S. You can delete this when you're done too. It's your config now :)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
--- TODO:
--- - Fix session manager keybinding
--- - Fix heirline colorscheme
--- - Add heirline git signs to buffer tabs
--- - Convert statusline to heirline
--- - Convert status column to heirline
--- - Prevent tsserver from formatting
--- - Remove character encoding warning
--- - Add all git/diagnostic icons
--- - Get . to repeat commands working
--- - Add lazygit
--- - Add context with full path below tab bar
--- - Clickable commit links
--- - Fix icon height
--- - Fix neovim sometimes quitting with error
-
 -- Set shell to bash for tmux navigation to be fast.
 -- TODO: Set this only when needed
 -- Reference: https://github.com/christoomey/vim-tmux-navigator/issues/72#issuecomment-873841679
