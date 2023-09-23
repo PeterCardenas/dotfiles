@@ -1,6 +1,6 @@
 git:
-  autoPush: true
-  autoCommit: true
+  autoPush: false
+  autoCommit: false
   autoAdd: true
 
 edit:
