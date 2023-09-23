@@ -51,14 +51,16 @@ vim.g.maplocalleader = ' '
 -- - Convert status column to heirline
 -- - Prevent tsserver from formatting
 -- - Remove character encoding warning
--- - Signature help keybinding
--- - Get icons working
+-- - Add all git/diagnostic icons
 -- - Get . to repeat commands working
 -- - Add lazygit
 -- - Add context with full path below tab bar
 -- - Clickable commit links
+-- - Fix icon height
+-- - Fix neovim sometimes quitting with error
 
 -- Set shell to bash for tmux navigation to be fast.
+-- TODO: Set this only when needed
 -- Reference: https://github.com/christoomey/vim-tmux-navigator/issues/72#issuecomment-873841679
 vim.opt.shell = "/bin/bash -i"
 
@@ -129,7 +131,17 @@ require('lazy').setup({
   },
 
   -- Useful plugin to show you pending keybinds.
-  'folke/which-key.nvim',
+  {
+    'folke/which-key.nvim',
+    event = "VeryLazy",
+    init = function()
+      vim.o.timeout = true
+      vim.o.timeoutlen = 300
+    end,
+    config = function()
+      require('which-key').setup { disable = { filetypes = { "TelescopePrompt" } } }
+    end
+  },
 
   {
     -- Adds git related signs to the gutter, as well as utilities for managing changes
@@ -453,6 +465,11 @@ vim.opt.foldlevel = 99
 vim.opt.foldlevelstart = 99
 vim.opt.foldenable = true
 
+-- Highlight current text line of cursor
+vim.opt.cursorline = true
+-- Number of lines to keep above and below the buffer
+vim.opt.scrolloff = 8
+
 -- Set highlight based on whether searching is done.
 vim.on_key(function(char)
   if vim.fn.mode() == "n" then
@@ -683,7 +700,7 @@ local on_attach = function(_, bufnr)
 
   -- See `:help K` for why this keymap
   nmap('K', vim.lsp.buf.hover, 'Hover Documentation')
-  nmap('<C-k>', vim.lsp.buf.signature_help, 'Signature Documentation')
+  vim.keymap.set({ 'n', 'i' }, '<C-k>', vim.lsp.buf.signature_help, { desc = 'LSP: Signature Documentation' })
 
   -- Lesser used LSP functionality
   nmap('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
@@ -1107,5 +1124,44 @@ vim.api.nvim_create_autocmd("BufDelete", {
     end
     vim.t.bufs = vim.tbl_filter(is_valid_buffer, vim.t.bufs)
     vim.cmd.redrawtabline()
+  end,
+})
+
+vim.api.nvim_create_autocmd("BufEnter", {
+  desc = "Open Neo-Tree on startup with directory",
+  group = vim.api.nvim_create_augroup("neotree_start", { clear = true }),
+  callback = function()
+    local stats = vim.loop.fs_stat(vim.api.nvim_buf_get_name(0))
+    if stats and stats.type == "directory" then require("neo-tree.setup.netrw").hijack() end
+  end,
+})
+
+vim.api.nvim_create_autocmd("BufEnter", {
+  desc = "Quit AstroNvim if more than one window is open and only sidebar windows are list",
+  group = vim.api.nvim_create_augroup("auto_quit", { clear = true }),
+  callback = function()
+    local wins = vim.api.nvim_tabpage_list_wins(0)
+    -- Both neo-tree and aerial will auto-quit if there is only a single window left
+    if #wins <= 1 then return end
+    local sidebar_fts = { aerial = true, ["neo-tree"] = true }
+    for _, winid in ipairs(wins) do
+      if vim.api.nvim_win_is_valid(winid) then
+        local bufnr = vim.api.nvim_win_get_buf(winid)
+        local filetype = vim.api.nvim_buf_get_option(bufnr, "filetype")
+        -- If any visible windows are not sidebars, early return
+        if not sidebar_fts[filetype] then
+          return
+        -- If the visible window is a sidebar
+        else
+          -- only count filetypes once, so remove a found sidebar from the detection
+          sidebar_fts[filetype] = nil
+        end
+      end
+    end
+    if #vim.api.nvim_list_tabpages() > 1 then
+      vim.cmd.tabclose()
+    else
+      vim.cmd.qall()
+    end
   end,
 })
