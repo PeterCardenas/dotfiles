@@ -514,7 +514,7 @@ vim.keymap.set({ 'v', 'n' }, "<leader>q", "<cmd>q<cr>", { desc = "Quit split" })
 vim.keymap.set({ 'v', 'n' }, "gj", "<C-i>", { desc = "Go to next location" })
 vim.keymap.set({ 'v', 'n' }, "gk", "<C-o>", { desc = "Go to previous location" })
 
-vim.keymap.set('n', "<leader>e", "<cmd>Neotree toggle<cr>", { desc = "Toggle file explorer" })
+vim.keymap.set('n', "<leader>o", "<cmd>Neotree toggle<cr>", { desc = "Toggle file explorer" })
 
 -- [[ Highlight on yank ]]
 -- See `:help vim.highlight.on_yank()`
