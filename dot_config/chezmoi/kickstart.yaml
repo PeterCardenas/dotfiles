@@ -1,0 +1,14 @@
+git:
+  autoPush: false
+  autoCommit: false
+  autoAdd: true
+
+edit:
+  command: nvim
+  args: ["-u", "$HOME/.config/nvim.kickstart/init.lua"]
+  apply: true
+  watch: true
+
+merge:
+  command: "nvim"
+  args: ["-d", "-c", '"$wincmd w"', "-c", '"wincmd J"']
