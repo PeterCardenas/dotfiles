@@ -6,6 +6,8 @@ git:
 edit:
   command: nvim
   apply: true
+  # Watch currently only works when executing chezmoi edit with one file
+  # Reference: https://www.chezmoi.io/reference/commands/edit/
   watch: true
 
 merge:
