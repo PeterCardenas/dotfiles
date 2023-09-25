@@ -546,7 +546,11 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 })
 
 vim.keymap.set('n', "<leader>S.",
-  "<cmd>SessionManager! load_current_dir_session<cr>", { desc = "Load current directory session" })
+  function()
+    require("session_manager").load_current_dir_session()
+  end,
+  { desc = "Load current directory session" }
+)
 
 -- [[ Configure Telescope ]]
 -- See `:help telescope` and `:help telescope.setup()`
