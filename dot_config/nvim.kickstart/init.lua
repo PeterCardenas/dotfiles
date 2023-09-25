@@ -613,6 +613,9 @@ require('nvim-treesitter.configs').setup {
 
   -- Autoinstall languages that are not installed. Defaults to false (but you can change for yourself!)
   auto_install = false,
+  modules = {},
+  ignore_install = {},
+  sync_install = false,
 
   highlight = { enable = true },
   indent = { enable = true },
@@ -679,6 +682,8 @@ vim.keymap.set('n', '<leader>sd', vim.diagnostic.setloclist, { desc = '[S]earch 
 
 -- [[ Configure LSP ]]
 --  This function gets run when an LSP connects to a particular buffer.
+---@param _ lsp.Client
+---@param bufnr integer
 local on_attach = function(_, bufnr)
   -- NOTE: Remember that lua is a real programming language, and as such it is possible
   -- to define small helper and utility functions so you don't have to repeat yourself
@@ -868,18 +873,18 @@ local TablineFileName = {
 local TablineFileFlags = {
   {
     condition = function(self)
-      return vim.api.nvim_buf_get_option(self.bufnr, "modified")
+      return vim.api.nvim_get_option_value("modified", { buf = self.bufnr })
     end,
     provider = "[+]",
     hl = { fg = "green" },
   },
   {
     condition = function(self)
-      return not vim.api.nvim_buf_get_option(self.bufnr, "modifiable")
-          or vim.api.nvim_buf_get_option(self.bufnr, "readonly")
+      return not vim.api.nvim_get_option_value("modifiable", { buf = self.bufnr })
+          or vim.api.nvim_get_option_value("readonly", { buf = self.bufnr })
     end,
     provider = function(self)
-      if vim.api.nvim_buf_get_option(self.bufnr, "buftype") == "terminal" then
+      if vim.api.nvim_get_option_value("buftype", { buf = self.bufnr }) == "terminal" then
         return "  "
       else
         return ""
@@ -942,7 +947,7 @@ local TablineFileNameBlock = {
 -- a nice "x" button to close the buffer
 local TablineCloseButton = {
   condition = function(self)
-    return not vim.api.nvim_buf_get_option(self.bufnr, "modified")
+    return not vim.api.nvim_get_option_value("modified", { buf = self.bufnr })
   end,
   { provider = " " },
   {
