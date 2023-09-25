@@ -385,6 +385,15 @@ require('lazy').setup({
         }
       }
     end
+  },
+
+  -- Add lazygit neovim integration.
+  {
+    "kdheepak/lazygit.nvim",
+    -- optional for floating window border decoration
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+    },
   }
 
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
@@ -517,6 +526,12 @@ vim.keymap.set({ 'v', 'n' }, "gk", "<C-o>", { desc = "Go to previous location" }
 vim.keymap.set('n', "<leader>o",
   function() require("neo-tree.command").execute({ toggle = true }) end,
   { desc = "Toggle file explorer" }
+)
+vim.keymap.set('n', '<leader>gg',
+  function()
+    require("lazygit").lazygit()
+  end,
+  { desc = "Open Floating LazyGit" }
 )
 
 -- [[ Highlight on yank ]]
