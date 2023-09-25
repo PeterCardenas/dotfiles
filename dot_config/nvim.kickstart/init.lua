@@ -514,7 +514,10 @@ vim.keymap.set({ 'v', 'n' }, "<leader>q", "<cmd>q<cr>", { desc = "Quit split" })
 vim.keymap.set({ 'v', 'n' }, "gj", "<C-i>", { desc = "Go to next location" })
 vim.keymap.set({ 'v', 'n' }, "gk", "<C-o>", { desc = "Go to previous location" })
 
-vim.keymap.set('n', "<leader>o", "<cmd>Neotree toggle<cr>", { desc = "Toggle file explorer" })
+vim.keymap.set('n', "<leader>o",
+  function() require("neo-tree.command").execute({ toggle = true }) end,
+  { desc = "Toggle file explorer" }
+)
 
 -- [[ Highlight on yank ]]
 -- See `:help vim.highlight.on_yank()`
@@ -742,12 +745,12 @@ mason_lspconfig.setup {
 
 mason_lspconfig.setup_handlers {
   function(server_name)
-    require('lspconfig')[server_name].setup {
+    require('lspconfig')[server_name].setup({
       capabilities = capabilities,
       on_attach = on_attach,
       settings = servers[server_name],
       filetypes = (servers[server_name] or {}).filetypes,
-    }
+    })
   end
 }
 
@@ -818,7 +821,6 @@ vim.keymap.set({ 'n', 'v' }, "<leader>ui", function() set_indent() end, { desc =
 
 -- [[ Configure heirline ]]
 -- See `:help heirline`
-local heirline_conditions = require("heirline.conditions")
 local heirline_utils = require("heirline.utils")
 local TablineBufnr = {
   provider = function(self)
@@ -826,6 +828,7 @@ local TablineBufnr = {
   end,
   hl = "Comment",
 }
+local heirline_conditions = require("heirline.conditions")
 
 -- we redefine the filename component, as we probably only want the tail and not the relative path
 local TablineFileName = {
@@ -1063,14 +1066,28 @@ local function move_buf(move_offset)
   vim.cmd.redrawtabline() -- redraw tabline
 end
 vim.keymap.set('n', "<leader>c", close_buf, { desc = "Close buffer" })
-vim.keymap.set('n', "<S-l>", function() nav_buf(vim.v.count > 0 and vim.v.count or 1) end,
-  { desc = "Next buffer" })
+vim.keymap.set('n', "<S-l>",
+  function()
+    local navigation_offset = vim.v.count > 0 and vim.v.count or 1
+    nav_buf(navigation_offset)
+  end,
+  { desc = "Next buffer" }
+)
 vim.keymap.set('n', "<S-h>",
-  function() nav_buf(-(vim.v.count > 0 and vim.v.count or 1)) end, { desc = "Previous buffer" })
+  function()
+    local navigation_offset = -(vim.v.count > 0 and vim.v.count or 1)
+    nav_buf(navigation_offset)
+  end,
+  { desc = "Previous buffer" }
+)
 vim.keymap.set('n', "<leader>rl",
-  function() move_buf(vim.v.count > 0 and vim.v.count or 1) end, { desc = "Move buffer tab right" })
+  function() move_buf(vim.v.count > 0 and vim.v.count or 1) end,
+  { desc = "Move buffer tab right" }
+)
 vim.keymap.set('n', "<leader>rh",
-  function() move_buf(-(vim.v.count > 0 and vim.v.count or 1)) end, { desc = "Move buffer tab left" })
+  function() move_buf(-(vim.v.count > 0 and vim.v.count or 1)) end,
+  { desc = "Move buffer tab left" }
+)
 -- Autocmds to make the internal buffer list state in sync with the actual buffers.
 local function is_valid_buffer(bufnr)
   if not bufnr or bufnr < 1 then return false end
@@ -1135,7 +1152,7 @@ vim.api.nvim_create_autocmd("BufEnter", {
         -- If any visible windows are not sidebars, early return
         if not sidebar_fts[filetype] then
           return
-        -- If the visible window is a sidebar
+          -- If the visible window is a sidebar
         else
           -- only count filetypes once, so remove a found sidebar from the detection
           sidebar_fts[filetype] = nil
