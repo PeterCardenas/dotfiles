@@ -51,6 +51,8 @@ set -gx GPG_TTY "(tty)"
 
 set -gx RIPGREP_CONFIG_PATH $HOME/.config/ripgrep.rc
 
+set -gx BOB_CONFIG $HOME/.config/bob/config.json
+
 # apt aliases
 abbr -a aptupd "sudo apt update -y"
 abbr -a aptupgd "sudo apt upgrade -y && sudo apt autoremove -y"
