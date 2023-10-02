@@ -12,6 +12,7 @@ vim.keymap.set('v', ">", ">gv", { desc = "indent line" })
 
 vim.keymap.set({ 'v', 'n' }, "<leader>s", "<cmd>w<cr>", { desc = "Save file" })
 vim.keymap.set({ 'v', 'n' }, "<leader>q", "<cmd>q<cr>", { desc = "Quit split" })
+vim.keymap.set({ 'v', 'n' }, "<leader>Q", "<cmd>qa<cr>", { desc = "Quit all" })
 
 -- Remap for dealing with word wrap
 -- vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
