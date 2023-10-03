@@ -31,58 +31,10 @@ vim.keymap.set('n', '<leader>gg',
   { desc = "Open Floating LazyGit" }
 )
 
--- Telescope keymaps
-vim.keymap.set('n', '<leader>fo',
-  function()
-    require('telescope.builtin').oldfiles()
-  end,
-  { desc = '[?] Find recently opened files' }
-)
-vim.keymap.set('n', '<leader>/',
-  function()
-    -- You can pass additional configuration to telescope to change theme, layout, etc.
-    require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
-      winblend = 10,
-      previewer = true,
-    })
-  end,
-  { desc = '[/] Fuzzily search in current buffer' }
-)
-vim.keymap.set('n', '<leader>ff',
-  function()
-    require('telescope.builtin').find_files()
-  end,
-  { desc = '[F]ind [F]iles' }
-)
-vim.keymap.set('n', '<leader>fw',
-  function()
-    require('telescope').extensions.live_grep_args.live_grep_args()
-  end,
-  { desc = '[F]ind [W]ords with ripgrep' }
-)
-vim.keymap.set('n', '<leader>sh',
-  function()
-    require('telescope.builtin').help_tags()
-  end,
-  { desc = '[S]earch [H]elp' }
-)
-vim.keymap.set('n', '<leader>ld',
-  function()
-    require('telescope.builtin').diagnostics({ bufnr = 0 })
-  end,
-  { desc = '[L]anguage [D]iagnostics for current buffer' }
-)
-vim.keymap.set('n', '<leader>sr',
-  function()
-    require('telescope.builtin').resume()
-  end,
-  { desc = '[S]earch [R]resume' }
-)
-
 -- Diagnostic keymaps
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous diagnostic message' })
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnostic message' })
-vim.keymap.set('n', '<leader>hd', vim.diagnostic.open_float, { desc = '[H]over [D]iagnostic' })
+vim.keymap.set('n', '<leader>ld', vim.diagnostic.open_float, { desc = '[L]anguage [D]iagnostic' })
 
 
 -- Set spaces per indent
