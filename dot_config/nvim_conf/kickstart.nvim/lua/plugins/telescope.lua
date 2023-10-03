@@ -70,6 +70,15 @@ return {
     local lga_actions = require "telescope-live-grep-args.actions"
     require('telescope').setup {
       defaults = {
+        layout_config = {
+          horizontal = {
+            prompt_position = "top",
+          }
+        },
+        sorting_strategy = "ascending",
+        path_display = { "truncate" },
+        prompt_prefix = "  ",
+        selection_caret = "❯ ",
         mappings = {
           i = {
             ['<C-u>'] = false,
@@ -86,7 +95,7 @@ return {
         live_grep_args = {
           mappings = { -- extend mappings
             i = {
-              ["<C-k>"] = lga_actions.quote_prompt({ postfix = " -Ttest " }),
+              ["<C-s>"] = lga_actions.quote_prompt({ postfix = " -Ttest " }),
             },
           },
         }
