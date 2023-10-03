@@ -110,6 +110,7 @@ require('lazy').setup({
     dependencies = {
       "kevinhwang91/promise-async",
     },
+    event = "BufEnter",
     config = function()
       require("ufo").setup {
         provider_selector = function() return { "treesitter", "indent" } end,
