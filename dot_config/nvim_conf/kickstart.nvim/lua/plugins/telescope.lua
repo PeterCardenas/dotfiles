@@ -1,3 +1,51 @@
+-- Telescope keymaps
+vim.keymap.set('n', '<leader>fo',
+  function()
+    require('telescope.builtin').oldfiles()
+  end,
+  { desc = '[?] Find recently opened files' }
+)
+vim.keymap.set('n', '<leader>/',
+  function()
+    -- You can pass additional configuration to telescope to change theme, layout, etc.
+    require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
+      winblend = 10,
+      previewer = true,
+    })
+  end,
+  { desc = '[/] Fuzzily search in current buffer' }
+)
+vim.keymap.set('n', '<leader>ff',
+  function()
+    require('telescope.builtin').find_files()
+  end,
+  { desc = '[F]ind [F]iles' }
+)
+vim.keymap.set('n', '<leader>fw',
+  function()
+    require('telescope').extensions.live_grep_args.live_grep_args()
+  end,
+  { desc = '[F]ind [W]ords with ripgrep' }
+)
+vim.keymap.set('n', '<leader>sh',
+  function()
+    require('telescope.builtin').help_tags()
+  end,
+  { desc = '[S]earch [H]elp' }
+)
+vim.keymap.set('n', '<leader>ld',
+  function()
+    require('telescope.builtin').diagnostics({ bufnr = 0 })
+  end,
+  { desc = '[L]anguage [D]iagnostics for current buffer' }
+)
+vim.keymap.set('n', '<leader>sr',
+  function()
+    require('telescope.builtin').resume()
+  end,
+  { desc = '[S]earch [R]resume' }
+)
+
 ---@type LazyPluginSpec
 return {
   -- Fuzzy Finder (files, lsp, etc)
@@ -10,8 +58,6 @@ return {
     -- requirements installed.
     {
       'nvim-telescope/telescope-fzf-native.nvim',
-      -- NOTE: If you are having trouble with this installation,
-      --       refer to the README for telescope-fzf-native for more instructions.
       build = 'make',
       cond = function()
         return vim.fn.executable 'make' == 1
@@ -20,7 +66,6 @@ return {
   },
   config = function()
     -- [[ Configure Telescope ]]
-    -- See `:help telescope` and `:help telescope.setup()`
     local telescope_actions = require "telescope.actions"
     local lga_actions = require "telescope-live-grep-args.actions"
     require('telescope').setup {
