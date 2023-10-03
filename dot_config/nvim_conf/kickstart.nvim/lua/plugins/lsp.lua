@@ -1,8 +1,8 @@
 -- [[ Configure LSP ]]
 --  This function gets run when an LSP connects to a particular buffer.
----@param _ lsp.Client
+---@param client lsp.Client
 ---@param bufnr integer
-local on_attach = function(_, bufnr)
+local on_attach = function(client, bufnr)
   local nmap = function(keys, func, desc)
     if desc then
       desc = 'LSP: ' .. desc
@@ -54,13 +54,24 @@ local on_attach = function(_, bufnr)
   -- Create a command `:Format` local to the LSP buffer
   nmap('<leader>lf', function()
     vim.lsp.buf.format({
-      filter = function(client)
+      filter = function(format_client)
         -- Do not request typescript-language-server for formatting.
-        return client.name ~= "tsserver"
+        return format_client.name ~= "tsserver"
       end
     })
   end, "Format buffer")
 end
+
+vim.api.nvim_create_autocmd('LspAttach', {
+  group = vim.api.nvim_create_augroup('UserLspConfig', {}),
+  callback = function(args)
+    local client = vim.lsp.get_client_by_id(args.data.client_id)
+    if client == nil then
+      return
+    end
+    on_attach(client, args.buf)
+  end
+})
 
 ---@type LazyPluginSpec
 return {
@@ -116,7 +127,6 @@ return {
       function(server_name)
         require('lspconfig')[server_name].setup({
           capabilities = capabilities,
-          on_attach = on_attach,
           settings = servers[server_name],
           filetypes = (servers[server_name] or {}).filetypes,
         })
