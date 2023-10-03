@@ -33,7 +33,20 @@ local on_attach = function(_, bufnr)
 
   -- See `:help K` for why this keymap
   nmap('K', vim.lsp.buf.hover, 'Hover Documentation')
-  vim.keymap.set({ 'n', 'i' }, '<C-k>', vim.lsp.buf.signature_help, { desc = 'LSP: Signature Documentation' })
+  vim.keymap.set({ 'n', 'i' }, '<C-k>',
+    function()
+      vim.lsp.buf.signature_help()
+    end,
+    { desc = 'LSP: Signature Documentation', buffer = bufnr }
+  )
+  if client.server_capabilities.inlayHintProvider then
+    vim.keymap.set({ 'n', 'i' }, '<C-i>',
+      function()
+        vim.lsp.inlay_hint(bufnr)
+      end,
+      { desc = 'LSP: Signature Documentation', buffer = bufnr }
+    )
+  end
 
   -- Lesser used LSP functionality
   nmap('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
