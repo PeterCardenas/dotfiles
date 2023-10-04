@@ -16,6 +16,14 @@ vim.opt.rtp:prepend(lazypath)
 
 -- Add plugins for lazy.nvim.
 require('lazy').setup({
+  -- Git related plugins
+  'tpope/vim-fugitive',
+  'tpope/vim-rhubarb',
+
+  -- Detect tabstop and shiftwidth automatically
+  'tpope/vim-sleuth',
+
+  -- Plugin configs that are of decent heft.
   require('plugins.heirline'),
   require('plugins.lsp'),
   require('plugins.cmp'),
@@ -26,12 +34,18 @@ require('lazy').setup({
   require('plugins.neo_tree'),
   require('plugins.debug'),
 
-  -- Git related plugins
-  'tpope/vim-fugitive',
-  'tpope/vim-rhubarb',
-
-  -- Detect tabstop and shiftwidth automatically
-  'tpope/vim-sleuth',
+  -- Enable copilot
+  {
+    'zbirenbaum/copilot.lua',
+    event = 'InsertEnter',
+    config = function()
+      require('copilot').setup({
+        suggestion = {
+          auto_trigger = true,
+        }
+      })
+    end
+  },
 
   -- Useful plugin to show you pending keybinds.
   {
