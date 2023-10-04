@@ -21,6 +21,12 @@ vim.keymap.set('n', '<leader>ff',
   end,
   { desc = '[F]ind [F]iles' }
 )
+vim.keymap.set('n', '<leader>fF',
+  function()
+    require('telescope.builtin').find_files({ hidden = true, no_ignore = true })
+  end,
+  { desc = '[F]ind Any [F]ile' }
+)
 vim.keymap.set('n', '<leader>fw',
   function()
     require('telescope').extensions.live_grep_args.live_grep_args()
@@ -76,7 +82,7 @@ return {
           }
         },
         sorting_strategy = "ascending",
-        path_display = { "truncate" },
+        path_display = { shorten = { len = 1, exclude = { -1, -2 } } },
         prompt_prefix = "  ",
         selection_caret = "❯ ",
         mappings = {
