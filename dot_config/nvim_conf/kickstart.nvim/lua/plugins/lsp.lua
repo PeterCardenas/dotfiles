@@ -12,7 +12,7 @@ local on_attach = function(client, bufnr)
   end
 
   nmap('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
-  nmap('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction')
+  nmap('<leader>la', vim.lsp.buf.code_action, '[L]anguage [A]ction')
 
   nmap('gd',
     function()
