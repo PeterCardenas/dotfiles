@@ -47,11 +47,6 @@ vim.o.completeopt = 'menuone,noselect'
 -- NOTE: You should make sure your terminal supports this
 vim.o.termguicolors = true
 
--- Set shell to bash for tmux navigation to be fast.
--- TODO: Set this only when needed
--- Reference: https://github.com/christoomey/vim-tmux-navigator/issues/72#issuecomment-873841679
-vim.opt.shell = "/bin/bash -i"
-
 -- Set highlight based on whether searching is done.
 vim.on_key(function(char)
   if vim.fn.mode() == "n" then
