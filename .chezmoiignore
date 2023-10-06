@@ -1,4 +1,5 @@
 README.md
+.git-blame-ignore-revs
 # Only add fishify for linux
 {{- if ne .chezmoi.os "linux" }}
 .local/bin/fishify
