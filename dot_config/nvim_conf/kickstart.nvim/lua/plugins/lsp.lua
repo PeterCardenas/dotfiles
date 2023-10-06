@@ -133,8 +133,17 @@ return {
 
     mason_lspconfig.setup_handlers {
       function(server_name)
+        local server_capabilities = capabilities
+        if server_name == 'clangd' then
+          server_capabilities = vim.tbl_extend('force', server_capabilities, {
+            offsetEncoding = { 'utf-16' },
+            general = {
+              positionEncodings = { 'utf-16' },
+            }
+          })
+        end
         require('lspconfig')[server_name].setup({
-          capabilities = capabilities,
+          capabilities = server_capabilities,
           settings = servers[server_name],
           filetypes = (servers[server_name] or {}).filetypes,
         })
