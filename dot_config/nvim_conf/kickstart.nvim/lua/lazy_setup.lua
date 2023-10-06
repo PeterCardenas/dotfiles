@@ -42,7 +42,7 @@ require('lazy').setup({
       require('copilot').setup({
         suggestion = {
           auto_trigger = true,
-        }
+        },
       })
     end
   },
@@ -99,7 +99,7 @@ require('lazy').setup({
   { 'numToStr/Comment.nvim', opts = {} },
 
   -- Camel-case and snake-case motion
-  "bkad/CamelCaseMotion",
+  { "bkad/CamelCaseMotion", event = "BufEnter" },
 
   -- Sticky scroll
   {
@@ -198,4 +198,3 @@ require('lazy').setup({
     notify = true,
   },
 })
-
