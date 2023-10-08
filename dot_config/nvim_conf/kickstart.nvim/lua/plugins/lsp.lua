@@ -105,7 +105,7 @@ return {
         filetypes = { "css", "scss" },
         settings = {
           stylelintplus = {
-            autoFixOnFormat = true
+            autoFixOnFormat = true,
           }
         }
       },

@@ -5,7 +5,7 @@ return {
   event = "BufEnter",
   config = function()
     -- See `:help gitsigns.txt`
-    require('gitsigns').setup {
+    require('gitsigns').setup({
       signs = {
         add = { text = '+' },
         change = { text = '~' },
@@ -15,7 +15,7 @@ return {
       },
       current_line_blame = true,
       current_line_blame_opts = {
-        delay = 10
+        delay = 10,
       },
       on_attach = function(bufnr)
         vim.keymap.set({ 'n', 'v' }, '<leader>gp', require('gitsigns').preview_hunk,
@@ -37,6 +37,6 @@ return {
           return '<Ignore>'
         end, { expr = true, buffer = bufnr, desc = "Jump to previous hunk" })
       end,
-    }
+    })
   end,
 }

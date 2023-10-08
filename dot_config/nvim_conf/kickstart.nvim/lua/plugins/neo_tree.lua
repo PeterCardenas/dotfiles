@@ -5,7 +5,7 @@ return {
   branch = "v3.x",
   dependencies = {
     "nvim-lua/plenary.nvim",
-    "nvim-tree/nvim-web-devicons",   -- not strictly required, but recommended
+    "nvim-tree/nvim-web-devicons", -- not strictly required, but recommended
     "MunifTanjim/nui.nvim",
   },
   config = function()
@@ -26,7 +26,7 @@ return {
       end
     end
 
-    require("neo-tree").setup {
+    require("neo-tree").setup({
       filesystem = {
         follow_current_file = { enabled = true },
         async_directory_scan = "always",
@@ -41,6 +41,6 @@ return {
           system_open = function(state) system_open(state.tree:get_node():get_id()) end,
         },
       }
-    }
+    })
   end
 }

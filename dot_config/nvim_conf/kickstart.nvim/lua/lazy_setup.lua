@@ -56,7 +56,11 @@ require('lazy').setup({
       vim.o.timeoutlen = 300
     end,
     config = function()
-      require('which-key').setup { disable = { filetypes = { "TelescopePrompt" } } }
+      require('which-key').setup({
+        disable = {
+          filetypes = { "TelescopePrompt" }
+        },
+      })
     end
   },
 
@@ -105,10 +109,10 @@ require('lazy').setup({
   {
     "nvim-treesitter/nvim-treesitter-context",
     config = function()
-      require("treesitter-context").setup {
+      require("treesitter-context").setup({
         mode = "topline",
         line_numbers = false,
-      }
+      })
     end,
   },
 
@@ -127,9 +131,9 @@ require('lazy').setup({
     },
     event = "BufEnter",
     config = function()
-      require("ufo").setup {
+      require("ufo").setup({
         provider_selector = function() return { "treesitter", "indent" } end,
-      }
+      })
     end,
   },
 
@@ -144,7 +148,7 @@ require('lazy').setup({
     "luukvbaal/statuscol.nvim",
     config = function()
       local builtin = require "statuscol.builtin"
-      require("statuscol").setup {
+      require("statuscol").setup({
         segments = {
           { text = { builtin.foldfunc }, click = "v:lua.ScFa" },
           {
@@ -157,7 +161,7 @@ require('lazy').setup({
             click = "v:lua.ScSa"
           },
         }
-      }
+      })
     end,
   },
 
@@ -166,9 +170,9 @@ require('lazy').setup({
     "windwp/nvim-autopairs",
     event = "InsertEnter",
     config = function()
-      require('nvim-autopairs').setup {
+      require('nvim-autopairs').setup({
         check_ts = true,
-      }
+      })
     end
   },
 
@@ -177,10 +181,10 @@ require('lazy').setup({
     "Shatur/neovim-session-manager",
     event = "BufWritePost",
     config = function()
-      require "session_manager".setup {
+      require "session_manager".setup({
         autoload_mode = require("session_manager.config").AutoloadMode.CurrentDir,
         autosave_ignore_dirs = { "~/", "~/Downloads", "/" },
-      }
+      })
     end,
   },
 
