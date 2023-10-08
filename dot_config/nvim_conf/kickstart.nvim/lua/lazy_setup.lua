@@ -97,6 +97,11 @@ require('lazy').setup({
     end
   },
 
+  -- Better code action menu
+  {
+    "weilbith/nvim-code-action-menu"
+  },
+
   {
     -- Theme inspired by Atom
     'navarasu/onedark.nvim',
@@ -166,6 +171,7 @@ require('lazy').setup({
     },
     event = "BufEnter",
     config = function()
+---@diagnostic disable-next-line: missing-fields
       require("ufo").setup({
         provider_selector = function() return { "treesitter", "indent" } end,
       })
