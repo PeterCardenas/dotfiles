@@ -33,11 +33,11 @@ vim.keymap.set('n', '<leader>fw',
   end,
   { desc = '[F]ind [W]ords with ripgrep' }
 )
-vim.keymap.set('n', '<leader>sh',
+vim.keymap.set('n', '<leader>fh',
   function()
     require('telescope.builtin').help_tags()
   end,
-  { desc = '[S]earch [H]elp' }
+  { desc = '[F]ind [H]elp' }
 )
 vim.keymap.set('n', '<leader>ld',
   function()
@@ -45,11 +45,11 @@ vim.keymap.set('n', '<leader>ld',
   end,
   { desc = '[L]anguage [D]iagnostics for current buffer' }
 )
-vim.keymap.set('n', '<leader>sr',
+vim.keymap.set('n', '<leader>fr',
   function()
     require('telescope.builtin').resume()
   end,
-  { desc = '[S]earch [R]resume' }
+  { desc = '[F]ind [R]resume' }
 )
 
 ---@type LazyPluginSpec
