@@ -42,6 +42,9 @@ require('lazy').setup({
       require('copilot').setup({
         suggestion = {
           auto_trigger = true,
+          keymap = {
+            accept = "<C-c>",
+          },
         },
       })
     end
