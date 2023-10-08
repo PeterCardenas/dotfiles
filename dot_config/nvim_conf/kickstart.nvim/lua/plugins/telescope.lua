@@ -51,6 +51,12 @@ vim.keymap.set('n', '<leader>fr',
   end,
   { desc = '[F]ind [R]resume' }
 )
+vim.keymap.set('n', '<leader>fn',
+  function()
+    require('telescope').extensions.notify.notify()
+  end,
+  { desc = '[F]ind [N]otification' }
+)
 
 ---@type LazyPluginSpec
 return {

@@ -67,6 +67,14 @@ require('lazy').setup({
     end
   },
 
+  -- Better notification UI
+  {
+    'rcarriga/nvim-notify',
+    config = function()
+      vim.notify = require('notify')
+    end,
+  },
+
   {
     -- Theme inspired by Atom
     'navarasu/onedark.nvim',
