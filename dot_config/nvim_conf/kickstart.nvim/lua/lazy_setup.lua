@@ -162,6 +162,7 @@ require('lazy').setup({
     config = function()
       local builtin = require "statuscol.builtin"
       require("statuscol").setup({
+        foldfunc = 'builtin',
         segments = {
           { text = { builtin.foldfunc }, click = "v:lua.ScFa" },
           {
