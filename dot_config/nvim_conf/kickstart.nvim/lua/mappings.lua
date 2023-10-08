@@ -15,8 +15,8 @@ vim.keymap.set({ 'v', 'n' }, "<leader>q", "<cmd>q<cr>", { desc = "Quit split" })
 vim.keymap.set({ 'v', 'n' }, "<leader>Q", "<cmd>qa<cr>", { desc = "Quit all" })
 
 -- Remap for dealing with word wrap
--- vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
--- vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
+vim.keymap.set('n', 'k', 'g<Up>', { silent = true })
+vim.keymap.set('n', 'j', 'g<Down>', { silent = true })
 vim.keymap.set({ 'v', 'n' }, "gj", "<C-i>", { desc = "Go to next location" })
 vim.keymap.set({ 'v', 'n' }, "gk", "<C-o>", { desc = "Go to previous location" })
 
