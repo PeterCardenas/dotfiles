@@ -118,7 +118,17 @@ return {
     }
 
     -- Setup neovim lua configuration
-    require('neodev').setup()
+    -- Load plugins when editing overall configuration.
+    require('neodev').setup({
+      override = function(root_dir, library)
+        if root_dir:find(".local/share/chezmoi", 1, true) ~= nil then
+          library.enabled = true
+          library.plugins = true
+          library.runtime = true
+          library.types = true
+        end
+      end,
+    })
 
     -- nvim-cmp supports additional completion capabilities, so broadcast that to servers
     local capabilities = vim.lsp.protocol.make_client_capabilities()
