@@ -33,7 +33,7 @@ local on_attach = function(client, bufnr)
 
   -- See `:help K` for why this keymap
   nmap('K', vim.lsp.buf.hover, 'Hover Documentation')
-  vim.keymap.set({ 'n', 'i' }, '<C-k>',
+  vim.keymap.set({ 'n', 'i' }, '<C-s>',
     function()
       vim.lsp.buf.signature_help()
     end,
