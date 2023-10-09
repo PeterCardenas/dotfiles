@@ -28,10 +28,15 @@ vim.api.nvim_create_autocmd("VimEnter", {
   group = tmux_navigator_group,
   callback = set_is_vim
 })
-vim.api.nvim_create_autocmd("VimLeave", {
+vim.api.nvim_create_autocmd("VimLeavePre", {
   desc = "Tell TMUX we left neovim",
   group = tmux_navigator_group,
-  callback = unset_is_vim
+  callback = function ()
+    unset_is_vim()
+    -- Hack for making sure vim doesn't exit with a non-zero exit code.
+    -- Reference: https://github.com/neovim/neovim/issues/21856#issuecomment-1514723887
+    vim.cmd('sleep 10m')
+  end
 })
 vim.api.nvim_create_autocmd("VimSuspend", {
   desc = "Tell TMUX we suspended neovim",
