@@ -27,6 +27,13 @@ return {
     end
 
     require("neo-tree").setup({
+      close_if_last_window = true,
+      window = {
+        mappings = {
+          -- Prefer existing keymaps using leader.
+          ["<space>"] = false,
+        },
+      },
       filesystem = {
         follow_current_file = { enabled = true },
         async_directory_scan = "always",
