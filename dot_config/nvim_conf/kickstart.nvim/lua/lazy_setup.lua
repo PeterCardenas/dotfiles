@@ -35,6 +35,7 @@ require('lazy').setup({
   require('plugins.debug'),
   require('plugins.harpoon'),
   require('plugins.dashboard'),
+  require('plugins.breadcrumbs'),
 
   -- Enable copilot
   {
