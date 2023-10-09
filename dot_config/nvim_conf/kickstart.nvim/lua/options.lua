@@ -48,6 +48,39 @@ vim.o.completeopt = 'menuone,noselect'
 -- NOTE: You should make sure your terminal supports this
 vim.o.termguicolors = true
 
+-- Style diagnostics
+local signs = {
+  { name = "DiagnosticSignError", text = "" },
+  { name = "DiagnosticSignWarn", text = "" },
+  { name = "DiagnosticSignHint", text = "" },
+  { name = "DiagnosticSignInfo", text = "" },
+  { name = "DiagnosticSignError", text = "" },
+  { name = "DapStopped", text = "", texthl = "DiagnosticWarn" },
+  { name = "DapBreakpoint", text = "", texthl = "DiagnosticInfo" },
+  { name = "DapBreakpointRejected", text = "", texthl = "DiagnosticError" },
+  { name = "DapBreakpointCondition", text = "", texthl = "DiagnosticInfo" },
+  { name = "DapLogPoint", text = ".>", texthl = "DiagnosticInfo" },
+}
+for _, sign in ipairs(signs) do
+  if not sign.texthl then sign.texthl = sign.name end
+  vim.fn.sign_define(sign.name, sign)
+end
+vim.diagnostic.config({
+  virtual_text = true,
+  signs = { active = signs },
+  update_in_insert = true,
+  underline = true,
+  severity_sort = true,
+  float = {
+    focused = false,
+    style = "minimal",
+    border = "rounded",
+    source = "always",
+    header = "",
+    prefix = "",
+  },
+})
+
 -- Set highlight based on whether searching is done.
 vim.on_key(function(char)
   if vim.fn.mode() == "n" then
@@ -66,4 +99,3 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   group = highlight_group,
   pattern = '*',
 })
-
