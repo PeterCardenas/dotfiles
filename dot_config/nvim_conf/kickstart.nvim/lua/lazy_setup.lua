@@ -33,6 +33,7 @@ require('lazy').setup({
   require('plugins.tmux'),
   require('plugins.neo_tree'),
   require('plugins.debug'),
+  require('plugins.harpoon'),
 
   -- Enable copilot
   {
