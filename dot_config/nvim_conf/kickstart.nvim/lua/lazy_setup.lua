@@ -34,6 +34,7 @@ require('lazy').setup({
   require('plugins.neo_tree'),
   require('plugins.debug'),
   require('plugins.harpoon'),
+  require('plugins.dashboard'),
 
   -- Enable copilot
   {
