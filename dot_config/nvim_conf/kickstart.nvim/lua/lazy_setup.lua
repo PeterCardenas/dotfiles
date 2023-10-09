@@ -88,11 +88,11 @@ require('lazy').setup({
         },
         -- you can enable a preset for easier configuration
         presets = {
-          bottom_search = true,   -- use a classic bottom cmdline for search
-          command_palette = true, -- position the cmdline and popupmenu together
+          bottom_search = true,         -- use a classic bottom cmdline for search
+          command_palette = true,       -- position the cmdline and popupmenu together
           long_message_to_split = true, -- long messages will be sent to a split
-          inc_rename = false,     -- enables an input dialog for inc-rename.nvim
-          lsp_doc_border = false, -- add a border to hover docs and signature help
+          inc_rename = false,           -- enables an input dialog for inc-rename.nvim
+          lsp_doc_border = false,       -- add a border to hover docs and signature help
         },
       })
     end
@@ -104,11 +104,11 @@ require('lazy').setup({
   },
 
   {
-    -- Theme inspired by Atom
-    'navarasu/onedark.nvim',
+    "folke/tokyonight.nvim",
+    lazy = false,
     priority = 1000,
     config = function()
-      vim.cmd.colorscheme 'onedark'
+      vim.cmd('colorscheme tokyonight-storm')
     end,
   },
 
@@ -116,15 +116,17 @@ require('lazy').setup({
     -- Set lualine as statusline
     'nvim-lualine/lualine.nvim',
     -- See `:help lualine.txt`
-    opts = {
-      options = {
-        icons_enabled = true,
-        theme = 'auto',
-        component_separators = '|',
-        section_separators = '',
-        globalstatus = true,
-      },
-    },
+    config = function()
+      require('lualine').setup({
+        options = {
+          icons_enabled = true,
+          theme = 'tokyonight',
+          component_separators = '|',
+          section_separators = '',
+          globalstatus = true,
+        },
+      })
+    end,
   },
 
   {
@@ -172,7 +174,7 @@ require('lazy').setup({
     },
     event = "BufEnter",
     config = function()
----@diagnostic disable-next-line: missing-fields
+      ---@diagnostic disable-next-line: missing-fields
       require("ufo").setup({
         provider_selector = function() return { "treesitter", "indent" } end,
       })
