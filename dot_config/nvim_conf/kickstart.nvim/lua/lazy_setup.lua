@@ -70,7 +70,7 @@ require('lazy').setup({
   -- Better UI for select, notifications, popups, and many others.
   {
     "folke/noice.nvim",
-    event = "VeryLazy",
+    priority = 999,
     dependencies = {
       "MunifTanjim/nui.nvim",
       "rcarriga/nvim-notify",
