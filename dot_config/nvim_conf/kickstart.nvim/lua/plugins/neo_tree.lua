@@ -32,6 +32,8 @@ return {
         mappings = {
           -- Prefer existing keymaps using leader.
           ["<space>"] = false,
+          -- Prefer neovim search of neo-tree search.
+          ['/'] = false,
         },
       },
       filesystem = {
