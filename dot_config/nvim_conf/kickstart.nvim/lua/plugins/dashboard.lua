@@ -46,7 +46,8 @@ end
 ---@type LazyPluginSpec
 return {
   "goolord/alpha-nvim",
-  event = "VimEnter",
+  lazy = false,
+  priority = 1001,
   config = function()
     -- Setup dashboard layout
     local dashboard = require("alpha.themes.dashboard")
