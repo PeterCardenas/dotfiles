@@ -148,7 +148,7 @@ require('lazy').setup({
   { 'numToStr/Comment.nvim', opts = {} },
 
   -- Camel-case and snake-case motion
-  { "bkad/CamelCaseMotion",  event = "BufEnter" },
+  { "bkad/CamelCaseMotion",  event = "VeryLazy" },
 
   -- Sticky scroll
   {
