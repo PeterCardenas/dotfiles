@@ -1,5 +1,5 @@
 --type-add
-test:*{.test.tsx,.test.ts,test.py,test.cc}
+test:*{.test.tsx,.test.ts,test.py,test.cc,test.go}
 --type-add
 tsx:*{.tsx}
 --type-add
