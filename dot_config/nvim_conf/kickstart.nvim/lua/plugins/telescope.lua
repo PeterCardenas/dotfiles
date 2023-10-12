@@ -33,6 +33,14 @@ vim.keymap.set('n', '<leader>fw',
   end,
   { desc = '[F]ind [W]ords with ripgrep' }
 )
+vim.keymap.set('n', "<leader>fW",
+  function()
+    require("telescope.builtin").live_grep {
+      additional_args = function(args) return vim.list_extend(args, { "--hidden", "--no-ignore" }) end,
+    }
+  end,
+  { desc = "[F]ind [W]ords with ripgrep across all files", }
+)
 vim.keymap.set('n', '<leader>fh',
   function()
     require('telescope.builtin').help_tags()
