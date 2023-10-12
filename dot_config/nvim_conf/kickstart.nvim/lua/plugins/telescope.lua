@@ -3,7 +3,7 @@ vim.keymap.set('n', '<leader>fo',
   function()
     require('telescope.builtin').oldfiles()
   end,
-  { desc = '[?] Find recently opened files' }
+  { desc = '[F]ind [O]ld files' }
 )
 vim.keymap.set('n', '<leader>/',
   function()
@@ -96,7 +96,6 @@ return {
           }
         },
         sorting_strategy = "ascending",
-        path_display = { shorten = { len = 1, exclude = { -1, -2 } } },
         prompt_prefix = "  ",
         selection_caret = "❯ ",
         mappings = {
