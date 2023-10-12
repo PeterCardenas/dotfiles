@@ -106,6 +106,7 @@ return {
             Method = ' ',
             Module = ' ',
             Namespace = ' ',
+            Number = ' ',
             Object = ' ',
             Package  = ' ',
             Property = ' ',
@@ -118,6 +119,7 @@ return {
             Text = " ",
             Type = ' ',
             TypeParameter = ' ',
+            Value = ' ',
             Variable = ' ',
             WhileStatement = ' ',
           }
