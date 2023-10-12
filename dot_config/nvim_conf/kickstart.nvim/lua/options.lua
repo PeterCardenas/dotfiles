@@ -6,6 +6,9 @@ vim.opt.foldlevelstart = 99
 vim.opt.foldenable = true
 vim.opt.fillchars = 'eob: ,fold: ,foldopen:,foldsep:│,foldclose:'
 
+-- Make global status work
+vim.opt.laststatus = 3
+
 -- Highlight current text line of cursor
 vim.opt.cursorline = true
 -- Number of lines to keep above and below the buffer
