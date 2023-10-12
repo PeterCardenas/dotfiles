@@ -122,10 +122,24 @@ require('lazy').setup({
       require('lualine').setup({
         options = {
           icons_enabled = true,
-          theme = 'tokyonight',
           component_separators = '|',
           section_separators = '',
           globalstatus = true,
+        },
+        sections = {
+          lualine_b = {
+            'branch',
+            'diff',
+            {
+              'diagnostics',
+              symbols = {
+                error = ' ',
+                warn = ' ',
+                info = ' ',
+                hint = ' ',
+              },
+            },
+          },
         },
       })
     end,
