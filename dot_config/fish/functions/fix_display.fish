@@ -9,9 +9,7 @@ function fix_display
     end
     set -l tmux_display (tmux showenv DISPLAY | cut -d= -f2)
     set -gx DISPLAY "$tmux_display"
-  else if set -q DISPLAY; and string match -q -r "^:[0-9]\$" $DISPLAY
-    set -gx DISPLAY "$(hostname)$DISPLAY"
   else if not set -q DISPLAY
-    set -gx DISPLAY "$(hostname):0"
+    set -gx DISPLAY ":0"
   end
 end
