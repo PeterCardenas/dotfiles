@@ -16,6 +16,13 @@ abbr -e (abbr -l)
 
 source "$HOME"/.config/fish/colors.fish
 source "$HOME"/.config/fish/completion_utils.fish
+# Add tmux variables to fish shell before a command is executed.
+function refresh_tmux_vars --on-event fish_preexec
+  if set -q TMUX
+    tmux showenv | string replace -rf '^((?:SSH|DISPLAY|XAUTHORITY).*?)=(.*?)$' 'set -gx $1 "$2"' | source
+    set -e XAUTHORITY
+  end
+end
 
 # OS Specific
 set -l os (uname -s)
