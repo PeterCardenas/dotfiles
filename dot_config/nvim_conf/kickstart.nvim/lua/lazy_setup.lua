@@ -170,7 +170,7 @@ require('lazy').setup({
     config = function()
       require("treesitter-context").setup({
         mode = "topline",
-        line_numbers = false,
+        line_numbers = true,
       })
     end,
   },
