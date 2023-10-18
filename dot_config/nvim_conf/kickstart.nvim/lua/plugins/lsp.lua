@@ -20,6 +20,8 @@ local on_attach = function(client, bufnr)
     end,
     '[G]oto [D]efinition'
   )
+  -- The fname option here is not good enough.
+  -- TODO Find a way to display path in a smart way.
   nmap('gr',
     function()
       require('telescope.builtin').lsp_references()
