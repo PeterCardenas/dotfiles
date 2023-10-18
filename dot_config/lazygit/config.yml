@@ -2,6 +2,7 @@ gui:
   skipRewordInEditorWarning: true
   splitDiff: "always"
   scrollPastBottom: true
+  animateExplosion: true
   authorColors:
     "Peter Cardenas": "yellow"
     "PeterPCardenas": "yellow"
@@ -9,6 +10,7 @@ gui:
   branchColors:
     "pcardenas": "yellow"
     "master": "red"
+    "main": "red"
   theme:
     selectedLineBgColor:
       - reverse
@@ -18,8 +20,13 @@ gui:
       - "#A39B8F"
 keybinding:
   commits:
-    moveDownCommit: '<c-n>' # move commit down one
-    moveUpCommit: '<c-p>' # move commit up one
-# TODO: Add Ctrl-Down and Ctrl-Up to move commits around (workaround since ctrl-k and ctrl-j are mapped in nvim)
-# TODO: Skip confirmation of opening up editor when renaming commits
-
+    moveDownCommit: '<c-n>'
+    moveUpCommit: '<c-p>'
+git:
+  parseEmoji: true
+notARepository: 'skip'
+promptToReturnFromSubprocess: false
+disableStartupPopups: true
+quitOnTopLevelReturn: true
+os:
+  editPreset: 'nvim'
