@@ -37,6 +37,12 @@ require('lazy').setup({
   require('plugins.dashboard'),
   require('plugins.breadcrumbs'),
 
+  -- Delete buffers more reliably
+  {
+    'famiu/bufdelete.nvim',
+    lazy = true,
+  },
+
   -- Enable copilot
   {
     'zbirenbaum/copilot.lua',
