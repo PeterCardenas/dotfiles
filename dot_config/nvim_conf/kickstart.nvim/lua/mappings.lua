@@ -72,7 +72,7 @@ end
 local function close_buf()
   local current = vim.api.nvim_get_current_buf()
   vim.schedule(function()
-    vim.api.nvim_buf_delete(current, { force = false })
+    require('bufdelete').bufdelete(current, false)
   end)
   nav_buf(-1)
 end
@@ -130,5 +130,11 @@ vim.keymap.set('n', "<leader>S.",
     require("session_manager").load_current_dir_session()
   end,
   { desc = "Load current directory session" }
+)
+vim.keymap.set('n', "<leader>Ss",
+  function()
+    require("session_manager").save_current_dir_session()
+  end,
+  { desc = "Save current directory session" }
 )
 

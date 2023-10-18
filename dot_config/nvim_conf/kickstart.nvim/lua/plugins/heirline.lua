@@ -167,7 +167,7 @@ return {
         callback = function(_, minwid, _, button)
           if (button == "m") then -- close on mouse middle click
             vim.schedule(function()
-              vim.api.nvim_buf_delete(minwid, { force = false })
+              require('bufdelete').bufdelete(minwid, false)
             end)
           else
             vim.api.nvim_win_set_buf(0, minwid)
@@ -195,7 +195,7 @@ return {
         on_click = {
           callback = function(_, minwid)
             vim.schedule(function()
-              vim.api.nvim_buf_delete(minwid, { force = false })
+              require('bufdelete').bufdelete(minwid, false)
               vim.cmd.redrawtabline()
             end)
           end,
