@@ -35,6 +35,9 @@ else if test $os = Darwin
   source ~/.iterm2_shell_integration.fish
 end
 
+# Make Ctrl-H work in tmux pane navigation.
+bind -M insert \ch "tmux select-pane -L"
+
 # Add hostname to DISPLAY for X11 forwarding.
 fix_display
 # Use eternal terminal instead of ssh.
