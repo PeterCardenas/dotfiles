@@ -10,7 +10,7 @@ vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
 vim.keymap.set('v', "<", "<gv", { desc = "unindent line" })
 vim.keymap.set('v', ">", ">gv", { desc = "indent line" })
 
-vim.keymap.set('n', '|', function () vim.cmd("vs") end, { desc = "Vertical split" })
+vim.keymap.set('n', '|', function() vim.cmd("vs") end, { desc = "Vertical split" })
 
 vim.keymap.set({ 'v', 'n' }, "<leader>s", "<cmd>w<cr>", { desc = "Save file" })
 vim.keymap.set({ 'v', 'n' }, "<leader>q", "<cmd>q<cr>", { desc = "Quit split" })
@@ -138,3 +138,10 @@ vim.keymap.set('n', "<leader>Ss",
   { desc = "Save current directory session" }
 )
 
+
+vim.keymap.set('n', '<leader>dn',
+  function()
+    require('notify').dismiss({ pending = false })
+  end,
+  { desc = "[D]ismiss [n]otification" }
+)
