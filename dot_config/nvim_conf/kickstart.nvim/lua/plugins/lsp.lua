@@ -91,7 +91,7 @@ return {
     -- Additional lua configuration, makes nvim stuff amazing!
     'folke/neodev.nvim',
   },
-  event = "BufEnter",
+  event = { 'BufReadPre', 'BufNewFile' },
   config = function()
     -- Enable the following language servers
     -- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md

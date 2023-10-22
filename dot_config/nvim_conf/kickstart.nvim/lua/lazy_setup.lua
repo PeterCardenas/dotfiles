@@ -165,14 +165,19 @@ require('lazy').setup({
   },
 
   -- "gc" to comment visual regions/lines
-  { 'numToStr/Comment.nvim', opts = {} },
+  {
+    'numToStr/Comment.nvim',
+    opts = {},
+    event = { "BufReadPre", "BufNewFile" }
+  },
 
   -- Camel-case and snake-case motion
-  { "bkad/CamelCaseMotion",  event = "VeryLazy" },
+  { "bkad/CamelCaseMotion", event = { "BufReadPre", "BufNewFile" } },
 
   -- Sticky scroll
   {
     "nvim-treesitter/nvim-treesitter-context",
+    after = "nvim-treesitter",
     config = function()
       require("treesitter-context").setup({
         mode = "topline",
@@ -194,7 +199,7 @@ require('lazy').setup({
     dependencies = {
       "kevinhwang91/promise-async",
     },
-    event = "BufEnter",
+    event = { "BufReadPre", "BufNewFile" },
     config = function()
       ---@diagnostic disable-next-line: missing-fields
       require("ufo").setup({
@@ -207,6 +212,7 @@ require('lazy').setup({
   {
     "ggandor/lightspeed.nvim",
     requires = { "tpope/vim-repeat" },
+    event = { "BufReadPre", "BufNewFile" },
   },
 
   -- Status column
