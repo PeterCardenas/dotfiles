@@ -144,7 +144,7 @@ vim.keymap.set('n', "<leader>Ss",
 
 vim.keymap.set('n', '<leader>dn',
   function()
-    require('notify').dismiss({ pending = false })
+    require('notify').dismiss({ pending = true, silent = true })
   end,
   { desc = "[D]ismiss [n]otification" }
 )
