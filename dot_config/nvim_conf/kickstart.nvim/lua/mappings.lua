@@ -38,6 +38,9 @@ vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous dia
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnostic message' })
 vim.keymap.set('n', '<leader>ld', vim.diagnostic.open_float, { desc = '[L]anguage [D]iagnostic' })
 
+-- System clipboard keymaps.
+vim.keymap.set({ 'v', 'n' }, "<leader>y", '"+y', { desc = "Yank to clipboard" })
+vim.keymap.set({ 'v', 'n' }, "<leader>p", '"+p', { desc = "Paste from clipboard" })
 
 -- Set spaces per indent
 local function set_indent()
