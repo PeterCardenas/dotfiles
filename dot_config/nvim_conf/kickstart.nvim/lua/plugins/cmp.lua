@@ -20,7 +20,8 @@ return {
     require('luasnip.loaders.from_vscode').lazy_load()
     luasnip.config.setup {}
 
-    cmp.setup {
+    ---@diagnostic disable-next-line: missing-fields
+    cmp.setup({
       snippet = {
         expand = function(args)
           luasnip.lsp_expand(args.body)
@@ -41,6 +42,6 @@ return {
         { name = 'nvim_lsp' },
         { name = 'luasnip' },
       },
-    }
+    })
   end
 }
