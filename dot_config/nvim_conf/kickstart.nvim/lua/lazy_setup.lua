@@ -219,12 +219,12 @@ require('lazy').setup({
         segments = {
           { text = { builtin.foldfunc }, click = "v:lua.ScFa" },
           {
-            sign = { name = { "Diagnostic" }, maxwidth = 2, auto = true },
+            sign = { name = { "Diagnostic" }, colwidth = 2 },
             click = "v:lua.ScSa"
           },
           { text = { builtin.lnumfunc }, click = "v:lua.ScLa", },
           {
-            sign = { namespace = { "gitsigns" }, maxwidth = 2, colwidth = 1, auto = true, wrap = true },
+            sign = { namespace = { "gitsigns" }, maxwidth = 2, colwidth = 1, wrap = true },
             click = "v:lua.ScSa"
           },
         }
