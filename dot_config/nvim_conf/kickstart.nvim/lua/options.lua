@@ -6,6 +6,11 @@ vim.opt.foldlevelstart = 99
 vim.opt.foldenable = true
 vim.opt.fillchars = 'eob: ,fold: ,foldopen:,foldsep:│,foldclose:'
 
+-- Enable true color support.
+if vim.fn.has('termguicolors') == 1 then
+  vim.opt.termguicolors = true
+end
+
 -- Make global status work
 vim.opt.laststatus = 3
 
