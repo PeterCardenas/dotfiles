@@ -220,20 +220,22 @@ require('lazy').setup({
     "luukvbaal/statuscol.nvim",
     config = function()
       local builtin = require "statuscol.builtin"
+
       require("statuscol").setup({
         foldfunc = 'builtin',
+        ft_ignore = { "dashboard", "neo-tree", "help" },
         segments = {
           { text = { builtin.foldfunc }, click = "v:lua.ScFa" },
           {
             sign = { name = { "Diagnostic" }, colwidth = 2 },
-            click = "v:lua.ScSa"
+            click = "v:lua.ScSa",
           },
           { text = { builtin.lnumfunc }, click = "v:lua.ScLa", },
           {
             sign = { namespace = { "gitsigns" }, maxwidth = 2, colwidth = 1, wrap = true },
             click = "v:lua.ScSa"
           },
-        }
+        },
       })
     end,
   },
