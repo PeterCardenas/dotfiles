@@ -6,14 +6,8 @@ prSections:
 issuesSections:
   - title: Mentioned Issues
     filters: mentions:@me
-  - title: 1.42 P1s
-    filters: is:open assignee:@me milestone:1.42 label:P1
-  - title: 1.42 P2s
-    filters: is:open assignee:@me milestone:1.42 label:P2
-  - title: 1.41 P1s
-    filters: is:open assignee:@me milestone:1.41 label:P1
-  - title: 1.41 P2s
-    filters: is:open assignee:@me milestone:1.41 label:P2
+  - title: Config
+    filters: is:open repo:PeterCardenas/dotfiles
 defaults:
   preview:
     open: false
