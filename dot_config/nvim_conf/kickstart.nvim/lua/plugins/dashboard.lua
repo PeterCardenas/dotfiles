@@ -70,7 +70,7 @@ return {
           require('telescope.builtin').oldfiles()
         end
       ),
-      create_button("g", "  Find text",
+      create_button("w", "  Find text",
         function()
           require("telescope").extensions.live_grep_args.live_grep_args()
         end
