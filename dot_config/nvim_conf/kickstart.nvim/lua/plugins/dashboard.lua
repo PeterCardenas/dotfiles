@@ -75,6 +75,11 @@ return {
           require("telescope").extensions.live_grep_args.live_grep_args()
         end
       ),
+      create_button("g", "  LazyGit",
+        function()
+          require("lazygit").lazygit()
+        end
+      ),
       create_button("s", "  Restore Session",
         function()
           require("session_manager").load_current_dir_session()
