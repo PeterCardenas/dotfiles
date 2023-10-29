@@ -6,7 +6,8 @@ local function set_is_vim()
   pcall(function()
     vim.opt.shell = "/bin/bash -i"
     local tmux_socket = vim.fn.split(vim.env.TMUX, ',')[1]
-    vim.fn.system("tmux -S " .. tmux_socket .. " set-option -p @is_vim yes")
+    vim.fn.system("tmux -S " .. tmux_socket .. " set-option -p @disable_vertical_pane_navigation yes")
+    vim.fn.system("tmux -S " .. tmux_socket .. " set-option -p @disable_horizontal_pane_navigation yes")
     vim.opt.shell = "fish"
   end)
 end
@@ -17,7 +18,8 @@ local function unset_is_vim()
   pcall(function()
     vim.opt.shell = "/bin/bash -i"
     local tmux_socket = vim.fn.split(vim.env.TMUX, ',')[1]
-    vim.fn.system("tmux -S " .. tmux_socket .. " set-option -p -u @is_vim")
+    vim.fn.system("tmux -S " .. tmux_socket .. " set-option -p -u @disable_vertical_pane_navigation")
+    vim.fn.system("tmux -S " .. tmux_socket .. " set-option -p -u @disable_horizontal_pane_navigation")
     vim.opt.shell = "fish"
   end)
 end
