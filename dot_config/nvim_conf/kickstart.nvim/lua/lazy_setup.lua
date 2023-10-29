@@ -186,6 +186,9 @@ require('lazy').setup({
       require("treesitter-context").setup({
         mode = "topline",
         line_numbers = true,
+        on_attach = function (bufnr)
+          return vim.bo[bufnr].ft ~= "python"
+        end
       })
     end,
   },
