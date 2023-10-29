@@ -60,7 +60,13 @@ end
 vim.keymap.set({ 'n', 'v' }, "<leader>ui", function() set_indent() end, { desc = "Change indent setting" })
 
 -- Manage Buffers
-vim.keymap.set({ 'v', 'n' }, "<leader>C", "<cmd>silent! %bwipeout!<cr>", { desc = "Close all buffers" })
+vim.keymap.set({ 'v', 'n' }, "<leader>C",
+  function ()
+    local bufs = vim.api.nvim_tabpage_get_var(0, "bufs")
+    require('bufdelete').bufdelete(bufs, true)
+  end,
+  { desc = "Close all buffers" }
+)
 local function nav_buf(navigation_offset)
   local bufs = vim.api.nvim_tabpage_get_var(0, "bufs")
   local current_bufnr = vim.api.nvim_get_current_buf()
