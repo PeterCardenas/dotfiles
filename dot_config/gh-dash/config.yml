@@ -1,13 +1,32 @@
 prSections:
   - title: My Pull Requests
     filters: is:open author:@me
+    layout:
+      repo:
+        hidden: true
+      author:
+        hidden: true
   - title: Needs My Review
-    filters: is:open user-review-requested:@me   
+    filters: is:open user-review-requested:@me
+    layout:
+      repo:
+        hidden: true
 issuesSections:
   - title: Mentioned Issues
     filters: mentions:@me
   - title: Config
     filters: is:open repo:PeterCardenas/dotfiles
+    layout:
+      repo:
+        hidden: true
+      creator:
+        hidden: true
+      state:
+        hidden: true
+      updatedAt:
+        hidden: true
+      reactions:
+        hidden: true
 defaults:
   preview:
     open: false
