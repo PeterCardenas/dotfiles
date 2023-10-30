@@ -39,6 +39,10 @@ end
 # Make Ctrl-H work in tmux pane navigation.
 bind -M insert \ch "tmux select-pane -L"
 
+# History search.
+bind -M insert \cp history-search-backward
+bind -M insert \cn history-search-forward
+
 # Add hostname to DISPLAY for X11 forwarding.
 fix_display
 # Use eternal terminal instead of ssh.
