@@ -43,8 +43,6 @@ bind -M insert \ch "tmux select-pane -L"
 bind -M insert \cp history-search-backward
 bind -M insert \cn history-search-forward
 
-# Add hostname to DISPLAY for X11 forwarding.
-fix_display
 # Use eternal terminal instead of ssh.
 abbr -a ssh "ssh-et"
 
