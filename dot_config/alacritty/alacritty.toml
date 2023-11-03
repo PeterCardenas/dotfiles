@@ -8,6 +8,11 @@ normal.family = "Dank Mono"
 bold.family = "Dank Mono"
 italic.family = "Dank Mono"
 
+[[keyboard.bindings]]
+key="V"
+mods="CONTROL"
+action="Paste"
+
 # TokyoNight Alacritty Colors
 [colors.primary]
 background = '0x24283b'
