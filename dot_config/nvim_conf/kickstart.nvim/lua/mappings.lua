@@ -41,6 +41,7 @@ vim.keymap.set('n', '<leader>ld', vim.diagnostic.open_float, { desc = '[L]anguag
 -- System clipboard keymaps.
 vim.keymap.set({ 'v', 'n' }, "<leader>y", '"+y', { desc = "Yank to clipboard" })
 vim.keymap.set({ 'v', 'n' }, "<leader>p", '"+p', { desc = "Paste from clipboard" })
+vim.keymap.set({ 'v', 'n', 'i' }, "<C-v>", '"+p', { desc = "Paste from clipboard" })
 
 -- Set spaces per indent
 local function set_indent()
