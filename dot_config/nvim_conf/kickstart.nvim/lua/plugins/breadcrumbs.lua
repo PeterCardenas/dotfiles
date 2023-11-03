@@ -43,7 +43,7 @@ local DROPBAR_CONFIG = {
     end,
   }
 }
-vim.keymap.set({ 'n', 'v', 'i' }, '<C-f>',
+vim.keymap.set({ 'n', 'v', 'i' }, '<C-o>',
   function()
     require('dropbar.api').pick()
   end,
