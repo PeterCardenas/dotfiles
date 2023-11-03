@@ -39,7 +39,8 @@ vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnos
 vim.keymap.set('n', '<leader>ld', vim.diagnostic.open_float, { desc = '[L]anguage [D]iagnostic' })
 
 -- System clipboard keymaps.
-vim.keymap.set({ 'v', 'n' }, "<leader>y", '"+y', { desc = "Yank to clipboard" })
+vim.keymap.set({ 'v', 'n' }, "<leader>y", '"+y', { desc = "Yank selection to clipboard" })
+vim.keymap.set({ 'v', 'n' }, "<leader>Y", '"+Y', { desc = "Yank to end of line to clipboard" })
 vim.keymap.set({ 'v', 'n' }, "<leader>p", '"+p', { desc = "Paste from clipboard" })
 vim.keymap.set({ 'v', 'n', 'i' }, "<C-v>", '"+p', { desc = "Paste from clipboard" })
 
