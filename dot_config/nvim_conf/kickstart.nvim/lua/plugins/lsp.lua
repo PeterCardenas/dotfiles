@@ -86,7 +86,7 @@ return {
 
     -- Useful status updates for LSP
     -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
-    { 'j-hui/fidget.nvim', tag = 'legacy', opts = {} },
+    { 'j-hui/fidget.nvim',       tag = 'legacy', opts = {} },
 
     -- Additional lua configuration, makes nvim stuff amazing!
     'folke/neodev.nvim',
@@ -105,10 +105,8 @@ return {
       eslint = {},
       stylelint_lsp = {
         filetypes = { "css", "scss" },
-        settings = {
-          stylelintplus = {
-            autoFixOnFormat = true,
-          }
+        stylelintplus = {
+          autoFixOnFormat = true,
         }
       },
       lua_ls = {
@@ -139,11 +137,11 @@ return {
     -- Ensure the servers above are installed
     local mason_lspconfig = require 'mason-lspconfig'
 
-    mason_lspconfig.setup {
+    mason_lspconfig.setup({
       ensure_installed = vim.tbl_keys(servers),
-    }
+    })
 
-    mason_lspconfig.setup_handlers {
+    mason_lspconfig.setup_handlers({
       function(server_name)
         local server_capabilities = capabilities
         if server_name == 'clangd' then
@@ -160,6 +158,6 @@ return {
           filetypes = (servers[server_name] or {}).filetypes,
         })
       end
-    }
+    })
   end,
 }
