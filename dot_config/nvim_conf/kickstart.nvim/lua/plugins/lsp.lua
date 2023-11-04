@@ -3,6 +3,14 @@
 ---@param client lsp.Client
 ---@param bufnr integer
 local on_attach = function(client, bufnr)
+  -- Defer to pylsp for hover documentation.
+  if client.name == 'ruff_lsp' then
+    client.server_capabilities.hoverProvider = false
+  end
+  -- Do not use code actions from pylsp since they are slow for now.
+  if client.name == 'pylsp' then
+    client.server_capabilities.codeActionProvider = false
+  end
   local nmap = function(keys, func, desc)
     if desc then
       desc = 'LSP: ' .. desc
@@ -99,8 +107,39 @@ return {
     local servers = {
       clangd = {},
       gopls = {},
-      pyright = {},
       rust_analyzer = {},
+      pylyzer = {
+        enabled = false,
+      },
+      -- Faster than pyright.
+      -- Would use pylyzer once it's more feature rich (doesn't support local imports yet).
+      pylsp = {
+        cmd = { 'pylsp' },
+        pylsp = {
+          plugins = {
+            mccabe = {
+              enabled = false,
+            },
+            pyflakes = {
+              enabled = false,
+            },
+            -- Use black for formatting.
+            black = {
+              enabled = true,
+            },
+            yapf = {
+              enabled = false,
+            },
+            autopep8 = {
+              enabled = false,
+            },
+            pycodestyle = {
+              maxLineLength = 120,
+            },
+          }
+        }
+      },
+      ruff_lsp = {},
       tsserver = {},
       eslint = {},
       stylelint_lsp = {
@@ -143,6 +182,9 @@ return {
 
     mason_lspconfig.setup_handlers({
       function(server_name)
+        if servers[server_name] and servers[server_name].enabled == false then
+          return
+        end
         local server_capabilities = capabilities
         if server_name == 'clangd' then
           server_capabilities = vim.tbl_extend('force', server_capabilities, {

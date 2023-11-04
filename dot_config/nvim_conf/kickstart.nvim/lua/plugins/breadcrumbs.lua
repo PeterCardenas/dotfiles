@@ -28,11 +28,6 @@ local DROPBAR_CONFIG = {
           sources.terminal,
         }
       end
-      if vim.bo[buf].ft == 'python' then
-        return {
-          sources.path
-        }
-      end
       return {
         sources.path,
         utils.source.fallback({

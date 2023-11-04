@@ -186,9 +186,6 @@ require('lazy').setup({
       require("treesitter-context").setup({
         mode = "topline",
         line_numbers = true,
-        on_attach = function (bufnr)
-          return vim.bo[bufnr].ft ~= "python"
-        end
       })
     end,
   },
@@ -210,7 +207,9 @@ require('lazy').setup({
     config = function()
       ---@diagnostic disable-next-line: missing-fields
       require("ufo").setup({
-        provider_selector = function() return { "treesitter", "indent" } end,
+        provider_selector = function()
+          return { "treesitter", "indent" }
+        end,
       })
     end,
   },
