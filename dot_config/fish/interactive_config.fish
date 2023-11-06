@@ -36,6 +36,11 @@ else if test $os = Darwin
   source ~/.iterm2_shell_integration.fish
 end
 
+# Set default editor to neovim.
+set -gx EDITOR nvim
+set -gx VISUAL nvim
+set -gx SUDO_EDITOR nvim
+
 # Make Ctrl-H work in tmux pane navigation.
 bind -M insert \ch "tmux select-pane -L"
 
