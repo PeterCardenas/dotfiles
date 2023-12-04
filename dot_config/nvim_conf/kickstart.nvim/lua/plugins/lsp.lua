@@ -114,9 +114,13 @@ return {
       -- Faster than pyright.
       -- Would use pylyzer once it's more feature rich (doesn't support local imports yet).
       pylsp = {
-        cmd = { 'pylsp' },
         pylsp = {
           plugins = {
+            jedi = {
+              extra_paths = {
+                "bazel-out/k8-fastbuild/bin",
+              },
+            },
             mccabe = {
               enabled = false,
             },
@@ -136,8 +140,14 @@ return {
             pycodestyle = {
               maxLineLength = 120,
             },
+            pylint = {
+              enabled = true,
+            },
           }
         }
+      },
+      pyright = {
+        enabled = false,
       },
       ruff_lsp = {},
       tsserver = {},
