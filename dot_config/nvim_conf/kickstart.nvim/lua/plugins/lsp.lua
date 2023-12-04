@@ -150,8 +150,22 @@ return {
         enabled = false,
       },
       ruff_lsp = {},
-      tsserver = {},
-      eslint = {},
+      tsserver = {
+        cmd = {
+          "env",
+          "NODE_OPTIONS=\"--max-old-space-size=6144\"",
+          "typescript-language-server",
+          "--stdio"
+        },
+      },
+      eslint = {
+        cmd = {
+          "env",
+          "NODE_OPTIONS=\"--max-old-space-size=6144\"",
+          "vscode-eslint-language-server",
+          "--stdio"
+        },
+      },
       stylelint_lsp = {
         filetypes = { "css", "scss" },
         stylelintplus = {
@@ -208,6 +222,7 @@ return {
           capabilities = server_capabilities,
           settings = servers[server_name],
           filetypes = (servers[server_name] or {}).filetypes,
+          cmd = (servers[server_name] or {}).cmd,
         })
       end
     })
