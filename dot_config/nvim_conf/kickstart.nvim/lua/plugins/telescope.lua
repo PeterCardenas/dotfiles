@@ -91,12 +91,16 @@ return {
     -- [[ Configure Telescope ]]
     local telescope_actions = require "telescope.actions"
     local lga_actions = require "telescope-live-grep-args.actions"
-    require('telescope').setup {
+    require('telescope').setup({
       defaults = {
         layout_config = {
           horizontal = {
             prompt_position = "top",
-          }
+            width = 0.98,
+          },
+          vertical = {
+            width = 0.98,
+          },
         },
         sorting_strategy = "ascending",
         prompt_prefix = "  ",
@@ -122,7 +126,7 @@ return {
           },
         }
       }
-    }
+    })
 
     -- Enable telescope fzf native, if installed
     pcall(require('telescope').load_extension, 'fzf')
