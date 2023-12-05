@@ -145,6 +145,7 @@ return {
               args = {
                 '--disable=invalid-name,missing-module-docstring,wrong-import-position,unused-argument',
               },
+              executable = 'pylint',
             },
             pylsp_mypy = {
               enabled = true,
