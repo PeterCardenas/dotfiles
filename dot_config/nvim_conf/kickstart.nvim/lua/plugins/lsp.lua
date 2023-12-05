@@ -142,6 +142,9 @@ return {
             },
             pylint = {
               enabled = true,
+              args = {
+                '--disable=invalid-name,missing-module-docstring,wrong-import-position,unused-argument',
+              },
             },
           }
         }
