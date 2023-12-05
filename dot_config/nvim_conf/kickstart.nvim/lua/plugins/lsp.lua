@@ -146,6 +146,11 @@ return {
                 '--disable=invalid-name,missing-module-docstring,wrong-import-position,unused-argument',
               },
             },
+            pylsp_mypy = {
+              enabled = true,
+              live_mode = true,
+              report_progress = true,
+            },
           }
         }
       },
