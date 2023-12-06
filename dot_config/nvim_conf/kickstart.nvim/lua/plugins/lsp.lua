@@ -143,9 +143,12 @@ return {
             pylint = {
               enabled = true,
               args = {
+                -- TODO: How to add additional search paths for pylint.
+                -- source-root doesn't seem to work, but could be using it wrong.
                 '--disable=invalid-name,missing-module-docstring,wrong-import-position,unused-argument',
               },
-              executable = 'pylint',
+              -- TODO: How to get live mode to not throw import errors.
+              -- executable = "pylint",
             },
             pylsp_mypy = {
               enabled = true,
