@@ -1,0 +1,138 @@
+#!/usr/bin/env fish
+# Usage:
+# ssh-et [ssh_options] <remote>
+#!/usr/bin/fish
+
+set -l MAX_RETRIES 10
+
+function _command_exists
+  command -q $argv
+end
+
+function _log_info
+  printf 'ssh-et: %s\n' $argv
+end
+
+function _error
+  set -l error (set_color red)
+  set -l normal (set_color normal)
+  printf '%s\n' "$error$argv$normal" >&2
+end
+
+function _log_error
+  _error (printf 'ssh-et: %s' $argv)
+end
+
+function _print_usage_and_die
+  printf 'Usage: ssh-et [ssh_options] <remote>\n' >&2
+  exit 1
+end
+
+function _check_deps
+  set -l s 0
+  for cmd in et ssh
+      if not _command_exists $cmd
+          _log_error "Missing dependency: $cmd"
+          set s 1
+      end
+  end
+  return $s
+end
+
+function _check_args
+  if test (count $argv) -le 1
+    _print_usage_and_die
+  end
+  if string match -rq "^-" "$argv[-1]" # Last arg must be a remote, not an SSH option
+    _log_error 'Last arg must be a remote, not an SSH option'
+    _print_usage_and_die
+  end
+end
+
+function _is_port_open
+  set -l port $argv[1]
+  not begin
+    printf '' > /dev/tcp/127.0.0.1/$port
+  end
+end
+
+function _find_ephemeral_port
+  for port in (seq 52200 52299) (seq 62200 62299)
+    if _is_port_open $port
+      echo $port
+      return 0
+    end
+  end
+  return 1
+end
+
+function main
+  if not _check_deps
+    return 1
+  end
+  _check_args $argv
+
+  set -l remote $argv[-1]
+  set -l ssh_args $argv[1..-2]
+  set -l tmpdir (mktemp -d -t "ssh-et-fifo-$$_XXX")
+
+  trap 'rm -rf -- $tmpdir &> /dev/null || true' EXIT ERR INT HUP TERM
+
+  set -l et_fifo "$tmpdir/et_fifo"
+  mkfifo $et_fifo; or return $status
+
+  set -l port num_retries 0 success 0 has_stdout 0 et_pid
+
+  while test "$success" -eq 0; and test "$num_retries" -lt $MAX_RETRIES
+    if not set port (_find_ephemeral_port)
+      _log_error 'Could not find an ephemeral port'
+      return 1
+    end
+
+    _log_info (printf 'Found open port: %s' $port)
+
+    set -l et_cmd et -t "$port":22 -N "$remote"
+    _log_info (printf 'Running: %s' $et_cmd)
+    $et_cmd > $et_fifo &
+    set et_pid $last_pid
+    set -l success 0 has_stdout 0
+
+    while read -l line
+      set has_stdout 1
+      printf 'et: %s\n' $line
+
+      if string match -q '*Address already in use*' $line
+        wait $et_pid || true
+        if math "$num_retries < $MAX_RETRIES - 1"
+          _log_info 'Port became used, finding another one...'
+          sleep 0.$(math "random")
+        end
+        set num_retries (math "$num_retries + 1")
+        break
+      end
+
+      if string match -q '*feel free to background*' $line
+        set success 1
+        break
+      end
+      return 1
+    end < $et_fifo
+
+    if not "$has_stdout"
+      return 1
+    end
+  end
+
+  if not "$success"
+    return 1
+  end
+
+  set -l ssh_cmd ssh -p $port $ssh_args -oHostName='127.0.0.1' -oHostKeyAlias="$remote"
+  _log_info (printf 'Running: %s' $ssh_cmd)
+  $ssh_cmd
+  kill $et_pid
+  rm -rf -- $tmpdir
+end
+
+main $argv
+
