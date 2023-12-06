@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+
+# Usage:
+# ssh-et [ssh_options] <remote>
+
+# See https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
+set -o errexit -o errtrace -o nounset -o pipefail
+
+readonly MAX_RETRIES=10
+
+_command_exists() {
+  command -v -- "$1" &> /dev/null
+}
+
+_log_info() {
+  printf 'ssh-et: %s\n' "$*"
+}
+
+_error() {
+  local error normal
+  # Red color
+  error="$(tput setaf 1 2> /dev/null)" || true
+  normal="$(tput sgr0 2> /dev/null)" || true
+  printf >&2 '%s\n' "${error}${*}${normal}"
+}
+
+_log_error() {
+  _error "$(printf 'ssh-et: %s' "$*")"
+}
+
+_print_usage_and_die() {
+  printf >&2 'Usage: ssh-et [ssh_options] <remote>\n'
+  exit 1
+}
+
+_check_deps() {
+  local s=0
+  if ((BASH_VERSINFO[0] < 4)); then
+    _log_error 'Bash version must be at least 4.0'
+    s=1
+  fi
+  for cmd in et ssh; do
+    if ! _command_exists "${cmd}"; then
+      _log_error "Missing dependency: ${cmd}"
+      s=1
+    fi
+  done
+  return $s
+}
+
+_check_args() {
+  if (($# < 1)); then
+    _print_usage_and_die
+  fi
+  if [[ "${*: -1}" == -* ]]; then
+    _log_error 'Last arg must be a remote, not an SSH option'
+    _print_usage_and_die
+  fi
+}
+
+# https://stackoverflow.com/a/6943581
+_is_port_open() {
+  local port="$1"
+  ! { printf '' > /dev/tcp/127.0.0.1/"${port}"; } &> /dev/null
+}
+
+# The range 49152–65535 contains ephemeral/dynamic ports. We scan 200 ports
+# that start with the prefixes "522" or "622" (the 22 part of the prefix is
+# useful to remember it's used for SSH).
+_find_ephemeral_port() {
+  for port in {52200..52299} {62200..62299}; do
+    if _is_port_open "${port}"; then
+      echo "${port}"
+      return 0
+    fi
+  done
+  return 1
+}
+
+main() {
+  _check_deps || return 1
+  _check_args "$@" || return 1
+  local remote="${*: -1}"
+  local ssh_args=("${@:1:(($# - 1))}")
+  local tmpdir
+  tmpdir="$(mktemp -d -t "ssh-et-fifo-$$_XXX")"
+  # NOTE: The path variable in trap must be expanded here because it may not be
+  # defined when the trap is ran.
+  # shellcheck disable=SC2064
+  trap "rm -rf -- '${tmpdir}' &> /dev/null || true" EXIT ERR INT HUP TERM
+  local et_fifo="${tmpdir}/et_fifo"
+  mkfifo "${et_fifo}" || return $?
+  local port num_retries=0 success=0 has_stdout=0
+  while ((!success && num_retries < MAX_RETRIES)); do
+    if ! port="$(_find_ephemeral_port)"; then
+      _log_error 'Could not find an ephemeral port'
+      return 1
+    fi
+    _log_info "Found open port: ${port}"
+    local et_cmd=(et -t "${port}":22 -N "${remote}")
+    _log_info "Running: ${et_cmd[*]}"
+    "${et_cmd[@]}" > "${et_fifo}" &
+    et_pid=$!
+    success=0
+    has_stdout=0
+    while IFS='' read -r line; do
+      has_stdout=1
+      printf 'et: %s\n' "${line}"
+      if [[ $line == *"Address already in use"* ]]; then
+        wait "${et_pid}" || true
+        if ((num_retries < MAX_RETRIES - 1)); then
+          _log_info 'Port became used, finding another one...'
+          sleep 0.$((RANDOM))
+        fi
+        ((num_retries += 1))
+        break
+      fi
+      if [[ $line == *"feel free to background"* ]]; then
+        success=1
+        break
+      fi
+      return 1
+    done < "${et_fifo}"
+    ((has_stdout)) || return 1
+  done
+  ((success)) || return 1
+  # We use the localhost loopback address for all remote hosts, but we still
+  # want to use the SSH options set for the remote in the client
+  # config. Therefore, we use the original remote hostname, but override two SSH
+  # options:
+  # - HostName: to connect to the loopback address
+  # - HostKeyAlias: to avoid warnings about the host key file
+  # NOTE: We must put the user provided SSH args first, since SSH gives priority
+  # to the *first* args it encounters.
+  # TODO: This doesn't work correctly when using the "%h" token in the ssh
+  # config, since it will be set to the loopback address instead of the remote
+  # name given on the command line. One possible workaround to explore is to
+  # create a temporary SSH config that includes the real config, and makes sure
+  # to only set HostName after all other config is passed.
+  local ssh_cmd=(
+    ssh -p "${port}" "${ssh_args[@]}" -oHostName='127.0.0.1'
+    -oHostKeyAlias="${remote}" "${remote}"
+  )
+  _log_info "Running: ${ssh_cmd[*]}"
+  "${ssh_cmd[@]}"
+  kill "${et_pid}"
+  # wait "${et_pid}"
+  rm -rf -- "${tmpdir}"
+}
+
+main "$@"
