@@ -138,14 +138,17 @@ return {
               enabled = false,
             },
             pycodestyle = {
-              maxLineLength = 120,
+              ignore = {
+                -- Delegate line length errors to pylint
+                "E501",
+              },
             },
             pylint = {
               enabled = true,
               args = {
                 -- TODO: How to add additional search paths for pylint.
                 -- source-root doesn't seem to work, but could be using it wrong.
-                '--disable=invalid-name,missing-module-docstring,wrong-import-position,unused-argument',
+                '--disable=invalid-name,missing-module-docstring,wrong-import-position,unused-argument --max-line-length=120',
               },
               -- TODO: How to get live mode to not throw import errors.
               -- executable = "pylint",
