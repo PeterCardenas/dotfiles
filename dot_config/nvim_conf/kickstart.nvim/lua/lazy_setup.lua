@@ -37,6 +37,24 @@ require('lazy').setup({
   require('plugins.dashboard'),
   require('plugins.breadcrumbs'),
 
+  -- Add a background color to colors defined in css.
+  -- {
+  --   'norcalli/nvim-colorizer.lua',
+  --   event = { "BufReadPre", "BufNewFile" },
+  --   config = function()
+  --     require('colorizer').setup()
+  --   end,
+  -- },
+
+  -- Enable editing the highlight colors and saving them to a file.
+  -- {
+  --   'Djancyp/custom-theme.nvim',
+  --   event = { "BufReadPre", "BufNewFile" },
+  --   config = function()
+  --     require('custom-theme').setup()
+  --   end,
+  -- },
+
   -- Smooth scrolling
   {
     "karb94/neoscroll.nvim",
