@@ -18,11 +18,16 @@ return {
         delay = 10,
       },
       on_attach = function(bufnr)
-        vim.keymap.set({ 'n', 'v' }, '<leader>gp', require('gitsigns').preview_hunk,
+        vim.keymap.set({ 'n', 'v' }, '<leader>gp', require('gitsigns.actions').preview_hunk,
           { buffer = bufnr, desc = 'Preview git hunk' })
 
-        vim.keymap.set({ 'n', 'v' }, '<leader>gr', require('gitsigns').reset_hunk,
+        vim.keymap.set({ 'n', 'v' }, '<leader>gr', require('gitsigns.actions').reset_hunk,
           { buffer = bufnr, desc = 'Reset git hunk' })
+
+        vim.keymap.set({ 'n', 'v' }, '<leader>gs', require('gitsigns.actions').stage_hunk,
+          { buffer = bufnr, desc = 'Stage git hunk' })
+        vim.keymap.set({ 'n', 'v' }, '<leader>gu', require('gitsigns.actions').undo_stage_hunk,
+          { buffer = bufnr, desc = 'Undo last staged git hunk in current buffer' })
 
         -- don't override the built-in and fugitive keymaps
         local gs = package.loaded.gitsigns
