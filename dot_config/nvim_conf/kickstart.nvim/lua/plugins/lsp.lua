@@ -105,7 +105,9 @@ return {
     -- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
     ---@type table<string, lspconfig.Config>
     local servers = {
-      clangd = {},
+      clangd = {
+        filetypes = { "c", "cpp", "objc", "objcpp", "cuda" },
+      },
       gopls = {},
       rust_analyzer = {},
       pylyzer = {
