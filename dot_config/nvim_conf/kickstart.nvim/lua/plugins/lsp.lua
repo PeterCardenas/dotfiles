@@ -166,6 +166,9 @@ return {
       pyright = {
         enabled = false,
       },
+      golangci_lint_ls = {
+        enabled = false,
+      },
       ruff_lsp = {},
       tsserver = {
         cmd = {
@@ -221,27 +224,42 @@ return {
       ensure_installed = vim.tbl_keys(servers),
     })
 
-    -- Setup up lsp servers not in mason.
+    -- Setup lsp servers not in mason.
     -- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
     ---@type table<string, lspconfig.Config>
     local custom_servers = {
       pls = {
         cmd = { "protobuf-lsp", "server", "--mode", "stdio", },
         filetypes = { "proto" },
+        default_config = {
+          root_dir = require('lspconfig.util').root_pattern(".git"),
+        }
+      },
+      fishls = {
+        enabled = false,
+        cmd = { "fish-lsp", "--stdio" },
+        filetypes = { "fish" },
+        default_config = {
+          root_dir = require('lspconfig.util').root_pattern(".git"),
+        }
       },
     }
     for server_name, server_config in pairs(custom_servers) do
+      if server_config.enabled == false then
+        goto continue
+      end
       require('lspconfig.configs')[server_name] = {
         default_config = {
           cmd = server_config.cmd,
           filetypes = server_config.filetypes,
           settings = server_config,
-          root_dir = require('lspconfig.util').root_pattern(".git"),
+          root_dir = server_config.default_config.root_dir,
         },
       }
       require('lspconfig')[server_name].setup({
         capabilities = capabilities,
       })
+      ::continue::
     end
 
     mason_lspconfig.setup_handlers({
