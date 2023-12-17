@@ -1,4 +1,25 @@
 -- [[ Configure LSP ]]
+---Organizes go imports on save.
+---@param bufnr integer
+local function format_go_imports(bufnr)
+  local params = vim.lsp.util.make_range_params()
+  params.context = { only = { "source.organizeImports" } }
+  local filetype = vim.bo[bufnr].filetype
+  if filetype ~= "go" then
+    return
+  end
+  local max_time_to_wait_ms = 3000
+  local lsps_results = vim.lsp.buf_request_sync(bufnr, "textDocument/codeAction", params, max_time_to_wait_ms)
+  for client_id, lsp_results in pairs(lsps_results or {}) do
+    for _, lsp_result in pairs(lsp_results.result or {}) do
+      if lsp_result.edit then
+        local offset_encoding = (vim.lsp.get_client_by_id(client_id) or {}).offset_encoding or "utf-16"
+        vim.lsp.util.apply_workspace_edit(lsp_result.edit, offset_encoding)
+      end
+    end
+  end
+end
+
 --  This function gets run when an LSP connects to a particular buffer.
 ---@param client lsp.Client
 ---@param bufnr integer
@@ -63,11 +84,13 @@ local on_attach = function(client, bufnr)
 
   -- Create a command `:Format` local to the LSP buffer
   nmap('<leader>lf', function()
+    format_go_imports(bufnr)
     vim.lsp.buf.format({
       filter = function(format_client)
         -- Do not request typescript-language-server for formatting.
         return format_client.name ~= "tsserver"
-      end
+      end,
+      bufnr = bufnr,
     })
   end, "Format buffer")
 end
@@ -166,8 +189,12 @@ return {
       pyright = {
         enabled = false,
       },
+      -- Prefer to use nogo, but there is not language server for it yet.
       golangci_lint_ls = {
-        enabled = false,
+        init_options = {
+          command = { 'golangci-lint', 'run', '--out-format', 'json', '--disable-all', '--enable',
+            'errcheck,ineffassign,unused' },
+        },
       },
       ruff_lsp = {},
       tsserver = {
@@ -289,6 +316,7 @@ return {
           settings = servers[server_name],
           filetypes = (servers[server_name] or {}).filetypes,
           cmd = (servers[server_name] or {}).cmd,
+          init_options = (servers[server_name] or {}).init_options,
         })
       end
     })
