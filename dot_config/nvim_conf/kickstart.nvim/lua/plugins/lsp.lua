@@ -229,7 +229,7 @@ return {
     ---@type table<string, lspconfig.Config>
     local custom_servers = {
       pls = {
-        cmd = { "protobuf-lsp", "server", "--mode", "stdio", },
+        cmd = { "protobuf-ls", "server", "--mode", "stdio", },
         filetypes = { "proto" },
         default_config = {
           root_dir = require('lspconfig.util').root_pattern(".git"),
@@ -237,10 +237,18 @@ return {
       },
       fishls = {
         enabled = false,
-        cmd = { "fish-lsp", "--stdio" },
+        cmd = { "fish-ls", "--stdio" },
         filetypes = { "fish" },
         default_config = {
           root_dir = require('lspconfig.util').root_pattern(".git"),
+        }
+      },
+      valels = {
+        enabled = false,
+        cmd = { "vale-ls" },
+        filetypes = { "markdown", "text" },
+        default_config = {
+          root_dir = require('lspconfig.util').root_pattern(".vale.ini"),
         }
       },
     }
