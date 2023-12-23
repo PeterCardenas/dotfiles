@@ -133,3 +133,6 @@ if test -e /opt/ros/noetic/setup.bash
   bass source /opt/ros/noetic/setup.bash
 end
 
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/petercardenas/google-cloud-sdk/path.fish.inc' ]; . '/Users/petercardenas/google-cloud-sdk/path.fish.inc'; end
