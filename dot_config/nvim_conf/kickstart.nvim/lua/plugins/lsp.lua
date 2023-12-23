@@ -275,11 +275,13 @@ return {
       ensure_installed = vim.tbl_keys(servers),
     })
 
-    -- Setup lsp servers not in mason.
+    -- Setup language servers found locally.
+    -- TODO: Try to get at least one of these to work lol.
     -- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
     ---@type table<string, lspconfig.Config>
     local custom_servers = {
       pls = {
+        enabled = false,
         cmd = { "protobuf-ls", "server", "--mode", "stdio", },
         filetypes = { "proto" },
         default_config = {
