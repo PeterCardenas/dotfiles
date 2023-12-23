@@ -190,17 +190,14 @@ return {
               enabled = false,
             },
             pycodestyle = {
-              ignore = {
-                -- Delegate line length errors to pylint
-                "E501",
-              },
+              enabled = false,
             },
             pylint = {
               enabled = true,
               args = {
-                -- TODO: How to add additional search paths for pylint.
-                -- source-root doesn't seem to work, but could be using it wrong.
-                '--disable=invalid-name,missing-module-docstring,wrong-import-position,unused-argument --max-line-length=120',
+                '--disable=invalid-name,missing-module-docstring,wrong-import-position,unused-argument,too-few-public-methods,unused-import,logging-fstring-interpolation,wrong-import-order,consider-using-f-string',
+                '--max-line-length=120',
+                '--source-root=bazel-out/k8-fastbuild/bin',
               },
               -- TODO: How to get live mode to not throw import errors.
               -- executable = "pylint",
