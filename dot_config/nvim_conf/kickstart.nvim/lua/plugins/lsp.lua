@@ -299,7 +299,7 @@ return {
       valels = {
         enabled = false,
         cmd = { "vale-ls" },
-        filetypes = { "markdown", "text" },
+        filetypes = { "markdown", "text", "dosini" },
         default_config = {
           root_dir = require('lspconfig.util').root_pattern(".vale.ini"),
         }
