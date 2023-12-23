@@ -1,13 +1,10 @@
 -- [[ Configure LSP ]]
----Organizes go imports on save.
+
 ---@param bufnr integer
-local function format_go_imports(bufnr)
+---@param action_type string
+local function commit_code_action_edit(bufnr, action_type)
   local params = vim.lsp.util.make_range_params()
-  params.context = { only = { "source.organizeImports" } }
-  local filetype = vim.bo[bufnr].filetype
-  if filetype ~= "go" then
-    return
-  end
+  params.context = { only = { action_type } }
   local max_time_to_wait_ms = 3000
   local lsps_results = vim.lsp.buf_request_sync(bufnr, "textDocument/codeAction", params, max_time_to_wait_ms)
   for client_id, lsp_results in pairs(lsps_results or {}) do
@@ -18,6 +15,27 @@ local function format_go_imports(bufnr)
       end
     end
   end
+end
+
+---Organizes go imports on save.
+---@param bufnr integer
+local function format_go_imports(bufnr)
+  local filetype = vim.bo[bufnr].filetype
+  if filetype ~= "go" then
+    return
+  end
+  commit_code_action_edit(bufnr, "source.organizeImports")
+end
+
+---Fix all auto-fixable ruff lsp errors.
+---@param bufnr integer
+local function fix_ruff_errors(bufnr)
+  local filetype = vim.bo[bufnr].filetype
+  if filetype ~= "python" then
+    return
+  end
+  -- TODO: Fix and re-enable this to get import sorting working.
+  -- commit_code_action_edit(bufnr, "source.fixAll")
 end
 
 --  This function gets run when an LSP connects to a particular buffer.
@@ -93,6 +111,7 @@ local on_attach = function(client, bufnr)
   -- Create a command `:Format` local to the LSP buffer
   nmap('<leader>lf', function()
     format_go_imports(bufnr)
+    fix_ruff_errors(bufnr)
     vim.lsp.buf.format({
       filter = function(format_client)
         -- Do not request typescript-language-server for formatting.
