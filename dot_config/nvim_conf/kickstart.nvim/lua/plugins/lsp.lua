@@ -322,14 +322,17 @@ return {
         if servers[server_name] and servers[server_name].enabled == false then
           return
         end
+        ---@type lsp.ClientCapabilities
         local server_capabilities = capabilities
         if server_name == 'clangd' then
-          server_capabilities = vim.tbl_extend('force', server_capabilities, {
+          ---@type lsp.ClientCapabilities
+          local clangd_overrides = {
             offsetEncoding = { 'utf-16' },
             general = {
               positionEncodings = { 'utf-16' },
             }
-          })
+          }
+          server_capabilities = vim.tbl_extend('force', server_capabilities, clangd_overrides)
         end
         require('lspconfig')[server_name].setup({
           capabilities = server_capabilities,
