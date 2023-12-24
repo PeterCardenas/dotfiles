@@ -309,7 +309,6 @@ return {
         }
       },
       valels = {
-        enabled = false,
         cmd = { "vale-ls" },
         filetypes = { "markdown", "text", "dosini" },
         default_config = {
@@ -325,7 +324,8 @@ return {
         default_config = {
           cmd = server_config.cmd,
           filetypes = server_config.filetypes,
-          settings = server_config,
+          -- Cannot have functions in settings since they are not serializable.
+          settings = {},
           root_dir = server_config.default_config.root_dir,
         },
       }
