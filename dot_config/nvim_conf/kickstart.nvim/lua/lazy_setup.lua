@@ -150,7 +150,7 @@ require('lazy').setup({
 
   -- Better code action menu
   {
-    "weilbith/nvim-code-action-menu"
+    "aznhe21/actions-preview.nvim"
   },
 
   {
