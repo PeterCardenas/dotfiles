@@ -1,41 +1,59 @@
 -- [[ Configure LSP ]]
 
 ---@param bufnr integer
+---@param ls_name string
 ---@param action_type string
-local function commit_code_action_edit(bufnr, action_type)
+local function commit_code_action_edit(bufnr, ls_name, action_type)
   local params = vim.lsp.util.make_range_params()
-  params.context = { only = { action_type } }
-  local max_time_to_wait_ms = 3000
-  local lsps_results = vim.lsp.buf_request_sync(bufnr, "textDocument/codeAction", params, max_time_to_wait_ms)
-  for client_id, lsp_results in pairs(lsps_results or {}) do
-    for _, lsp_result in pairs(lsp_results.result or {}) do
-      if lsp_result.edit then
-        local offset_encoding = (vim.lsp.get_client_by_id(client_id) or {}).offset_encoding or "utf-16"
-        vim.lsp.util.apply_workspace_edit(lsp_result.edit, offset_encoding)
-      end
+  params.context = { only = { action_type }, diagnostics = {} }
+  local clients = vim.lsp.get_clients({
+    bufnr = bufnr,
+    name = ls_name,
+    method = "textDocument/codeAction",
+  })
+  local pending_requests = {}
+  for _, client in pairs(clients) do
+    ---@diagnostic disable-next-line: invisible
+    local status, request_id = client.request(
+      'textDocument/codeAction',
+      params,
+      function(err, ls_results, _, _)
+        table.remove(pending_requests, client.id)
+        if err then
+          vim.notify("Error running" .. ls_name .. " code action: " .. err, vim.log.levels.ERROR)
+        end
+        for _, ls_result in pairs(ls_results or {}) do
+          if ls_result.edit then
+            local offset_encoding = (vim.lsp.get_client_by_id(client.id) or {}).offset_encoding or "utf-16"
+            vim.lsp.util.apply_workspace_edit(ls_result.edit, offset_encoding)
+          end
+        end
+      end,
+      bufnr
+    )
+    if status then
+      table.insert(pending_requests, client.id, request_id)
     end
+  end
+  local wait_result = vim.wait(3000, function()
+    return vim.tbl_isempty(pending_requests)
+  end, 10)
+  if not wait_result then
+    vim.notify("Timed out waiting for " .. ls_name .. " code action to complete.", vim.log.levels.ERROR)
   end
 end
 
----Organizes go imports on save.
+---Organizes go imports.
 ---@param bufnr integer
 local function format_go_imports(bufnr)
-  local filetype = vim.bo[bufnr].filetype
-  if filetype ~= "go" then
-    return
-  end
-  commit_code_action_edit(bufnr, "source.organizeImports")
+  commit_code_action_edit(bufnr, "gopls", "source.organizeImports")
 end
 
 ---Fix all auto-fixable ruff lsp errors.
 ---@param bufnr integer
 local function fix_ruff_errors(bufnr)
-  local filetype = vim.bo[bufnr].filetype
-  if filetype ~= "python" then
-    return
-  end
-  -- TODO: Fix and re-enable this to get import sorting working.
-  -- commit_code_action_edit(bufnr, "source.fixAll")
+  commit_code_action_edit(bufnr, "ruff_lsp", "source.organizeImports")
+  commit_code_action_edit(bufnr, "ruff_lsp", "source.fixAll")
 end
 
 --  This function gets run when an LSP connects to a particular buffer.
