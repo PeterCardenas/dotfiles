@@ -2,6 +2,9 @@ if status is-interactive
   source $HOME/.config/fish/interactive_config.fish
 end
 
-# MUST BE AT END OF FILE
-# Start Starship 
-starship init fish | source
+
+if not set -q FAST_PROMPT
+  # MUST BE AT END OF FILE
+  # Start Starship
+  starship init fish | source
+end
