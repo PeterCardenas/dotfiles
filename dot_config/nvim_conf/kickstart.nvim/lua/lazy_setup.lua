@@ -245,7 +245,7 @@ require('lazy').setup({
     dependencies = {
       "kevinhwang91/promise-async",
     },
-    event = { "BufReadPre", "BufNewFile" },
+    event = { "BufEnter" },
     config = function()
       ---@diagnostic disable-next-line: missing-fields
       require("ufo").setup({
