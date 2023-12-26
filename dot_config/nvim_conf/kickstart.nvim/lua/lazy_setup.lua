@@ -24,18 +24,7 @@ require('lazy').setup({
   'tpope/vim-sleuth',
 
   -- Plugin configs that are of decent heft.
-  require('plugins.heirline'),
-  require('plugins.lsp'),
-  require('plugins.cmp'),
-  require('plugins.telescope'),
-  require('plugins.treesitter'),
-  require('plugins.gitsigns'),
-  require('plugins.tmux'),
-  require('plugins.neo_tree'),
-  require('plugins.debug'),
-  require('plugins.harpoon'),
-  require('plugins.dashboard'),
-  require('plugins.breadcrumbs'),
+  { import = 'plugins' },
 
   -- Add a background color to colors defined in css.
   -- {
