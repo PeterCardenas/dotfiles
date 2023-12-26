@@ -138,10 +138,10 @@ require('lazy').setup({
         },
         -- you can enable a preset for easier configuration
         presets = {
-          bottom_search = false,         -- use a classic bottom cmdline for search
+          bottom_search = false,        -- use a classic bottom cmdline for search
           command_palette = true,       -- position the cmdline and popupmenu together
           long_message_to_split = true, -- long messages will be sent to a split
-          inc_rename = true,           -- enables an input dialog for inc-rename.nvim
+          inc_rename = true,            -- enables an input dialog for inc-rename.nvim
           lsp_doc_border = false,       -- add a border to hover docs and signature help
         },
       })
@@ -223,7 +223,7 @@ require('lazy').setup({
   -- Sticky scroll
   {
     "nvim-treesitter/nvim-treesitter-context",
-    after = "nvim-treesitter",
+    dependencies = "nvim-treesitter",
     config = function()
       require("treesitter-context").setup({
         mode = "topline",
@@ -235,7 +235,7 @@ require('lazy').setup({
   -- Ripgrep with file name filtering
   {
     "nvim-telescope/telescope-live-grep-args.nvim",
-    after = "telescope.nvim",
+    dependencies = "telescope.nvim",
     config = function() require("telescope").load_extension "live_grep_args" end,
   },
 
@@ -259,7 +259,7 @@ require('lazy').setup({
   -- Fast motion commands
   {
     "ggandor/leap.nvim",
-    requires = { "tpope/vim-repeat" },
+    dependencies = { "tpope/vim-repeat" },
     event = { "BufReadPre", "BufNewFile" },
     config = function()
       require('leap').add_default_mappings()
