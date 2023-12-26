@@ -27,6 +27,8 @@ vim.wo.number = true
 
 -- Enable mouse mode
 vim.o.mouse = 'a'
+-- Enable tracking mouse movements.
+vim.o.mousemoveevent = true
 
 -- Enable camel case move_options
 vim.g.camelcasemotion_key = '<leader>'
