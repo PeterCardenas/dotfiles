@@ -53,6 +53,8 @@ vim.o.timeoutlen = 300
 -- Set completeopt to have a better completion experience
 vim.o.completeopt = 'menuone,noselect'
 
+vim.o.shell = 'env FAST_PROMPT=1 /usr/bin/fish'
+
 -- Style diagnostics
 local signs = {
   { name = "DiagnosticSignError", text = "" },
