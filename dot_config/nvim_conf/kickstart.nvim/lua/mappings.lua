@@ -63,7 +63,7 @@ vim.keymap.set({ 'n', 'v' }, "<leader>ui", function() set_indent() end, { desc =
 
 -- Manage Buffers
 vim.keymap.set({ 'v', 'n' }, "<leader>C",
-  function ()
+  function()
     local bufs = vim.api.nvim_tabpage_get_var(0, "bufs")
     require('bufdelete').bufdelete(bufs, true)
   end,
