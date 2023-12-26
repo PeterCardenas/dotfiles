@@ -1,4 +1,10 @@
-vim.api.nvim_create_user_command('PRLink', function()
+---@return string
+local function get_repo_url()
+  local repo_url = vim.fn.systemlist('gh repo view --json=url -q ".url"')[1]
+  return repo_url
+end
+
+vim.api.nvim_create_user_command('GHPR', function()
   local bufnr = vim.api.nvim_get_current_buf()
   local cache_entry = require('gitsigns.cache').cache[bufnr]
   if not cache_entry then
@@ -18,7 +24,7 @@ vim.api.nvim_create_user_command('PRLink', function()
     vim.notify("No PR number in commit message", vim.log.levels.ERROR)
     return
   end
-  local repo_url = vim.fn.systemlist('gh repo view --json=url -q ".url"')[1]
+  local repo_url = get_repo_url()
   local pr_url = repo_url .. '/pull/' .. pr_number
   local could_open = require('utils').system_open(pr_url, true)
   if could_open then
@@ -27,7 +33,56 @@ vim.api.nvim_create_user_command('PRLink', function()
     vim.notify("Copied PR link to clipboard", vim.log.levels.INFO)
     vim.fn.setreg('+', pr_url)
   end
-end, { nargs = 0, desc = "Copy GitHub PR link for current line to clipboard" })
+end, { nargs = 0, desc = "Open/Copy GitHub PR link for current line" })
+
+local function get_git_root()
+  local git_root = vim.fn.systemlist('git rev-parse --show-toplevel 2> /dev/null')[1]
+  return git_root
+end
+
+local function relative_path_to_git_root()
+  local current_file_paths = vim.fn.expand('%:p')
+  local current_file = current_file_paths[1]
+  if type(current_file_paths) == 'string' then
+    current_file = current_file_paths
+  end
+  local git_root = get_git_root()
+
+  if git_root and vim.fn.isdirectory(git_root) == 1 then
+    if vim.fn.stridx(current_file, git_root) == 0 then
+      return vim.fn.substitute(current_file, '^' .. git_root .. '/', '', '')
+    end
+  end
+
+  return nil
+end
+
+local function common_ancestor_commit_with_master()
+  local commit_sha = vim.fn.systemlist('git merge-base HEAD origin/master')[1]
+  return commit_sha
+end
+
+vim.api.nvim_create_user_command('GHFile', function()
+  local start_lnum, end_lnum = vim.fn.line("'<"), vim.fn.line("'>")
+  if start_lnum == 0 or end_lnum == 0 then
+    start_lnum, end_lnum = vim.fn.line("."), vim.fn.line(".")
+  end
+  local repo_url = get_repo_url()
+  local filepath = relative_path_to_git_root()
+  if not filepath then
+    vim.notify("Could not find relative path to git root", vim.log.levels.ERROR)
+    return
+  end
+  local commit_sha = common_ancestor_commit_with_master()
+  local file_url = repo_url .. '/blob/' .. commit_sha .. '/' .. filepath .. '#L' .. start_lnum .. '-L' .. end_lnum
+  local could_open = require('utils').system_open(file_url, true)
+  if could_open then
+    vim.notify("Opened file in browser", vim.log.levels.INFO)
+  else
+    vim.notify("Copied file link to clipboard", vim.log.levels.INFO)
+    vim.fn.setreg('+', file_url)
+  end
+end, { nargs = 0, desc = "Open/Copy GitHub file link on master for current file", range = true })
 
 ---@type LazyPluginSpec
 return {
