@@ -1,3 +1,34 @@
+vim.api.nvim_create_user_command('PRLink', function()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local cache_entry = require('gitsigns.cache').cache[bufnr]
+  if not cache_entry then
+    vim.notify("No blame for current buffer", vim.log.levels.ERROR)
+    return
+  end
+  local lnum = vim.api.nvim_win_get_cursor(0)[1]
+  local config = require('gitsigns.config').config
+  local blame_info = cache_entry:get_blame(lnum, config.current_line_blame_opts)
+  if not blame_info then
+    vim.notify("No blame for current line", vim.log.levels.ERROR)
+    return
+  end
+  local commit_message = blame_info.commit.summary
+  local pr_number = commit_message:match('%(#(%d+)%)$')
+  if not pr_number then
+    vim.notify("No PR number in commit message", vim.log.levels.ERROR)
+    return
+  end
+  local repo_url = vim.fn.systemlist('gh repo view --json=url -q ".url"')[1]
+  local pr_url = repo_url .. '/pull/' .. pr_number
+  local could_open = require('utils').system_open(pr_url, true)
+  if could_open then
+    vim.notify("Opened PR in browser", vim.log.levels.INFO)
+  else
+    vim.notify("Copied PR link to clipboard", vim.log.levels.INFO)
+    vim.fn.setreg('+', pr_url)
+  end
+end, { nargs = 0, desc = "Copy GitHub PR link for current line to clipboard" })
+
 ---@type LazyPluginSpec
 return {
   -- Adds git related signs to the gutter, as well as utilities for managing changes

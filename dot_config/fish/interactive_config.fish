@@ -19,9 +19,10 @@ source "$HOME"/.config/fish/completion_utils.fish
 # Add tmux variables to fish shell before a command is executed.
 function refresh_tmux_vars --on-event fish_preexec
   if set -q TMUX
-    tmux showenv | string replace -rf '^((?:DISPLAY).*?)=(.*?)$' 'set -gx $1 "$2"' | source
     set -e XAUTHORITY
     set -e SSH_AUTH_SOCK
+    set -e SSH_CONNECTION
+    tmux showenv | string replace -rf '^((?:DISPLAY|SSH_CONNECTION).*?)=(.*?)$' 'set -gx $1 "$2"' | source
   end
 end
 
