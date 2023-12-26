@@ -35,6 +35,7 @@ return {
           ["<space>"] = false,
           -- Prefer neovim search of neo-tree search.
           ['/'] = false,
+          ['?'] = false,
         },
       },
       filesystem = {
