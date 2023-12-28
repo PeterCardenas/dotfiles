@@ -44,6 +44,24 @@ require('lazy').setup({
   --   end,
   -- },
 
+  -- Better picker for LSP references, definitions, and diagnostics.
+  {
+    "folke/trouble.nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    config = function()
+      require("trouble").setup({
+        use_diagnostic_signs = true,
+        severity = vim.diagnostic.severity.ERROR,
+        position = 'right',
+        auto_open = false,
+        auto_close = true,
+        action_keys = {
+          toggle_fold = { "zc", "zo", "o" },
+        }
+      })
+    end,
+  },
+
   -- Smooth scrolling
   {
     "karb94/neoscroll.nvim",

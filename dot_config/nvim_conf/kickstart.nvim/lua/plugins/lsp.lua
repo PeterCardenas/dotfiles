@@ -89,7 +89,7 @@ local on_attach = function(client, bufnr)
 
   nmap('gd',
     function()
-      require('telescope.builtin').lsp_definitions()
+      require('trouble').toggle('lsp_definitions')
     end,
     '[G]oto [D]efinition'
   )
@@ -97,7 +97,7 @@ local on_attach = function(client, bufnr)
   -- TODO Find a way to display path in a smart way.
   nmap('gr',
     function()
-      require('telescope.builtin').lsp_references()
+      require('trouble').toggle('lsp_references')
     end,
     '[G]oto [R]eferences'
   )
