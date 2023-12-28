@@ -34,8 +34,16 @@ vim.keymap.set('n', '<leader>gg',
 )
 
 -- Diagnostic keymaps
-vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous diagnostic message' })
-vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnostic message' })
+local NAVIGABLE_SEVERITIES = {
+  vim.diagnostic.severity.WARN,
+  vim.diagnostic.severity.ERROR,
+}
+vim.keymap.set('n', '[d', function()
+  vim.diagnostic.goto_prev({ severity = NAVIGABLE_SEVERITIES })
+end, { desc = 'Go to previous diagnostic message' })
+vim.keymap.set('n', ']d', function()
+  vim.diagnostic.goto_next({ severity = NAVIGABLE_SEVERITIES } )
+end, { desc = 'Go to next diagnostic message' })
 
 -- System clipboard keymaps.
 vim.keymap.set({ 'v', 'n' }, "<leader>y", '"+y', { desc = "Yank selection to clipboard" })
