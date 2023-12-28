@@ -50,12 +50,9 @@ vim.keymap.set('n', '<leader>fh',
   end,
   { desc = '[F]ind [H]elp' }
 )
-vim.keymap.set('n', '<leader>ld',
-  function()
-    require('telescope.builtin').diagnostics({ bufnr = 0 })
-  end,
-  { desc = '[L]anguage [D]iagnostics for current buffer' }
-)
+vim.keymap.set('n', '<leader>ld', function ()
+  require('trouble').toggle('document_diagnostics')
+end, { desc = '[L]anguage [D]iagnostic' })
 vim.keymap.set('n', '<leader>fr',
   function()
     require('telescope.builtin').resume()
