@@ -306,5 +306,18 @@ return {
     config = function()
       vim.g.lazygit_floating_window_scaling_factor = 1
     end,
+  },
+
+  {
+    'sourcegraph/sg.nvim',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-telescope/telescope.nvim',
+    },
+    config = function ()
+      vim.env.SRC_ENDPOINT = 'https://sourcegraph.com'
+      vim.env.SRC_ACCESS_TOKEN = vim.fn.systemlist('cat ' .. os.getenv('HOME') .. '/.config/sourcegraph/.access_token')[1]
+      require('sg').setup({})
+    end
   }
 }
