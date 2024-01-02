@@ -51,7 +51,7 @@ vim.keymap.set('n', '<leader>fh',
   { desc = '[F]ind [H]elp' }
 )
 vim.keymap.set('n', '<leader>ld', function ()
-  require('trouble').toggle('document_diagnostics')
+  require('trouble').open('document_diagnostics')
 end, { desc = '[L]anguage [D]iagnostic' })
 vim.keymap.set('n', '<leader>fr',
   function()
