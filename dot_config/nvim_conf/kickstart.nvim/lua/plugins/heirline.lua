@@ -199,7 +199,13 @@ return {
       { provider = " " },
       {
         provider = "",
-        hl = { fg = "gray" },
+        hl = function(self)
+          if self.is_active then
+            return "TabLineClose"
+          else
+            return "TabLine"
+          end
+        end,
         on_click = {
           callback = function(_, minwid)
             vim.schedule(function()
