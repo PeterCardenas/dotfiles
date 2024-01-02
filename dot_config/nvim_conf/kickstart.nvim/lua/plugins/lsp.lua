@@ -89,7 +89,7 @@ local on_attach = function(client, bufnr)
 
   nmap('gd',
     function()
-      require('trouble').toggle('lsp_definitions')
+      require('trouble').open('lsp_definitions')
     end,
     '[G]oto [D]efinition'
   )
@@ -97,7 +97,7 @@ local on_attach = function(client, bufnr)
   -- TODO Find a way to display path in a smart way.
   nmap('gr',
     function()
-      require('trouble').toggle('lsp_references')
+      require('trouble').open('lsp_references')
     end,
     '[G]oto [R]eferences'
   )

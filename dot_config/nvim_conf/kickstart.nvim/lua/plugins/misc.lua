@@ -26,8 +26,8 @@ return {
     config = function()
       require("trouble").setup({
         use_diagnostic_signs = true,
-        severity = vim.diagnostic.severity.ERROR,
         position = 'right',
+        width = 100,
         auto_open = false,
         auto_close = true,
         action_keys = {
