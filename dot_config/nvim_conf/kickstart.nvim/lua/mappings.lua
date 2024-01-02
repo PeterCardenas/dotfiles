@@ -90,7 +90,7 @@ local function nav_buf(navigation_offset)
 end
 ---@param num integer
 local jump_backward = function(num)
-	vim.cmd([[execute "normal! ]] .. tostring(num) .. [[\<c-o>"]])
+  vim.cmd([[execute "normal! ]] .. tostring(num) .. [[\<c-o>"]])
 end
 local function close_buf()
   local current_bufnr = vim.api.nvim_get_current_buf()

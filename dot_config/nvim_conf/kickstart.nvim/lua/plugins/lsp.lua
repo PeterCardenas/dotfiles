@@ -288,7 +288,6 @@ return {
     })
 
     -- Setup language servers found locally.
-    -- TODO: Try to get at least one of these to work lol.
     -- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
     ---@type table<string, lspconfig.Config>
     local custom_servers = {
