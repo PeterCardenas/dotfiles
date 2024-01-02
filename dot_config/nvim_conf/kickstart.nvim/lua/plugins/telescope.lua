@@ -118,7 +118,7 @@ return {
         live_grep_args = {
           mappings = { -- extend mappings
             i = {
-              ["<C-s>"] = lga_actions.quote_prompt({ postfix = ' -Ttest -ig ""' }),
+              ["<C-s>"] = lga_actions.quote_prompt({ postfix = ' -Ttest' }),
             },
           },
         }
