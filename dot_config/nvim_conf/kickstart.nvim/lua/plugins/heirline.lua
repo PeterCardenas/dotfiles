@@ -8,6 +8,7 @@ local function is_valid_buffer(bufnr)
   if not bufnr or bufnr < 1 then return false end
   return vim.bo[bufnr].buflisted and vim.api.nvim_buf_is_valid(bufnr)
 end
+
 local bufferline_group = vim.api.nvim_create_augroup("bufferline", { clear = true })
 vim.api.nvim_create_autocmd({ "BufAdd", "BufEnter" }, {
   desc = "Update buffers when adding new buffers",
@@ -18,10 +19,27 @@ vim.api.nvim_create_autocmd({ "BufAdd", "BufEnter" }, {
       bufs = {}
     end
     if not vim.tbl_contains(bufs, args.buf) then
-      table.insert(bufs, args.buf)
+      local current_buf = vim.api.nvim_get_current_buf()
+      if vim.g.session_loaded and current_buf ~= args.buf then
+        for buf_index, bufnr in ipairs(bufs) do
+          if bufnr == current_buf then
+            table.insert(bufs, buf_index + 1, args.buf)
+            break
+          end
+        end
+      else
+        table.insert(bufs, args.buf)
+      end
     end
     bufs = vim.tbl_filter(is_valid_buffer, bufs)
     vim.api.nvim_tabpage_set_var(0, 'bufs', bufs)
+  end,
+})
+vim.api.nvim_create_autocmd({ 'User' }, {
+  pattern = "SessionLoadPost",
+  group = vim.api.nvim_create_augroup("session_loaded_post", { clear = true }),
+  callback = function( )
+    vim.g.session_loaded = true
   end,
 })
 vim.api.nvim_create_autocmd("BufDelete", {
@@ -46,20 +64,10 @@ vim.api.nvim_create_autocmd("BufDelete", {
 })
 
 vim.api.nvim_create_autocmd("BufEnter", {
-  desc = "Open Neo-Tree on startup with directory",
-  group = vim.api.nvim_create_augroup("neotree_start", { clear = true }),
-  callback = function()
-    local stats = vim.loop.fs_stat(vim.api.nvim_buf_get_name(0))
-    if stats and stats.type == "directory" then require("neo-tree.setup.netrw").hijack() end
-  end,
-})
-
-vim.api.nvim_create_autocmd("BufEnter", {
   desc = "Quit AstroNvim if more than one window is open and only sidebar windows are list",
   group = vim.api.nvim_create_augroup("auto_quit", { clear = true }),
   callback = function()
     local wins = vim.api.nvim_tabpage_list_wins(0)
-    -- Both neo-tree and aerial will auto-quit if there is only a single window left
     if #wins <= 1 then return end
     local sidebar_fts = { ["neo-tree"] = true }
     for _, winid in ipairs(wins) do
