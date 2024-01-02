@@ -22,6 +22,7 @@ return {
   {
     "folke/trouble.nvim",
     dependencies = { "nvim-tree/nvim-web-devicons" },
+    lazy = true,
     config = function()
       require("trouble").setup({
         use_diagnostic_signs = true,
@@ -39,6 +40,7 @@ return {
   -- Smooth scrolling
   {
     "karb94/neoscroll.nvim",
+    event = { "BufReadPre", "BufNewFile" },
     config = function()
       require('neoscroll').setup({
         cursor_scrolls_alone = false,
@@ -131,7 +133,8 @@ return {
 
   -- Better code action menu
   {
-    "aznhe21/actions-preview.nvim"
+    "aznhe21/actions-preview.nvim",
+    lazy = true,
   },
 
   {
@@ -169,6 +172,7 @@ return {
     -- Add indentation guides even on blank lines
     'lukas-reineke/indent-blankline.nvim',
     main = 'ibl',
+    event = { "BufReadPre", "BufNewFile" },
     config = function()
       require('ibl').setup({
         scope = {
@@ -195,6 +199,7 @@ return {
   -- Sticky scroll
   {
     "nvim-treesitter/nvim-treesitter-context",
+    event = { "BufReadPre", "BufNewFile" },
     dependencies = "nvim-treesitter",
     config = function()
       require("treesitter-context").setup({
