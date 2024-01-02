@@ -15,6 +15,8 @@ return {
     vim.cmd [[highlight GitSignsAdd guifg=#258F4E]]
     vim.cmd [[highlight GitSignsChange guifg=#DBC614]]
     vim.cmd [[highlight GitSignsDelete guifg=#DB4539]]
+    -- Make git blame foreground brighter.
+    vim.cmd [[highlight GitSignsCurrentLineBlame guifg=#7c7c7c]]
     -- Make leap backdrop foreground light grey (in case I forget the key to press lol).
     vim.cmd [[highlight LeapBackdrop guifg=#5C5C5C]]
     -- Add red close button highlight.

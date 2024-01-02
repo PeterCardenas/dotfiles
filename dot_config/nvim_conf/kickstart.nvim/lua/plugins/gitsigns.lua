@@ -84,6 +84,10 @@ vim.api.nvim_create_user_command('GHFile', function()
   end
 end, { nargs = 0, desc = "Open/Copy GitHub file link on master for current file", range = true })
 
+vim.keymap.set({ 'n' }, '<leader>gh',function ()
+  require('gitsigns.actions').blame_line()
+end, { desc = "Show blame for current line" })
+
 ---@type LazyPluginSpec
 return {
   -- Adds git related signs to the gutter, as well as utilities for managing changes
@@ -102,6 +106,7 @@ return {
       current_line_blame = true,
       current_line_blame_opts = {
         delay = 10,
+        virt_text_pos = 'right_align',
       },
       on_attach = function(bufnr)
         vim.keymap.set({ 'n', 'v' }, '<leader>gp', require('gitsigns.actions').preview_hunk,
