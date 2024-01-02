@@ -42,7 +42,7 @@ vim.keymap.set('n', '[d', function()
   vim.diagnostic.goto_prev({ severity = NAVIGABLE_SEVERITIES })
 end, { desc = 'Go to previous diagnostic message' })
 vim.keymap.set('n', ']d', function()
-  vim.diagnostic.goto_next({ severity = NAVIGABLE_SEVERITIES } )
+  vim.diagnostic.goto_next({ severity = NAVIGABLE_SEVERITIES })
 end, { desc = 'Go to next diagnostic message' })
 
 -- System clipboard keymaps.
@@ -76,6 +76,7 @@ vim.keymap.set({ 'v', 'n' }, "<leader>C",
   end,
   { desc = "Close all buffers" }
 )
+---@param navigation_offset integer
 local function nav_buf(navigation_offset)
   local bufs = vim.api.nvim_tabpage_get_var(0, "bufs")
   local current_bufnr = vim.api.nvim_get_current_buf()
@@ -87,13 +88,35 @@ local function nav_buf(navigation_offset)
     end
   end
 end
-local function close_buf()
-  local current = vim.api.nvim_get_current_buf()
-  vim.schedule(function()
-    require('bufdelete').bufdelete(current, false)
-  end)
-  nav_buf(-1)
+---@param num integer
+local jump_backward = function(num)
+	vim.cmd([[execute "normal! ]] .. tostring(num) .. [[\<c-o>"]])
 end
+local function close_buf()
+  local current_bufnr = vim.api.nvim_get_current_buf()
+  local is_modified = vim.api.nvim_get_option_value("modified", { buf = current_bufnr })
+  if is_modified then
+    local choice = vim.fn.input("Buffer modified. Save? (y/n): ")
+    if choice == "y" then
+      vim.cmd.w()
+    end
+  end
+  local jumplist_result = vim.fn.getjumplist()
+  if not jumplist_result then return end
+  local jumplist, current_jumplist_index = jumplist_result[1], jumplist_result[2]
+  local target_jumplist_index = current_jumplist_index
+  local target_bufnr = jumplist[target_jumplist_index].bufnr
+  local bufs = vim.api.nvim_tabpage_get_var(0, "bufs")
+  while target_jumplist_index > 1 and (current_bufnr == target_bufnr or not vim.tbl_contains(bufs, target_bufnr)) do
+    target_jumplist_index = target_jumplist_index - 1
+    target_bufnr = jumplist[target_jumplist_index].bufnr
+  end
+  jump_backward(current_jumplist_index - target_jumplist_index)
+  vim.schedule(function()
+    require('bufdelete').bufdelete(current_bufnr, true)
+  end)
+end
+---@param move_offset integer
 local function move_buf(move_offset)
   if move_offset == 0 then return end               -- if n = 0 then no shifts are needed
   local bufs = vim.api.nvim_tabpage_get_var(0, 'bufs')
