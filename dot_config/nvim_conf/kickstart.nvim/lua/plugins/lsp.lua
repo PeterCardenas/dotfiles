@@ -3,7 +3,8 @@
 ---@param bufnr integer
 ---@param ls_name string
 ---@param action_type string
-local function commit_code_action_edit(bufnr, ls_name, action_type)
+---@param on_complete? function
+local function commit_code_action_edit(bufnr, ls_name, action_type, on_complete)
   local params = vim.lsp.util.make_range_params()
   params.context = { only = { action_type }, diagnostics = {} }
   local clients = vim.lsp.get_clients({
@@ -11,14 +12,13 @@ local function commit_code_action_edit(bufnr, ls_name, action_type)
     name = ls_name,
     method = "textDocument/codeAction",
   })
-  local pending_requests = {}
+  local completion_count = 0
   for _, client in pairs(clients) do
     ---@diagnostic disable-next-line: invisible
-    local status, request_id = client.request(
+    client.request(
       'textDocument/codeAction',
       params,
       function(err, ls_results, _, _)
-        table.remove(pending_requests, client.id)
         if err then
           vim.notify("Error running" .. ls_name .. " code action: " .. err, vim.log.levels.ERROR)
         end
@@ -28,18 +28,13 @@ local function commit_code_action_edit(bufnr, ls_name, action_type)
             vim.lsp.util.apply_workspace_edit(ls_result.edit, offset_encoding)
           end
         end
+        completion_count = completion_count + 1
+        if completion_count == #clients and on_complete then
+          on_complete()
+        end
       end,
       bufnr
     )
-    if status then
-      table.insert(pending_requests, client.id, request_id)
-    end
-  end
-  local wait_result = vim.wait(3000, function()
-    return vim.tbl_isempty(pending_requests)
-  end, 10)
-  if not wait_result then
-    vim.notify("Timed out waiting for " .. ls_name .. " code action to complete.", vim.log.levels.ERROR)
   end
 end
 
@@ -52,8 +47,9 @@ end
 ---Fix all auto-fixable ruff lsp errors.
 ---@param bufnr integer
 local function fix_ruff_errors(bufnr)
-  commit_code_action_edit(bufnr, "ruff_lsp", "source.organizeImports")
-  commit_code_action_edit(bufnr, "ruff_lsp", "source.fixAll")
+  commit_code_action_edit(bufnr, "ruff_lsp", "source.organizeImports", function ()
+    commit_code_action_edit(bufnr, "ruff_lsp", "source.fixAll")
+  end)
 end
 
 --  This function gets run when an LSP connects to a particular buffer.
@@ -309,7 +305,7 @@ return {
       },
       valels = {
         cmd = { "vale-ls" },
-        filetypes = { "markdown", "text", "dosini" },
+        filetypes = { "markdown", "text", "dosini", "yaml" },
         default_config = {
           root_dir = require('lspconfig.util').root_pattern(".vale.ini"),
         }
