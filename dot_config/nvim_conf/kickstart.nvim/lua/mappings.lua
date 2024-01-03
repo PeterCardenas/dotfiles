@@ -90,6 +90,12 @@ end
 local jump_backward = function(num)
   vim.cmd([[execute "normal! ]] .. tostring(num) .. [[\<c-o>"]])
 end
+---@param bufnr integer
+local function force_close_buf(bufnr)
+  vim.schedule(function()
+    require('bufdelete').bufdelete(bufnr, true)
+  end)
+end
 local function close_buf()
   local current_bufnr = vim.api.nvim_get_current_buf()
   local is_modified = vim.api.nvim_get_option_value("modified", { buf = current_bufnr })
@@ -99,20 +105,25 @@ local function close_buf()
       vim.cmd.w()
     end
   end
+  local bufs = vim.api.nvim_tabpage_get_var(0, "bufs")
+  if #bufs == 1 then
+    force_close_buf(current_bufnr)
+    return
+  end
   local jumplist_result = vim.fn.getjumplist()
-  if not jumplist_result then return end
+  if not jumplist_result then
+    force_close_buf(current_bufnr)
+    return
+  end
   local jumplist, current_jumplist_index = jumplist_result[1], jumplist_result[2]
   local target_jumplist_index = current_jumplist_index
   local target_bufnr = jumplist[target_jumplist_index].bufnr
-  local bufs = vim.api.nvim_tabpage_get_var(0, "bufs")
   while target_jumplist_index > 1 and (current_bufnr == target_bufnr or not vim.tbl_contains(bufs, target_bufnr)) do
     target_jumplist_index = target_jumplist_index - 1
     target_bufnr = jumplist[target_jumplist_index].bufnr
   end
   jump_backward(current_jumplist_index - target_jumplist_index)
-  vim.schedule(function()
-    require('bufdelete').bufdelete(current_bufnr, true)
-  end)
+  force_close_buf(current_bufnr)
 end
 ---@param move_offset integer
 local function move_buf(move_offset)
