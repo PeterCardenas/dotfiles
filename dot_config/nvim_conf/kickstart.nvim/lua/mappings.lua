@@ -86,10 +86,6 @@ local function nav_buf(navigation_offset)
     end
   end
 end
----@param num integer
-local jump_backward = function(num)
-  vim.cmd([[execute "normal! ]] .. tostring(num) .. [[\<c-o>"]])
-end
 ---@param bufnr integer
 local function force_close_buf(bufnr)
   vim.schedule(function()
@@ -122,7 +118,7 @@ local function close_buf()
     target_jumplist_index = target_jumplist_index - 1
     target_bufnr = jumplist[target_jumplist_index].bufnr
   end
-  jump_backward(current_jumplist_index - target_jumplist_index)
+  vim.cmd.b(target_bufnr)
   force_close_buf(current_bufnr)
 end
 ---@param move_offset integer
