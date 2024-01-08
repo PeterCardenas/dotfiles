@@ -35,12 +35,10 @@ vim.keymap.set('n', '<leader>gg',
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '[d', function()
-  require('trouble').open('document_diagnostics')
-  require('trouble').previous({ skip_groups = true, jump = true })
+  vim.diagnostic.goto_prev()
 end, { desc = 'Go to previous diagnostic message' })
 vim.keymap.set('n', ']d', function()
-  require('trouble').open('document_diagnostics')
-  require('trouble').next({ skip_groups = true, jump = true })
+  vim.diagnostic.goto_next()
 end, { desc = 'Go to next diagnostic message' })
 
 -- System clipboard keymaps.
