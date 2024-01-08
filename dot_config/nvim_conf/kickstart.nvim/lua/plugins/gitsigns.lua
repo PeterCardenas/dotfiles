@@ -26,13 +26,8 @@ vim.api.nvim_create_user_command('GHPR', function()
   end
   local repo_url = get_repo_url()
   local pr_url = repo_url .. '/pull/' .. pr_number
-  local could_open = require('utils').system_open(pr_url, true)
-  if could_open then
-    vim.notify("Opened PR in browser", vim.log.levels.INFO)
-  else
-    vim.notify("Copied PR link to clipboard", vim.log.levels.INFO)
-    vim.fn.setreg('+', pr_url)
-  end
+  vim.fn.setreg('+', pr_url)
+  vim.notify("Copied PR link to clipboard", vim.log.levels.INFO)
 end, { nargs = 0, desc = "Open/Copy GitHub PR link for current line" })
 
 local function get_git_root()
@@ -75,13 +70,8 @@ vim.api.nvim_create_user_command('GHFile', function()
   end
   local commit_sha = common_ancestor_commit_with_master()
   local file_url = repo_url .. '/blob/' .. commit_sha .. '/' .. filepath .. '#L' .. start_lnum .. '-L' .. end_lnum
-  local could_open = require('utils').system_open(file_url, true)
-  if could_open then
-    vim.notify("Opened file in browser", vim.log.levels.INFO)
-  else
-    vim.notify("Copied file link to clipboard", vim.log.levels.INFO)
-    vim.fn.setreg('+', file_url)
-  end
+  vim.notify("Copied file link to clipboard", vim.log.levels.INFO)
+  vim.fn.setreg('+', file_url)
 end, { nargs = 0, desc = "Open/Copy GitHub file link on master for current file", range = true })
 
 vim.keymap.set({ 'n' }, '<leader>gh',function ()
