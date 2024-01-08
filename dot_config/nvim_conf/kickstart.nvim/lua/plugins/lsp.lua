@@ -172,6 +172,7 @@ return {
   },
   event = { 'BufReadPre', 'BufNewFile' },
   config = function()
+    VENV_PATH = os.getenv('HOME') .. "/.local/share/nvim/mason/packages/python-lsp-server/venv"
     -- Enable the following language servers
     -- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
     ---@type table<string, lspconfig.Config>
@@ -227,6 +228,10 @@ return {
               enabled = true,
               live_mode = true,
               report_progress = true,
+              -- Currently using a fork of pylsp-mypy to support venv and MYPYPATH.
+              -- https://github.com/PeterCardenas/pylsp-mypy
+              venv_path = VENV_PATH,
+              relative_mypy_path = "bazel-out/k8-fastbuild/bin",
             },
           }
         }
