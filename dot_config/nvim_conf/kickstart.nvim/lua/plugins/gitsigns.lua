@@ -4,6 +4,26 @@ local function get_repo_url()
   return repo_url
 end
 
+---@param commit_sha string
+---@return string | nil
+local function get_pr_url(commit_sha)
+  local command = "gh pr list --state=merged --json=url,mergeCommit --search='" .. commit_sha .. "'"
+      .. " --jq='.[] | select(.mergeCommit.oid == \"" .. commit_sha .. "\") | .url'"
+  local result = vim.fn.systemlist(command)[1]
+  if result == "" then
+    return nil
+  end
+  return result
+end
+
+---@param commit_sha string
+---@return string
+local function get_commit_url(commit_sha)
+  local repo_url = get_repo_url()
+  local commit_url = repo_url .. '/commit/' .. commit_sha
+  return commit_url
+end
+
 vim.api.nvim_create_user_command('GHPR', function()
   local bufnr = vim.api.nvim_get_current_buf()
   local cache_entry = require('gitsigns.cache').cache[bufnr]
@@ -15,19 +35,23 @@ vim.api.nvim_create_user_command('GHPR', function()
   local config = require('gitsigns.config').config
   local blame_info = cache_entry:get_blame(lnum, config.current_line_blame_opts)
   if not blame_info then
-    vim.notify("No blame for current line", vim.log.levels.ERROR)
+    vim.notify("Blame has not been loaded yet.", vim.log.levels.ERROR)
     return
   end
-  local commit_message = blame_info.commit.summary
-  local pr_number = commit_message:match('%(#(%d+)%)$')
-  if not pr_number then
-    vim.notify("No PR number in commit message", vim.log.levels.ERROR)
+  if blame_info.commit.author == require('gitsigns.git').not_commited('').author then
+    vim.notify("Current line not committed yet.", vim.log.levels.ERROR)
     return
   end
-  local repo_url = get_repo_url()
-  local pr_url = repo_url .. '/pull/' .. pr_number
+  local commit_sha = blame_info.commit.sha
+  local pr_url = get_pr_url(commit_sha)
+  if not pr_url then
+    local commit_url = get_commit_url(commit_sha)
+    vim.fn.setreg('+', commit_url)
+    vim.notify("No PR created yet.\nCopied commit link to clipboard:\n" .. commit_url, vim.log.levels.WARN)
+    return
+  end
   vim.fn.setreg('+', pr_url)
-  vim.notify("Copied PR link to clipboard", vim.log.levels.INFO)
+  vim.notify("Copied PR link to clipboard:\n" .. pr_url, vim.log.levels.INFO)
 end, { nargs = 0, desc = "Open/Copy GitHub PR link for current line" })
 
 local function get_git_root()
@@ -74,7 +98,7 @@ vim.api.nvim_create_user_command('GHFile', function()
   vim.fn.setreg('+', file_url)
 end, { nargs = 0, desc = "Open/Copy GitHub file link on master for current file", range = true })
 
-vim.keymap.set({ 'n' }, '<leader>gh',function ()
+vim.keymap.set({ 'n' }, '<leader>gh', function()
   require('gitsigns.actions').blame_line()
 end, { desc = "Show blame for current line" })
 
