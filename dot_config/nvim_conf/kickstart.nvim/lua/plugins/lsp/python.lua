@@ -1,0 +1,130 @@
+local M = {}
+
+---@return table<string, lspconfig.Config>
+local function pylsp_config()
+  VENV_PATH = os.getenv('HOME') .. "/.local/share/nvim/mason/packages/python-lsp-server/venv"
+  local disabled_pylint_rules = {
+    'invalid-name',
+    'missing-module-docstring',
+    'wrong-import-position',
+    'unused-argument',
+    'too-few-public-methods',
+    'unused-import',
+    'logging-fstring-interpolation',
+    'wrong-import-order',
+    'consider-using-f-string',
+    -- Below have been delegated to ruff.
+    'trailing-whitespace',
+    'missing-function-docstring',
+    'missing-class-docstring',
+  }
+  return {
+    pylsp = {
+      cmd = { "pylsp", "--log-file=/tmp/pylsp.log", },
+      pylsp = {
+        plugins = {
+          jedi = {
+            extra_paths = {
+              "bazel-out/k8-fastbuild/bin",
+            },
+          },
+          -- Use black for formatting.
+          black = {
+            enabled = true,
+          },
+          -- TODO(PeterPCardenas): Replace all useful pylint rules with ruff rules.
+          pylint = {
+            enabled = true,
+            args = {
+              '--disable=' .. table.concat(disabled_pylint_rules, ','),
+              '--max-line-length=120',
+            },
+            -- Enables pylint to run in live mode.
+            executable = VENV_PATH .. "/bin/pylint",
+          },
+          pylsp_mypy = {
+            enabled = true,
+            live_mode = true,
+            report_progress = true,
+            -- Currently using a fork of pylsp-mypy to support venv and MYPYPATH.
+            -- https://github.com/PeterCardenas/pylsp-mypy
+            venv_path = VENV_PATH,
+            relative_mypy_path = "bazel-out/k8-fastbuild/bin",
+          },
+          -- Disable other default formatters and linters.
+          mccabe = {
+            enabled = false,
+          },
+          pyflakes = {
+            enabled = false,
+          },
+          yapf = {
+            enabled = false,
+          },
+          autopep8 = {
+            enabled = false,
+          },
+          pycodestyle = {
+            enabled = false,
+          },
+        }
+      }
+    }
+  }
+end
+
+---@return table<string, lspconfig.Config>
+local function ruff_lsp_config()
+  local selected_rules = {
+    'D', -- pydocstyle: https://docs.astral.sh/ruff/rules/#pydocstyle-d
+    'W', -- pycodestyle warnings: https://docs.astral.sh/ruff/rules/#warning-w
+  }
+  local ignored_rules = {
+    'W191' -- tab-indentation https://docs.astral.sh/ruff/rules/tab-indentation/
+  }
+  local used_in_repo = {
+    'W605' -- invalid escape sequence https://docs.astral.sh/ruff/rules/invalid-escape-sequence/
+  }
+  local ruff_args = {
+    '--select=' .. table.concat(selected_rules, ','),
+    '--ignore=' .. table.concat(ignored_rules, ','),
+    -- Do not fix selected rules to minimize diff.
+    '--unfixable=' .. table.concat(selected_rules, ','),
+    -- Re-enable rules that are used in codebase.
+    '--fixable=' .. table.concat(used_in_repo, ','),
+  }
+  -- TODO(PeterPCardenas): Fork https://github.com/astral-sh/ruff-lsp
+  -- Add support to adding rules without changing how the codebase selects and fixes rules.
+  return {
+    ruff_lsp = {
+      init_options = {
+        settings = {
+          args = ruff_args,
+        },
+      },
+    },
+  }
+end
+
+---@return table<string, lspconfig.Config>
+function M.python_lsp_config()
+  ---@type table<string, lspconfig.Config>
+  local server_configs = {
+    -- Fastest lsp, but not feature rich enough.
+    pylyzer = {
+      enabled = false,
+    },
+    -- Currently too slow and laggy in neovim.
+    pyright = {
+      enabled = false,
+    },
+  }
+  local ruff_configs = ruff_lsp_config()
+  server_configs = vim.tbl_extend('force', server_configs, ruff_configs)
+  -- Fastest lsp, but linting/formatting will be moved to ruff.
+  local pylsp_configs = pylsp_config()
+  server_configs = vim.tbl_extend('force', server_configs, pylsp_configs)
+  return server_configs
+end
+
+return M
