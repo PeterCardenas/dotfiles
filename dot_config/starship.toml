@@ -10,7 +10,7 @@ format = "[$symbol$branch(:$remote_branch)]($style) "
 format = "[$duration]($style) "
 
 [python]
-format = "[$symbol]($style)"
+format = "[${symbol}${pyenv_prefix}(${version} )(\\($virtualenv\\) )]($style)"
 
 [rust]
 format = "[$symbol($version)]($style) "
