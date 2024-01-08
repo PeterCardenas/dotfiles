@@ -218,10 +218,11 @@ return {
             pycodestyle = {
               enabled = false,
             },
+            -- TODO(PeterPCardenas): Replace all useful pylint rules with ruff rules.
             pylint = {
               enabled = true,
               args = {
-                '--disable=invalid-name,missing-module-docstring,wrong-import-position,unused-argument,too-few-public-methods,unused-import,logging-fstring-interpolation,wrong-import-order,consider-using-f-string',
+                '--disable=invalid-name,missing-module-docstring,wrong-import-position,unused-argument,too-few-public-methods,unused-import,logging-fstring-interpolation,wrong-import-order,consider-using-f-string,trailing-whitespace,missing-function-docstring,missing-class-docstring',
                 '--max-line-length=120',
                 '--source-root=bazel-out/k8-fastbuild/bin',
               },
@@ -240,6 +241,20 @@ return {
           }
         }
       },
+      ruff_lsp = {
+        init_options = {
+          settings = {
+            args = {
+              -- TODO(PeterPCardenas): Fork https://github.com/astral-sh/ruff-lsp
+              -- Add support to adding rules without changing how the codebase selects and fixes rules.
+              "--select=D,W",
+              "--ignore=W191",
+              "--unfixable=D,W", -- Do not fix selected rules to minimize diff.
+              "--fixable=W605",  -- Re-enable rules that are used in codebase.
+            },
+          },
+        },
+      },
       pyright = {
         enabled = false,
       },
@@ -250,7 +265,6 @@ return {
             'errcheck,ineffassign,unused' },
         },
       },
-      ruff_lsp = {},
       tsserver = {
         cmd_env = {
           NODE_OPTIONS = "--max-old-space-size=6144",
