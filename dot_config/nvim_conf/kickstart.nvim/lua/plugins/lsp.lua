@@ -12,6 +12,12 @@ local function commit_code_action_edit(bufnr, ls_name, action_type, on_complete)
     name = ls_name,
     method = "textDocument/codeAction",
   })
+  if #clients == 0 then
+    if on_complete then
+      on_complete()
+    end
+    return
+  end
   local completion_count = 0
   for _, client in pairs(clients) do
     ---@diagnostic disable-next-line: invisible
@@ -40,15 +46,17 @@ end
 
 ---Organizes go imports.
 ---@param bufnr integer
-local function format_go_imports(bufnr)
-  commit_code_action_edit(bufnr, "gopls", "source.organizeImports")
+---@param on_complete? function
+local function format_go_imports(bufnr, on_complete)
+  commit_code_action_edit(bufnr, "gopls", "source.organizeImports", on_complete)
 end
 
 ---Fix all auto-fixable ruff lsp errors.
 ---@param bufnr integer
-local function fix_ruff_errors(bufnr)
+---@param on_complete? function
+local function fix_ruff_errors(bufnr, on_complete)
   commit_code_action_edit(bufnr, "ruff_lsp", "source.organizeImports", function()
-    commit_code_action_edit(bufnr, "ruff_lsp", "source.fixAll")
+    commit_code_action_edit(bufnr, "ruff_lsp", "source.fixAll", on_complete)
   end)
 end
 
@@ -128,16 +136,19 @@ local on_attach = function(client, bufnr)
   -- Create a command `:Format` local to the LSP buffer
   vim.keymap.set({ 'n', 'v', }, '<leader>lf',
     function()
-      format_go_imports(bufnr)
-      fix_ruff_errors(bufnr)
-      vim.lsp.buf.format({
-        filter = function(format_client)
-          -- Do not request typescript-language-server for formatting.
-          return format_client.name ~= "tsserver"
-        end,
-        bufnr = bufnr,
-        async = true,
-      })
+      -- TODO(@PeterPCardenas): Spawn a separate thread instead of using callbacks.
+      format_go_imports(bufnr, function()
+        fix_ruff_errors(bufnr, function()
+          vim.lsp.buf.format({
+            filter = function(format_client)
+              -- Do not request typescript-language-server for formatting.
+              return format_client.name ~= "tsserver"
+            end,
+            bufnr = bufnr,
+            async = true,
+          })
+        end)
+      end)
     end,
     {
       desc = "LSP: Format buffer",
