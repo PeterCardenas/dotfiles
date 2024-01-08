@@ -221,8 +221,8 @@ return {
                 '--max-line-length=120',
                 '--source-root=bazel-out/k8-fastbuild/bin',
               },
-              -- TODO: How to get live mode to not throw import errors.
-              -- executable = "pylint",
+              -- Enables pylint to run in live mode.
+              executable = VENV_PATH .. "/bin/pylint",
             },
             pylsp_mypy = {
               enabled = true,
