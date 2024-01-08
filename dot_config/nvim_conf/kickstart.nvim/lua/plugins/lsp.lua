@@ -186,7 +186,6 @@ return {
   },
   event = { 'BufReadPre', 'BufNewFile' },
   config = function()
-    VENV_PATH = os.getenv('HOME') .. "/.local/share/nvim/mason/packages/python-lsp-server/venv"
     -- Enable the following language servers
     -- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
     ---@type table<string, lspconfig.Config>
@@ -196,79 +195,6 @@ return {
       },
       gopls = {},
       rust_analyzer = {},
-      pylyzer = {
-        enabled = false,
-      },
-      -- Faster than pyright.
-      -- Would use pylyzer once it's more feature rich (doesn't support local imports yet).
-      pylsp = {
-        cmd = { "pylsp", "--log-file=/tmp/pylsp.log", },
-        pylsp = {
-          plugins = {
-            jedi = {
-              extra_paths = {
-                "bazel-out/k8-fastbuild/bin",
-              },
-            },
-            mccabe = {
-              enabled = false,
-            },
-            pyflakes = {
-              enabled = false,
-            },
-            -- Use black for formatting.
-            black = {
-              enabled = true,
-            },
-            yapf = {
-              enabled = false,
-            },
-            autopep8 = {
-              enabled = false,
-            },
-            pycodestyle = {
-              enabled = false,
-            },
-            -- TODO(PeterPCardenas): Replace all useful pylint rules with ruff rules.
-            pylint = {
-              enabled = true,
-              args = {
-                '--disable=invalid-name,missing-module-docstring,wrong-import-position,unused-argument,too-few-public-methods,unused-import,logging-fstring-interpolation,wrong-import-order,consider-using-f-string,trailing-whitespace,missing-function-docstring,missing-class-docstring',
-                '--max-line-length=120',
-                '--source-root=bazel-out/k8-fastbuild/bin',
-              },
-              -- Enables pylint to run in live mode.
-              executable = VENV_PATH .. "/bin/pylint",
-            },
-            pylsp_mypy = {
-              enabled = true,
-              live_mode = true,
-              report_progress = true,
-              -- Currently using a fork of pylsp-mypy to support venv and MYPYPATH.
-              -- https://github.com/PeterCardenas/pylsp-mypy
-              venv_path = VENV_PATH,
-              relative_mypy_path = "bazel-out/k8-fastbuild/bin",
-            },
-          }
-        }
-      },
-      ruff_lsp = {
-        init_options = {
-          settings = {
-            args = {
-              -- TODO(PeterPCardenas): Fork https://github.com/astral-sh/ruff-lsp
-              -- Add support to adding rules without changing how the codebase selects and fixes rules.
-              "--select=D,W",
-              "--ignore=W191",
-              "--unfixable=D,W", -- Do not fix selected rules to minimize diff.
-              "--fixable=W605",  -- Re-enable rules that are used in codebase.
-            },
-          },
-        },
-      },
-      pyright = {
-        enabled = false,
-      },
       -- Prefer to use nogo, but there is not language server for it yet.
       golangci_lint_ls = {
         init_options = {
@@ -299,6 +225,8 @@ return {
         },
       },
     }
+    local python_lsp_config = require('plugins.lsp.python').python_lsp_config()
+    servers = vim.tbl_extend('force', servers, python_lsp_config)
 
     -- Setup neovim lua configuration
     -- Load plugins when editing overall configuration.
