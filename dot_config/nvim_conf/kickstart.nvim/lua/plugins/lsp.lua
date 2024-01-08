@@ -47,7 +47,7 @@ end
 ---Fix all auto-fixable ruff lsp errors.
 ---@param bufnr integer
 local function fix_ruff_errors(bufnr)
-  commit_code_action_edit(bufnr, "ruff_lsp", "source.organizeImports", function ()
+  commit_code_action_edit(bufnr, "ruff_lsp", "source.organizeImports", function()
     commit_code_action_edit(bufnr, "ruff_lsp", "source.fixAll")
   end)
 end
@@ -123,17 +123,24 @@ local on_attach = function(client, bufnr)
   nmap('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
   -- Create a command `:Format` local to the LSP buffer
-  nmap('<leader>lf', function()
-    format_go_imports(bufnr)
-    fix_ruff_errors(bufnr)
-    vim.lsp.buf.format({
-      filter = function(format_client)
-        -- Do not request typescript-language-server for formatting.
-        return format_client.name ~= "tsserver"
-      end,
-      bufnr = bufnr,
-    })
-  end, "Format buffer")
+  vim.keymap.set({ 'n', 'v', }, '<leader>lf',
+    function()
+      format_go_imports(bufnr)
+      fix_ruff_errors(bufnr)
+      vim.lsp.buf.format({
+        filter = function(format_client)
+          -- Do not request typescript-language-server for formatting.
+          return format_client.name ~= "tsserver"
+        end,
+        bufnr = bufnr,
+        async = true,
+      })
+    end,
+    {
+      desc = "LSP: Format buffer",
+      buffer = bufnr,
+    }
+  )
 end
 
 vim.api.nvim_create_autocmd('LspAttach', {
