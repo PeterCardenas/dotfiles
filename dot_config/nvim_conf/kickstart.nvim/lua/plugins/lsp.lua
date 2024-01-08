@@ -188,6 +188,7 @@ return {
       -- Faster than pyright.
       -- Would use pylyzer once it's more feature rich (doesn't support local imports yet).
       pylsp = {
+        cmd = { "pylsp", "--log-file=/tmp/pylsp.log", },
         pylsp = {
           plugins = {
             jedi = {
