@@ -56,9 +56,12 @@ end
 ---@param client lsp.Client
 ---@param bufnr integer
 local on_attach = function(client, bufnr)
-  -- Defer to pylsp for hover documentation.
   if client.name == 'ruff_lsp' then
+    -- Defer to pylsp jedi plugin for hover documentation.
     client.server_capabilities.hoverProvider = false
+    -- Defer to pylsp black plugin for formatting.
+    client.server_capabilities.documentFormattingProvider = false
+    client.server_capabilities.documentRangeFormattingProvider = false
   end
   -- Do not use code actions from pylsp since they are slow for now.
   if client.name == 'pylsp' then
