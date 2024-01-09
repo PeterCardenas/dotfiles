@@ -132,12 +132,12 @@ local function ruff_lsp_config()
     'W605', -- invalid escape sequence https://docs.astral.sh/ruff/rules/invalid-escape-sequence/
   }
   local ruff_args = {
-    '--select=' .. table.concat(selected_rules, ','),
+    '--extend-select=' .. table.concat(selected_rules, ','),
     '--ignore=' .. table.concat(ignored_rules, ','),
     -- Do not fix selected rules to minimize diff.
     '--unfixable=' .. table.concat(selected_rules, ','),
     -- Re-enable rules that are used in codebase.
-    '--fixable=' .. table.concat(used_in_repo, ','),
+    '--extend-fixable=' .. table.concat(used_in_repo, ','),
   }
   -- TODO(PeterPCardenas): Fork https://github.com/astral-sh/ruff-lsp
   -- Add support to adding rules without changing how the codebase selects and fixes rules.
