@@ -2,7 +2,7 @@ local M = {}
 
 ---@return table<string, lspconfig.Config>
 local function pylsp_config()
-  VENV_PATH = os.getenv('HOME') .. "/.local/share/nvim/mason/packages/python-lsp-server/venv"
+  VENV_PATH = os.getenv('HOME') .. '/.local/share/nvim/mason/packages/python-lsp-server/venv'
   local disabled_pylint_rules = {
     'invalid-name',
     'missing-module-docstring',
@@ -26,7 +26,7 @@ local function pylsp_config()
   local gen_files_path = 'bazel-out/k8-fastbuild/bin'
   return {
     pylsp = {
-      cmd = { "pylsp", "--log-file=/tmp/pylsp.log", },
+      cmd = { 'pylsp', '--log-file=/tmp/pylsp.log' },
       pylsp = {
         plugins = {
           jedi = {
@@ -46,7 +46,7 @@ local function pylsp_config()
               '--max-line-length=120',
             },
             -- Enables pylint to run in live mode.
-            executable = VENV_PATH .. "/bin/pylint",
+            executable = VENV_PATH .. '/bin/pylint',
             -- TODO(@PeterCardenas): The following is for adding additional paths
             -- for pylint to search for modules. This is made possible by this fork:
             -- https://github.com/PeterCardenas/python-lsp-server
@@ -82,9 +82,9 @@ local function pylsp_config()
           pycodestyle = {
             enabled = false,
           },
-        }
-      }
-    }
+        },
+      },
+    },
   }
 end
 
@@ -95,10 +95,10 @@ local function ruff_lsp_config()
     'W', -- pycodestyle warnings: https://docs.astral.sh/ruff/rules/#warning-w
   }
   local ignored_rules = {
-    'W191' -- tab-indentation https://docs.astral.sh/ruff/rules/tab-indentation/
+    'W191', -- tab-indentation https://docs.astral.sh/ruff/rules/tab-indentation/
   }
   local used_in_repo = {
-    'W605' -- invalid escape sequence https://docs.astral.sh/ruff/rules/invalid-escape-sequence/
+    'W605', -- invalid escape sequence https://docs.astral.sh/ruff/rules/invalid-escape-sequence/
   }
   local ruff_args = {
     '--select=' .. table.concat(selected_rules, ','),

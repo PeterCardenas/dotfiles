@@ -2,7 +2,7 @@
 local DROPBAR_CONFIG = {
   icons = {
     kinds = {
-      symbols = require("plugins.breadcrumbs.icons")
+      symbols = require('plugins.breadcrumbs.icons'),
     },
     ui = {
       bar = {
@@ -11,7 +11,7 @@ local DROPBAR_CONFIG = {
       menu = {
         indicator = '> ',
       },
-    }
+    },
   },
   bar = {
     sources = function(buf, _)
@@ -36,21 +36,18 @@ local DROPBAR_CONFIG = {
         }),
       }
     end,
-  }
+  },
 }
-vim.keymap.set({ 'n', 'v', 'i' }, '<C-o>',
-  function()
-    require('dropbar.api').pick()
-  end,
-  { desc = 'Focus on breadcrumbs' }
-)
+vim.keymap.set({ 'n', 'v', 'i' }, '<C-o>', function()
+  require('dropbar.api').pick()
+end, { desc = 'Focus on breadcrumbs' })
 ---@type LazyPluginSpec
 return {
   'Bekaboo/dropbar.nvim',
   event = { 'BufReadPre', 'BufNewFile' },
   -- optional, but required for fuzzy finder support
   dependencies = {
-    'nvim-telescope/telescope-fzf-native.nvim'
+    'nvim-telescope/telescope-fzf-native.nvim',
   },
   config = function()
     require('dropbar').setup(DROPBAR_CONFIG)
