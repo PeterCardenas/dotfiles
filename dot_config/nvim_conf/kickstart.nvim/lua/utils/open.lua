@@ -9,21 +9,19 @@ function M.system_open(uri, quiet)
   quiet = quiet or false
   if vim.fn.empty(vim.fn.getenv('SSH_CONNECTION')) == 0 then
     if not quiet then
-      vim.notify("system_open is not supported in SSH sessions", vim.log.levels.ERROR,
-        { title = "System Open" })
+      vim.notify('system_open is not supported in SSH sessions', vim.log.levels.ERROR, { title = 'System Open' })
     end
     return false
   end
-  if vim.fn.has("mac") == 1 then
+  if vim.fn.has('mac') == 1 then
     -- if mac use the open command
-    vim.fn.jobstart({ "open", uri }, { detach = true })
-  elseif vim.fn.has("unix") == 1 then
+    vim.fn.jobstart({ 'open', uri }, { detach = true })
+  elseif vim.fn.has('unix') == 1 then
     -- if unix then use xdg-open
-    vim.fn.jobstart({ "xdg-open", uri }, { detach = true })
+    vim.fn.jobstart({ 'xdg-open', uri }, { detach = true })
   else
     if not quiet then
-      vim.notify("System open is not supported on this OS!", vim.log.levels.ERROR,
-        { title = "System Open" })
+      vim.notify('System open is not supported on this OS!', vim.log.levels.ERROR, { title = 'System Open' })
     end
     return false
   end

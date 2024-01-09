@@ -18,8 +18,8 @@ local on_attach = function(client, bufnr)
   if client.name == 'yamlls' then
     local file_name = vim.api.nvim_buf_get_name(bufnr)
     -- If file name ends with .template.yaml, then we disable yamlls diagnostics since jinja templates cannot be parsed correctly.
-    local template_yaml_extension = ".template.yaml"
-    if file_name:sub(- #template_yaml_extension) == template_yaml_extension then
+    local template_yaml_extension = '.template.yaml'
+    if file_name:sub(-#template_yaml_extension) == template_yaml_extension then
       client.handlers[vim.lsp.protocol.Methods.textDocument_publishDiagnostics] = function() end
     end
   end
@@ -34,20 +34,14 @@ local on_attach = function(client, bufnr)
   nmap('<leader>lr', vim.lsp.buf.rename, '[L]anguage [R]ename]')
   nmap('<leader>la', require('actions-preview').code_actions, '[L]anguage [A]ction')
 
-  nmap('gd',
-    function()
-      require('trouble').open('lsp_definitions')
-    end,
-    '[G]oto [D]efinition'
-  )
+  nmap('gd', function()
+    require('trouble').open('lsp_definitions')
+  end, '[G]oto [D]efinition')
   -- The fname option here is not good enough.
   -- TODO Find a way to display path in a smart way.
-  nmap('gr',
-    function()
-      require('trouble').open('lsp_references')
-    end,
-    '[G]oto [R]eferences'
-  )
+  nmap('gr', function()
+    require('trouble').open('lsp_references')
+  end, '[G]oto [R]eferences')
   nmap('gI', require('telescope.builtin').lsp_implementations, '[G]oto [I]mplementation')
   nmap('<leader>D', vim.lsp.buf.type_definition, 'Type [D]efinition')
   nmap('<leader>ls', require('telescope.builtin').lsp_document_symbols, '[L]anguage [S]ymbols')
@@ -55,35 +49,26 @@ local on_attach = function(client, bufnr)
 
   -- See `:help K` for why this keymap
   nmap('K', vim.lsp.buf.hover, 'Hover Documentation')
-  vim.keymap.set({ 'n', 'i' }, '<C-s>',
-    function()
-      vim.lsp.buf.signature_help()
-    end,
-    { desc = 'LSP: Signature Documentation', buffer = bufnr }
-  )
+  vim.keymap.set({ 'n', 'i' }, '<C-s>', function()
+    vim.lsp.buf.signature_help()
+  end, { desc = 'LSP: Signature Documentation', buffer = bufnr })
   if client.server_capabilities.inlayHintProvider then
-    vim.keymap.set({ 'n', 'i' }, '<C-i>',
-      function()
-        vim.lsp.inlay_hint(bufnr)
-      end,
-      { desc = 'LSP: Signature Documentation', buffer = bufnr }
-    )
+    vim.keymap.set({ 'n', 'i' }, '<C-i>', function()
+      vim.lsp.inlay_hint(bufnr)
+    end, { desc = 'LSP: Signature Documentation', buffer = bufnr })
   end
 
   -- Lesser used LSP functionality
   nmap('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
   -- Create a command `:Format` local to the LSP buffer
-  vim.keymap.set({ 'n', 'v', }, '<leader>lf',
-    function()
-      -- TODO(@PeterPCardenas): Spawn a separate thread instead of using callbacks.
-      require('plugins.lsp.format').format(bufnr)
-    end,
-    {
-      desc = "LSP: Format buffer",
-      buffer = bufnr,
-    }
-  )
+  vim.keymap.set({ 'n', 'v' }, '<leader>lf', function()
+    -- TODO(@PeterPCardenas): Spawn a separate thread instead of using callbacks.
+    require('plugins.lsp.format').format(bufnr)
+  end, {
+    desc = 'LSP: Format buffer',
+    buffer = bufnr,
+  })
 end
 
 vim.api.nvim_create_autocmd('LspAttach', {
@@ -94,7 +79,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
       return
     end
     on_attach(client, args.buf)
-  end
+  end,
 })
 
 ---@type LazyPluginSpec
@@ -108,7 +93,7 @@ return {
 
     -- Useful status updates for LSP
     -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
-    { 'j-hui/fidget.nvim',       tag = 'legacy', opts = {} },
+    { 'j-hui/fidget.nvim', tag = 'legacy', opts = {} },
 
     -- Additional lua configuration, makes nvim stuff amazing!
     'folke/neodev.nvim',
@@ -120,32 +105,31 @@ return {
     ---@type table<string, lspconfig.Config>
     local servers = {
       clangd = {
-        filetypes = { "c", "cpp", "objc", "objcpp", "cuda" },
+        filetypes = { 'c', 'cpp', 'objc', 'objcpp', 'cuda' },
       },
       gopls = {},
       rust_analyzer = {},
       -- Prefer to use nogo, but there is not language server for it yet.
       golangci_lint_ls = {
         init_options = {
-          command = { 'golangci-lint', 'run', '--out-format', 'json', '--disable-all', '--enable',
-            'errcheck,ineffassign,unused' },
+          command = { 'golangci-lint', 'run', '--out-format', 'json', '--disable-all', '--enable', 'errcheck,ineffassign,unused' },
         },
       },
       tsserver = {
         cmd_env = {
-          NODE_OPTIONS = "--max-old-space-size=6144",
+          NODE_OPTIONS = '--max-old-space-size=6144',
         },
       },
       eslint = {
         cmd_env = {
-          NODE_OPTIONS = "--max-old-space-size=6144",
+          NODE_OPTIONS = '--max-old-space-size=6144',
         },
       },
       stylelint_lsp = {
-        filetypes = { "css", "scss" },
+        filetypes = { 'css', 'scss' },
         stylelintplus = {
           autoFixOnFormat = true,
-        }
+        },
       },
       lua_ls = {
         Lua = {
@@ -161,7 +145,7 @@ return {
     -- Load plugins when editing overall configuration.
     require('neodev').setup({
       override = function(root_dir, library)
-        if root_dir:find(".local/share/chezmoi", 1, true) ~= nil then
+        if root_dir:find('.local/share/chezmoi', 1, true) ~= nil then
           library.enabled = true
           library.plugins = true
           library.runtime = true
@@ -178,7 +162,7 @@ return {
     require('plugins.lsp.local').setup(capabilities)
 
     -- Ensure the servers above are installed
-    local mason_lspconfig = require 'mason-lspconfig'
+    local mason_lspconfig = require('mason-lspconfig')
 
     mason_lspconfig.setup({
       ensure_installed = vim.tbl_keys(servers),
@@ -197,7 +181,7 @@ return {
             offsetEncoding = { 'utf-16' },
             general = {
               positionEncodings = { 'utf-16' },
-            }
+            },
           }
           server_capabilities = vim.tbl_extend('force', server_capabilities, clangd_overrides)
         end
@@ -209,7 +193,7 @@ return {
           cmd_env = (servers[server_name] or {}).cmd_env,
           init_options = (servers[server_name] or {}).init_options,
         })
-      end
+      end,
     })
   end,
 }

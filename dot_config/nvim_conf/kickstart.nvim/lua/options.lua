@@ -1,6 +1,6 @@
 -- [[ Setting options ]]
 -- Folding setup for nvim-ufo
-vim.opt.foldcolumn = "1"
+vim.opt.foldcolumn = '1'
 vim.opt.foldlevel = 99
 vim.opt.foldlevelstart = 99
 vim.opt.foldenable = true
@@ -57,19 +57,21 @@ vim.o.shell = 'env FAST_PROMPT=1 /usr/bin/fish'
 
 -- Style diagnostics
 local signs = {
-  { name = "DiagnosticSignError", text = "" },
-  { name = "DiagnosticSignWarn", text = "" },
-  { name = "DiagnosticSignHint", text = "" },
-  { name = "DiagnosticSignInfo", text = "" },
-  { name = "DiagnosticSignError", text = "" },
-  { name = "DapStopped", text = "", texthl = "DiagnosticWarn" },
-  { name = "DapBreakpoint", text = "", texthl = "DiagnosticInfo" },
-  { name = "DapBreakpointRejected", text = "", texthl = "DiagnosticError" },
-  { name = "DapBreakpointCondition", text = "", texthl = "DiagnosticInfo" },
-  { name = "DapLogPoint", text = ".>", texthl = "DiagnosticInfo" },
+  { name = 'DiagnosticSignError', text = '' },
+  { name = 'DiagnosticSignWarn', text = '' },
+  { name = 'DiagnosticSignHint', text = '' },
+  { name = 'DiagnosticSignInfo', text = '' },
+  { name = 'DiagnosticSignError', text = '' },
+  { name = 'DapStopped', text = '', texthl = 'DiagnosticWarn' },
+  { name = 'DapBreakpoint', text = '', texthl = 'DiagnosticInfo' },
+  { name = 'DapBreakpointRejected', text = '', texthl = 'DiagnosticError' },
+  { name = 'DapBreakpointCondition', text = '', texthl = 'DiagnosticInfo' },
+  { name = 'DapLogPoint', text = '.>', texthl = 'DiagnosticInfo' },
 }
 for _, sign in ipairs(signs) do
-  if not sign.texthl then sign.texthl = sign.name end
+  if not sign.texthl then
+    sign.texthl = sign.name
+  end
   vim.fn.sign_define(sign.name, sign)
 end
 vim.diagnostic.config({
@@ -80,21 +82,23 @@ vim.diagnostic.config({
   severity_sort = true,
   float = {
     focused = false,
-    style = "minimal",
-    border = "rounded",
-    source = "always",
-    header = "",
-    prefix = "",
+    style = 'minimal',
+    border = 'rounded',
+    source = 'always',
+    header = '',
+    prefix = '',
   },
 })
 
 -- Set highlight based on whether searching is done.
 vim.on_key(function(char)
-  if vim.fn.mode() == "n" then
-    local new_hlsearch = vim.tbl_contains({ "<CR>", "n", "N", "*", "#", "?", "/" }, vim.fn.keytrans(char))
-    if vim.opt.hlsearch:get() ~= new_hlsearch then vim.opt.hlsearch = new_hlsearch end
+  if vim.fn.mode() == 'n' then
+    local new_hlsearch = vim.tbl_contains({ '<CR>', 'n', 'N', '*', '#', '?', '/' }, vim.fn.keytrans(char))
+    if vim.opt.hlsearch:get() ~= new_hlsearch then
+      vim.opt.hlsearch = new_hlsearch
+    end
   end
-end, vim.api.nvim_create_namespace "auto_hlsearch")
+end, vim.api.nvim_create_namespace('auto_hlsearch'))
 
 -- [[ Highlight on yank ]]
 -- See `:help vim.highlight.on_yank()`

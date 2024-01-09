@@ -8,7 +8,7 @@ local function commit_code_action_edit(bufnr, ls_name, action_type, on_complete)
   local clients = vim.lsp.get_clients({
     bufnr = bufnr,
     name = ls_name,
-    method = "textDocument/codeAction",
+    method = 'textDocument/codeAction',
   })
   if #clients == 0 then
     if on_complete then
@@ -19,26 +19,21 @@ local function commit_code_action_edit(bufnr, ls_name, action_type, on_complete)
   local completion_count = 0
   for _, client in pairs(clients) do
     ---@diagnostic disable-next-line: invisible
-    client.request(
-      'textDocument/codeAction',
-      params,
-      function(err, ls_results, _, _)
-        if err then
-          vim.notify("Error running" .. ls_name .. " code action: " .. err, vim.log.levels.ERROR)
+    client.request('textDocument/codeAction', params, function(err, ls_results, _, _)
+      if err then
+        vim.notify('Error running' .. ls_name .. ' code action: ' .. err, vim.log.levels.ERROR)
+      end
+      for _, ls_result in pairs(ls_results or {}) do
+        if ls_result.edit then
+          local offset_encoding = (vim.lsp.get_client_by_id(client.id) or {}).offset_encoding or 'utf-16'
+          vim.lsp.util.apply_workspace_edit(ls_result.edit, offset_encoding)
         end
-        for _, ls_result in pairs(ls_results or {}) do
-          if ls_result.edit then
-            local offset_encoding = (vim.lsp.get_client_by_id(client.id) or {}).offset_encoding or "utf-16"
-            vim.lsp.util.apply_workspace_edit(ls_result.edit, offset_encoding)
-          end
-        end
-        completion_count = completion_count + 1
-        if completion_count == #clients and on_complete then
-          on_complete()
-        end
-      end,
-      bufnr
-    )
+      end
+      completion_count = completion_count + 1
+      if completion_count == #clients and on_complete then
+        on_complete()
+      end
+    end, bufnr)
   end
 end
 
@@ -46,15 +41,15 @@ end
 ---@param bufnr integer
 ---@param on_complete? function
 local function format_go_imports(bufnr, on_complete)
-  commit_code_action_edit(bufnr, "gopls", "source.organizeImports", on_complete)
+  commit_code_action_edit(bufnr, 'gopls', 'source.organizeImports', on_complete)
 end
 
 ---Fix all auto-fixable ruff lsp errors.
 ---@param bufnr integer
 ---@param on_complete? function
 local function fix_ruff_errors(bufnr, on_complete)
-  commit_code_action_edit(bufnr, "ruff_lsp", "source.organizeImports", function()
-    commit_code_action_edit(bufnr, "ruff_lsp", "source.fixAll", on_complete)
+  commit_code_action_edit(bufnr, 'ruff_lsp', 'source.organizeImports', function()
+    commit_code_action_edit(bufnr, 'ruff_lsp', 'source.fixAll', on_complete)
   end)
 end
 
@@ -68,7 +63,7 @@ function M.format(bufnr)
       vim.lsp.buf.format({
         filter = function(format_client)
           -- Do not request typescript-language-server for formatting.
-          return format_client.name ~= "tsserver"
+          return format_client.name ~= 'tsserver'
         end,
         bufnr = bufnr,
         async = true,

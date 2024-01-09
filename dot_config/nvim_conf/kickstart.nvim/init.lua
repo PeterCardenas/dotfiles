@@ -1,4 +1,4 @@
-require("mappings")
-require("options")
-require("lazy_setup")
+require('mappings')
+require('options')
+require('lazy_setup')
 require('local')

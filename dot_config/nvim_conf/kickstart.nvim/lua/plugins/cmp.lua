@@ -13,10 +13,10 @@ return {
     -- Adds a number of user-friendly snippets
     'rafamadriz/friendly-snippets',
   },
-  event = "InsertEnter",
+  event = 'InsertEnter',
   config = function()
     local cmp = require('cmp')
-    local luasnip = require ('luasnip')
+    local luasnip = require('luasnip')
     require('luasnip.loaders.from_vscode').lazy_load()
     luasnip.config.setup({})
 
@@ -43,5 +43,5 @@ return {
         { name = 'luasnip' },
       },
     })
-  end
+  end,
 }
