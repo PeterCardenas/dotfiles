@@ -5,7 +5,7 @@ local M = {}
 ---@param uri string
 ---@param quiet? boolean
 ---@return boolean
-M.system_open = function(uri, quiet)
+function M.system_open(uri, quiet)
   quiet = quiet or false
   if vim.fn.empty(vim.fn.getenv('SSH_CONNECTION')) == 0 then
     if not quiet then
