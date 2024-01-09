@@ -1,4 +1,5 @@
 local M = {}
+local LspMethod = vim.lsp.protocol.Methods
 
 --  Configures a language server after it attaches to a buffer.
 ---@param client lsp.Client
@@ -14,6 +15,23 @@ local function on_attach(client, _)
   if client.name == 'pylsp' then
     -- Do not use code actions from pylsp since they are slow for now.
     client.server_capabilities.codeActionProvider = false
+    -- Remove no-name-in-module pylint error for protobuf imports.
+    client.handlers[LspMethod.textDocument_publishDiagnostics] = function(_, result, ctx, config)
+      ---@type lsp.Diagnostic[]
+      local diagnostics = result.diagnostics
+      local filtered_diagnostics = {}
+      for _, diagnostic in ipairs(diagnostics) do
+        local should_filter = true
+        if diagnostic.source == 'pylint' and diagnostic.code == 'E0611' and diagnostic.message:find('_pb2') then
+          should_filter = false
+        end
+        if should_filter then
+          table.insert(filtered_diagnostics, diagnostic)
+        end
+      end
+      result.diagnostics = filtered_diagnostics
+      return vim.lsp.diagnostic.on_publish_diagnostics(_, result, ctx, config)
+    end
   end
 end
 
@@ -44,9 +62,6 @@ local function pylsp_config()
     'logging-fstring-interpolation',
     'wrong-import-order',
     'consider-using-f-string',
-    -- Re-enable when .pyi files are taken into consideration.
-    -- Not certain, but might be able to delegate to mypy.
-    'no-name-in-module',
     -- Below have been delegated to mypy.
     'too-many-function-args',
     -- Below have been delegated to ruff.
