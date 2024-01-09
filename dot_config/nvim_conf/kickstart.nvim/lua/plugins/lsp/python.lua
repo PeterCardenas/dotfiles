@@ -1,5 +1,36 @@
 local M = {}
 
+--  Configures a language server after it attaches to a buffer.
+---@param client lsp.Client
+---@param _ integer buffer number
+local function on_attach(client, _)
+  if client.name == 'ruff_lsp' then
+    -- Defer to pylsp jedi plugin for hover documentation.
+    client.server_capabilities.hoverProvider = false
+    -- Defer to pylsp black plugin for formatting.
+    client.server_capabilities.documentFormattingProvider = false
+    client.server_capabilities.documentRangeFormattingProvider = false
+  end
+  if client.name == 'pylsp' then
+    -- Do not use code actions from pylsp since they are slow for now.
+    client.server_capabilities.codeActionProvider = false
+  end
+end
+
+function M.setup()
+  vim.api.nvim_create_autocmd('LspAttach', {
+    group = vim.api.nvim_create_augroup('PythonConfig', { clear = true }),
+    callback = function(args)
+      local client = vim.lsp.get_client_by_id(args.data.client_id)
+      local filetype = vim.api.nvim_get_option_value('filetype', { buf = args.buf })
+      if client == nil or filetype ~= 'python' then
+        return
+      end
+      on_attach(client, args.buf)
+    end,
+  })
+end
+
 ---@return table<string, lspconfig.Config>
 local function pylsp_config()
   VENV_PATH = os.getenv('HOME') .. '/.local/share/nvim/mason/packages/python-lsp-server/venv'

@@ -1,20 +1,9 @@
 -- [[ Configure LSP ]]
 
---  This function gets run when an LSP connects to a particular buffer.
+--  Configures a language server after it attaches to a buffer.
 ---@param client lsp.Client
 ---@param bufnr integer
-local on_attach = function(client, bufnr)
-  if client.name == 'ruff_lsp' then
-    -- Defer to pylsp jedi plugin for hover documentation.
-    client.server_capabilities.hoverProvider = false
-    -- Defer to pylsp black plugin for formatting.
-    client.server_capabilities.documentFormattingProvider = false
-    client.server_capabilities.documentRangeFormattingProvider = false
-  end
-  -- Do not use code actions from pylsp since they are slow for now.
-  if client.name == 'pylsp' then
-    client.server_capabilities.codeActionProvider = false
-  end
+local function on_attach(client, bufnr)
   if client.name == 'yamlls' then
     local file_name = vim.api.nvim_buf_get_name(bufnr)
     -- If file name ends with .template.yaml, then we disable yamlls diagnostics since jinja templates cannot be parsed correctly.
@@ -23,7 +12,7 @@ local on_attach = function(client, bufnr)
       client.handlers[vim.lsp.protocol.Methods.textDocument_publishDiagnostics] = function() end
     end
   end
-  local nmap = function(keys, func, desc)
+  local function nmap(keys, func, desc)
     if desc then
       desc = 'LSP: ' .. desc
     end
@@ -160,6 +149,8 @@ return {
 
     -- Setup language servers found locally.
     require('plugins.lsp.local').setup(capabilities)
+    -- Setup specific autocmds.
+    require('plugins.lsp.python').setup()
 
     -- Ensure the servers above are installed
     local mason_lspconfig = require('mason-lspconfig')
