@@ -13,6 +13,9 @@ local function pylsp_config()
     'logging-fstring-interpolation',
     'wrong-import-order',
     'consider-using-f-string',
+    -- Re-enable when .pyi files are taken into consideration.
+    -- Not certain, but might be able to delegate to mypy.
+    'no-name-in-module',
     -- Below have been delegated to mypy.
     'too-many-function-args',
     -- Below have been delegated to ruff.
@@ -20,6 +23,7 @@ local function pylsp_config()
     'missing-function-docstring',
     'missing-class-docstring',
   }
+  local gen_files_path = 'bazel-out/k8-fastbuild/bin'
   return {
     pylsp = {
       cmd = { "pylsp", "--log-file=/tmp/pylsp.log", },
@@ -27,14 +31,14 @@ local function pylsp_config()
         plugins = {
           jedi = {
             extra_paths = {
-              "bazel-out/k8-fastbuild/bin",
+              gen_files_path,
             },
           },
           -- Use black for formatting.
           black = {
             enabled = true,
           },
-          -- TODO(PeterPCardenas): Replace all useful pylint rules with ruff rules.
+          -- TODO(@PeterCardenas): Replace all useful pylint rules with ruff rules.
           pylint = {
             enabled = true,
             args = {
@@ -43,6 +47,15 @@ local function pylsp_config()
             },
             -- Enables pylint to run in live mode.
             executable = VENV_PATH .. "/bin/pylint",
+            -- TODO(@PeterCardenas): The following is for adding additional paths
+            -- for pylint to search for modules. This is made possible by this fork:
+            -- https://github.com/PeterCardenas/python-lsp-server
+            -- However, I am not enabling this because .pyi files are not taken into
+            -- consideration when a .py file with the same module name exists.
+            -- Relevant issue: https://github.com/pylint-dev/pylint/issues/6281
+            -- extra_paths = {
+            --   gen_files_path,
+            -- }
           },
           pylsp_mypy = {
             enabled = true,
@@ -51,7 +64,7 @@ local function pylsp_config()
             -- Currently using a fork of pylsp-mypy to support venv and MYPYPATH.
             -- https://github.com/PeterCardenas/pylsp-mypy
             venv_path = VENV_PATH,
-            relative_mypy_path = "bazel-out/k8-fastbuild/bin",
+            relative_mypy_path = gen_files_path,
           },
           -- Disable other default formatters and linters.
           mccabe = {
