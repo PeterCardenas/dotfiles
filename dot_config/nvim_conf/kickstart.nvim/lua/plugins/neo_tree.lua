@@ -20,7 +20,7 @@ return {
   config = function()
     local function system_open(path)
       path = path or vim.fn.expand "<cfile>"
-      require('utils').system_open(path)
+      require('utils.open').system_open(path)
     end
 
     require("neo-tree").setup({
