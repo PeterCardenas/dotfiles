@@ -13,6 +13,8 @@ local function pylsp_config()
     'logging-fstring-interpolation',
     'wrong-import-order',
     'consider-using-f-string',
+    -- Below have been delegated to mypy.
+    'too-many-function-args',
     -- Below have been delegated to ruff.
     'trailing-whitespace',
     'missing-function-docstring',
