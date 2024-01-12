@@ -31,5 +31,5 @@ end
 vim.api.nvim_create_autocmd('User', {
   callback = track_lazy_lock,
   group = chezmoi_augroup,
-  pattern = { 'LazyInstall', 'LazyUpdate', 'LazyClean' },
+  pattern = { 'LazyInstall', 'LazyUpdate', 'LazyClean', 'LazyDone', 'LazyReload' },
 })
