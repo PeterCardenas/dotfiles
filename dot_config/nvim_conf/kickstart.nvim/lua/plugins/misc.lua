@@ -18,6 +18,15 @@ return {
   --   end,
   -- },
 
+  -- Diffviewer and Mergetool
+  {
+    'sindrets/diffview.nvim',
+    event = { 'BufReadPre', 'BufNewFile' },
+    config = function()
+      require('diffview').setup({})
+    end,
+  },
+
   -- Better picker for LSP references, definitions, and diagnostics.
   {
     'folke/trouble.nvim',
