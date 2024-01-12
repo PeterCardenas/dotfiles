@@ -51,6 +51,22 @@ vim.api.nvim_create_autocmd('VimResume', {
   callback = set_is_vim,
 })
 
+vim.api.nvim_create_autocmd('FocusLost', {
+  desc = 'Dim the colors to appear unfocused',
+  group = tmux_navigator_group,
+  callback = function()
+    require('utils.colorscheme').set_unfocused_colors()
+  end,
+})
+
+vim.api.nvim_create_autocmd('FocusGained', {
+  desc = 'Brighten the colors to appear focused',
+  group = tmux_navigator_group,
+  callback = function()
+    require('utils.colorscheme').set_focused_colors()
+  end,
+})
+
 ---@type LazyPluginSpec
 return {
   -- Easy navigation between splits.
