@@ -64,11 +64,16 @@ local function pylsp_config()
     'consider-using-f-string',
     -- Below have been delegated to mypy.
     'too-many-function-args',
+    'undefined-variable',
     -- Below have been delegated to ruff.
     'trailing-whitespace',
     'missing-function-docstring',
     'missing-class-docstring',
+    'f-string-without-interpolation',
+    'too-many-branches',
   }
+  -- The following are rules that we want from pylint, but are not supported elsewhere.
+  -- 'trailing-newlines'
   local gen_files_path = 'bazel-out/k8-fastbuild/bin'
   return {
     pylsp = {
@@ -138,6 +143,7 @@ local function ruff_lsp_config()
   local selected_rules = {
     'D', -- pydocstyle: https://docs.astral.sh/ruff/rules/#pydocstyle-d
     'W', -- pycodestyle warnings: https://docs.astral.sh/ruff/rules/#warning-w
+    'PLR0912', -- too-many-branches
   }
   local ignored_rules = {
     'W191', -- tab-indentation https://docs.astral.sh/ruff/rules/tab-indentation/
