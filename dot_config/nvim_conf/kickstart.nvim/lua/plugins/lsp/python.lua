@@ -110,7 +110,6 @@ local function pylsp_config()
             -- Currently using a fork of pylsp-mypy to support venv and MYPYPATH.
             -- https://github.com/PeterCardenas/pylsp-mypy
             venv_path = VENV_PATH,
-            relative_mypy_path = gen_files_path,
           },
           -- Disable other default formatters and linters.
           mccabe = {
