@@ -82,7 +82,17 @@ return {
 
     -- Useful status updates for LSP
     -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
-    { 'j-hui/fidget.nvim', tag = 'legacy', opts = {} },
+    {
+      'j-hui/fidget.nvim',
+      tag = 'legacy',
+      config = function()
+        require('fidget').setup({
+          window = {
+            winblend = 0,
+          }
+        })
+      end,
+    },
 
     -- Additional lua configuration, makes nvim stuff amazing!
     'folke/neodev.nvim',
