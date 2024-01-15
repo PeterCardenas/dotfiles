@@ -1,7 +1,7 @@
 git:
   autoPush: false
   autoCommit: false
-  autoAdd: true
+  autoAdd: false
 
 edit:
   command: nvim
