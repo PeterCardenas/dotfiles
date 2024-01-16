@@ -63,6 +63,7 @@ local function on_attach(client, bufnr)
     desc = 'LSP: Format buffer',
     buffer = bufnr,
   })
+  require('plugins.lsp.format').setup_formatting_diagnostic(bufnr)
 end
 
 vim.api.nvim_create_autocmd('LspAttach', {
