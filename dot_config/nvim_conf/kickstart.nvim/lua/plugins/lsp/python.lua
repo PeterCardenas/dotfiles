@@ -16,8 +16,10 @@ local function on_attach(client, _)
     -- Do not use code actions from pylsp since they are slow for now.
     client.server_capabilities.codeActionProvider = false
     -- Remove no-name-in-module pylint error for protobuf imports.
+    ---@param result lsp.PublishDiagnosticsParams
+    ---@param ctx lsp.HandlerContext
+    ---@param config any
     client.handlers[LspMethod.textDocument_publishDiagnostics] = function(_, result, ctx, config)
-      ---@type lsp.Diagnostic[]
       local diagnostics = result.diagnostics
       local filtered_diagnostics = {}
       for _, diagnostic in ipairs(diagnostics) do
@@ -141,8 +143,8 @@ end
 ---@return table<string, lspconfig.Config>
 local function ruff_lsp_config()
   local selected_rules = {
-    'D', -- pydocstyle: https://docs.astral.sh/ruff/rules/#pydocstyle-d
-    'W', -- pycodestyle warnings: https://docs.astral.sh/ruff/rules/#warning-w
+    'D',       -- pydocstyle: https://docs.astral.sh/ruff/rules/#pydocstyle-d
+    'W',       -- pycodestyle warnings: https://docs.astral.sh/ruff/rules/#warning-w
     'PLR0912', -- too-many-branches
   }
   local ignored_rules = {
