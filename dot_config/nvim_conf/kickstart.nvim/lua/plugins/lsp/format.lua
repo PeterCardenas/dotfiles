@@ -71,4 +71,109 @@ function M.format(bufnr)
   end)
 end
 
+local format_diagnostic_autocmd_group = vim.api.nvim_create_augroup('FormatChecker', { clear = true })
+local format_diagnostic_namespace = vim.api.nvim_create_namespace('FormatChecker')
+
+---@return integer
+local function get_current_lnum()
+  local lnum = vim.fn.line('.')
+  if lnum ~= nil then
+    lnum = lnum - 1
+  else
+    lnum = 0
+  end
+  return lnum
+end
+
+---@param bufnr integer
+local function check_if_needs_formatting(bufnr)
+  local formatting_clients = vim.lsp.get_clients({
+    bufnr = bufnr,
+    method = LspMethod.textDocument_formatting,
+  })
+  local formatting_params = vim.lsp.util.make_formatting_params()
+  ---@type string[]
+  local clients_needing_formatting = {}
+  local clients_to_check = #formatting_clients
+  local function on_format_needed()
+    local lnum = get_current_lnum()
+    ---@type Diagnostic
+    local format_diagnostic = {
+      bufnr = bufnr,
+      col = vim.fn.col('.') or 0,
+      lnum = lnum,
+      message = 'Format needed from ' .. table.concat(clients_needing_formatting, ', '),
+    }
+    vim.diagnostic.set(format_diagnostic_namespace, bufnr, { format_diagnostic }, {})
+  end
+  for _, client in pairs(formatting_clients) do
+    ---@param err any
+    ---@param results lsp.TextEdit[]
+    client.request(LspMethod.textDocument_formatting, formatting_params, function(err, results, _, _)
+      if err then
+        vim.notify('Error checking formatting: ' .. vim.inspect(err), vim.log.levels.ERROR)
+      end
+      for _, result in ipairs(results or {}) do
+        local current_lines = vim.api.nvim_buf_get_lines(bufnr, result.range.start.line, result.range['end'].line, false)
+        local formatted_lines = vim.split(string.gsub(result.newText, '\r\n?', '\n'), '\n', { plain = true })
+        local formatted_lines_count = #formatted_lines
+        if formatted_lines_count > 0 and formatted_lines[formatted_lines_count] == '' then
+          formatted_lines_count = formatted_lines_count - 1
+        end
+        if #current_lines ~= formatted_lines_count then
+          table.insert(clients_needing_formatting, client.name)
+        else
+          for i, line in ipairs(current_lines) do
+            if line ~= formatted_lines[i] then
+              table.insert(clients_needing_formatting, client.name)
+              break
+            end
+          end
+        end
+        clients_to_check = clients_to_check - 1
+        if clients_to_check == 0 then
+          if #clients_needing_formatting > 0 then
+            on_format_needed()
+          else
+            vim.diagnostic.reset(format_diagnostic_namespace, bufnr)
+          end
+        end
+      end
+    end, bufnr)
+  end
+end
+
+local function update_formatting_diagnostic_position(bufnr)
+  local current_diagnostics = vim.diagnostic.get(bufnr, { namespace = format_diagnostic_namespace })
+  if #current_diagnostics ~= 1 then
+    return
+  end
+  local lnum = get_current_lnum()
+  local new_diagnostic = vim.deepcopy(current_diagnostics[1])
+  new_diagnostic.lnum = lnum
+  vim.diagnostic.set(format_diagnostic_namespace, bufnr, { new_diagnostic }, {})
+end
+
+---@param bufnr integer
+function M.setup_formatting_diagnostic(bufnr)
+  local existing_autocmds = vim.api.nvim_get_autocmds({ group = format_diagnostic_autocmd_group, buffer = bufnr })
+  if #existing_autocmds > 0 then
+    return
+  end
+  vim.api.nvim_create_autocmd({ 'TextChanged' }, {
+    group = format_diagnostic_autocmd_group,
+    buffer = bufnr,
+    callback = function(args)
+      check_if_needs_formatting(args.buf)
+    end,
+  })
+  vim.api.nvim_create_autocmd({ 'CursorMoved' }, {
+    group = format_diagnostic_autocmd_group,
+    buffer = bufnr,
+    callback = function(args)
+      update_formatting_diagnostic_position(args.buf)
+    end,
+  })
+end
+
 return M
