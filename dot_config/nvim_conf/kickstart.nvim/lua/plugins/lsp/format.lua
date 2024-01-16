@@ -78,6 +78,7 @@ local format_diagnostic_namespace = vim.api.nvim_create_namespace('FormatChecker
 local function get_current_lnum()
   local lnum = vim.fn.line('.')
   if lnum ~= nil then
+    -- Diagnostic lnums are 0-indexed, but vim.fn.line is 1-indexed.
     lnum = lnum - 1
   else
     lnum = 0
@@ -130,13 +131,13 @@ local function check_if_needs_formatting(bufnr)
             end
           end
         end
-        clients_to_check = clients_to_check - 1
-        if clients_to_check == 0 then
-          if #clients_needing_formatting > 0 then
-            on_format_needed()
-          else
-            vim.diagnostic.reset(format_diagnostic_namespace, bufnr)
-          end
+      end
+      clients_to_check = clients_to_check - 1
+      if clients_to_check == 0 then
+        if #clients_needing_formatting > 0 then
+          on_format_needed()
+        else
+          vim.diagnostic.reset(format_diagnostic_namespace, bufnr)
         end
       end
     end, bufnr)
