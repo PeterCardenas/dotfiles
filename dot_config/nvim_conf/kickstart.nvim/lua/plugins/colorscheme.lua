@@ -21,5 +21,7 @@ return {
     vim.cmd([[highlight LeapBackdrop guifg=#5C5C5C]])
     -- Add red close button highlight.
     vim.cmd([[highlight TabLineClose guifg=#DB4539]])
+    -- Make unused variables brighter.
+    vim.cmd([[highlight DiagnosticUnnecessary guifg=#7c7c7c]])
   end,
 }
