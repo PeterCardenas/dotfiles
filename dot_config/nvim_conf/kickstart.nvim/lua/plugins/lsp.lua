@@ -12,6 +12,11 @@ local function on_attach(client, bufnr)
       client.handlers[vim.lsp.protocol.Methods.textDocument_publishDiagnostics] = function() end
     end
   end
+  if client.name == 'tsserver' then
+    -- Defer to eslint for formatting.
+    client.server_capabilities.documentFormattingProvider = false
+    client.server_capabilities.documentRangeFormattingProvider = false
+  end
   local function nmap(keys, func, desc)
     if desc then
       desc = 'LSP: ' .. desc

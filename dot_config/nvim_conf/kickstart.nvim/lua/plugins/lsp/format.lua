@@ -61,10 +61,6 @@ function M.format(bufnr)
   format_go_imports(bufnr, function()
     fix_ruff_errors(bufnr, function()
       vim.lsp.buf.format({
-        filter = function(format_client)
-          -- Do not request typescript-language-server for formatting.
-          return format_client.name ~= 'tsserver'
-        end,
         bufnr = bufnr,
         async = true,
       })
