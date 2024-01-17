@@ -49,9 +49,6 @@ bind -M insert \ch "tmux select-pane -L"
 bind -M insert \cp history-search-backward
 bind -M insert \cn history-search-forward
 
-# Use eternal terminal instead of ssh.
-abbr -a ssh "ssh-et"
-
 # Fix gopls install for nvim.
 # Reference: https://stackoverflow.com/questions/54415733/getting-gopath-error-go-cannot-use-pathversion-syntax-in-gopath-mode-in-ubun
 set -gx GO111MODULE "on"
