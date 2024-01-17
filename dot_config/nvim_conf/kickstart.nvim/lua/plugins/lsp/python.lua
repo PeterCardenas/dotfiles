@@ -15,7 +15,6 @@ local function on_attach(client, _)
   if client.name == 'pylsp' then
     -- Do not use code actions from pylsp since they are slow for now.
     client.server_capabilities.codeActionProvider = false
-    -- Remove no-name-in-module pylint error for protobuf imports.
     ---@param result lsp.PublishDiagnosticsParams
     ---@param ctx lsp.HandlerContext
     ---@param config any
@@ -24,7 +23,12 @@ local function on_attach(client, _)
       local filtered_diagnostics = {}
       for _, diagnostic in ipairs(diagnostics) do
         local should_filter = true
+        -- Remove no-name-in-module pylint error for protobuf imports.
         if diagnostic.source == 'pylint' and diagnostic.code == 'E0611' and diagnostic.message:find('_pb2') then
+          should_filter = false
+        end
+        -- False positive not-callable error for sqlalchemy.func.count.
+        if diagnostic.source == 'pylint' and diagnostic.code == 'E1102' and diagnostic.message:find('sqlalchemy.func.count') then
           should_filter = false
         end
         if should_filter then
