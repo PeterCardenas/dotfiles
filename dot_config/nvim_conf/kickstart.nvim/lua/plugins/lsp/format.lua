@@ -98,11 +98,14 @@ local function check_if_needs_formatting(bufnr)
   local clients_to_check = #formatting_clients
   local function on_format_needed()
     local lnum = get_current_lnum()
+    local col = vim.fn.col('.') or 0
     ---@type Diagnostic
     local format_diagnostic = {
       bufnr = bufnr,
       col = vim.fn.col('.') or 0,
       lnum = lnum,
+      end_col = col,
+      end_lnum = lnum,
       message = 'Format needed from ' .. table.concat(clients_needing_formatting, ', '),
     }
     vim.diagnostic.set(format_diagnostic_namespace, bufnr, { format_diagnostic }, {})
@@ -131,6 +134,9 @@ local function check_if_needs_formatting(bufnr)
             end
           end
         end
+        if vim.tbl_contains(clients_needing_formatting, client.name) then
+          break
+        end
       end
       clients_to_check = clients_to_check - 1
       if clients_to_check == 0 then
@@ -152,6 +158,7 @@ local function update_formatting_diagnostic_position(bufnr)
   local lnum = get_current_lnum()
   local new_diagnostic = vim.deepcopy(current_diagnostics[1])
   new_diagnostic.lnum = lnum
+  new_diagnostic.end_lnum = lnum
   vim.diagnostic.set(format_diagnostic_namespace, bufnr, { new_diagnostic }, {})
 end
 
