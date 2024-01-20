@@ -5,3 +5,4 @@ tsx:*{.tsx}
 --type-add
 proto:*{.proto}
 --smart-case
+--glob=!.git
