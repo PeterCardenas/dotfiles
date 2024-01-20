@@ -57,7 +57,6 @@ local function on_attach(client, bufnr)
 
   -- Create a command `:Format` local to the LSP buffer
   vim.keymap.set({ 'n', 'v' }, '<leader>lf', function()
-    -- TODO(@PeterPCardenas): Spawn a separate thread instead of using callbacks.
     require('plugins.lsp.format').format(bufnr)
   end, {
     desc = 'LSP: Format buffer',
