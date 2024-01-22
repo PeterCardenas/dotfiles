@@ -61,7 +61,11 @@ vim.o.completeopt = 'menuone,noselect'
 
 vim.o.shell = 'env FAST_PROMPT=1 /usr/bin/fish'
 
+---@class SignDefinition: vim.fn.sign_define.dict
+---@field name string
+
 -- Style diagnostics
+---@type SignDefinition[]
 local signs = {
   { name = 'DiagnosticSignError', text = '' },
   { name = 'DiagnosticSignWarn', text = '' },
