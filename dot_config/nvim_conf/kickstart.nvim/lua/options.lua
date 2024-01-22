@@ -6,6 +6,12 @@ vim.opt.foldlevelstart = 99
 vim.opt.foldenable = true
 vim.opt.fillchars = 'eob: ,fold: ,foldopen:,foldsep:│,foldclose:'
 
+vim.filetype.add({
+  filename = {
+    ['.bazelrc'] = 'Bazelrc',
+  },
+})
+
 -- Enable true color support.
 if vim.fn.has('termguicolors') == 1 then
   vim.opt.termguicolors = true
