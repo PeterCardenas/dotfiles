@@ -35,6 +35,8 @@ return {
           -- Prefer neovim search of neo-tree search.
           ['/'] = false,
           ['?'] = false,
+          ['s'] = '<Plug>(leap-forward-to)',
+          ['S'] = '<Plug>(leap-backward-to)',
         },
       },
       default_component_configs = {
