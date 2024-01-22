@@ -98,6 +98,9 @@ local function close_buf()
     local choice = vim.fn.input('Buffer modified. Save? (y/n): ')
     if choice == 'y' then
       vim.cmd.w()
+    elseif choice ~= 'n' then
+      vim.notify('Buffer close failed.', vim.log.levels.WARN)
+      return
     end
   end
   local bufs = vim.api.nvim_tabpage_get_var(0, 'bufs')
