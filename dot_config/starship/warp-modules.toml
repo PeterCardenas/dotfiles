@@ -1,5 +1,4 @@
 # starship module configuration when warp is used
 
 [character]
-disabled=true
-
+disabled = true

@@ -9,9 +9,9 @@ bold.family = "DankMono Nerd Font"
 italic.family = "DankMono Nerd Font"
 
 [[keyboard.bindings]]
-key="V"
-mods="CONTROL"
-action="Paste"
+key = "V"
+mods = "CONTROL"
+action = "Paste"
 
 # TokyoNight Alacritty Colors
 [colors.primary]
@@ -41,8 +41,8 @@ cyan = '0x7dcfff'
 white = '0xc0caf5'
 
 [[colors.indexed_colors]]
-index= 16
-color= '0xff9e64'
+index = 16
+color = '0xff9e64'
 [[colors.indexed_colors]]
-index= 17
-color= '0xdb4b4b'
+index = 17
+color = '0xdb4b4b'

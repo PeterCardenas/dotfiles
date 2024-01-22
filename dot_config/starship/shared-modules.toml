@@ -1,26 +1,25 @@
 # starship module configuration whether or not warp is used
 
 [git_branch]
-format="[$symbol$branch(:$remote_branch)]($style) "
+format = "[$symbol$branch(:$remote_branch)]($style) "
 
 [cmd_duration]
-format="[$duration]($style) "
+format = "[$duration]($style) "
 
 [java]
-format="[$symbol($version)]($style) "
+format = "[$symbol($version)]($style) "
 
 [golang]
-format="[$symbol($version)]($style) "
+format = "[$symbol($version)]($style) "
 
 [python]
-format="[$symbol($version)]($style) "
+format = "[$symbol($version)]($style) "
 
 [nodejs]
-format="[$symbol($version)]($style) "
+format = "[$symbol($version)]($style) "
 
 [package]
-format="[$symbol$version]($style) "
+format = "[$symbol$version]($style) "
 
 [rust]
-format="[$symbol$version]($style) "
-
+format = "[$symbol$version]($style) "
