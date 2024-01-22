@@ -4,7 +4,7 @@ vim.opt.foldcolumn = '1'
 vim.opt.foldlevel = 99
 vim.opt.foldlevelstart = 99
 vim.opt.foldenable = true
-vim.opt.fillchars = 'eob: ,fold: ,foldopen:,foldsep:│,foldclose:'
+vim.opt.fillchars = 'eob: ,fold: ,foldopen:,foldsep:│,foldclose:'
 
 vim.filetype.add({
   filename = {
@@ -63,12 +63,11 @@ vim.o.shell = 'env FAST_PROMPT=1 /usr/bin/fish'
 
 -- Style diagnostics
 local signs = {
-  { name = 'DiagnosticSignError', text = '' },
+  { name = 'DiagnosticSignError', text = '' },
   { name = 'DiagnosticSignWarn', text = '' },
-  { name = 'DiagnosticSignHint', text = '' },
-  { name = 'DiagnosticSignInfo', text = '' },
-  { name = 'DiagnosticSignError', text = '' },
-  { name = 'DapStopped', text = '', texthl = 'DiagnosticWarn' },
+  { name = 'DiagnosticSignInfo', text = '' },
+  { name = 'DiagnosticSignHint', text = '󰛩' },
+  { name = 'DapStopped', text = '', texthl = 'DiagnosticWarn' },
   { name = 'DapBreakpoint', text = '', texthl = 'DiagnosticInfo' },
   { name = 'DapBreakpointRejected', text = '', texthl = 'DiagnosticError' },
   { name = 'DapBreakpointCondition', text = '', texthl = 'DiagnosticInfo' },

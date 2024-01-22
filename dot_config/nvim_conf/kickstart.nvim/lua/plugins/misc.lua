@@ -165,10 +165,10 @@ return {
             {
               'diagnostics',
               symbols = {
-                error = ' ',
+                error = ' ',
                 warn = ' ',
-                info = ' ',
-                hint = ' ',
+                info = ' ',
+                hint = '󰛩',
               },
             },
           },
