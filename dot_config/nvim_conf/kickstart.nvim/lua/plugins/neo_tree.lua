@@ -46,6 +46,12 @@ return {
             hint = '󰛩',
           },
         },
+        git_status = {
+          symbols = {
+            staged = '',
+            unstaged = '',
+          },
+        },
       },
       filesystem = {
         follow_current_file = { enabled = true },
