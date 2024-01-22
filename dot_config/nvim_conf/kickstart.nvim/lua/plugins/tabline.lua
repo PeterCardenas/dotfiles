@@ -152,6 +152,10 @@ return {
         local filename = self.filename
         local extension = vim.fn.fnamemodify(filename, ':e')
         self.icon, self.icon_color = require('nvim-web-devicons').get_icon_color(filename, extension, { default = true })
+        if self.icon == require('nvim-web-devicons').get_default_icon().icon then
+          local filetype = vim.api.nvim_get_option_value('filetype', { buf = self.bufnr })
+          self.icon, self.icon_color = require('nvim-web-devicons').get_icon_color_by_filetype(filetype, { default = true })
+        end
       end,
       provider = function(self)
         return self.icon and (self.icon .. ' ')
