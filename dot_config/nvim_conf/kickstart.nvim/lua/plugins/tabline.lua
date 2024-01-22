@@ -226,7 +226,7 @@ return {
       },
     }
 
-    local TablineBufferBlock = heirline_utils.surround({ "", "" }, function(self)
+    local TablineBufferBlock = heirline_utils.surround({ '', '' }, function(self)
       if self.is_active then
         return heirline_utils.get_highlight('TabLineSel').bg
       else
