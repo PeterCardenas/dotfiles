@@ -1,11 +1,10 @@
 # starship non-module configuration when warp is used
 
-add_newline=false
-format="""
+add_newline = false
+format = """
 $jobs\
 $battery\
 $time\
 $status\
 $shell\
 $all"""
-
