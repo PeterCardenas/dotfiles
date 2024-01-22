@@ -47,6 +47,8 @@ function M.on_attach(client, bufnr)
     vim.lsp.buf.signature_help()
   end, { desc = 'LSP: Signature Documentation', buffer = bufnr })
   if client.server_capabilities.inlayHintProvider then
+    -- Enable inlay hints by default.
+    require('vim.lsp.inlay_hint')(bufnr, true)
     vim.keymap.set({ 'n', 'i' }, '<C-i>', function()
       vim.lsp.inlay_hint(bufnr)
     end, { desc = 'LSP: Signature Documentation', buffer = bufnr })
