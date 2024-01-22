@@ -37,6 +37,16 @@ return {
           ['?'] = false,
         },
       },
+      default_component_configs = {
+        diagnostics = {
+          symbols = {
+            error = '',
+            warn = '',
+            info = '',
+            hint = '󰛩',
+          },
+        },
+      },
       filesystem = {
         follow_current_file = { enabled = true },
         async_directory_scan = 'always',
