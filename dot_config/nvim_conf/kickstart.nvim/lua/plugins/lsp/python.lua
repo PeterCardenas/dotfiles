@@ -147,8 +147,8 @@ end
 ---@return table<string, lspconfig.Config>
 local function ruff_lsp_config()
   local selected_rules = {
-    'D',       -- pydocstyle: https://docs.astral.sh/ruff/rules/#pydocstyle-d
-    'W',       -- pycodestyle warnings: https://docs.astral.sh/ruff/rules/#warning-w
+    'D', -- pydocstyle: https://docs.astral.sh/ruff/rules/#pydocstyle-d
+    'W', -- pycodestyle warnings: https://docs.astral.sh/ruff/rules/#warning-w
     'PLR0912', -- too-many-branches
   }
   local ignored_rules = {
