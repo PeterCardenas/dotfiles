@@ -149,7 +149,8 @@ return {
 
     local FileIcon = {
       init = function(self)
-        local filename = self.filename
+        local filepath = self.filename
+        local filename = vim.fn.fnamemodify(filepath, ':t')
         local extension = vim.fn.fnamemodify(filename, ':e')
         self.icon, self.icon_color = require('nvim-web-devicons').get_icon_color(filename, extension, { default = true })
         if self.icon == require('nvim-web-devicons').get_default_icon().icon then
