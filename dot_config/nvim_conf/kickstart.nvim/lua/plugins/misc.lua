@@ -27,6 +27,21 @@ return {
     end,
   },
 
+  {
+    'nvim-tree/nvim-web-devicons',
+    config = function()
+      require('nvim-web-devicons').setup({
+        override_by_filename = {
+          ['.bazelrc'] = {
+            icon = '',
+            color = '#4288b9',
+            name = 'Bazelrc',
+          },
+        }
+      })
+    end
+  },
+
   -- Better picker for LSP references, definitions, and diagnostics.
   {
     'folke/trouble.nvim',
