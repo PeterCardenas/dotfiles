@@ -203,7 +203,7 @@ return {
       end,
       { provider = ' ' },
       {
-        provider = '',
+        provider = '󰖭',
         hl = function(self)
           if self.is_active then
             return 'TabLineClose'
@@ -226,11 +226,7 @@ return {
       },
     }
 
-    -- The final touch!
-    -- TODO: Use when I fix the patched font for Dank Mono by making icons smaller.
-    -- For now, just pad with spaces.
-    -- local TablineBufferBlock = heirline_utils.surround({ "", "" }, function(self)
-    local TablineBufferBlock = heirline_utils.surround({}, function(self)
+    local TablineBufferBlock = heirline_utils.surround({ "", "" }, function(self)
       if self.is_active then
         return heirline_utils.get_highlight('TabLineSel').bg
       else
@@ -238,7 +234,6 @@ return {
       end
     end, { { provider = ' ' }, TablineFileNameBlock, TablineCloseButton, { provider = ' ' } })
 
-    -- and here we go
     local BufferLine = heirline_utils.make_buflist(
       TablineBufferBlock,
       { provider = '  ', hl = { fg = 'gray' } }, -- left truncation, optional (defaults to "<")
@@ -247,7 +242,6 @@ return {
         return vim.api.nvim_tabpage_get_var(0, 'bufs')
       end,
       false
-      -- by the way, open a lot of buffers and try clicking them ;)
     )
 
     local Tabpage = {

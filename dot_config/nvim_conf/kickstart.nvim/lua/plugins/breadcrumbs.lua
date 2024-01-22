@@ -1,9 +1,6 @@
 ---@type dropbar_configs_t
 local DROPBAR_CONFIG = {
   icons = {
-    kinds = {
-      symbols = require('plugins.breadcrumbs.icons'),
-    },
     ui = {
       bar = {
         separator = '> ',
