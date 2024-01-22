@@ -30,14 +30,21 @@ return {
   {
     'nvim-tree/nvim-web-devicons',
     config = function()
+      ---@param icon_name string
+      local function get_config_icon(icon_name)
+        return {
+          icon = '',
+          color = '#4288b9',
+          name = icon_name,
+        }
+      end
       require('nvim-web-devicons').setup({
         override_by_filename = {
-          ['.bazelrc'] = {
-            icon = '',
-            color = '#4288b9',
-            name = 'Bazelrc',
-          },
-        }
+          ['.bazelrc'] = get_config_icon('Bazelrc'),
+        },
+        override_by_extension = {
+          rc = get_config_icon('Rc'),
+        },
       })
     end
   },
