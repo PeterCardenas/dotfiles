@@ -146,10 +146,11 @@ end
 
 ---@return table<string, lspconfig.Config>
 local function ruff_lsp_config()
-  local selected_rules = {
+  local additional_rules = {
     'D', -- pydocstyle: https://docs.astral.sh/ruff/rules/#pydocstyle-d
     'W', -- pycodestyle warnings: https://docs.astral.sh/ruff/rules/#warning-w
     'PLR0912', -- too-many-branches
+    'T201', -- print
   }
   local ignored_rules = {
     'W191', -- tab-indentation https://docs.astral.sh/ruff/rules/tab-indentation/
@@ -158,10 +159,10 @@ local function ruff_lsp_config()
     'W605', -- invalid escape sequence https://docs.astral.sh/ruff/rules/invalid-escape-sequence/
   }
   local ruff_args = {
-    '--extend-select=' .. table.concat(selected_rules, ','),
+    '--extend-select=' .. table.concat(additional_rules, ','),
     '--ignore=' .. table.concat(ignored_rules, ','),
     -- Do not fix selected rules to minimize diff.
-    '--unfixable=' .. table.concat(selected_rules, ','),
+    '--unfixable=' .. table.concat(additional_rules, ','),
     -- Re-enable rules that are used in codebase.
     '--extend-fixable=' .. table.concat(used_in_repo, ','),
   }
