@@ -85,6 +85,7 @@ return {
     -- Setup neovim lua configuration
     -- Load plugins when editing overall configuration.
     require('neodev').setup({
+      ---@param root_dir string
       override = function(root_dir, library)
         if root_dir:find('.local/share/chezmoi', 1, true) ~= nil then
           library.enabled = true
