@@ -64,6 +64,7 @@ return {
         action_keys = {
           toggle_fold = { 'zc', 'zo', 'o' },
         },
+        include_declaration = { 'lsp_definitions' },
       })
     end,
   },
