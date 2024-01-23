@@ -12,7 +12,7 @@ function M.on_attach(client, bufnr)
       client.handlers[vim.lsp.protocol.Methods.textDocument_publishDiagnostics] = function() end
     end
   end
-  if client.name == 'tsserver' then
+  if client.name == 'tsserver' or client.name == require('typescript-tools.config').plugin_name then
     -- Defer to eslint for formatting.
     client.server_capabilities.documentFormattingProvider = false
     client.server_capabilities.documentRangeFormattingProvider = false
