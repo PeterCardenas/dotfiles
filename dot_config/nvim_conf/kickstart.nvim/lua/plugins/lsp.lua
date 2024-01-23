@@ -55,6 +55,7 @@ return {
         },
       },
       tsserver = {
+        enabled = require('utils.config').tsserver_enabled,
         cmd_env = {
           NODE_OPTIONS = '--max-old-space-size=6144',
         },
