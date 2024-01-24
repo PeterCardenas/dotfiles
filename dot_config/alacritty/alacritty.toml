@@ -4,9 +4,10 @@ startup_mode = "Maximized"
 
 [font]
 size = 13
-normal.family = "DankMono Nerd Font"
-bold.family = "DankMono Nerd Font"
-italic.family = "DankMono Nerd Font"
+normal.family = "MonaspiceKr Nerd Font"
+bold.family = "MonaspiceKr Nerd Font"
+italic.family = "MonaspiceRn Nerd Font"
+bold_italic.family = "MonaspiceRn Nerd Font"
 
 [[keyboard.bindings]]
 key = "V"
