@@ -77,6 +77,7 @@ local function pylsp_config()
     'missing-class-docstring',
     'f-string-without-interpolation',
     'too-many-branches',
+    'protected-access',
   }
   -- The following are rules that we want from pylint, but are not supported elsewhere.
   -- 'trailing-newlines'
@@ -151,6 +152,7 @@ local function ruff_lsp_config()
     'W', -- pycodestyle warnings: https://docs.astral.sh/ruff/rules/#warning-w
     'PLR0912', -- too-many-branches
     'T201', -- print
+    'SLF001', -- private-member-access
   }
   local ignored_rules = {
     'W191', -- tab-indentation https://docs.astral.sh/ruff/rules/tab-indentation/
