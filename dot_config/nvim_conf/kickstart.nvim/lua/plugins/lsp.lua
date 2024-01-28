@@ -78,6 +78,9 @@ return {
           hint = { enable = true },
         },
       },
+      bzl = {
+        filetypes = { 'bzl', 'Bazelrc' },
+      },
     }
     local python_lsp_config = require('plugins.lsp.python').python_lsp_config()
     servers = vim.tbl_extend('force', servers, python_lsp_config)
@@ -104,13 +107,6 @@ return {
     require('plugins.lsp.local').setup(capabilities)
     -- Setup specific autocmds.
     require('plugins.lsp.python').setup()
-    -- Setup servers that are in Mason but not in mason-lspconfig.
-    -- TODO: Move this to servers table when the following PR is merged:
-    -- https://github.com/williamboman/mason-lspconfig.nvim/pull/350
-    require('lspconfig').bzl.setup({
-      capabilities = capabilities,
-      filetypes = { 'bzl', 'Bazelrc' },
-    })
 
     -- Ensure the servers above are installed
     local mason_lspconfig = require('mason-lspconfig')
