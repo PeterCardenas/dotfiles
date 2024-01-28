@@ -23,11 +23,15 @@ require('lazy').setup({
   -- Detect tabstop and shiftwidth automatically
   'tpope/vim-sleuth',
 
-  -- Plugin configs that are of decent heft.
+  -- TODO: Unsure if this is causing delays in startup rather than requiring the plugin configs manually.
   { import = 'plugins' },
 }, {
   change_detection = {
     enabled = true,
     notify = true,
   },
+  ui = {
+    border = 'rounded',
+    title = 'Lazy Plugins',
+  }
 })
