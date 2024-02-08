@@ -19,6 +19,7 @@ return {
           includeInlayEnumMemberValueHints = true,
           includeInlayParameterNameHints = 'literals',
           importModuleSpecifierPreference = 'non-relative',
+          quotePreference = 'single',
         },
         jsx_close_tag = {
           enable = true,
