@@ -67,6 +67,13 @@ end
 vim.keymap.set({ 'n', 'v' }, '<leader>ui', function()
   set_indent()
 end, { desc = 'Change indent setting' })
+vim.keymap.set({ 'n' }, '<leader>ud', function()
+  if vim.diagnostic.is_disabled(0) then
+    vim.diagnostic.enable(0)
+  else
+    vim.diagnostic.disable(0)
+  end
+end, { desc = 'Toggle diagnostics' })
 
 -- Manage Buffers
 vim.keymap.set({ 'v', 'n' }, '<leader>C', function()
