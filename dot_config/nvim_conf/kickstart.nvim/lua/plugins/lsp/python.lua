@@ -112,7 +112,7 @@ local function pylsp_config()
               '--disable=' .. table.concat(disabled_pylint_rules, ','),
             },
             -- Enables pylint to run in live mode.
-            executable = VENV_PATH .. '/bin/pylint',
+            -- executable = VENV_PATH .. '/bin/pylint',
             -- TODO(@PeterCardenas): The following is for adding additional paths
             -- for pylint to search for modules. This is made possible by this fork:
             -- https://github.com/PeterCardenas/python-lsp-server
