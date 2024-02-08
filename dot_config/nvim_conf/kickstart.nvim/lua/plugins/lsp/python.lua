@@ -68,6 +68,8 @@ local function pylsp_config()
     'logging-fstring-interpolation',
     'wrong-import-order',
     'consider-using-f-string',
+    -- Line length checking is most often just annoying.
+    'line-too-long',
     -- Below have been delegated to mypy.
     'too-many-function-args',
     'undefined-variable',
@@ -78,6 +80,13 @@ local function pylsp_config()
     'f-string-without-interpolation',
     'too-many-branches',
     'protected-access',
+    'unspecified-encoding',
+    'unnecessary-comprehension',
+    'bare-except',
+    'consider-using-get',
+    'unexpected-special-method-signature',
+    'broad-exception-raised',
+    'cell-var-from-loop',
   }
   -- The following are rules that we want from pylint, but are not supported elsewhere.
   -- 'trailing-newlines'
@@ -101,7 +110,6 @@ local function pylsp_config()
             enabled = true,
             args = {
               '--disable=' .. table.concat(disabled_pylint_rules, ','),
-              '--max-line-length=120',
             },
             -- Enables pylint to run in live mode.
             executable = VENV_PATH .. '/bin/pylint',
@@ -119,7 +127,7 @@ local function pylsp_config()
             enabled = true,
             live_mode = true,
             report_progress = true,
-            -- Currently using a fork of pylsp-mypy to support venv and MYPYPATH.
+            -- Currently using a fork of pylsp-mypy to support venv.
             -- https://github.com/PeterCardenas/pylsp-mypy
             venv_path = VENV_PATH,
           },
@@ -153,6 +161,12 @@ local function ruff_lsp_config()
     'PLR0912', -- too-many-branches
     'T201', -- print
     'SLF001', -- private-member-access
+    'PLW1514', -- unspecified-encoding
+    'C416', -- unnecessary-comprehension
+    'SIM401', -- if-else-block-instead-of-dict-get
+    'PLE0302', --unexpected-special-method-signature
+    'TRY002', -- raise-vanilla-class
+    'B023', -- function-uses-loop-variable
   }
   local ignored_rules = {
     'W191', -- tab-indentation https://docs.astral.sh/ruff/rules/tab-indentation/
@@ -161,6 +175,8 @@ local function ruff_lsp_config()
     'W605', -- invalid escape sequence https://docs.astral.sh/ruff/rules/invalid-escape-sequence/
   }
   local ruff_args = {
+    -- Enable preview mode for some additional rules.
+    '--preview',
     '--extend-select=' .. table.concat(additional_rules, ','),
     '--ignore=' .. table.concat(ignored_rules, ','),
     -- Do not fix selected rules to minimize diff.
