@@ -1,5 +1,7 @@
 local M = {}
 
+local LspMethod = vim.lsp.protocol.Methods
+
 --  Configures a language server after it attaches to a buffer.
 ---@param client lsp.Client
 ---@param bufnr integer
@@ -9,7 +11,7 @@ function M.on_attach(client, bufnr)
     -- If file name ends with .template.yaml, then we disable yamlls diagnostics since jinja templates cannot be parsed correctly.
     local template_yaml_extension = '.template.yaml'
     if file_name:sub(-#template_yaml_extension) == template_yaml_extension then
-      client.handlers[vim.lsp.protocol.Methods.textDocument_publishDiagnostics] = function() end
+      client.handlers[LspMethod.textDocument_publishDiagnostics] = function() end
     end
   end
   if client.name == 'tsserver' or client.name == require('typescript-tools.config').plugin_name then
