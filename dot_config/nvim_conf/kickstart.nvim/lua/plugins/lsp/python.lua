@@ -87,6 +87,8 @@ local function pylsp_config()
     'unexpected-special-method-signature',
     'broad-exception-raised',
     'cell-var-from-loop',
+    'logging-too-few-args',
+    'logging-too-many-args',
   }
   -- The following are rules that we want from pylint, but are not supported elsewhere.
   -- 'trailing-newlines'
@@ -167,6 +169,8 @@ local function ruff_lsp_config()
     'PLE0302', --unexpected-special-method-signature
     'TRY002', -- raise-vanilla-class
     'B023', -- function-uses-loop-variable
+    'PLE1206', -- logging-too-few-args
+    'PLE1205', -- logging-too-many-args
   }
   local ignored_rules = {
     'W191', -- tab-indentation https://docs.astral.sh/ruff/rules/tab-indentation/
