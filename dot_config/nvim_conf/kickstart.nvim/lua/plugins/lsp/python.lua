@@ -96,58 +96,60 @@ local function pylsp_config()
   return {
     pylsp = {
       cmd = { 'pylsp', '--log-file=/tmp/pylsp.log' },
-      pylsp = {
-        plugins = {
-          jedi = {
-            extra_paths = {
-              gen_files_path,
+      settings = {
+        pylsp = {
+          plugins = {
+            jedi = {
+              extra_paths = {
+                gen_files_path,
+              },
             },
-          },
-          -- Use black for formatting.
-          black = {
-            enabled = true,
-          },
-          -- TODO(@PeterCardenas): Replace all useful pylint rules with ruff rules.
-          pylint = {
-            enabled = true,
-            args = {
-              '--disable=' .. table.concat(disabled_pylint_rules, ','),
+            -- Use black for formatting.
+            black = {
+              enabled = true,
             },
-            -- Enables pylint to run in live mode.
-            -- executable = VENV_PATH .. '/bin/pylint',
-            -- TODO(@PeterCardenas): The following is for adding additional paths
-            -- for pylint to search for modules. This is made possible by this fork:
-            -- https://github.com/PeterCardenas/python-lsp-server
-            -- However, I am not enabling this because .pyi files are not taken into
-            -- consideration when a .py file with the same module name exists.
-            -- Relevant issue: https://github.com/pylint-dev/pylint/issues/6281
-            -- extra_paths = {
-            --   gen_files_path,
-            -- }
-          },
-          pylsp_mypy = {
-            enabled = true,
-            live_mode = true,
-            report_progress = true,
-            -- Currently using a fork of pylsp-mypy to support venv.
-            -- https://github.com/PeterCardenas/pylsp-mypy
-            venv_path = VENV_PATH,
-          },
-          -- Disable other default formatters and linters.
-          mccabe = {
-            enabled = false,
-          },
-          pyflakes = {
-            enabled = false,
-          },
-          yapf = {
-            enabled = false,
-          },
-          autopep8 = {
-            enabled = false,
-          },
-          pycodestyle = {
-            enabled = false,
+            -- TODO(@PeterCardenas): Replace all useful pylint rules with ruff rules.
+            pylint = {
+              enabled = true,
+              args = {
+                '--disable=' .. table.concat(disabled_pylint_rules, ','),
+              },
+              -- Enables pylint to run in live mode.
+              -- executable = VENV_PATH .. '/bin/pylint',
+              -- TODO(@PeterCardenas): The following is for adding additional paths
+              -- for pylint to search for modules. This is made possible by this fork:
+              -- https://github.com/PeterCardenas/python-lsp-server
+              -- However, I am not enabling this because .pyi files are not taken into
+              -- consideration when a .py file with the same module name exists.
+              -- Relevant issue: https://github.com/pylint-dev/pylint/issues/6281
+              -- extra_paths = {
+              --   gen_files_path,
+              -- }
+            },
+            pylsp_mypy = {
+              enabled = true,
+              live_mode = true,
+              report_progress = true,
+              -- Currently using a fork of pylsp-mypy to support venv.
+              -- https://github.com/PeterCardenas/pylsp-mypy
+              venv_path = VENV_PATH,
+            },
+            -- Disable other default formatters and linters.
+            mccabe = {
+              enabled = false,
+            },
+            pyflakes = {
+              enabled = false,
+            },
+            yapf = {
+              enabled = false,
+            },
+            autopep8 = {
+              enabled = false,
+            },
+            pycodestyle = {
+              enabled = false,
+            },
           },
         },
       },
