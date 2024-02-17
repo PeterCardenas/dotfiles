@@ -45,6 +45,12 @@ return {
     local servers = {
       clangd = {
         filetypes = { 'c', 'cpp', 'objc', 'objcpp', 'cuda' },
+        capabilities = {
+          offsetEncoding = { 'utf-16' },
+          general = {
+            positionEncodings = { 'utf-16' },
+          },
+        },
       },
       gopls = {},
       rust_analyzer = {},
@@ -67,15 +73,19 @@ return {
       },
       stylelint_lsp = {
         filetypes = { 'css', 'scss' },
-        stylelintplus = {
-          autoFixOnFormat = true,
+        settings = {
+          stylelintplus = {
+            autoFixOnFormat = true,
+          },
         },
       },
       lua_ls = {
-        Lua = {
-          workspace = { checkThirdParty = false },
-          telemetry = { enable = false },
-          hint = { enable = true },
+        settings = {
+          Lua = {
+            workspace = { checkThirdParty = false },
+            telemetry = { enable = false },
+            hint = { enable = true },
+          },
         },
       },
       bzl = {
@@ -83,7 +93,7 @@ return {
       },
     }
     local python_lsp_config = require('plugins.lsp.python').python_lsp_config()
-    servers = vim.tbl_extend('force', servers, python_lsp_config)
+    servers = require('utils.table').merge_tables(servers, python_lsp_config)
 
     -- Setup neovim lua configuration
     -- Load plugins when editing overall configuration.
@@ -101,7 +111,7 @@ return {
 
     -- nvim-cmp supports additional completion capabilities, so broadcast that to servers
     local capabilities = vim.lsp.protocol.make_client_capabilities()
-    capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)
+    capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities) ---@type lsp.ClientCapabilities
 
     -- Setup language servers found locally.
     require('plugins.lsp.local').setup(capabilities)
@@ -117,29 +127,12 @@ return {
 
     mason_lspconfig.setup_handlers({
       function(server_name)
-        if servers[server_name] and servers[server_name].enabled == false then
+        local server_config = servers[server_name] or {}
+        if server_config.enabled == false then
           return
         end
-        ---@type lsp.ClientCapabilities
-        local server_capabilities = capabilities
-        if server_name == 'clangd' then
-          ---@type lsp.ClientCapabilities
-          local clangd_overrides = {
-            offsetEncoding = { 'utf-16' },
-            general = {
-              positionEncodings = { 'utf-16' },
-            },
-          }
-          server_capabilities = vim.tbl_extend('force', server_capabilities, clangd_overrides)
-        end
-        require('lspconfig')[server_name].setup({
-          capabilities = server_capabilities,
-          settings = servers[server_name],
-          filetypes = (servers[server_name] or {}).filetypes,
-          cmd = (servers[server_name] or {}).cmd,
-          cmd_env = (servers[server_name] or {}).cmd_env,
-          init_options = (servers[server_name] or {}).init_options,
-        })
+        server_config.capabilities = require('utils.table').merge_tables(capabilities, server_config.capabilities or {})
+        require('lspconfig')[server_name].setup(server_config)
       end,
     })
   end,
