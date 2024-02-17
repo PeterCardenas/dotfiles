@@ -19,6 +19,11 @@ function M.on_attach(client, bufnr)
     client.server_capabilities.documentFormattingProvider = false
     client.server_capabilities.documentRangeFormattingProvider = false
   end
+  if client.name == 'lua_ls' then
+    -- Defer to stylua for formatting.
+    client.server_capabilities.documentFormattingProvider = false
+    client.server_capabilities.documentRangeFormattingProvider = false
+  end
   local function nmap(keys, func, desc)
     if desc then
       desc = 'LSP: ' .. desc
