@@ -98,7 +98,7 @@ vim.api.nvim_create_user_command('GHFile', function()
   end
   local commit_sha = common_ancestor_commit_with_master()
   local file_url = repo_url .. '/blob/' .. commit_sha .. '/' .. filepath .. '#L' .. start_lnum .. '-L' .. end_lnum
-  vim.notify('Copied file link to clipboard', vim.log.levels.INFO)
+  vim.notify('Copied file link to clipboard:\n' .. file_url, vim.log.levels.INFO)
   vim.fn.setreg('+', file_url)
 end, { nargs = 0, desc = 'Open/Copy GitHub file link on master for current file', range = true })
 
