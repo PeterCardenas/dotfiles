@@ -26,6 +26,12 @@ return {
 
     -- Get words from the current buffer
     'hrsh7th/cmp-buffer',
+
+    -- Add completions for fish shell
+    'mtoohey31/cmp-fish',
+
+    -- Add completions for tmux
+    'andersevenrud/cmp-tmux',
   },
   event = { 'InsertEnter', 'CmdlineEnter' },
   config = function()
@@ -88,6 +94,8 @@ return {
           end
         },
         { name = 'luasnip' },
+        { name = 'fish' },
+        { name = 'tmux' },
       },
     })
 
