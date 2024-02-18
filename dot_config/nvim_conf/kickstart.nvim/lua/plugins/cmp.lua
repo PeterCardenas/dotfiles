@@ -79,7 +79,14 @@ return {
       sources = {
         { name = 'git' },
         { name = 'emoji' },
-        { name = 'nvim_lsp' },
+        {
+          name = 'nvim_lsp',
+          ---@param entry cmp.Entry
+          ---@param context cmp.Context
+          entry_filter = function(entry, context)
+            return entry.completion_item.kind ~= 1
+          end
+        },
         { name = 'luasnip' },
       },
     })
