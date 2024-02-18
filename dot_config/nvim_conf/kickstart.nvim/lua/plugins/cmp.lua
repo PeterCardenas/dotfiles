@@ -12,6 +12,9 @@ return {
 
     -- Adds a number of user-friendly snippets
     'rafamadriz/friendly-snippets',
+
+    -- Git/GitHub completion
+    'petertriho/cmp-git',
   },
   event = 'InsertEnter',
   config = function()
@@ -19,6 +22,31 @@ return {
     local luasnip = require('luasnip')
     require('luasnip.loaders.from_vscode').lazy_load()
     luasnip.config.setup({})
+    require('cmp_git').setup({
+      -- Enable completion for all filetypes to get them in comments.
+      filetypes = { "*" },
+      github = {
+        issues = {
+          filter = 'subscribed',
+        },
+      },
+      trigger_actions = {
+        {
+          debug_name = "github_issues_and_pr",
+          trigger_character = "#",
+          action = function(sources, trigger_char, callback, params, git_info)
+            return sources.github:get_issues_and_prs(callback, git_info, trigger_char)
+          end,
+        },
+        {
+          debug_name = "github_mentions",
+          trigger_character = "@",
+          action = function(sources, trigger_char, callback, params, git_info)
+            return sources.github:get_mentions(callback, git_info, trigger_char)
+          end,
+        },
+      },
+    })
 
     ---@diagnostic disable-next-line: missing-fields
     cmp.setup({
@@ -39,6 +67,7 @@ return {
         }),
       }),
       sources = {
+        { name = 'git' },
         { name = 'nvim_lsp' },
         { name = 'luasnip' },
       },
