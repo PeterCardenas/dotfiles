@@ -29,6 +29,7 @@ return {
 
   {
     'nvim-tree/nvim-web-devicons',
+    lazy = true,
     config = function()
       ---@param icon_name string
       local function get_config_icon(icon_name)
@@ -244,6 +245,7 @@ return {
   -- Ripgrep with file name filtering
   {
     'nvim-telescope/telescope-live-grep-args.nvim',
+    lazy = true,
     dependencies = 'telescope.nvim',
     config = function()
       require('telescope').load_extension('live_grep_args')
@@ -256,7 +258,7 @@ return {
     dependencies = {
       'kevinhwang91/promise-async',
     },
-    event = { 'BufEnter' },
+    event = { 'BufReadPre', 'BufNewFile' },
     config = function()
       ---@diagnostic disable-next-line: missing-fields
       require('ufo').setup({
@@ -280,6 +282,7 @@ return {
   -- Status column
   {
     'luukvbaal/statuscol.nvim',
+    event = { 'BufReadPre', 'BufNewFile' },
     config = function()
       local builtin = require('statuscol.builtin')
 
@@ -338,14 +341,4 @@ return {
     end,
   },
 
-  {
-    'sourcegraph/sg.nvim',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      'nvim-telescope/telescope.nvim',
-    },
-    config = function()
-      require('sg').setup({})
-    end,
-  },
 }

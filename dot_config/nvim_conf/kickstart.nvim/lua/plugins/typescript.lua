@@ -2,6 +2,7 @@
 return {
   'pmizio/typescript-tools.nvim',
   dependencies = { 'nvim-lua/plenary.nvim', 'neovim/nvim-lspconfig' },
+  ft = { 'typescript', 'typescriptreact', 'javascript', 'javascriptreact' },
   config = function()
     -- Still uncertain if we should enable this by default.
     -- Following issues remain:

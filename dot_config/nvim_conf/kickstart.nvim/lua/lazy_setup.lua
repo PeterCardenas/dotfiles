@@ -16,12 +16,11 @@ vim.opt.rtp:prepend(lazypath)
 
 -- Add plugins for lazy.nvim.
 require('lazy').setup({
-  -- Git related plugins
-  'tpope/vim-fugitive',
-  'tpope/vim-rhubarb',
-
   -- Detect tabstop and shiftwidth automatically
-  'tpope/vim-sleuth',
+  {
+    'tpope/vim-sleuth',
+    event = { 'BufReadPre', 'BufNewFile' },
+  },
 
   -- TODO: Unsure if this is causing delays in startup rather than requiring the plugin configs manually.
   { import = 'plugins' },

@@ -113,7 +113,7 @@ end, { desc = 'Show blame for current line' })
 return {
   -- Adds git related signs to the gutter, as well as utilities for managing changes
   'lewis6991/gitsigns.nvim',
-  priority = 100,
+  event = { 'BufReadPre', 'BufNewFile' },
   config = function()
     -- See `:help gitsigns.txt`
     require('gitsigns').setup({
