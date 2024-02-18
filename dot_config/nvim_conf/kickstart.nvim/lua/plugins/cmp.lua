@@ -21,6 +21,8 @@ return {
 
     -- Command completion
     'hrsh7th/cmp-cmdline',
+    -- Command history completion
+    'dmitmel/cmp-cmdline-history',
 
     -- Get words from the current buffer
     'hrsh7th/cmp-buffer',
@@ -85,8 +87,8 @@ return {
     cmp.setup.cmdline('/', {
       mapping = cmp.mapping.preset.cmdline(),
       sources = {
-        { name = 'buffer' }
-      }
+        { name = 'buffer' },
+      },
     })
     cmp.setup.cmdline(':', {
       mapping = cmp.mapping.preset.cmdline(),
@@ -96,7 +98,8 @@ return {
           option = {
             ignore_cmds = { 'Man', '!' }
           }
-        }
+        },
+        { name = 'cmdline_history' },
       })
     })
   end,
