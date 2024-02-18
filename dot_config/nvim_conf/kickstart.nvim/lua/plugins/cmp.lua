@@ -15,8 +15,17 @@ return {
 
     -- Git/GitHub completion
     'petertriho/cmp-git',
+
+    -- Emoji completion
+    'hrsh7th/cmp-emoji',
+
+    -- Command completion
+    'hrsh7th/cmp-cmdline',
+
+    -- Get words from the current buffer
+    'hrsh7th/cmp-buffer',
   },
-  event = 'InsertEnter',
+  event = { 'InsertEnter', 'CmdlineEnter' },
   config = function()
     local cmp = require('cmp')
     local luasnip = require('luasnip')
@@ -48,7 +57,6 @@ return {
       },
     })
 
-    ---@diagnostic disable-next-line: missing-fields
     cmp.setup({
       snippet = {
         expand = function(args)
@@ -68,9 +76,28 @@ return {
       }),
       sources = {
         { name = 'git' },
+        { name = 'emoji' },
         { name = 'nvim_lsp' },
         { name = 'luasnip' },
       },
+    })
+
+    cmp.setup.cmdline('/', {
+      mapping = cmp.mapping.preset.cmdline(),
+      sources = {
+        { name = 'buffer' }
+      }
+    })
+    cmp.setup.cmdline(':', {
+      mapping = cmp.mapping.preset.cmdline(),
+      sources = cmp.config.sources({
+        {
+          name = 'cmdline',
+          option = {
+            ignore_cmds = { 'Man', '!' }
+          }
+        }
+      })
     })
   end,
 }
