@@ -29,9 +29,6 @@ return {
 
     -- Add completions for fish shell
     'mtoohey31/cmp-fish',
-
-    -- Add completions for tmux
-    'andersevenrud/cmp-tmux',
   },
   event = { 'InsertEnter', 'CmdlineEnter' },
   config = function()
@@ -90,12 +87,12 @@ return {
           ---@param entry cmp.Entry
           ---@param context cmp.Context
           entry_filter = function(entry, context)
-            return entry.completion_item.kind ~= 1
+            -- Gets rid of noisy buffer word completion.
+            return entry.completion_item.kind ~= require('cmp.types').lsp.CompletionItemKind.Text
           end
         },
         { name = 'luasnip' },
         { name = 'fish' },
-        { name = 'tmux' },
       },
     })
 
