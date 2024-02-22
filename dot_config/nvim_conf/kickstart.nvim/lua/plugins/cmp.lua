@@ -21,8 +21,6 @@ return {
 
     -- Command completion
     'hrsh7th/cmp-cmdline',
-    -- Command history completion
-    'dmitmel/cmp-cmdline-history',
 
     -- Get words from the current buffer
     'hrsh7th/cmp-buffer',
@@ -111,7 +109,6 @@ return {
             ignore_cmds = { 'Man', '!' }
           }
         },
-        { name = 'cmdline_history' },
       })
     })
   end,
