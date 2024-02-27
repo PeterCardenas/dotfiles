@@ -25,7 +25,7 @@ vim.keymap.set({ 'v', 'n' }, 'gj', '<C-i>', { desc = 'Go to next location' })
 vim.keymap.set({ 'v', 'n' }, 'gk', '<C-o>', { desc = 'Go to previous location' })
 
 vim.keymap.set('n', '<leader>o', function()
-  require('neo-tree.command').execute({ toggle = true })
+  require('nvim-tree.actions').tree.toggle.fn({ find_file = true })
 end, { desc = 'Toggle file explorer' })
 vim.keymap.set('n', '<leader>gg', function()
   require('lazygit').lazygit()

@@ -12,6 +12,10 @@ vim.filetype.add({
   },
 })
 
+-- Disable netrw
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+
 -- Enable true color support.
 if vim.fn.has('termguicolors') == 1 then
   vim.opt.termguicolors = true
