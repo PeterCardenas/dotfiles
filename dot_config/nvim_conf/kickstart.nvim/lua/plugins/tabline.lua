@@ -75,7 +75,7 @@ vim.api.nvim_create_autocmd('BufEnter', {
     if #wins <= 1 then
       return
     end
-    local sidebar_fts = { ['neo-tree'] = true }
+    local sidebar_fts = { ['NvimTree'] = true }
     for _, winid in ipairs(wins) do
       if vim.api.nvim_win_is_valid(winid) then
         local bufnr = vim.api.nvim_win_get_buf(winid)
@@ -283,7 +283,7 @@ return {
         local bufnr = vim.api.nvim_win_get_buf(win)
         self.winid = win
 
-        local found_buffer_for_offset = heirline_conditions.buffer_matches({ filetype = { 'neo%-tree' } }, bufnr)
+        local found_buffer_for_offset = heirline_conditions.buffer_matches({ filetype = { 'NvimTree' } }, bufnr)
         return found_buffer_for_offset
       end,
 

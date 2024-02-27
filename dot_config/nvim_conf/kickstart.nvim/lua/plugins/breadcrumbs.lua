@@ -35,9 +35,11 @@ local DROPBAR_CONFIG = {
     end,
   },
 }
+
 vim.keymap.set({ 'n', 'v', 'i' }, '<C-o>', function()
   require('dropbar.api').pick()
 end, { desc = 'Focus on breadcrumbs' })
+
 ---@type LazyPluginSpec
 return {
   'Bekaboo/dropbar.nvim',

@@ -288,7 +288,7 @@ return {
 
       require('statuscol').setup({
         foldfunc = 'builtin',
-        ft_ignore = { 'dashboard', 'neo-tree', 'help' },
+        ft_ignore = { 'dashboard', 'NvimTree', 'help' },
         segments = {
           { text = { builtin.foldfunc }, click = 'v:lua.ScFa' },
           {
