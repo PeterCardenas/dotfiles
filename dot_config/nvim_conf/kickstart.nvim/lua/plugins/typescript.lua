@@ -1,3 +1,14 @@
+---@param client lsp.Client
+---@param bufnr integer
+local function on_attach(client, bufnr)
+  if client.name == require('typescript-tools.config').plugin_name  then
+    -- Defer to eslint for formatting.
+    client.server_capabilities.documentFormattingProvider = false
+    client.server_capabilities.documentRangeFormattingProvider = false
+  end
+  require('plugins.lsp.on_attach').on_attach(client, bufnr)
+end
+
 ---@type LazyPluginSpec
 return {
   'pmizio/typescript-tools.nvim',
@@ -7,11 +18,8 @@ return {
     -- Still uncertain if we should enable this by default.
     -- Following issues remain:
     --  - Cannot view document symbols while project is loading.
-    if require('utils.config').tsserver_enabled then
-      return
-    end
     require('typescript-tools').setup({
-      on_attach = require('plugins.lsp.on_attach').on_attach,
+      on_attach = on_attach,
       settings = {
         tsserver_max_memory = 8192,
         separate_diagnostic_server = false,

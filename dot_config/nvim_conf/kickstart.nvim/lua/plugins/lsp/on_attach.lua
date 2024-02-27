@@ -14,11 +14,6 @@ function M.on_attach(client, bufnr)
       client.handlers[LspMethod.textDocument_publishDiagnostics] = function() end
     end
   end
-  if client.name == 'tsserver' or client.name == require('typescript-tools.config').plugin_name then
-    -- Defer to eslint for formatting.
-    client.server_capabilities.documentFormattingProvider = false
-    client.server_capabilities.documentRangeFormattingProvider = false
-  end
   if client.name == 'lua_ls' then
     -- Defer to stylua for formatting.
     client.server_capabilities.documentFormattingProvider = false
