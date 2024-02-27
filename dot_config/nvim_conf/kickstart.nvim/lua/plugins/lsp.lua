@@ -60,12 +60,6 @@ return {
           command = { 'golangci-lint', 'run', '--out-format', 'json', '--disable-all', '--enable', 'errcheck,ineffassign,unused' },
         },
       },
-      tsserver = {
-        enabled = require('utils.config').tsserver_enabled,
-        cmd_env = {
-          NODE_OPTIONS = '--max-old-space-size=6144',
-        },
-      },
       eslint = {
         cmd_env = {
           NODE_OPTIONS = '--max-old-space-size=8192',
