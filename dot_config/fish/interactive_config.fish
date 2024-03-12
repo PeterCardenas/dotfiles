@@ -14,6 +14,9 @@ end
 # Clear all previous abbreviations
 abbr -e (abbr -l)
 
+# Enable vim keybindings
+set -g fish_key_bindings fish_vi_key_bindings
+
 source "$HOME"/.config/fish/colors.fish
 source "$HOME"/.config/fish/completion_utils.fish
 # Add tmux variables to fish shell before a command is executed.
