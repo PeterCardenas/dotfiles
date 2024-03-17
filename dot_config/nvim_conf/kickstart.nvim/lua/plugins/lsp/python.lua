@@ -8,9 +8,6 @@ local function on_attach(client, _)
   if client.name == 'ruff_lsp' then
     -- Defer to pylsp jedi plugin for hover documentation.
     client.server_capabilities.hoverProvider = false
-    -- Defer to pylsp black plugin for formatting.
-    client.server_capabilities.documentFormattingProvider = false
-    client.server_capabilities.documentRangeFormattingProvider = false
   end
   if client.name == 'pylsp' then
     -- Do not use code actions from pylsp since they are slow for now.
@@ -104,10 +101,6 @@ local function pylsp_config()
                 gen_files_path,
               },
             },
-            -- Use black for formatting.
-            black = {
-              enabled = true,
-            },
             -- TODO(@PeterCardenas): Replace all useful pylint rules with ruff rules.
             pylint = {
               enabled = true,
@@ -134,7 +127,10 @@ local function pylsp_config()
               -- https://github.com/PeterCardenas/pylsp-mypy
               venv_path = VENV_PATH,
             },
-            -- Disable other default formatters and linters.
+            -- Disable other default formatters and linters in favor of ruff and pylint.
+            black = {
+              enabled = false,
+            },
             mccabe = {
               enabled = false,
             },
