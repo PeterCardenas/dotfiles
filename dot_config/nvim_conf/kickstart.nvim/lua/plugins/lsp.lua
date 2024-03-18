@@ -79,6 +79,12 @@ return {
             workspace = { checkThirdParty = false },
             telemetry = { enable = false },
             hint = { enable = true },
+            library = vim.tbl_extend('keep', {
+              vim.fn.expand('$VIMRUNTIME/lua'),
+              vim.fn.stdpath("config") .. '/lua',
+            },
+              vim.api.nvim_get_runtime_file('', true)
+            ),
           },
         },
       },
