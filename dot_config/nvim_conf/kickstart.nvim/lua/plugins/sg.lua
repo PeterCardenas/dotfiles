@@ -1,29 +1,44 @@
-vim.api.nvim_create_user_command('CodyChat',
-  function(command)
-    -- Wait for the user to be authenticated
-    while not require('sg.auth').get() do
-      vim.wait(50)
-    end
-    local name = nil
-    if not vim.tbl_isempty(command.fargs) then
-      name = table.concat(command.fargs, " ")
-    end
-
-    require('sg.cody.commands').chat(name, { reset = command.bang })
+vim.api.nvim_create_user_command('CodyInit',
+  function()
+    require('sg')
   end,
-  { nargs = "*", bang = true }
+  { nargs = 0, desc = "Load the Cody Module" }
 )
 
-
----@type LazyPluginSpec
-return {
-  'sourcegraph/sg.nvim',
-  lazy = true,
-  dependencies = {
-    'nvim-lua/plenary.nvim',
-    'nvim-telescope/telescope.nvim',
-  },
-  config = function()
-    require('sg').setup({})
+vim.api.nvim_create_user_command('CopilotChatInit',
+  function()
+    require('CopilotChat')
   end,
+  { nargs = 0, desc = "Load the Copilot Chat Module" }
+)
+
+---@type LazyPluginSpec[]
+return {
+  {
+    'sourcegraph/sg.nvim',
+    lazy = true,
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-telescope/telescope.nvim',
+    },
+    config = function()
+      require('sg').setup({})
+    end,
+  },
+  {
+    "CopilotC-Nvim/CopilotChat.nvim",
+    branch = "canary",
+    lazy = true,
+    dependencies = {
+      { "zbirenbaum/copilot.lua" },
+      { "nvim-lua/plenary.nvim" },
+    },
+    config = function()
+      require('CopilotChat').setup({
+        window = {
+          layout = "float"
+        }
+      })
+    end,
+  }
 }
