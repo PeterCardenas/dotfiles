@@ -38,7 +38,12 @@ end, { desc = 'Go to previous diagnostic message' })
 vim.keymap.set('n', ']d', function()
   vim.diagnostic.goto_next()
 end, { desc = 'Go to next diagnostic message' })
+vim.keymap.set('n', '<leader>ds', function()
+  vim.diagnostic.open_float()
+end, { desc = 'Show hovered diagnostic' })
 
+-- Remap <leader>+v to trigger visual block mode because pasting from clipboard is mapped to Ctrl-V
+vim.keymap.set({ 'n', 'v' }, '<leader>v', '<C-v>', { desc = 'Visual block mode' })
 -- System clipboard keymaps.
 vim.keymap.set({ 'v', 'n' }, '<leader>y', '"+y', { desc = 'Yank selection to clipboard' })
 vim.keymap.set({ 'v', 'n' }, '<leader>Y', '"+Y', { desc = 'Yank to end of line to clipboard' })
