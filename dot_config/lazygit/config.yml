@@ -19,6 +19,9 @@ gui:
     cherryPickedCommitBgColor:
       - "#A39B8F"
 keybinding:
+  files:
+    commitChanges: 'C'
+    commitChangesWithEditor: 'c'
   commits:
     moveDownCommit: '<c-n>'
     moveUpCommit: '<c-p>'
