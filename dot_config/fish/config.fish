@@ -11,6 +11,8 @@ fish_add_path -P $PNPM_HOME\
  "/usr/local/go/bin"\
  "$HOME/.cargo/bin"
 
+set -U async_prompt_inherit_variables all
+
 if not set -q FAST_PROMPT
   # MUST BE AT END OF FILE
   # Start Starship
