@@ -25,6 +25,8 @@ keybinding:
   commits:
     moveDownCommit: '<c-n>'
     moveUpCommit: '<c-p>'
+    renameCommit: 'R'
+    renameCommitWithEditor: 'r'
 git:
   parseEmoji: true
 notARepository: 'skip'
