@@ -51,7 +51,12 @@ vim.api.nvim_create_autocmd('BufDelete', {
   group = bufferline_group,
   callback = function(args)
     for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
-      local bufs = vim.api.nvim_tabpage_get_var(tab, 'bufs')
+      local success, bufs = pcall(function()
+        return vim.api.nvim_tabpage_get_var(0, 'bufs')
+      end)
+      if not success then
+        bufs = {}
+      end
       if bufs then
         for i, bufnr in ipairs(bufs) do
           if bufnr == args.buf then
