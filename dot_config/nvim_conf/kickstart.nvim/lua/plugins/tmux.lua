@@ -67,6 +67,25 @@ vim.api.nvim_create_autocmd('FocusGained', {
   end,
 })
 
+local function update_display_from_tmux()
+  local tmux_display = vim.fn.systemlist("tmux showenv | string match -rg '^DISPLAY=(.*?)$'")[1]
+  if not tmux_display then
+    return
+  end
+  vim.env.DISPLAY = tmux_display
+end
+
+local function poll_tmux_display()
+  local res = vim.fn.timer_start(1000, vim.schedule_wrap(function()
+    update_display_from_tmux()
+  end), { ["repeat"] = -1 })
+  if res == -1 then
+    vim.notify('Failed to start timer for updating DISPLAY from tmux', vim.log.levels.ERROR)
+  end
+end
+
+poll_tmux_display()
+
 ---@type LazyPluginSpec
 return {
   -- Easy navigation between splits.
