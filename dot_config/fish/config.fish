@@ -13,6 +13,8 @@ fish_add_path -P $PNPM_HOME\
 
 set -U async_prompt_inherit_variables all
 
+set -gx XDG_CONFIG_HOME $HOME/.config
+
 if not set -q FAST_PROMPT
   # MUST BE AT END OF FILE
   # Start Starship
