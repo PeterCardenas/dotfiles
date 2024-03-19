@@ -6,6 +6,9 @@ vim.opt.foldlevelstart = 99
 vim.opt.foldenable = true
 vim.opt.fillchars = 'eob: ,fold: ,foldopen:,foldsep:│,foldclose:'
 
+-- Faster loading of nvim-ts-context-commentstring plugin
+vim.g.skip_ts_context_commentstring_module = true
+
 vim.filetype.add({
   filename = {
     ['.bazelrc'] = 'Bazelrc',

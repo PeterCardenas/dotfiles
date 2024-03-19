@@ -222,8 +222,26 @@ return {
   -- "gc" to comment visual regions/lines
   {
     'numToStr/Comment.nvim',
-    opts = {},
     event = { 'BufReadPre', 'BufNewFile' },
+    config = function()
+      ---@diagnostic disable-next-line: missing-fields
+      require('Comment').setup({
+        pre_hook = require('ts_context_commentstring.integrations.comment_nvim').create_pre_hook(),
+      })
+    end,
+  },
+
+  -- Better commentstring (helps commenting in tsx/jsx files)
+  {
+    event = { 'BufReadPre', 'BufNewFile' },
+    'JoosepAlviste/nvim-ts-context-commentstring',
+    dependencies = 'nvim-treesitter',
+    config = function()
+      ---@diagnostic disable-next-line: missing-fields
+      require('ts_context_commentstring').setup({
+        enable_autocmd = false,
+      })
+    end,
   },
 
   -- Camel-case and snake-case motion
