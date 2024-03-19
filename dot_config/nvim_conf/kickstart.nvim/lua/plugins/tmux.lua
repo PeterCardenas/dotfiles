@@ -4,7 +4,7 @@ local function set_is_vim()
   -- Reference: https://github.com/christoomey/vim-tmux-navigator/issues/72#issuecomment-873841679
   -- TODO: Ideally fish isn't that slow, maybe we there's a way to make startup faster.
   pcall(function()
-    vim.opt.shell = '/bin/bash -i'
+    vim.opt.shell = '/bin/bash'
     local tmux_socket = vim.fn.split(vim.env.TMUX, ',')[1]
     vim.fn.system('tmux -S ' .. tmux_socket .. ' set-option -p @disable_vertical_pane_navigation yes')
     vim.fn.system('tmux -S ' .. tmux_socket .. ' set-option -p @disable_horizontal_pane_navigation yes')
@@ -16,7 +16,7 @@ local function unset_is_vim()
   -- Set shell to bash for tmux navigation to be fast.
   -- Reference: https://github.com/christoomey/vim-tmux-navigator/issues/72#issuecomment-873841679
   pcall(function()
-    vim.opt.shell = '/bin/bash -i'
+    vim.opt.shell = '/bin/bash'
     local tmux_socket = vim.fn.split(vim.env.TMUX, ',')[1]
     vim.fn.system('tmux -S ' .. tmux_socket .. ' set-option -p -u @disable_vertical_pane_navigation')
     vim.fn.system('tmux -S ' .. tmux_socket .. ' set-option -p -u @disable_horizontal_pane_navigation')
