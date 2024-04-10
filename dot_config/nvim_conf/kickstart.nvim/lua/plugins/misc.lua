@@ -21,7 +21,7 @@ return {
   -- Diffviewer and Mergetool
   {
     'sindrets/diffview.nvim',
-    event = { 'BufReadPre', 'BufNewFile' },
+    cmd = { 'DiffviewOpen', 'DiffviewClose', 'DiffviewFileHistory' },
     config = function()
       require('diffview').setup({})
     end,
