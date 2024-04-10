@@ -124,11 +124,9 @@ return {
         topdelete = { text = '‾' },
         changedelete = { text = '~' },
       },
-      current_line_blame = true,
-      current_line_blame_opts = {
-        delay = 10,
-        virt_text_pos = 'right_align',
-      },
+      -- Currently causing performance issues with gopls, so disabled for now.
+      -- Hint: Maybe inlay hints are causing this issue.
+      current_line_blame = false,
       on_attach = function(bufnr)
         vim.keymap.set({ 'n', 'v' }, '<leader>gp', require('gitsigns.actions').preview_hunk, { buffer = bufnr, desc = 'Preview git hunk' })
 
