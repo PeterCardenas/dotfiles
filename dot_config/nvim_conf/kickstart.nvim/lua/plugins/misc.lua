@@ -206,10 +206,6 @@ return {
     'lukas-reineke/indent-blankline.nvim',
     main = 'ibl',
     event = { 'BufReadPre', 'BufNewFile' },
-    -- Disabled because currently causing performance issues with gopls.
-    enabled = function ()
-      return false
-    end,
     config = function()
       require('ibl').setup({
         scope = {
