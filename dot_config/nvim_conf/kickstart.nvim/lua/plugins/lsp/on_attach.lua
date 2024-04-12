@@ -71,7 +71,9 @@ function M.on_attach(client, bufnr)
     desc = 'LSP: Format buffer',
     buffer = bufnr,
   })
-  require('plugins.lsp.format').setup_formatting_diagnostic(bufnr)
+  if not require("utils.config").GOPLS_WORKAROUND_ENABLED then
+    require('plugins.lsp.format').setup_formatting_diagnostic(bufnr)
+  end
 end
 
 return M

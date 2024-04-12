@@ -137,6 +137,7 @@ return {
   -- Better UI for select, notifications, popups, and many others.
   {
     'folke/noice.nvim',
+    enabled = not require("utils.config").GOPLS_WORKAROUND_ENABLED,
     priority = 999,
     dependencies = {
       'MunifTanjim/nui.nvim',
@@ -173,6 +174,7 @@ return {
   {
     -- Set lualine as statusline
     'nvim-lualine/lualine.nvim',
+    enabled = not require("utils.config").GOPLS_WORKAROUND_ENABLED,
     -- See `:help lualine.txt`
     config = function()
       require('lualine').setup({
@@ -206,6 +208,7 @@ return {
     'lukas-reineke/indent-blankline.nvim',
     main = 'ibl',
     event = { 'BufReadPre', 'BufNewFile' },
+    enabled = not require("utils.config").GOPLS_WORKAROUND_ENABLED,
     config = function()
       require('ibl').setup({
         scope = {
@@ -250,6 +253,7 @@ return {
   -- Sticky scroll
   {
     'nvim-treesitter/nvim-treesitter-context',
+    enabled = not require("utils.config").GOPLS_WORKAROUND_ENABLED,
     event = { 'BufReadPre', 'BufNewFile' },
     dependencies = 'nvim-treesitter',
     config = function()
@@ -273,6 +277,7 @@ return {
   -- Easy folding
   {
     'kevinhwang91/nvim-ufo',
+    enabled = not require("utils.config").GOPLS_WORKAROUND_ENABLED,
     dependencies = {
       'kevinhwang91/promise-async',
     },
@@ -300,6 +305,7 @@ return {
   -- Status column
   {
     'luukvbaal/statuscol.nvim',
+    enabled = not require("utils.config").GOPLS_WORKAROUND_ENABLED,
     event = { 'BufReadPre', 'BufNewFile' },
     config = function()
       local builtin = require('statuscol.builtin')
