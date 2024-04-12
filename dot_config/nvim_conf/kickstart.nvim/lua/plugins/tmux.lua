@@ -84,7 +84,9 @@ local function poll_tmux_display()
   end
 end
 
-poll_tmux_display()
+if not require("utils.config").GOPLS_WORKAROUND_ENABLED then
+  poll_tmux_display()
+end
 
 ---@type LazyPluginSpec
 return {
