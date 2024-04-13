@@ -33,7 +33,9 @@ function M.on_attach(client, bufnr)
   end
 
   nmap('<leader>lr', vim.lsp.buf.rename, '[L]anguage [R]ename]')
-  nmap('<leader>la', require('actions-preview').code_actions, '[L]anguage [A]ction')
+  nmap('<leader>la', function ()
+    require('actions-preview').code_actions()
+  end, '[L]anguage [A]ction')
 
   nmap('gd', function()
     require('trouble').open('lsp_definitions')
