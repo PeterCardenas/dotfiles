@@ -84,15 +84,12 @@ local function poll_tmux_display()
   end
 end
 
-if not require("utils.config").GOPLS_WORKAROUND_ENABLED then
-  poll_tmux_display()
-end
+poll_tmux_display()
 
 ---@type LazyPluginSpec
 return {
   -- Easy navigation between splits.
   'alexghergh/nvim-tmux-navigation',
-  enabled = not require("utils.config").GOPLS_WORKAROUND_ENABLED,
   config = function()
     require('nvim-tmux-navigation').setup({
       keybindings = {

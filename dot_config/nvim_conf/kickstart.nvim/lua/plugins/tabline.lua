@@ -107,7 +107,6 @@ vim.api.nvim_create_autocmd('BufEnter', {
 return {
   -- Tabline (Also has a winbar and statusline that are not currently used)
   'rebelot/heirline.nvim',
-  enabled = not require("utils.config").GOPLS_WORKAROUND_ENABLED,
   config = function()
     -- [[ Configure heirline ]]
     -- See `:help heirline`

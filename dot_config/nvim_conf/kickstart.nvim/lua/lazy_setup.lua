@@ -26,7 +26,7 @@ require('lazy').setup({
   { import = 'plugins' },
 }, {
   change_detection = {
-    enabled = not require("utils.config").GOPLS_WORKAROUND_ENABLED,
+    enabled = true,
     notify = true,
   },
   ui = {

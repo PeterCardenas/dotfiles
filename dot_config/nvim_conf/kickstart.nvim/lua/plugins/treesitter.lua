@@ -3,7 +3,6 @@ return {
   -- Highlight, edit, and navigate code
   'nvim-treesitter/nvim-treesitter',
   event = { 'BufReadPre', 'BufNewFile' },
-  enabled = not require("utils.config").GOPLS_WORKAROUND_ENABLED,
   dependencies = {
     'nvim-treesitter/nvim-treesitter-textobjects',
   },
