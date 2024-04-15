@@ -43,7 +43,6 @@ end, { desc = 'Focus on breadcrumbs' })
 ---@type LazyPluginSpec
 return {
   'Bekaboo/dropbar.nvim',
-  enabled = not require("utils.config").GOPLS_WORKAROUND_ENABLED,
   event = { 'BufReadPre', 'BufNewFile' },
   -- optional, but required for fuzzy finder support
   dependencies = {

@@ -56,7 +56,6 @@ return {
       rust_analyzer = {},
       -- Prefer to use nogo, but there is not language server for it yet.
       golangci_lint_ls = {
-        enabled = not require("utils.config").GOPLS_WORKAROUND_ENABLED,
         init_options = {
           command = { 'golangci-lint', 'run', '--out-format', 'json', '--disable-all', '--enable', 'errcheck,ineffassign,unused' },
         },

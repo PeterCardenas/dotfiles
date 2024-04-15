@@ -114,7 +114,6 @@ return {
   -- Adds git related signs to the gutter, as well as utilities for managing changes
   'lewis6991/gitsigns.nvim',
   event = { 'BufReadPre', 'BufNewFile' },
-  enabled = not require("utils.config").GOPLS_WORKAROUND_ENABLED,
   config = function()
     -- See `:help gitsigns.txt`
     require('gitsigns').setup({
