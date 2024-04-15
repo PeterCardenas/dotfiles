@@ -24,6 +24,23 @@ function M.on_attach(client, bufnr)
     client.server_capabilities.documentFormattingProvider = false
     client.server_capabilities.documentRangeFormattingProvider = false
   end
+  if require('utils.config').GOPLS_WORKAROUND_ENABLED and client.name == 'gopls' then
+    -- Disable LSP features for performance.
+    client.server_capabilities.semanticTokensProvider = nil
+    client.server_capabilities.inlayHintProvider = nil
+    client.server_capabilities.foldingRangeProvider = nil
+    client.server_capabilities.codeLensProvider = nil
+    client.server_capabilities.diagnosticProvider = nil
+    client.handlers[LspMethod.textDocument_publishDiagnostics] = function() end
+    client.handlers[LspMethod.textDocument_diagnostic] = function() end
+    client.handlers[LspMethod.textDocument_documentHighlight] = function() end
+    client.handlers[LspMethod.textDocument_codeLens] = function() end
+    client.handlers[LspMethod.textDocument_inlayHint] = function() end
+    client.handlers[LspMethod.textDocument_completion] = function() end
+    client.handlers[LspMethod.workspace_inlayHint_refresh] = function() end
+    client.handlers[LspMethod.workspace_executeCommand] = function() end
+    client.handlers[LspMethod.workspace_applyEdit] = function() end
+  end
   local function nmap(keys, func, desc)
     if desc then
       desc = 'LSP: ' .. desc
