@@ -92,6 +92,7 @@ end
 return {
   -- Easy navigation between splits.
   'alexghergh/nvim-tmux-navigation',
+  enabled = not require("utils.config").GOPLS_WORKAROUND_ENABLED,
   config = function()
     require('nvim-tmux-navigation').setup({
       keybindings = {

@@ -226,6 +226,7 @@ return {
   {
     'numToStr/Comment.nvim',
     event = { 'BufReadPre', 'BufNewFile' },
+    enabled = not require("utils.config").GOPLS_WORKAROUND_ENABLED,
     config = function()
       ---@diagnostic disable-next-line: missing-fields
       require('Comment').setup({
@@ -238,6 +239,7 @@ return {
   {
     event = { 'BufReadPre', 'BufNewFile' },
     'JoosepAlviste/nvim-ts-context-commentstring',
+    enabled = not require("utils.config").GOPLS_WORKAROUND_ENABLED,
     dependencies = 'nvim-treesitter',
     config = function()
       ---@diagnostic disable-next-line: missing-fields
@@ -333,6 +335,7 @@ return {
   {
     'windwp/nvim-autopairs',
     event = 'InsertEnter',
+    enabled = not require("utils.config").GOPLS_WORKAROUND_ENABLED,
     config = function()
       require('nvim-autopairs').setup({
         check_ts = true,

@@ -14,6 +14,7 @@ return {
   -- File Explorer
   'nvim-tree/nvim-tree.lua',
   lazy = true,
+  enabled = not require('utils.config').GOPLS_WORKAROUND_ENABLED,
   dependencies = {
     'nvim-tree/nvim-web-devicons',
   },
