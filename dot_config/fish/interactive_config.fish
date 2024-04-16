@@ -69,6 +69,9 @@ set -gx RIPGREP_CONFIG_PATH $HOME/.config/ripgrep.rc
 
 set -gx BOB_CONFIG $HOME/.config/bob/config.json
 
+# Any other terminal seems to mess with colors.
+set TERM xterm-256color
+
 # apt aliases
 abbr -a aptupd "sudo apt update -y"
 abbr -a aptupgd "sudo apt upgrade -y && sudo apt autoremove -y"
