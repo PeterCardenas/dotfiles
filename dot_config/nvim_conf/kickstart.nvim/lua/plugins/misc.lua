@@ -366,7 +366,7 @@ return {
   -- Profile lua neovim config.
   {
     'stevearc/profile.nvim',
-    enabled = function()
+    cond = function()
       return os.getenv("NVIM_PROFILE") ~= nil
     end,
     -- MUST be the first plugin to load.
@@ -401,6 +401,6 @@ return {
       end
       vim.keymap.set("", "<f1>", toggle_profile)
     end,
-  }
+  },
 
 }
