@@ -28,15 +28,9 @@ local function set_is_vim()
     -- Reference: https://github.com/christoomey/vim-tmux-navigator/issues/72#issuecomment-873841679
     -- TODO: Ideally fish isn't that slow, maybe we there's a way to make startup faster.
     vim.opt.shell = '/bin/bash'
-    local output = ''
-    output = vim.fn.system(with_tmux_set_option('@disable_vertical_pane_navigation yes'))
-    if vim.v.shell_error ~= 0 then
-      error('Failed to set @disable_vertical_pane_navigation, output: ' .. output)
-    end
-    output = vim.fn.system(with_tmux_set_option('@disable_horizontal_pane_navigation yes'))
-    if vim.v.shell_error ~= 0 then
-      error('Failed to set @disable_horizontal_pane_navigation, output: ' .. output)
-    end
+    local strict_cmd = require('utils.shell').strict_cmd
+    strict_cmd(with_tmux_set_option('@disable_vertical_pane_navigation yes'))
+    strict_cmd(with_tmux_set_option('@disable_horizontal_pane_navigation yes'))
     vim.opt.shell = 'fish'
   end)
   if not was_success then
@@ -45,22 +39,16 @@ local function set_is_vim()
 end
 
 local function unset_is_vim()
-  local was_sucess, error_obj = pcall(function()
+  local was_success, error_obj = pcall(function()
     -- Set shell to bash for tmux navigation to be fast.
     -- Reference: https://github.com/christoomey/vim-tmux-navigator/issues/72#issuecomment-873841679
     vim.opt.shell = '/bin/bash'
-    local output = ''
-    output = vim.fn.system(with_tmux_set_option('-u @disable_vertical_pane_navigation'))
-    if vim.v.shell_error ~= 0 then
-      error('Failed to unset @disable_vertical_pane_navigation, output: ' .. output)
-    end
-    output = vim.fn.system(with_tmux_set_option('-u @disable_horizontal_pane_navigation'))
-    if vim.v.shell_error ~= 0 then
-      error('Failed to unset @disable_horizontal_pane_navigation, output: ' .. output)
-    end
+    local strict_cmd = require('utils.shell').strict_cmd
+    strict_cmd(with_tmux_set_option('-u @disable_vertical_pane_navigation'))
+    strict_cmd(with_tmux_set_option('-u @disable_horizontal_pane_navigation'))
     vim.opt.shell = 'fish'
   end)
-  if not was_sucess then
+  if not was_success then
     vim.notify('Failed to unset is_vim, error:' .. vim.inspect(error_obj), vim.log.levels.ERROR)
   end
 end
