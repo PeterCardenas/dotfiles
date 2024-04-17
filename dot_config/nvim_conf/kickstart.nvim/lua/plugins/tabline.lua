@@ -11,102 +11,213 @@ local function is_valid_buffer(bufnr)
   return vim.bo[bufnr].buflisted and vim.api.nvim_buf_is_valid(bufnr)
 end
 
-local bufferline_group = vim.api.nvim_create_augroup('bufferline', { clear = true })
-vim.api.nvim_create_autocmd({ 'BufAdd', 'BufEnter' }, {
-  desc = 'Update buffers when adding new buffers',
-  group = bufferline_group,
-  callback = function(args)
-    local success, bufs = pcall(function()
-      return vim.api.nvim_tabpage_get_var(0, 'bufs')
-    end)
-    if not success then
-      bufs = {}
-    end
-    if not vim.tbl_contains(bufs, args.buf) then
-      local current_buf = vim.api.nvim_get_current_buf()
-      if vim.g.session_loaded and current_buf ~= args.buf then
-        for buf_index, bufnr in ipairs(bufs) do
-          if bufnr == current_buf then
-            table.insert(bufs, buf_index + 1, args.buf)
-            break
-          end
-        end
-      else
-        table.insert(bufs, args.buf)
+local function add_keymaps()
+-- Manage Buffers
+  vim.keymap.set({ 'v', 'n' }, '<leader>C', function()
+    local bufs = vim.api.nvim_tabpage_get_var(0, 'bufs')
+    require('bufdelete').bufdelete(bufs, true)
+  end, { desc = 'Close all buffers' })
+  ---@param navigation_offset integer
+  local function nav_buf(navigation_offset)
+    local bufs = vim.api.nvim_tabpage_get_var(0, 'bufs')
+    local current_bufnr = vim.api.nvim_get_current_buf()
+    for i, bufnr in ipairs(bufs) do
+      if bufnr == current_bufnr then
+        local new_bufnr_idx = (i + navigation_offset - 1) % #bufs + 1
+        vim.cmd.b(bufs[new_bufnr_idx])
+        break
       end
     end
-    bufs = vim.tbl_filter(is_valid_buffer, bufs)
+  end
+  ---@param bufnr integer
+  local function force_close_buf(bufnr)
+    vim.schedule(function()
+      require('bufdelete').bufdelete(bufnr, true)
+    end)
+  end
+  local function close_buf()
+    local current_bufnr = vim.api.nvim_get_current_buf()
+    local is_modified = vim.api.nvim_get_option_value('modified', { buf = current_bufnr })
+    if is_modified then
+      local choice = vim.fn.input('Buffer modified. Save? (y/n): ')
+      if choice == 'y' then
+        vim.cmd.w()
+      elseif choice ~= 'n' then
+        vim.notify('Buffer close failed.', vim.log.levels.WARN)
+        return
+      end
+    end
+    local bufs = vim.api.nvim_tabpage_get_var(0, 'bufs')
+    if #bufs == 1 then
+      force_close_buf(current_bufnr)
+      return
+    end
+    local jumplist_result = vim.fn.getjumplist()
+    if not jumplist_result then
+      force_close_buf(current_bufnr)
+      return
+    end
+    local jumplist, current_jumplist_index = jumplist_result[1], jumplist_result[2]
+    local target_jumplist_index = current_jumplist_index
+    local target_bufnr = jumplist[target_jumplist_index].bufnr
+    while target_jumplist_index > 1 and (current_bufnr == target_bufnr or not vim.tbl_contains(bufs, target_bufnr)) do
+      target_jumplist_index = target_jumplist_index - 1
+      target_bufnr = jumplist[target_jumplist_index].bufnr
+    end
+    vim.cmd.b(target_bufnr)
+    force_close_buf(current_bufnr)
+  end
+  ---@param move_offset integer
+  local function move_buf(move_offset)
+    if move_offset == 0 then
+      return
+    end -- if n = 0 then no shifts are needed
+    local bufs = vim.api.nvim_tabpage_get_var(0, 'bufs')
+    for i, bufnr in ipairs(bufs) do -- loop to find current buffer
+      if bufnr == vim.api.nvim_get_current_buf() then -- found index of current buffer
+        for _ = 0, (move_offset % #bufs) - 1 do -- calculate number of right shifts
+          local new_i = i + 1 -- get next i
+          if i == #bufs then -- if at end, cycle to beginning
+            new_i = 1 -- next i is actually 1 if at the end
+            local val = bufs[i] -- save value
+            table.remove(bufs, i) -- remove from end
+            table.insert(bufs, new_i, val) -- insert at beginning
+          else -- if not at the end,then just do an in place swap
+            bufs[i], bufs[new_i] = bufs[new_i], bufs[i]
+          end
+          i = new_i -- iterate i to next value
+        end
+        break
+      end
+    end
+    -- set buffers
     vim.api.nvim_tabpage_set_var(0, 'bufs', bufs)
-  end,
-})
-vim.api.nvim_create_autocmd({ 'User' }, {
-  pattern = 'SessionLoadPost',
-  group = vim.api.nvim_create_augroup('session_loaded_post', { clear = true }),
-  callback = function()
-    vim.g.session_loaded = true
-  end,
-})
-vim.api.nvim_create_autocmd('BufDelete', {
-  desc = 'Update buffers when deleting buffers',
-  group = bufferline_group,
-  callback = function(args)
-    for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
+    -- redraw tabline
+    vim.cmd.redrawtabline()
+  end
+  vim.keymap.set('n', '<leader>c', close_buf, { desc = 'Close buffer' })
+  vim.keymap.set('n', '<S-l>', function()
+    local navigation_offset = vim.v.count > 0 and vim.v.count or 1
+    nav_buf(navigation_offset)
+  end, { desc = 'Next buffer' })
+  vim.keymap.set('n', '<S-h>', function()
+    local navigation_offset = -(vim.v.count > 0 and vim.v.count or 1)
+    nav_buf(navigation_offset)
+  end, { desc = 'Previous buffer' })
+  vim.keymap.set('n', '<leader>rl', function()
+    move_buf(vim.v.count > 0 and vim.v.count or 1)
+  end, { desc = 'Move buffer tab right' })
+  vim.keymap.set('n', '<leader>rh', function()
+    move_buf(-(vim.v.count > 0 and vim.v.count or 1))
+  end, { desc = 'Move buffer tab left' })
+end
+
+local function register_autocmds()
+  local bufferline_group = vim.api.nvim_create_augroup('bufferline', { clear = true })
+  vim.api.nvim_create_autocmd({ 'BufAdd', 'BufEnter' }, {
+    desc = 'Update buffers when adding new buffers',
+    group = bufferline_group,
+    callback = function(args)
       local success, bufs = pcall(function()
         return vim.api.nvim_tabpage_get_var(0, 'bufs')
       end)
       if not success then
         bufs = {}
       end
-      if bufs then
-        for i, bufnr in ipairs(bufs) do
-          if bufnr == args.buf then
-            table.remove(bufs, i)
-            break
+      if not vim.tbl_contains(bufs, args.buf) then
+        local current_buf = vim.api.nvim_get_current_buf()
+        if vim.g.session_loaded and current_buf ~= args.buf then
+          for buf_index, bufnr in ipairs(bufs) do
+            if bufnr == current_buf then
+              table.insert(bufs, buf_index + 1, args.buf)
+              break
+            end
           end
+        else
+          table.insert(bufs, args.buf)
         end
       end
       bufs = vim.tbl_filter(is_valid_buffer, bufs)
-      vim.api.nvim_tabpage_set_var(tab, 'bufs', bufs)
-    end
-    vim.cmd.redrawtabline()
-  end,
-})
+      vim.api.nvim_tabpage_set_var(0, 'bufs', bufs)
+    end,
+  })
+  vim.api.nvim_create_autocmd({ 'User' }, {
+    pattern = 'SessionLoadPost',
+    group = vim.api.nvim_create_augroup('session_loaded_post', { clear = true }),
+    callback = function()
+      vim.g.session_loaded = true
+    end,
+  })
+  vim.api.nvim_create_autocmd('BufDelete', {
+    desc = 'Update buffers when deleting buffers',
+    group = bufferline_group,
+    callback = function(args)
+      for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
+        local success, bufs = pcall(function()
+          return vim.api.nvim_tabpage_get_var(0, 'bufs')
+        end)
+        if not success then
+          bufs = {}
+        end
+        if bufs then
+          for i, bufnr in ipairs(bufs) do
+            if bufnr == args.buf then
+              table.remove(bufs, i)
+              break
+            end
+          end
+        end
+        bufs = vim.tbl_filter(is_valid_buffer, bufs)
+        vim.api.nvim_tabpage_set_var(tab, 'bufs', bufs)
+      end
+      vim.cmd.redrawtabline()
+    end,
+  })
 
-vim.api.nvim_create_autocmd('BufEnter', {
-  desc = 'Quit AstroNvim if more than one window is open and only sidebar windows are list',
-  group = vim.api.nvim_create_augroup('auto_quit', { clear = true }),
-  callback = function()
-    local wins = vim.api.nvim_tabpage_list_wins(0)
-    if #wins <= 1 then
-      return
-    end
-    local sidebar_fts = { ['NvimTree'] = true }
-    for _, winid in ipairs(wins) do
-      if vim.api.nvim_win_is_valid(winid) then
-        local bufnr = vim.api.nvim_win_get_buf(winid)
-        local filetype = vim.api.nvim_get_option_value('filetype', { buf = bufnr })
-        -- If any visible windows are not sidebars, early return
-        if not sidebar_fts[filetype] then
-          return
-          -- If the visible window is a sidebar
-        else
-          -- only count filetypes once, so remove a found sidebar from the detection
-          sidebar_fts[filetype] = nil
+  vim.api.nvim_create_autocmd('BufEnter', {
+    desc = 'Quit AstroNvim if more than one window is open and only sidebar windows are list',
+    group = vim.api.nvim_create_augroup('auto_quit', { clear = true }),
+    callback = function()
+      local wins = vim.api.nvim_tabpage_list_wins(0)
+      if #wins <= 1 then
+        return
+      end
+      local sidebar_fts = { ['NvimTree'] = true }
+      for _, winid in ipairs(wins) do
+        if vim.api.nvim_win_is_valid(winid) then
+          local bufnr = vim.api.nvim_win_get_buf(winid)
+          local filetype = vim.api.nvim_get_option_value('filetype', { buf = bufnr })
+          -- If any visible windows are not sidebars, early return
+          if not sidebar_fts[filetype] then
+            return
+            -- If the visible window is a sidebar
+          else
+            -- only count filetypes once, so remove a found sidebar from the detection
+            sidebar_fts[filetype] = nil
+          end
         end
       end
-    end
-    if #vim.api.nvim_list_tabpages() > 1 then
-      vim.cmd.tabclose()
-    else
-      vim.cmd.qall()
-    end
-  end,
-})
+      if #vim.api.nvim_list_tabpages() > 1 then
+        vim.cmd.tabclose()
+      else
+        vim.cmd.qall()
+      end
+    end,
+  })
+end
+
+if require('utils.config').USE_HEIRLINE then
+  register_autocmds()
+  add_keymaps()
+end
 
 ---@type LazyPluginSpec
 return {
   -- Tabline (Also has a winbar and statusline that are not currently used)
   'rebelot/heirline.nvim',
+  cond = function()
+    return require('utils.config').USE_HEIRLINE
+  end,
   config = function()
     -- [[ Configure heirline ]]
     -- See `:help heirline`
