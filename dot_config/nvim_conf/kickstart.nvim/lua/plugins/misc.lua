@@ -143,6 +143,10 @@ return {
       'rcarriga/nvim-notify',
     },
     config = function()
+      ---@diagnostic disable-next-line: missing-fields
+      require('notify').setup({
+        top_down = false,
+      })
       require('noice').setup({
         lsp = {
           -- override markdown rendering so that **cmp** and other plugins use **Treesitter**
