@@ -6,6 +6,10 @@ vim.opt.foldlevelstart = 99
 vim.opt.foldenable = true
 vim.opt.fillchars = 'eob: ,fold: ,foldopen:,foldsep:│,foldclose:'
 
+local current_sessionoptions = vim.opt.sessionoptions:get()
+table.insert(current_sessionoptions, "globals")
+vim.opt.sessionoptions = current_sessionoptions
+
 -- Faster loading of nvim-ts-context-commentstring plugin
 vim.g.skip_ts_context_commentstring_module = true
 
@@ -110,7 +114,7 @@ vim.diagnostic.config({
 vim.on_key(function(char)
   if vim.fn.mode() == 'n' then
     local new_hlsearch = vim.tbl_contains({ '<CR>', 'n', 'N', '*', '#', '?', '/' }, vim.fn.keytrans(char))
-    if vim.opt.hlsearch:get() ~= new_hlsearch then
+    if vim.opt.hlsearch ~= new_hlsearch then
       vim.opt.hlsearch = new_hlsearch
     end
   end
