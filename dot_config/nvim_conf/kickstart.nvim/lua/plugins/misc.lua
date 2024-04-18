@@ -403,4 +403,13 @@ return {
     end,
   },
 
+  {
+    'smjonas/inc-rename.nvim',
+    cmd = { 'IncRename' },
+    config = function()
+      ---@diagnostic disable-next-line: missing-fields
+      require('inc_rename').setup({})
+    end,
+  },
+
 }

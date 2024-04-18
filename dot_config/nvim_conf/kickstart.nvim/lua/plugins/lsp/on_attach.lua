@@ -39,7 +39,7 @@ function M.on_attach(client, bufnr)
       end
     end
   end
-  
+
   local function nmap(keys, func, desc)
     if desc then
       desc = 'LSP: ' .. desc
@@ -48,7 +48,9 @@ function M.on_attach(client, bufnr)
     vim.keymap.set('n', keys, func, { buffer = bufnr, desc = desc })
   end
 
-  nmap('<leader>lr', vim.lsp.buf.rename, '[L]anguage [R]ename]')
+  vim.keymap.set("n", "<leader>lr", function()
+    return ":IncRename " .. vim.fn.expand("<cword>")
+  end, { expr = true, desc = '[L]anguage [R]ename' })
   nmap('<leader>la', function ()
     require('actions-preview').code_actions()
   end, '[L]anguage [A]ction')
