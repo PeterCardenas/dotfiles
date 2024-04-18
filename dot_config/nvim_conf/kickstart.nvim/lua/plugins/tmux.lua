@@ -34,7 +34,7 @@ local function set_is_vim()
     vim.opt.shell = 'fish'
   end)
   if not was_success then
-    vim.notify('Failed to set is_vim, error:' .. vim.inspect(error_obj), vim.log.levels.ERROR)
+    vim.notify('Failed to set is_vim, error: ' .. vim.inspect(error_obj), vim.log.levels.ERROR)
   end
 end
 
@@ -49,7 +49,7 @@ local function unset_is_vim()
     vim.opt.shell = 'fish'
   end)
   if not was_success then
-    vim.notify('Failed to unset is_vim, error:' .. vim.inspect(error_obj), vim.log.levels.ERROR)
+    vim.notify('Failed to unset is_vim, error: ' .. vim.inspect(error_obj), vim.log.levels.ERROR)
   end
 end
 

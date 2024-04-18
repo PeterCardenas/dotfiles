@@ -6,7 +6,7 @@ M = {}
 function M.strict_cmd(cmd)
   local result = vim.fn.system(cmd)
   if vim.v.shell_error ~= 0 then
-    error('Failed to run command: ' .. cmd .. ', output: ' .. result)
+    error({message = 'Command failed', cmd = cmd, output = result, error_code = vim.v.shell_error})
   end
   return result
 end
