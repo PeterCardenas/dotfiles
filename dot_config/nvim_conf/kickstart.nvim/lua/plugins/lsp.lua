@@ -131,6 +131,7 @@ return {
         if server_config.enabled == false then
           return
         end
+        ---@diagnostic disable-next-line: inject-field
         server_config.capabilities = require('utils.table').merge_tables(capabilities, server_config.capabilities or {})
         require('lspconfig')[server_name].setup(server_config)
       end,
