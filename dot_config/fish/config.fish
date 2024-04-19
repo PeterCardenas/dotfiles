@@ -15,8 +15,6 @@ set -U async_prompt_inherit_variables all
 
 set -gx XDG_CONFIG_HOME $HOME/.config
 
-set BAT_THEME "tokyonight_storm"
-
 if not set -q FAST_PROMPT
   # MUST BE AT END OF FILE
   # Start Starship
