@@ -152,5 +152,13 @@ return {
         next = '<C-Space>',
       },
     })
+    -- TODO: Enabled these keybindings when lazygit uses the existing editor session instead of opening a new one.
+    -- local tmux_directions = { 'h', 'j', 'k', 'l' }
+    local tmux_directions = { 'h', 'l' }
+    for _, direction in ipairs(tmux_directions) do
+      vim.keymap.set('t', '<C-' .. direction .. '>', function ()
+        require('nvim-tmux-navigation.tmux_util').tmux_change_pane(direction)
+      end, { silent = true, noremap = true })
+    end
   end,
 }
