@@ -26,8 +26,9 @@ require('lazy').setup({
   { import = 'plugins' },
 }, {
   change_detection = {
-    enabled = true,
-    notify = true,
+    -- TODO: 1 day this will be useful, but today is not that day.
+    enabled = false,
+    notify = false,
   },
   ui = {
     border = 'rounded',
