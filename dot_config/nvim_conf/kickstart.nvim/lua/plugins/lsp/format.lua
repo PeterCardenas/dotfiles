@@ -115,7 +115,9 @@ local function check_if_needs_formatting(bufnr)
     ---@param results lsp.TextEdit[]
     client.request(LspMethod.textDocument_formatting, formatting_params, function(err, results, _, _)
       if err then
-        vim.notify('Error checking formatting: ' .. vim.inspect(err), vim.log.levels.ERROR)
+        if client.name ~= 'gopls' then
+          vim.notify('Error checking formatting: ' .. vim.inspect(err), vim.log.levels.ERROR)
+        end
       end
       for _, result in ipairs(results or {}) do
         local current_lines = vim.api.nvim_buf_get_lines(bufnr, result.range.start.line, result.range['end'].line, false)
