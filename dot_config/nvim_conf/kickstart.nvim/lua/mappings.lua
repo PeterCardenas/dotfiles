@@ -14,6 +14,10 @@ vim.keymap.set('n', '|', function()
   vim.cmd('vs')
 end, { desc = 'Vertical split' })
 
+-- Shift-J/K to move lines up and down.
+vim.keymap.set('v', '<S-j>', ":m '>+1<CR>gv=gv", { desc = 'Move line down', noremap = true, silent = true })
+vim.keymap.set('v', '<S-k>', ":m '<-2<CR>gv=gv", { desc = 'Move line up', noremap = true, silent = true })
+
 vim.keymap.set({ 'v', 'n' }, '<leader>s', '<cmd>w<cr>', { desc = 'Save file' })
 vim.keymap.set({ 'v', 'n' }, '<leader>q', '<cmd>q<cr>', { desc = 'Quit split' })
 vim.keymap.set({ 'v', 'n' }, '<leader>Q', '<cmd>qa<cr>', { desc = 'Quit all' })
