@@ -11,6 +11,51 @@ vim.api.nvim_create_autocmd('LspAttach', {
   end,
 })
 
+---@return lspconfig.Config
+local function gopls_config()
+  --- @type lspconfig.Config
+  local config = {
+    -- Disabled for performance reasons.
+    -- Reference: https://github.com/neovim/neovim/issues/23291
+    -- Possibly updating neovim can help: https://github.com/neovim/neovim/issues/23291#issuecomment-1817816570
+    capabilities = {
+      workspace = {
+        didChangeWatchedFiles = {
+          dynamicRegistration = false,
+        },
+      },
+    },
+    settings = {
+      gopls = {
+        codelenses = {
+          generate = false,
+          gc_details = false,
+          test = false,
+          tidy = false,
+          upgrade_dependency = false,
+          vendor = false,
+          regenerate_cgo = false,
+        },
+        completeFunctionCalls = true,
+        completeUnimported = true,
+        staticcheck = false,
+        semanticTokens = true,
+        hints = {
+          assignVariableTypes = true,
+          compositeLiteralFields = true,
+          compositeLiteralTypes = true,
+          constantValues = true,
+          functionTypeParameters = true,
+          parameterNames = true,
+          rangeVariableTypes = true,
+        },
+      },
+    },
+  }
+
+  return config
+end
+
 ---@type LazyPluginSpec
 return {
   -- LSP Configuration & Plugins
@@ -52,7 +97,7 @@ return {
           },
         },
       },
-      gopls = {},
+      gopls = gopls_config(),
       rust_analyzer = {},
       -- Prefer to use nogo, but there is not language server for it yet.
       golangci_lint_ls = {
