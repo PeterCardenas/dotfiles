@@ -38,7 +38,7 @@ local function gopls_config()
         },
         completeFunctionCalls = true,
         completeUnimported = true,
-        staticcheck = false,
+        staticcheck = true,
         semanticTokens = true,
         hints = {
           assignVariableTypes = true,
