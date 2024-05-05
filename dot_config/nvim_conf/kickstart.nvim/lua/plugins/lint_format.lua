@@ -16,6 +16,7 @@ return {
           lua = { 'stylua' },
           go = { 'gofmt', 'golines' },
           bzl = { 'buildifier' },
+          json = { 'jq' },
         },
         notify_on_error = true,
       })
