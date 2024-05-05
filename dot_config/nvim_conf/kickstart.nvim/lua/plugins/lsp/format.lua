@@ -63,9 +63,9 @@ function M.format(bufnr)
   -- TODO(@PeterPCardenas): Spawn a separate thread instead of using callbacks.
   format_go_imports(bufnr, function()
     fix_ruff_errors(bufnr, function()
-      vim.lsp.buf.format({
-        bufnr = bufnr,
+      require('conform').format({
         async = true,
+        lsp_fallback = 'always',
       })
     end)
   end)
