@@ -12,7 +12,7 @@ local function is_valid_buffer(bufnr)
 end
 
 local function add_keymaps()
--- Manage Buffers
+  -- Manage Buffers
   vim.keymap.set({ 'v', 'n' }, '<leader>C', function()
     local bufs = vim.api.nvim_tabpage_get_var(0, 'bufs')
     require('bufdelete').bufdelete(bufs, true)

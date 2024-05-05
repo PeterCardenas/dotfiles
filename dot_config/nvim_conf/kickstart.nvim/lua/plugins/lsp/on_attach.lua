@@ -48,10 +48,10 @@ function M.on_attach(client, bufnr)
     vim.keymap.set('n', keys, func, { buffer = bufnr, desc = desc })
   end
 
-  vim.keymap.set("n", "<leader>lr", function()
-    return ":IncRename " .. vim.fn.expand("<cword>")
+  vim.keymap.set('n', '<leader>lr', function()
+    return ':IncRename ' .. vim.fn.expand('<cword>')
   end, { expr = true, desc = '[L]anguage [R]ename' })
-  nmap('<leader>la', function ()
+  nmap('<leader>la', function()
     require('actions-preview').code_actions()
   end, '[L]anguage [A]ction')
 

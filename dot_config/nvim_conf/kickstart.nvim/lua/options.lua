@@ -7,7 +7,7 @@ vim.opt.foldenable = true
 vim.opt.fillchars = 'eob: ,fold: ,foldopen:,foldsep:│,foldclose:'
 
 local current_sessionoptions = vim.opt.sessionoptions:get()
-table.insert(current_sessionoptions, "globals")
+table.insert(current_sessionoptions, 'globals')
 vim.opt.sessionoptions = current_sessionoptions
 
 -- Faster loading of nvim-ts-context-commentstring plugin

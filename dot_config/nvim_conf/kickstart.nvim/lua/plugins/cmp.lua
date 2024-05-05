@@ -36,7 +36,7 @@ return {
     luasnip.config.setup({})
     require('cmp_git').setup({
       -- Enable completion for all filetypes to get them in comments.
-      filetypes = { "*" },
+      filetypes = { '*' },
       github = {
         issues = {
           filter = 'subscribed',
@@ -44,15 +44,15 @@ return {
       },
       trigger_actions = {
         {
-          debug_name = "github_issues_and_pr",
-          trigger_character = "#",
+          debug_name = 'github_issues_and_pr',
+          trigger_character = '#',
           action = function(sources, trigger_char, callback, params, git_info)
             return sources.github:get_issues_and_prs(callback, git_info, trigger_char)
           end,
         },
         {
-          debug_name = "github_mentions",
-          trigger_character = "@",
+          debug_name = 'github_mentions',
+          trigger_character = '@',
           action = function(sources, trigger_char, callback, params, git_info)
             return sources.github:get_mentions(callback, git_info, trigger_char)
           end,
@@ -87,7 +87,7 @@ return {
           entry_filter = function(entry, context)
             -- Gets rid of noisy buffer word completion.
             return entry.completion_item.kind ~= require('cmp.types').lsp.CompletionItemKind.Text
-          end
+          end,
         },
         { name = 'luasnip' },
         { name = 'fish' },
@@ -106,10 +106,10 @@ return {
         {
           name = 'cmdline',
           option = {
-            ignore_cmds = { 'Man', '!' }
-          }
+            ignore_cmds = { 'Man', '!' },
+          },
         },
-      })
+      }),
     })
   end,
 }

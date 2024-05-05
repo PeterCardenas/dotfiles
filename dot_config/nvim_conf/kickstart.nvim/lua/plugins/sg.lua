@@ -12,19 +12,19 @@ return {
     end,
   },
   {
-    "CopilotC-Nvim/CopilotChat.nvim",
-    branch = "canary",
+    'CopilotC-Nvim/CopilotChat.nvim',
+    branch = 'canary',
     cmd = { 'CopilotChatToggle' },
     dependencies = {
-      { "zbirenbaum/copilot.lua" },
-      { "nvim-lua/plenary.nvim" },
+      { 'zbirenbaum/copilot.lua' },
+      { 'nvim-lua/plenary.nvim' },
     },
     config = function()
       require('CopilotChat').setup({
         window = {
-          layout = "float"
-        }
+          layout = 'float',
+        },
       })
     end,
-  }
+  },
 }
