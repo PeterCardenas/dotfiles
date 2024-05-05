@@ -14,7 +14,7 @@ return {
       require('conform').setup({
         formatters_by_ft = {
           lua = { 'stylua' },
-          go = { 'gofmt', 'golines' },
+          go = { 'gofumpt', 'golines' },
           bzl = { 'buildifier' },
           json = { 'jq' },
         },
