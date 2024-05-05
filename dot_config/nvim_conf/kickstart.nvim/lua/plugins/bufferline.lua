@@ -5,20 +5,20 @@ local function close_buffer(bufnum)
 end
 
 local function add_keymaps()
-  vim.keymap.set('n', '<leader>cc', function ()
+  vim.keymap.set('n', '<leader>cc', function()
     local current_bufnr = vim.api.nvim_get_current_buf()
     close_buffer(current_bufnr)
   end, { desc = 'Close buffer' })
 
-  vim.keymap.set('n', '<leader>co', function ()
+  vim.keymap.set('n', '<leader>co', function()
     require('bufferline').close_others()
   end, { desc = 'Close all other buffers' })
 
-  vim.keymap.set('n', '<leader>cl', function ()
+  vim.keymap.set('n', '<leader>cl', function()
     require('bufferline').close_in_direction('right')
   end, { desc = 'Close all buffers to the right' })
 
-  vim.keymap.set('n', '<leader>ch', function ()
+  vim.keymap.set('n', '<leader>ch', function()
     require('bufferline').close_in_direction('left')
   end, { desc = 'Close all buffers to the left' })
 
@@ -50,8 +50,8 @@ end
 ---@type LazyPluginSpec
 return {
   'akinsho/bufferline.nvim',
-  version = "*",
-  dependencies = {'nvim-tree/nvim-web-devicons'},
+  version = '*',
+  dependencies = { 'nvim-tree/nvim-web-devicons' },
   cond = function()
     return not require('utils.config').USE_HEIRLINE
   end,
@@ -61,26 +61,26 @@ return {
         close_command = close_buffer,
         right_mouse_command = nil,
         middle_mouse_command = close_buffer,
-        diagnostics = "nvim_lsp",
+        diagnostics = 'nvim_lsp',
         diagnostics_indicator = function(count, level)
-            local icon = level:match("error") and " " or " "
-            return " " .. icon .. count
+          local icon = level:match('error') and ' ' or ' '
+          return ' ' .. icon .. count
         end,
         offsets = {
           {
-            filetype = "NvimTree",
-            text = "File Explorer",
-            text_align = "center",
-            separator = false
-          }
+            filetype = 'NvimTree',
+            text = 'File Explorer',
+            text_align = 'center',
+            separator = false,
+          },
         },
         ---@type fun(buf_a: bufferline.Buffer, buf_b: bufferline.Buffer): boolean
-        sort_by = function (buf_a, buf_b)
+        sort_by = function(buf_a, buf_b)
           local modified_weight_a = buf_a.modified and 1 or 0
           local modified_weight_b = buf_b.modified and 1 or 0
           -- Most recently used buffer first (leftmost)
           return modified_weight_a > modified_weight_b
-        end
+        end,
       },
     })
   end,

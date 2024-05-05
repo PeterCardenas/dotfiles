@@ -1,7 +1,7 @@
 ---@param client lsp.Client
 ---@param bufnr integer
 local function on_attach(client, bufnr)
-  if client.name == require('typescript-tools.config').plugin_name  then
+  if client.name == require('typescript-tools.config').plugin_name then
     -- Defer to eslint for formatting.
     client.server_capabilities.documentFormattingProvider = false
     client.server_capabilities.documentRangeFormattingProvider = false

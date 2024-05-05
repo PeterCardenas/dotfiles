@@ -58,7 +58,7 @@ local tmux_navigator_group = vim.api.nvim_create_augroup('tmux_navigator_is_vim'
 vim.api.nvim_create_autocmd('VimEnter', {
   desc = 'Tell TMUX we entered neovim',
   group = tmux_navigator_group,
-  callback = function ()
+  callback = function()
     nvim_is_open = true
     set_is_vim()
   end,
@@ -78,7 +78,7 @@ vim.api.nvim_create_autocmd('VimLeavePre', {
 vim.api.nvim_create_autocmd('VimSuspend', {
   desc = 'Tell TMUX we suspended neovim',
   group = tmux_navigator_group,
-  callback = function ()
+  callback = function()
     nvim_is_open = false
     unset_is_vim()
   end,
@@ -122,14 +122,18 @@ local function poll_update_tmux_env()
   if TMUX_TIMER_ID ~= nil then
     vim.fn.timer_stop(TMUX_TIMER_ID)
   end
-  TMUX_TIMER_ID = vim.fn.timer_start(1000, vim.schedule_wrap(function()
-    update_display_from_tmux()
+  TMUX_TIMER_ID = vim.fn.timer_start(
+    1000,
+    vim.schedule_wrap(function()
+      update_display_from_tmux()
 
-    -- The vim pane option is only set when vim is open.
-    if nvim_is_open then
-      set_is_vim()
-    end
-  end), { ["repeat"] = -1 })
+      -- The vim pane option is only set when vim is open.
+      if nvim_is_open then
+        set_is_vim()
+      end
+    end),
+    { ['repeat'] = -1 }
+  )
   if TMUX_TIMER_ID == -1 then
     vim.notify('Failed to start timer for updating tmux env', vim.log.levels.ERROR)
   end
@@ -156,7 +160,7 @@ return {
     -- local tmux_directions = { 'h', 'j', 'k', 'l' }
     local tmux_directions = { 'h', 'l' }
     for _, direction in ipairs(tmux_directions) do
-      vim.keymap.set('t', '<C-' .. direction .. '>', function ()
+      vim.keymap.set('t', '<C-' .. direction .. '>', function()
         require('nvim-tmux-navigation.tmux_util').tmux_change_pane(direction)
       end, { silent = true, noremap = true })
     end

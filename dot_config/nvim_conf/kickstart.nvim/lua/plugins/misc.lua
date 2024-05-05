@@ -47,7 +47,7 @@ return {
           rc = get_config_icon('Rc'),
         },
       })
-    end
+    end,
   },
 
   -- Better picker for LSP references, definitions, and diagnostics.
@@ -377,42 +377,43 @@ return {
   {
     'stevearc/profile.nvim',
     cond = function()
-      return os.getenv("NVIM_PROFILE") ~= nil
+      return os.getenv('NVIM_PROFILE') ~= nil
     end,
     -- MUST be the first plugin to load.
     -- TODO: this doesn't ensure that with other lazy=false plugins.
     priority = 100000,
     lazy = false,
     config = function()
-      local profile_env = os.getenv("NVIM_PROFILE")
+      local profile_env = os.getenv('NVIM_PROFILE')
       if not profile_env then
-        error("NVIM_PROFILE is not set")
+        error('NVIM_PROFILE is not set')
         return
       end
-      require("profile").instrument_autocmds()
-      if profile_env:lower():match("^start") then
-        require("profile").start("*")
+      require('profile').instrument_autocmds()
+      if profile_env:lower():match('^start') then
+        require('profile').start('*')
       else
-        require("profile").instrument("*")
+        require('profile').instrument('*')
       end
       local function toggle_profile()
-        local prof = require("profile")
+        local prof = require('profile')
         if prof.is_recording() then
           prof.stop()
-          vim.ui.input({ prompt = "Save profile to:", completion = "file", default = "/tmp/neovim_lua_profile.json" }, function(filename)
+          vim.ui.input({ prompt = 'Save profile to:', completion = 'file', default = '/tmp/neovim_lua_profile.json' }, function(filename)
             if filename then
               prof.export(filename)
-              vim.notify(string.format("Wrote %s", filename))
+              vim.notify(string.format('Wrote %s', filename))
             end
           end)
         else
-          prof.start("*")
+          prof.start('*')
         end
       end
-      vim.keymap.set("", "<f1>", toggle_profile)
+      vim.keymap.set('', '<f1>', toggle_profile)
     end,
   },
 
+  -- Previewer for renaming symbols.
   {
     'smjonas/inc-rename.nvim',
     cmd = { 'IncRename' },
@@ -421,5 +422,4 @@ return {
       require('inc_rename').setup({})
     end,
   },
-
 }
