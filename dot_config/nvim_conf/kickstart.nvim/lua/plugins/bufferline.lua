@@ -74,7 +74,13 @@ return {
             separator = false
           }
         },
-        sort_by = "insert_after_current",
+        ---@type fun(buf_a: bufferline.Buffer, buf_b: bufferline.Buffer): boolean
+        sort_by = function (buf_a, buf_b)
+          local modified_weight_a = buf_a.modified and 1 or 0
+          local modified_weight_b = buf_b.modified and 1 or 0
+          -- Most recently used buffer first (leftmost)
+          return modified_weight_a > modified_weight_b
+        end
       },
     })
   end,
