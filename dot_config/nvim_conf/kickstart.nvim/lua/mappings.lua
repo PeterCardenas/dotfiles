@@ -54,19 +54,23 @@ vim.keymap.set({ 'v', 'n' }, '<leader>Y', '"+Y', { desc = 'Yank to end of line t
 vim.keymap.set({ 'v', 'n' }, '<leader>p', '"+p', { desc = 'Paste from clipboard' })
 vim.keymap.set({ 'v', 'n', 'i' }, '<C-v>', '"+p', { desc = 'Paste from clipboard' })
 
--- Set spaces per indent
-local function set_indent()
+---Set spaces per indent
+---@param indent number
+local function set_indent(indent)
+  vim.bo.expandtab = (indent > 0) -- local to buffer
+  indent = math.abs(indent)
+  vim.bo.tabstop = indent -- local to buffer
+  vim.bo.softtabstop = indent -- local to buffer
+  vim.bo.shiftwidth = indent -- local to buffer
+end
+local function request_and_set_indent()
   local input_avail, input = pcall(vim.fn.input, 'Set indent value (>0 expandtab, <=0 noexpandtab): ')
   if input_avail then
     local indent = tonumber(input)
     if not indent or indent == 0 then
       return
     end
-    vim.bo.expandtab = (indent > 0) -- local to buffer
-    indent = math.abs(indent)
-    vim.bo.tabstop = indent -- local to buffer
-    vim.bo.softtabstop = indent -- local to buffer
-    vim.bo.shiftwidth = indent -- local to buffer
+    set_indent(indent)
     local notification_msg = string.format('indent=%d %s', indent, vim.bo.expandtab and 'expandtab' or 'noexpandtab')
     vim.schedule(function()
       vim.notify(notification_msg)
@@ -74,7 +78,7 @@ local function set_indent()
   end
 end
 vim.keymap.set({ 'n', 'v' }, '<leader>ui', function()
-  set_indent()
+  request_and_set_indent()
 end, { desc = 'Change indent setting' })
 vim.keymap.set({ 'n' }, '<leader>ud', function()
   if vim.diagnostic.is_disabled(0) then

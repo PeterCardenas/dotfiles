@@ -28,9 +28,6 @@ if vim.fn.has('termguicolors') == 1 then
   vim.opt.termguicolors = true
 end
 
--- Make tab stop 4 spaces instead of 8 by default.
-vim.opt.tabstop = 4
-
 -- Make global status work
 vim.opt.laststatus = 3
 
