@@ -18,6 +18,11 @@ return {
           bzl = { 'buildifier' },
           json = { 'jq' },
         },
+        formatters = {
+          buildifier = {
+            args = { '--lint=fix' },
+          },
+        },
         notify_on_error = true,
       })
     end,
