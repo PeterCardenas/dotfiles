@@ -36,7 +36,7 @@ local DROPBAR_CONFIG = {
   },
 }
 
-vim.keymap.set({ 'n', 'v', 'i' }, '<C-o>', function()
+vim.keymap.set({ 'n', 'v' }, '<C-o>', function()
   require('dropbar.api').pick()
 end, { desc = 'Focus on breadcrumbs' })
 
