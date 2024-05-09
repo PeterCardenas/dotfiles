@@ -1,0 +1,31 @@
+[gpg]
+	program = /usr/bin/gpg
+[core]
+	editor = nvim
+	pager = delta
+	gpgpath = /usr/bin/gpg
+[delta]
+	navigate = true # use n and N to move between diff sections
+[diff]
+	tool = vimdiff
+[diff "vimdiff"]
+	command = nvim -d $BASE $LOCAL $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'
+[interactive]
+	diffFilter = delta --color-only
+[merge]
+	tool = vimdiff
+	conflictstyle = diff3
+[mergetool "vimdiff"]
+	cmd = nvim -d $BASE $LOCAL $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'
+[pull]
+	rebase = true
+[push]
+	autoSetupRemote = true
+[feature]
+	manyFiles = true
+[rebase]
+	updateRefs = true
+[commit]
+	gpgSign = true
+[init]
+	defaultBranch = main
