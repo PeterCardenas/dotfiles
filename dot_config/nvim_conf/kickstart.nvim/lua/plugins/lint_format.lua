@@ -4,6 +4,27 @@ vim.api.nvim_create_autocmd({ 'BufWritePost' }, {
   end,
 })
 
+---@param bufnr number
+local function get_buildifier_filetype(bufnr)
+  -- Logic taken from https://github.com/bazelbuild/buildtools/blob/master/build/lex.go#L125
+  local fname = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ':t')
+  fname = string.lower(fname)
+
+  if fname == 'module.bazel' then
+    return 'module'
+  elseif vim.endswith(fname, '.bzl') then
+    return 'bzl'
+  elseif vim.endswith(fname, '.sky') then
+    return 'default'
+  elseif fname == 'build' or vim.startswith(fname, 'build.') or vim.endswith(fname, '.build') then
+    return 'build'
+  elseif fname == 'workspace' or vim.startswith(fname, 'workspace.') or vim.endswith(fname, '.workspace') then
+    return 'workspace'
+  else
+    return 'default'
+  end
+end
+
 ---@type LazyPluginSpec[]
 return {
   -- Formatting.
@@ -20,7 +41,11 @@ return {
         },
         formatters = {
           buildifier = {
-            args = { '--lint=fix' },
+            ---@type fun(self: conform.JobFormatterConfig, ctx: conform.Context): string|string[]
+            args = function(_, ctx)
+              local filetype = get_buildifier_filetype(ctx.buf)
+              return { '-lint=fix', '-warnings=all', '-type', filetype }
+            end,
           },
         },
         notify_on_error = true,
