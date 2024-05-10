@@ -36,6 +36,9 @@ vim.opt.cursorline = true
 -- Number of lines to keep above and below the buffer
 vim.opt.scrolloff = 8
 
+-- Make tabs default to 4 characters wide.
+vim.opt.tabstop = 4
+
 -- Make line numbers default
 vim.wo.number = true
 
