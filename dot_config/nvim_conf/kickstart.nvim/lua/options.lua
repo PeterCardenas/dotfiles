@@ -16,6 +16,8 @@ vim.g.skip_ts_context_commentstring_module = true
 vim.filetype.add({
   filename = {
     ['.bazelrc'] = 'Bazelrc',
+    -- Add chezmoi file name.
+    ['dot_gitconfig'] = 'gitconfig',
   },
 })
 
