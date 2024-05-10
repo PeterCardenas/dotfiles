@@ -38,6 +38,7 @@ return {
           go = { 'gofumpt', 'golines' },
           bzl = { 'buildifier' },
           json = { 'jq' },
+          jsonc = { 'jq' },
         },
         formatters = {
           buildifier = {
