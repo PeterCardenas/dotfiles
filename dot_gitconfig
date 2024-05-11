@@ -1,9 +1,9 @@
 [gpg]
-	program = /usr/bin/gpg
+	program = gpg
 [core]
 	editor = nvim
 	pager = delta
-	gpgpath = /usr/bin/gpg
+	gpgpath = gpg
 [delta]
 	navigate = true # use n and N to move between diff sections
 [diff]
