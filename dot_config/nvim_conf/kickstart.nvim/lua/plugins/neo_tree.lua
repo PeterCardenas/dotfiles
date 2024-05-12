@@ -9,19 +9,43 @@ vim.api.nvim_create_autocmd('BufEnter', {
   end,
 })
 
----@type LazyPluginSpec
+vim.keymap.set('n', '<leader>ot', function()
+  require('nvim-tree.actions').tree.toggle.fn({ find_file = true })
+end, { desc = 'Toggle file explorer tree' })
+
+vim.keymap.set('n', '<leader>oo', function()
+  require('oil').toggle_float()
+end, { desc = 'Toggle oil file explorer' })
+
+---@type LazyPluginSpec[]
 return {
-  -- File Explorer
-  'nvim-tree/nvim-tree.lua',
-  lazy = true,
-  dependencies = {
-    'nvim-tree/nvim-web-devicons',
+  -- File explorer as a tree
+  {
+    'nvim-tree/nvim-tree.lua',
+    lazy = true,
+    dependencies = {
+      'nvim-tree/nvim-web-devicons',
+    },
+    config = function()
+      require('nvim-tree').setup({
+        update_focused_file = {
+          enable = true,
+        },
+      })
+    end,
   },
-  config = function()
-    require('nvim-tree').setup({
-      update_focused_file = {
-        enable = true,
-      },
-    })
-  end,
+
+  -- File explorer as an editable buffer
+  {
+    'stevearc/oil.nvim',
+    dependencies = {
+      'nvim-tree/nvim-web-devicons',
+    },
+    lazy = true,
+    config = function ()
+      require('oil').setup({
+        default_file_explorer = true,
+      })
+    end
+  },
 }
