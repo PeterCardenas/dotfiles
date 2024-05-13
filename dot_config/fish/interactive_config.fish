@@ -75,8 +75,6 @@ set -gx FZF_ALT_C_COMMAND 'fd --type d --hidden --exclude .git --follow'
 
 source $HOME/.config/fish/fzf-key-bindings.fish
 
-set -gx GPG_TTY "(tty)"
-
 set -gx RIPGREP_CONFIG_PATH $HOME/.config/ripgrep.rc
 
 set -gx BOB_CONFIG $HOME/.config/bob/config.json
