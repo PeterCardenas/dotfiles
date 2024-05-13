@@ -52,6 +52,8 @@ function M.setup()
   })
 end
 
+local enable_pyright = false
+
 ---@return table<string, lspconfig.Config>
 local function pylsp_config()
   VENV_PATH = os.getenv('HOME') .. '/.local/share/nvim/mason/packages/python-lsp-server/venv'
@@ -97,13 +99,14 @@ local function pylsp_config()
         pylsp = {
           plugins = {
             jedi = {
+              enabled = not enable_pyright,
               extra_paths = {
                 gen_files_path,
               },
             },
             -- TODO(@PeterCardenas): Replace all useful pylint rules with ruff rules.
             pylint = {
-              enabled = true,
+              enabled = not enable_pyright,
               args = {
                 '--disable=' .. table.concat(disabled_pylint_rules, ','),
               },
@@ -120,7 +123,7 @@ local function pylsp_config()
               -- }
             },
             pylsp_mypy = {
-              enabled = true,
+              enabled = not enable_pyright,
               live_mode = true,
               report_progress = true,
               -- Currently using a fork of pylsp-mypy to support venv.
@@ -209,7 +212,7 @@ function M.python_lsp_config()
     },
     -- Currently too slow and laggy in neovim.
     pyright = {
-      enabled = false,
+      enabled = enable_pyright,
     },
   }
   local ruff_configs = ruff_lsp_config()
