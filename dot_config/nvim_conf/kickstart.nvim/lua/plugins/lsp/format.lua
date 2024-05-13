@@ -96,6 +96,8 @@ local function apply_typescript_codefixes(bufnr, on_complete)
   }
 
   local lsp_constants = require('typescript-tools.protocol.constants')
+  ---@param err lsp.ResponseError|nil
+  ---@param res lsp.CodeAction
   typescript_client.request(lsp_constants.CustomMethods.BatchCodeActions, params, function(err, res)
     if err ~= nil then
       vim.notify('Error running typescript-tools code fixes: ' .. err.message, vim.log.levels.ERROR)
@@ -143,6 +145,62 @@ local function fix_typescript_errors(bufnr, on_complete)
   end)
 end
 
+---Perform async formatting on the current buffer.
+---@param bufnr integer
+---@param dry_run boolean
+---@param on_complete? fun(clients_needing_formatting: string[]): nil
+local function lsp_format(bufnr, dry_run, on_complete)
+  local formatting_clients = vim.lsp.get_clients({
+    bufnr = bufnr,
+    method = LspMethod.textDocument_formatting,
+  })
+  local formatting_params = vim.lsp.util.make_formatting_params()
+  ---@type string[]
+  local clients_needing_formatting = {}
+  local clients_to_check = #formatting_clients
+  for _, client in pairs(formatting_clients) do
+    ---@param err any
+    ---@param results lsp.TextEdit[]
+    client.request(LspMethod.textDocument_formatting, formatting_params, function(err, results, _, _)
+      if err then
+        if client.name ~= 'gopls' then
+          vim.notify('Error checking formatting: ' .. vim.inspect(err), vim.log.levels.ERROR)
+        end
+      end
+      if not dry_run then
+        vim.lsp.util.apply_text_edits(results, bufnr, client.offset_encoding)
+      end
+      for _, result in ipairs(results or {}) do
+        local current_lines = vim.api.nvim_buf_get_lines(bufnr, result.range.start.line, result.range['end'].line, false)
+        local formatted_lines = vim.split(string.gsub(result.newText, '\r\n?', '\n'), '\n', { plain = true })
+        local formatted_lines_count = #formatted_lines
+        if formatted_lines_count > 0 and formatted_lines[formatted_lines_count] == '' then
+          formatted_lines_count = formatted_lines_count - 1
+        end
+        if #current_lines ~= formatted_lines_count then
+          table.insert(clients_needing_formatting, client.name)
+        else
+          for i, line in ipairs(current_lines) do
+            if line ~= formatted_lines[i] then
+              table.insert(clients_needing_formatting, client.name)
+              break
+            end
+          end
+        end
+        if vim.tbl_contains(clients_needing_formatting, client.name) then
+          break
+        end
+      end
+      clients_to_check = clients_to_check - 1
+      if clients_to_check == 0 then
+        if on_complete ~= nil then
+          on_complete(clients_needing_formatting)
+        end
+      end
+    end, bufnr)
+  end
+end
+
 local M = {}
 
 ---@param bufnr integer
@@ -156,7 +214,7 @@ function M.format(bufnr)
 
         local function format_next()
           if index > #formatters then
-            vim.lsp.buf.format({ bufnr = bufnr, async = true })
+            lsp_format(bufnr, false)
             return
           end
           ---@type (string | string[])[]
@@ -195,15 +253,13 @@ end
 
 ---@param bufnr integer
 local function check_if_needs_formatting(bufnr)
-  local formatting_clients = vim.lsp.get_clients({
-    bufnr = bufnr,
-    method = LspMethod.textDocument_formatting,
-  })
-  local formatting_params = vim.lsp.util.make_formatting_params()
-  ---@type string[]
-  local clients_needing_formatting = {}
-  local clients_to_check = #formatting_clients
-  local function on_format_needed()
+  ---Creates the formatting diagnostic if needed.
+  ---@param clients_needing_formatting string[]
+  local function on_format_needed(clients_needing_formatting)
+    if #clients_needing_formatting == 0 then
+      vim.diagnostic.reset(format_diagnostic_namespace, bufnr)
+      return
+    end
     local lnum = get_current_lnum()
     local col = vim.fn.col('.') or 0
     ---@type Diagnostic
@@ -217,46 +273,7 @@ local function check_if_needs_formatting(bufnr)
     }
     vim.diagnostic.set(format_diagnostic_namespace, bufnr, { format_diagnostic }, {})
   end
-  for _, client in pairs(formatting_clients) do
-    ---@param err any
-    ---@param results lsp.TextEdit[]
-    client.request(LspMethod.textDocument_formatting, formatting_params, function(err, results, _, _)
-      if err then
-        if client.name ~= 'gopls' then
-          vim.notify('Error checking formatting: ' .. vim.inspect(err), vim.log.levels.ERROR)
-        end
-      end
-      for _, result in ipairs(results or {}) do
-        local current_lines = vim.api.nvim_buf_get_lines(bufnr, result.range.start.line, result.range['end'].line, false)
-        local formatted_lines = vim.split(string.gsub(result.newText, '\r\n?', '\n'), '\n', { plain = true })
-        local formatted_lines_count = #formatted_lines
-        if formatted_lines_count > 0 and formatted_lines[formatted_lines_count] == '' then
-          formatted_lines_count = formatted_lines_count - 1
-        end
-        if #current_lines ~= formatted_lines_count then
-          table.insert(clients_needing_formatting, client.name)
-        else
-          for i, line in ipairs(current_lines) do
-            if line ~= formatted_lines[i] then
-              table.insert(clients_needing_formatting, client.name)
-              break
-            end
-          end
-        end
-        if vim.tbl_contains(clients_needing_formatting, client.name) then
-          break
-        end
-      end
-      clients_to_check = clients_to_check - 1
-      if clients_to_check == 0 then
-        if #clients_needing_formatting > 0 then
-          on_format_needed()
-        else
-          vim.diagnostic.reset(format_diagnostic_namespace, bufnr)
-        end
-      end
-    end, bufnr)
-  end
+  lsp_format(bufnr, true, on_format_needed)
 end
 
 local function update_formatting_diagnostic_position(bufnr)
