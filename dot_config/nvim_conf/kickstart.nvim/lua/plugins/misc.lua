@@ -290,7 +290,7 @@ return {
     dependencies = {
       'kevinhwang91/promise-async',
     },
-    event = { 'BufReadPre', 'BufNewFile' },
+    event = { 'BufRead' },
     config = function()
       ---@diagnostic disable-next-line: missing-fields
       require('ufo').setup({
