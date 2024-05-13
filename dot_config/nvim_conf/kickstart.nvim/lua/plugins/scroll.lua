@@ -39,6 +39,20 @@ keymap('zb', function()
   require('neoscroll').zb(75, 'sine', {}, winid)
 end)
 
+-- TODO: Properly gg and G, currently this is way too slow.
+-- Reference: https://github.com/karb94/neoscroll.nvim/issues/23
+-- keymap('gg', function()
+--   local winid = vim.api.nvim_get_current_win()
+--   local bufnr = vim.api.nvim_win_get_buf(winid)
+--   require('neoscroll').scroll(-2 * vim.api.nvim_buf_line_count(0), true, 150, 'sine', { kind = 'gg', winid = winid, bufnr = bufnr }, winid)
+-- end)
+
+-- keymap('G', function()
+--   local winid = vim.api.nvim_get_current_win()
+--   local bufnr = vim.api.nvim_win_get_buf(winid)
+--   require('neoscroll').scroll(2 * vim.api.nvim_buf_line_count(0), true, 150, 'sine', { kind = 'G', winid = winid, bufnr = bufnr }, winid)
+-- end)
+
 ---@type LazyPluginSpec[]
 return {
   -- Smooth scrolling
@@ -49,6 +63,17 @@ return {
       require('neoscroll').setup({
         cursor_scrolls_alone = false,
         stop_eof = false,
+        post_hook = function(info)
+          if info == nil then
+            return
+          end
+          if info.kind == 'gg' then
+            vim.api.nvim_win_set_cursor(info.winid, { 1, 0 })
+          elseif info.kind == 'G' then
+            local line = vim.api.nvim_buf_line_count(info.bufnr)
+            vim.api.nvim_win_set_cursor(info.winid, { line, 0 })
+          end
+        end,
       })
     end,
   },
