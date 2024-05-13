@@ -56,6 +56,91 @@ local function fix_ruff_errors(bufnr, on_complete)
   end)
 end
 
+---Send batch code fixes to the typescript-tools language server.
+---@param bufnr number
+---@param on_complete? function
+local function apply_typescript_codefixes(bufnr, on_complete)
+  local typescript_client = require('typescript-tools.utils').get_typescript_client(bufnr)
+  if typescript_client == nil then
+    if on_complete ~= nil then
+      on_complete()
+    end
+    return
+  end
+
+  -- Reference: https://github.com/microsoft/TypeScript/blob/main/src/compiler/diagnosticMessages.json
+  local error_codes = {
+    -- Cannot find name '{0}'. Did you mean '{1}'?
+    2552,
+    -- Cannot find name '{0}'.
+    2304,
+    -- 'await' expressions are only allowed within async functions and at the top levels of modules.
+    1308,
+    -- Unreachable code detected.
+    7027,
+  }
+  -- Reference: https://github.com/microsoft/TypeScript/tree/main/src/services/codefixes
+  local fix_names = {
+    'import',
+    'fixAwaitInSyncFunction',
+    'fixUnreachableCode',
+  }
+
+  local params = {
+    diagnostics = vim.diagnostic.get(bufnr),
+    bufnr = bufnr,
+    error_codes = error_codes,
+    fix_names = fix_names,
+  }
+
+  local lsp_constants = require('typescript-tools.protocol.constants')
+  typescript_client.request(lsp_constants.CustomMethods.BatchCodeActions, params, function(err, res)
+    if err ~= nil then
+      vim.notify('Error running typescript-tools code fixes: ' .. err.message, vim.log.levels.ERROR)
+    else
+      vim.lsp.util.apply_workspace_edit(res.edit, 'utf-8')
+    end
+    if on_complete ~= nil then
+      on_complete()
+    end
+  end, bufnr)
+end
+
+---Remove unused imports from the current typescript file.
+---@param bufnr integer
+---@param on_complete? function
+local function remove_typescript_unused_imports(bufnr, on_complete)
+  local lsp_constants = require('typescript-tools.protocol.constants')
+  local params = { file = vim.api.nvim_buf_get_name(bufnr), mode = lsp_constants.OrganizeImportsMode.RemoveUnused }
+  local typescript_client = require('typescript-tools.utils').get_typescript_client(bufnr)
+  if typescript_client == nil then
+    if on_complete ~= nil then
+      on_complete()
+    end
+    return
+  end
+
+  typescript_client.request(lsp_constants.CustomMethods.OrganizeImports, params, function(err, res)
+    if err ~= nil then
+      vim.notify('Error running typescript-tools remove unused imports: ' .. err.message, vim.log.levels.ERROR)
+    else
+      vim.lsp.util.apply_workspace_edit(res, 'utf-8')
+    end
+    if on_complete ~= nil then
+      on_complete()
+    end
+  end, bufnr)
+end
+
+---Fix all auto-fixable typescript errors.
+---@param bufnr integer
+---@param on_complete? function
+local function fix_typescript_errors(bufnr, on_complete)
+  apply_typescript_codefixes(bufnr, function()
+    remove_typescript_unused_imports(bufnr, on_complete)
+  end)
+end
+
 local M = {}
 
 ---@param bufnr integer
@@ -63,10 +148,12 @@ function M.format(bufnr)
   -- TODO(@PeterPCardenas): Spawn a separate thread instead of using callbacks.
   format_go_imports(bufnr, function()
     fix_ruff_errors(bufnr, function()
-      require('conform').format({
-        async = true,
-        lsp_fallback = 'always',
-      })
+      fix_typescript_errors(bufnr, function()
+        require('conform').format({
+          async = true,
+          lsp_fallback = 'always',
+        })
+      end)
     end)
   end)
 end
