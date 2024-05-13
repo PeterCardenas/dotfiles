@@ -1,9 +1,11 @@
 LspMethod = vim.lsp.protocol.Methods
 
+---@alias FormatCallback fun()
+
 ---@param bufnr integer
 ---@param ls_name string
 ---@param action_type string
----@param on_complete? function
+---@param on_complete? FormatCallback
 local function commit_code_action_edit(bufnr, ls_name, action_type, on_complete)
   local params = vim.lsp.util.make_range_params()
   params.context = { only = { action_type }, diagnostics = {} }
@@ -42,14 +44,14 @@ end
 
 ---Organizes go imports.
 ---@param bufnr integer
----@param on_complete? function
+---@param on_complete? FormatCallback
 local function format_go_imports(bufnr, on_complete)
   commit_code_action_edit(bufnr, 'gopls', 'source.organizeImports', on_complete)
 end
 
 ---Fix all auto-fixable ruff lsp errors.
 ---@param bufnr integer
----@param on_complete? function
+---@param on_complete? FormatCallback
 local function fix_ruff_errors(bufnr, on_complete)
   commit_code_action_edit(bufnr, 'ruff_lsp', 'source.organizeImports', function()
     commit_code_action_edit(bufnr, 'ruff_lsp', 'source.fixAll', on_complete)
@@ -58,7 +60,7 @@ end
 
 ---Send batch code fixes to the typescript-tools language server.
 ---@param bufnr number
----@param on_complete? function
+---@param on_complete? FormatCallback
 local function apply_typescript_codefixes(bufnr, on_complete)
   local typescript_client = require('typescript-tools.utils').get_typescript_client(bufnr)
   if typescript_client == nil then
@@ -108,7 +110,7 @@ end
 
 ---Remove unused imports from the current typescript file.
 ---@param bufnr integer
----@param on_complete? function
+---@param on_complete? FormatCallback
 local function remove_typescript_unused_imports(bufnr, on_complete)
   local lsp_constants = require('typescript-tools.protocol.constants')
   local params = { file = vim.api.nvim_buf_get_name(bufnr), mode = lsp_constants.OrganizeImportsMode.RemoveUnused }
@@ -134,7 +136,7 @@ end
 
 ---Fix all auto-fixable typescript errors.
 ---@param bufnr integer
----@param on_complete? function
+---@param on_complete? FormatCallback
 local function fix_typescript_errors(bufnr, on_complete)
   apply_typescript_codefixes(bufnr, function()
     remove_typescript_unused_imports(bufnr, on_complete)
