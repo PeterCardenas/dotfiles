@@ -151,10 +151,28 @@ function M.format(bufnr)
   format_go_imports(bufnr, function()
     fix_ruff_errors(bufnr, function()
       fix_typescript_errors(bufnr, function()
-        require('conform').format({
-          async = true,
-          lsp_fallback = 'always',
-        })
+        local formatters = require('conform').list_formatters_for_buffer(bufnr)
+        local index = 1
+
+        local function format_next()
+          if index > #formatters then
+            vim.lsp.buf.format({ bufnr = bufnr, async = true })
+            return
+          end
+          ---@type (string | string[])[]
+          local formatter = {}
+          table.insert(formatter, formatters[index])
+          require('conform').format({
+            formatter = formatter,
+            async = true,
+            lsp_fallback = false,
+          }, function()
+            index = index + 1
+            format_next()
+          end)
+        end
+
+        format_next()
       end)
     end)
   end)
