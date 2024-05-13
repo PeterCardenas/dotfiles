@@ -213,6 +213,16 @@ function M.python_lsp_config()
     -- Currently too slow and laggy in neovim.
     pyright = {
       enabled = enable_pyright,
+      -- Disabled for performance reasons.
+      -- Reference: https://github.com/neovim/neovim/issues/23291
+      -- Possibly updating neovim can help: https://github.com/neovim/neovim/issues/23291#issuecomment-1817816570
+      capabilities = {
+        workspace = {
+          didChangeWatchedFiles = {
+            dynamicRegistration = false,
+          },
+        },
+      },
     },
   }
   local ruff_configs = ruff_lsp_config()
