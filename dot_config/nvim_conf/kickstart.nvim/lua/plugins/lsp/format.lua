@@ -1,12 +1,13 @@
 LspMethod = vim.lsp.protocol.Methods
 
----@alias FormatCallback fun()
+---@alias FormatCallback fun(would_edit: boolean): nil
 
 ---@param bufnr integer
 ---@param ls_name string
 ---@param action_type string
+---@param dry_run boolean
 ---@param on_complete? FormatCallback
-local function commit_code_action_edit(bufnr, ls_name, action_type, on_complete)
+local function commit_code_action_edit(bufnr, ls_name, action_type, dry_run, on_complete)
   local params = vim.lsp.util.make_range_params()
   params.context = { only = { action_type }, diagnostics = {} }
   local clients = vim.lsp.get_clients({
@@ -16,7 +17,7 @@ local function commit_code_action_edit(bufnr, ls_name, action_type, on_complete)
   })
   if #clients == 0 then
     if on_complete then
-      on_complete()
+      on_complete(false)
     end
     return
   end
@@ -28,15 +29,19 @@ local function commit_code_action_edit(bufnr, ls_name, action_type, on_complete)
       if err then
         vim.notify('Error running' .. ls_name .. ' code action: ' .. err, vim.log.levels.ERROR)
       end
+      local did_edit = false
       for _, ls_result in ipairs(ls_results or {}) do
         if ls_result.edit then
           local offset_encoding = (vim.lsp.get_client_by_id(client.id) or {}).offset_encoding or 'utf-16'
-          vim.lsp.util.apply_workspace_edit(ls_result.edit, offset_encoding)
+          did_edit = true
+          if not dry_run then
+            vim.lsp.util.apply_workspace_edit(ls_result.edit, offset_encoding)
+          end
         end
       end
       completion_count = completion_count + 1
       if completion_count == #clients and on_complete then
-        on_complete()
+        on_complete(did_edit)
       end
     end, bufnr)
   end
@@ -44,28 +49,31 @@ end
 
 ---Organizes go imports.
 ---@param bufnr integer
+---@param dry_run boolean
 ---@param on_complete? FormatCallback
-local function format_go_imports(bufnr, on_complete)
-  commit_code_action_edit(bufnr, 'gopls', 'source.organizeImports', on_complete)
+local function format_go_imports(bufnr, dry_run, on_complete)
+  commit_code_action_edit(bufnr, 'gopls', 'source.organizeImports', dry_run, on_complete)
 end
 
 ---Fix all auto-fixable ruff lsp errors.
 ---@param bufnr integer
+---@param dry_run boolean
 ---@param on_complete? FormatCallback
-local function fix_ruff_errors(bufnr, on_complete)
-  commit_code_action_edit(bufnr, 'ruff_lsp', 'source.organizeImports', function()
-    commit_code_action_edit(bufnr, 'ruff_lsp', 'source.fixAll', on_complete)
+local function fix_ruff_errors(bufnr, dry_run, on_complete)
+  commit_code_action_edit(bufnr, 'ruff_lsp', 'source.organizeImports', dry_run, function()
+    commit_code_action_edit(bufnr, 'ruff_lsp', 'source.fixAll', dry_run, on_complete)
   end)
 end
 
 ---Send batch code fixes to the typescript-tools language server.
 ---@param bufnr number
+---@param dry_run boolean
 ---@param on_complete? FormatCallback
-local function apply_typescript_codefixes(bufnr, on_complete)
+local function apply_typescript_codefixes(bufnr, dry_run, on_complete)
   local typescript_client = require('typescript-tools.utils').get_typescript_client(bufnr)
   if typescript_client == nil then
     if on_complete ~= nil then
-      on_complete()
+      on_complete(false)
     end
     return
   end
@@ -99,49 +107,63 @@ local function apply_typescript_codefixes(bufnr, on_complete)
   ---@param err lsp.ResponseError|nil
   ---@param res lsp.CodeAction
   typescript_client.request(lsp_constants.CustomMethods.BatchCodeActions, params, function(err, res)
+    local did_edit = false
     if err ~= nil then
       vim.notify('Error running typescript-tools code fixes: ' .. err.message, vim.log.levels.ERROR)
     else
-      vim.lsp.util.apply_workspace_edit(res.edit, 'utf-8')
+      did_edit = true
+      if not dry_run then
+        vim.lsp.util.apply_workspace_edit(res.edit, 'utf-8')
+      end
     end
     if on_complete ~= nil then
-      on_complete()
+      on_complete(did_edit)
     end
   end, bufnr)
 end
 
 ---Remove unused imports from the current typescript file.
 ---@param bufnr integer
+---@param dry_run boolean
 ---@param on_complete? FormatCallback
-local function remove_typescript_unused_imports(bufnr, on_complete)
+local function remove_typescript_unused_imports(bufnr, dry_run, on_complete)
   local lsp_constants = require('typescript-tools.protocol.constants')
   local params = { file = vim.api.nvim_buf_get_name(bufnr), mode = lsp_constants.OrganizeImportsMode.RemoveUnused }
   local typescript_client = require('typescript-tools.utils').get_typescript_client(bufnr)
   if typescript_client == nil then
     if on_complete ~= nil then
-      on_complete()
+      on_complete(false)
     end
     return
   end
 
   typescript_client.request(lsp_constants.CustomMethods.OrganizeImports, params, function(err, res)
+    local did_edit = false
     if err ~= nil then
       vim.notify('Error running typescript-tools remove unused imports: ' .. err.message, vim.log.levels.ERROR)
     else
-      vim.lsp.util.apply_workspace_edit(res, 'utf-8')
+      did_edit = true
+      if not dry_run then
+        vim.lsp.util.apply_workspace_edit(res, 'utf-8')
+      end
     end
     if on_complete ~= nil then
-      on_complete()
+      on_complete(did_edit)
     end
   end, bufnr)
 end
 
 ---Fix all auto-fixable typescript errors.
 ---@param bufnr integer
+---@param dry_run boolean
 ---@param on_complete? FormatCallback
-local function fix_typescript_errors(bufnr, on_complete)
-  apply_typescript_codefixes(bufnr, function()
-    remove_typescript_unused_imports(bufnr, on_complete)
+local function fix_typescript_errors(bufnr, dry_run, on_complete)
+  apply_typescript_codefixes(bufnr, dry_run, function(would_edit_from_codefix)
+    remove_typescript_unused_imports(bufnr, dry_run, function(would_edit_from_remove_unused)
+      if on_complete ~= nil then
+        on_complete(would_edit_from_codefix or would_edit_from_remove_unused)
+      end
+    end)
   end)
 end
 
@@ -158,7 +180,13 @@ local function lsp_format(bufnr, dry_run, on_complete)
   ---@type string[]
   local clients_needing_formatting = {}
   local clients_to_check = #formatting_clients
-  for _, client in pairs(formatting_clients) do
+  if clients_to_check == 0 then
+    if on_complete ~= nil then
+      on_complete(clients_needing_formatting)
+    end
+    return
+  end
+  for _, client in ipairs(formatting_clients) do
     ---@param err any
     ---@param results lsp.TextEdit[]
     client.request(LspMethod.textDocument_formatting, formatting_params, function(err, results, _, _)
@@ -201,30 +229,53 @@ local function lsp_format(bufnr, dry_run, on_complete)
   end
 end
 
-local M = {}
-
+---Check if the current buffer needs auto-fixing.
 ---@param bufnr integer
-function M.format(bufnr)
+---@param dry_run boolean If true, no edits will be made.
+---@param on_complete? fun(sources_with_formatting: string[]): nil
+local function format_with_check(bufnr, dry_run, on_complete)
+  ---@type string[]
+  local sources_with_edits = {}
+
   -- TODO(@PeterPCardenas): Spawn a separate thread instead of using callbacks.
-  format_go_imports(bufnr, function()
-    fix_ruff_errors(bufnr, function()
-      fix_typescript_errors(bufnr, function()
-        local formatters = require('conform').list_formatters_for_buffer(bufnr)
+  format_go_imports(bufnr, dry_run, function(would_edit_from_go_imports)
+    if would_edit_from_go_imports then
+      table.insert(sources_with_edits, 'gopls')
+    end
+    fix_ruff_errors(bufnr, dry_run, function(would_edit_from_ruff_errors)
+      if would_edit_from_ruff_errors then
+        table.insert(sources_with_edits, 'ruff_lsp')
+      end
+      fix_typescript_errors(bufnr, dry_run, function(would_edit_from_typescript_errors)
+        if would_edit_from_typescript_errors then
+          table.insert(sources_with_edits, 'typescript-tools')
+        end
+        local possible_formatter_names = require('conform').list_formatters_for_buffer(bufnr)
+        local formatters = require('conform').resolve_formatters(possible_formatter_names, bufnr, true)
         local index = 1
 
         local function format_next()
           if index > #formatters then
-            lsp_format(bufnr, false)
+            lsp_format(bufnr, dry_run, function(clients_that_would_format)
+              for _, client in ipairs(clients_that_would_format) do
+                table.insert(sources_with_edits, client)
+              end
+              if on_complete ~= nil then
+                on_complete(sources_with_edits)
+              end
+            end)
             return
           end
-          ---@type (string | string[])[]
-          local formatter = {}
-          table.insert(formatter, formatters[index])
+          local formatter_name = formatters[index].name
           require('conform').format({
-            formatter = formatter,
+            formatter = formatter_name,
             async = true,
+            dry_run = dry_run,
             lsp_fallback = false,
-          }, function()
+          }, function(_, would_edit_from_formatter)
+            if would_edit_from_formatter then
+              table.insert(sources_with_edits, formatter_name)
+            end
             index = index + 1
             format_next()
           end)
@@ -234,6 +285,13 @@ function M.format(bufnr)
       end)
     end)
   end)
+end
+
+local M = {}
+
+---@param bufnr integer
+function M.format(bufnr)
+  format_with_check(bufnr, false)
 end
 
 local format_diagnostic_autocmd_group = vim.api.nvim_create_augroup('FormatChecker', { clear = true })
@@ -254,9 +312,9 @@ end
 ---@param bufnr integer
 local function check_if_needs_formatting(bufnr)
   ---Creates the formatting diagnostic if needed.
-  ---@param clients_needing_formatting string[]
-  local function on_format_needed(clients_needing_formatting)
-    if #clients_needing_formatting == 0 then
+  ---@param sources_needing_formatting string[]
+  local function on_format_needed(sources_needing_formatting)
+    if #sources_needing_formatting == 0 then
       vim.diagnostic.reset(format_diagnostic_namespace, bufnr)
       return
     end
@@ -269,11 +327,11 @@ local function check_if_needs_formatting(bufnr)
       lnum = lnum,
       end_col = col,
       end_lnum = lnum,
-      message = 'Format needed from ' .. table.concat(clients_needing_formatting, ', '),
+      message = 'Format needed from ' .. table.concat(sources_needing_formatting, ', '),
     }
     vim.diagnostic.set(format_diagnostic_namespace, bufnr, { format_diagnostic }, {})
   end
-  lsp_format(bufnr, true, on_format_needed)
+  format_with_check(bufnr, true, on_format_needed)
 end
 
 local function update_formatting_diagnostic_position(bufnr)
