@@ -19,14 +19,16 @@ set -g fish_key_bindings fish_vi_key_bindings
 
 source "$HOME"/.config/fish/colors.fish
 source "$HOME"/.config/fish/completion_utils.fish
+
+# Set the SSH_AUTH_SOCK variable.
+eval (ssh-agent -c) > /dev/null
+
 # Add tmux variables to fish shell before a command is executed.
 function refresh_tmux_vars --on-event fish_preexec
   if set -q TMUX
     set -e XAUTHORITY
     set -e SSH_CONNECTION
     tmux showenv | string replace -rf '^((?:DISPLAY|SSH_CONNECTION).*?)=(.*?)$' 'set -gx $1 "$2"' | source
-    # Update the SSH_AUTH_SOCK variable.
-    eval (ssh-agent -c) > /dev/null
     # Update the GPG_TTY variable.
     set -gx GPG_TTY (tty)
   end
