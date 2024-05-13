@@ -251,7 +251,7 @@ local function format_with_check(bufnr, dry_run, on_complete)
           table.insert(sources_with_edits, 'typescript-tools')
         end
         local possible_formatter_names = require('conform').list_formatters_for_buffer(bufnr)
-        local formatters = require('conform').resolve_formatters(possible_formatter_names, bufnr, true)
+        local formatters = require('conform').resolve_formatters(possible_formatter_names, bufnr, not dry_run)
         local index = 1
 
         local function format_next()
@@ -271,6 +271,7 @@ local function format_with_check(bufnr, dry_run, on_complete)
             formatter = formatter_name,
             async = true,
             dry_run = dry_run,
+            quiet = dry_run,
             lsp_fallback = false,
           }, function(_, would_edit_from_formatter)
             if would_edit_from_formatter then
