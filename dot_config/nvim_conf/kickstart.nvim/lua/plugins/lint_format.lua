@@ -29,6 +29,8 @@ local function bazel_go_lint(abs_filepath)
     enqueue_next_bazel_go_lint()
     return
   end
+  local output_base_id = workspace_root:gsub('/', '_')
+  local output_base_flag = string.format('--output_base=$HOME/.cache/bazel/_bazel_go_build_lint_%s', output_base_id)
   local relative_filepath = string.sub(abs_filepath, #workspace_root + 2)
   local current_filename = vim.fn.fnamemodify(abs_filepath, ':t')
   local relative_parent_dir = string.sub(relative_filepath, 1, string.len(relative_filepath) - string.len(current_filename) - 1)
@@ -37,7 +39,7 @@ local function bazel_go_lint(abs_filepath)
   ---@type string[]
   local matched_targets = {}
   local handle = vim.loop.spawn('fish', {
-    args = { '-c', string.format('bazel query "%s"', query_targets) },
+    args = { '-c', string.format('bazel %s query "%s"', output_base_flag, query_targets) },
     cwd = workspace_root,
     stdio = { nil, stdout, nil },
   })
@@ -56,7 +58,7 @@ local function bazel_go_lint(abs_filepath)
       stdout:close()
       local stderr = vim.loop.new_pipe()
       handle = vim.loop.spawn('fish', {
-        args = { '-c', string.format('bazel build %s', table.concat(matched_targets, ' ')) },
+        args = { '-c', string.format('bazel %s build %s', output_base_flag, table.concat(matched_targets, ' ')) },
         cwd = workspace_root,
         stdio = { nil, nil, stderr },
       })
@@ -81,7 +83,6 @@ local function bazel_go_lint(abs_filepath)
             if line_num == nil or col_num == nil then
               return
             end
-            vim.notify('matched line: ' .. line, vim.log.levels.INFO)
             ---@type Diagnostic
             local diagnostic = {
               source = 'bazel-go-build',
@@ -114,7 +115,6 @@ local function bazel_go_lint(abs_filepath)
                 vim.fn.bufload(bufnr)
               end
               vim.bo[bufnr].buflisted = true
-              vim.notify('Setting diagnostics for ' .. file_uri .. ' at bufnr ' .. bufnr, vim.log.levels.INFO)
               vim.diagnostic.set(nogo_diagnostic_ns, bufnr, diagnostics, { underline = true })
               enqueue_next_bazel_go_lint()
             end
