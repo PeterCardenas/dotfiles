@@ -288,13 +288,6 @@ local function format_with_check(bufnr, dry_run, on_complete)
   end)
 end
 
-local M = {}
-
----@param bufnr integer
-function M.format(bufnr)
-  format_with_check(bufnr, false)
-end
-
 local format_diagnostic_autocmd_group = vim.api.nvim_create_augroup('FormatChecker', { clear = true })
 local format_diagnostic_namespace = vim.api.nvim_create_namespace('FormatChecker')
 
@@ -310,29 +303,33 @@ local function get_current_lnum()
   return lnum
 end
 
+---Creates the formatting diagnostic if needed.
+---@param bufnr integer
+---@param sources_needing_formatting string[]
+local function update_format_diagnostic(bufnr, sources_needing_formatting)
+  if #sources_needing_formatting == 0 then
+    vim.diagnostic.reset(format_diagnostic_namespace, bufnr)
+    return
+  end
+  local lnum = get_current_lnum()
+  local col = vim.fn.col('.') or 0
+  ---@type Diagnostic
+  local format_diagnostic = {
+    bufnr = bufnr,
+    col = vim.fn.col('.') or 0,
+    lnum = lnum,
+    end_col = col,
+    end_lnum = lnum,
+    message = 'Format needed from ' .. table.concat(sources_needing_formatting, ', '),
+  }
+  vim.diagnostic.set(format_diagnostic_namespace, bufnr, { format_diagnostic }, {})
+end
+
 ---@param bufnr integer
 local function check_if_needs_formatting(bufnr)
-  ---Creates the formatting diagnostic if needed.
-  ---@param sources_needing_formatting string[]
-  local function on_format_needed(sources_needing_formatting)
-    if #sources_needing_formatting == 0 then
-      vim.diagnostic.reset(format_diagnostic_namespace, bufnr)
-      return
-    end
-    local lnum = get_current_lnum()
-    local col = vim.fn.col('.') or 0
-    ---@type Diagnostic
-    local format_diagnostic = {
-      bufnr = bufnr,
-      col = vim.fn.col('.') or 0,
-      lnum = lnum,
-      end_col = col,
-      end_lnum = lnum,
-      message = 'Format needed from ' .. table.concat(sources_needing_formatting, ', '),
-    }
-    vim.diagnostic.set(format_diagnostic_namespace, bufnr, { format_diagnostic }, {})
-  end
-  format_with_check(bufnr, true, on_format_needed)
+  format_with_check(bufnr, true, function(sources_needing_formatting)
+    update_format_diagnostic(bufnr, sources_needing_formatting)
+  end)
 end
 
 local function update_formatting_diagnostic_position(bufnr)
@@ -346,6 +343,8 @@ local function update_formatting_diagnostic_position(bufnr)
   new_diagnostic.end_lnum = lnum
   vim.diagnostic.set(format_diagnostic_namespace, bufnr, { new_diagnostic }, {})
 end
+
+local M = {}
 
 ---@param bufnr integer
 function M.setup_formatting_diagnostic(bufnr)
@@ -367,6 +366,13 @@ function M.setup_formatting_diagnostic(bufnr)
       update_formatting_diagnostic_position(args.buf)
     end,
   })
+end
+
+---@param bufnr integer
+function M.format(bufnr)
+  format_with_check(bufnr, false, function(sources_needing_formatting)
+    update_format_diagnostic(bufnr, sources_needing_formatting)
+  end)
 end
 
 return M
