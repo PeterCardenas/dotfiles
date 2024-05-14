@@ -25,8 +25,12 @@ local function bazel_go_lint(abs_filepath)
   ---@type fun(path: string): string|nil
   local get_workspace_root = require('lspconfig.util').root_pattern('WORKSPACE')
   local workspace_root = get_workspace_root(abs_filepath)
+  if not workspace_root then
+    enqueue_next_bazel_go_lint()
+    return
+  end
   local dev_docker_name = vim.fn.systemlist('cat ' .. workspace_root .. '/.dev_docker_name')[1]
-  if not workspace_root or not dev_docker_name then
+  if not dev_docker_name then
     enqueue_next_bazel_go_lint()
     return
   end
