@@ -204,8 +204,16 @@ return {
     'mfussenegger/nvim-lint',
     lazy = true,
     config = function()
+      require('lint').linters.golint = {
+        name = 'golint',
+        cmd = 'golint',
+        stdin = false,
+        ignore_exitcode = true,
+        parser = require('lint.parser').from_pattern('([^:]+):([0-9]+):([0-9]+): (.+)', { 'filename', 'lnum', 'col', 'message' }),
+      }
       require('lint').linters_by_ft = {
         bzl = { 'buildifier' },
+        go = { 'golint' },
       }
     end,
   },
