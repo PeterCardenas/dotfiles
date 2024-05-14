@@ -190,6 +190,9 @@ return {
               return { '-lint=fix', '-warnings=all', '-type', filetype }
             end,
           },
+          golines = {
+            args = { '--no-reformat-tags' },
+          },
         },
         notify_on_error = true,
       })
