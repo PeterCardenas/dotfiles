@@ -111,7 +111,7 @@ local function apply_typescript_codefixes(bufnr, dry_run, on_complete)
     if err ~= nil then
       vim.notify('Error running typescript-tools code fixes: ' .. err.message, vim.log.levels.ERROR)
     else
-      did_edit = true
+      did_edit = not vim.tbl_isempty(res.edit)
       if not dry_run then
         vim.lsp.util.apply_workspace_edit(res.edit, 'utf-8')
       end
