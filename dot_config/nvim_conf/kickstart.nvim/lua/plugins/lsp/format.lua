@@ -268,7 +268,7 @@ local function format_with_check(bufnr, dry_run, on_complete)
           end
           local formatter_name = formatters[index].name
           require('conform').format({
-            formatter = formatter_name,
+            formatters = { formatter_name },
             async = true,
             dry_run = dry_run,
             quiet = dry_run,
