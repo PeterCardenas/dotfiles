@@ -52,7 +52,7 @@ function M.setup()
   })
 end
 
-local enable_pyright = false
+local enable_pyright = true
 local gen_files_path = 'bazel-out/k8-fastbuild/bin'
 
 ---@return table<string, lspconfig.Config>
@@ -123,7 +123,7 @@ local function pylsp_config()
               -- }
             },
             pylsp_mypy = {
-              enabled = not enable_pyright,
+              enabled = true,
               live_mode = true,
               report_progress = true,
               -- Currently using a fork of pylsp-mypy to support venv.
@@ -226,9 +226,12 @@ function M.python_lsp_config()
       settings = {
         python = {
           analysis = {
+            autoImportCompletions = true,
             extraPaths = {
               gen_files_path,
             },
+            diagnosticMode = 'workspace',
+            typeCheckingMode = 'off',
           },
         },
       },
