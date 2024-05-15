@@ -32,10 +32,11 @@ end
 
 ---@param bufnr integer
 ---@param ls_name string
----@param action_type string
+---@param action_type lsp.CodeActionKind
 ---@param dry_run boolean
 ---@param on_complete? FormatCallback
 local function commit_code_action_edit(bufnr, ls_name, action_type, dry_run, on_complete)
+  ---@type lsp.CodeActionParams
   local params = vim.lsp.util.make_range_params()
   params.context = { only = { action_type }, diagnostics = {} }
   local clients = vim.lsp.get_clients({
@@ -93,6 +94,12 @@ local function fix_ruff_errors(bufnr, dry_run, on_complete)
   end)
 end
 
+---@class BatchCodeActionParams
+---@field diagnostics Diagnostic[]
+---@field bufnr integer
+---@field error_codes integer[]
+---@field fix_names string[]
+
 ---Send batch code fixes to the typescript-tools language server.
 ---@param bufnr number
 ---@param dry_run boolean
@@ -124,6 +131,7 @@ local function apply_typescript_codefixes(bufnr, dry_run, on_complete)
     'fixUnreachableCode',
   }
 
+  ---@type BatchCodeActionParams
   local params = {
     diagnostics = vim.diagnostic.get(bufnr),
     bufnr = bufnr,
@@ -150,12 +158,17 @@ local function apply_typescript_codefixes(bufnr, dry_run, on_complete)
   end, bufnr)
 end
 
+---@class OrganizeImportsParams
+---@field file string
+---@field mode OrganizeImportsMode
+
 ---Remove unused imports from the current typescript file.
 ---@param bufnr integer
 ---@param dry_run boolean
 ---@param on_complete? FormatCallback
 local function remove_typescript_unused_imports(bufnr, dry_run, on_complete)
   local lsp_constants = require('typescript-tools.protocol.constants')
+  ---@type OrganizeImportsParams
   local params = { file = vim.api.nvim_buf_get_name(bufnr), mode = lsp_constants.OrganizeImportsMode.RemoveUnused }
   local typescript_client = require('typescript-tools.utils').get_typescript_client(bufnr)
   if typescript_client == nil then
