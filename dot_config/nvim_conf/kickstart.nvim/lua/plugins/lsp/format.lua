@@ -195,7 +195,7 @@ local function lsp_format(bufnr, dry_run, on_complete)
           vim.notify('Error checking formatting: ' .. vim.inspect(err), vim.log.levels.ERROR)
         end
       end
-      if not dry_run then
+      if not dry_run and results ~= nil then
         vim.lsp.util.apply_text_edits(results, bufnr, client.offset_encoding)
       end
       for _, result in ipairs(results or {}) do
