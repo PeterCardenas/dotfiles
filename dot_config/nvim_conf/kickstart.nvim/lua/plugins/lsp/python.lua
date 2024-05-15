@@ -106,7 +106,7 @@ local function pylsp_config()
             },
             -- TODO(@PeterCardenas): Replace all useful pylint rules with ruff rules.
             pylint = {
-              enabled = not enable_pyright,
+              enabled = true,
               args = {
                 '--disable=' .. table.concat(disabled_pylint_rules, ','),
               },
