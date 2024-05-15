@@ -53,6 +53,7 @@ function M.setup()
 end
 
 local enable_pyright = false
+local gen_files_path = 'bazel-out/k8-fastbuild/bin'
 
 ---@return table<string, lspconfig.Config>
 local function pylsp_config()
@@ -91,7 +92,6 @@ local function pylsp_config()
   }
   -- The following are rules that we want from pylint, but are not supported elsewhere.
   -- 'trailing-newlines'
-  local gen_files_path = 'bazel-out/k8-fastbuild/bin'
   return {
     pylsp = {
       cmd = { 'pylsp', '--log-file=/tmp/pylsp.log' },
@@ -220,6 +220,15 @@ function M.python_lsp_config()
         workspace = {
           didChangeWatchedFiles = {
             dynamicRegistration = false,
+          },
+        },
+      },
+      settings = {
+        python = {
+          analysis = {
+            extraPaths = {
+              gen_files_path,
+            },
           },
         },
       },
