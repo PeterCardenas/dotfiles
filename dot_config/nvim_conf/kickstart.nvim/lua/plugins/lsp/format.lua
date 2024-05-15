@@ -2,6 +2,34 @@ LspMethod = vim.lsp.protocol.Methods
 
 ---@alias FormatCallback fun(would_edit: boolean): nil
 
+---@param client lsp.Client
+local function get_client_offset_encoding(client)
+  return (vim.lsp.get_client_by_id(client.id) or {}).offset_encoding or 'utf-16'
+end
+
+---Check if a code action has edits.
+---@param bufnr number
+---@param code_action lsp.CodeAction|nil
+local function has_edits(bufnr, code_action)
+  if code_action == nil then
+    return false
+  end
+  if not vim.tbl_isempty(code_action.edit or {}) then
+    return false
+  end
+  for _, change in ipairs(code_action.edit.documentChanges or {}) do
+    if change.newUri ~= change.oldUri or not vim.tbl_isempty(change.edits) then
+      return true
+    end
+  end
+  for uri, change in pairs(code_action.edit.changes or {}) do
+    if not vim.tbl_isempty(change) then
+      return true
+    end
+  end
+  return false
+end
+
 ---@param bufnr integer
 ---@param ls_name string
 ---@param action_type string
@@ -32,8 +60,8 @@ local function commit_code_action_edit(bufnr, ls_name, action_type, dry_run, on_
       local did_edit = false
       for _, ls_result in ipairs(ls_results or {}) do
         if ls_result.edit then
-          local offset_encoding = (vim.lsp.get_client_by_id(client.id) or {}).offset_encoding or 'utf-16'
-          did_edit = true
+          local offset_encoding = get_client_offset_encoding(client)
+          did_edit = did_edit or has_edits(bufnr, ls_result)
           if not dry_run then
             vim.lsp.util.apply_workspace_edit(ls_result.edit, offset_encoding)
           end
@@ -111,7 +139,7 @@ local function apply_typescript_codefixes(bufnr, dry_run, on_complete)
     if err ~= nil then
       vim.notify('Error running typescript-tools code fixes: ' .. err.message, vim.log.levels.ERROR)
     else
-      did_edit = not vim.tbl_isempty(res.edit)
+      did_edit = has_edits(bufnr, res)
       if not dry_run then
         vim.lsp.util.apply_workspace_edit(res.edit, 'utf-8')
       end
@@ -196,7 +224,8 @@ local function lsp_format(bufnr, dry_run, on_complete)
         end
       end
       if not dry_run and results ~= nil then
-        vim.lsp.util.apply_text_edits(results, bufnr, client.offset_encoding)
+        local offset_encoding = get_client_offset_encoding(client)
+        vim.lsp.util.apply_text_edits(results, bufnr, offset_encoding)
       end
       for _, result in ipairs(results or {}) do
         local current_lines = vim.api.nvim_buf_get_lines(bufnr, result.range.start.line, result.range['end'].line, false)
