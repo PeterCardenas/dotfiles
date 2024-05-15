@@ -138,17 +138,17 @@ local function remove_typescript_unused_imports(bufnr, dry_run, on_complete)
   end
 
   typescript_client.request(lsp_constants.CustomMethods.OrganizeImports, params, function(err, res)
-    local did_edit = false
     if err ~= nil then
       vim.notify('Error running typescript-tools remove unused imports: ' .. err.message, vim.log.levels.ERROR)
     else
-      did_edit = true
       if not dry_run then
         vim.lsp.util.apply_workspace_edit(res, 'utf-8')
       end
     end
     if on_complete ~= nil then
-      on_complete(did_edit)
+      -- TODO: The edit is the same as the content but is very weird. It replaces the first line with the same lines and the lines that exist
+      -- below it, and then removes the lines it replaces in another edit. This is a bug in the typescript-tools server.
+      on_complete(false)
     end
   end, bufnr)
 end
