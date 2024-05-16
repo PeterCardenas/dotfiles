@@ -34,6 +34,16 @@ return {
     local luasnip = require('luasnip')
     require('luasnip.loaders.from_vscode').lazy_load()
     luasnip.config.setup({})
+    vim.keymap.set({ 'i', 's' }, '<C-n>', function()
+      if luasnip.expand_or_jumpable() then
+        return luasnip.expand_or_jump()
+      end
+    end)
+    vim.keymap.set({ 'i', 's' }, '<C-p>', function()
+      if luasnip.jumpable(-1) then
+        return luasnip.jump(-1)
+      end
+    end)
     require('cmp_git').setup({
       -- Enable completion for all filetypes to get them in comments.
       filetypes = { '*' },
@@ -70,7 +80,7 @@ return {
         ['<C-j>'] = cmp.mapping.select_next_item(),
         ['<C-k>'] = cmp.mapping.select_prev_item(),
         ['<C-d>'] = cmp.mapping.scroll_docs(-4),
-        ['<C-f>'] = cmp.mapping.scroll_docs(4),
+        ['<C-u>'] = cmp.mapping.scroll_docs(4),
         ['<C-Space>'] = cmp.mapping.complete({}),
         ['<CR>'] = cmp.mapping.confirm({
           behavior = cmp.ConfirmBehavior.Replace,
