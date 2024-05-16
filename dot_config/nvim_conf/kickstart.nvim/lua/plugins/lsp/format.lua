@@ -35,7 +35,7 @@ end
 ---@param action_type lsp.CodeActionKind
 ---@param dry_run boolean
 ---@param on_complete? FormatCallback
-local function commit_code_action_edit(bufnr, ls_name, action_type, dry_run, on_complete)
+local function fix_from_code_action(bufnr, ls_name, action_type, dry_run, on_complete)
   ---@type lsp.CodeActionParams
   local params = vim.lsp.util.make_range_params()
   params.context = { only = { action_type }, diagnostics = {} }
@@ -81,7 +81,7 @@ end
 ---@param dry_run boolean
 ---@param on_complete? FormatCallback
 local function format_go_imports(bufnr, dry_run, on_complete)
-  commit_code_action_edit(bufnr, 'gopls', 'source.organizeImports', dry_run, on_complete)
+  fix_from_code_action(bufnr, 'gopls', 'source.organizeImports', dry_run, on_complete)
 end
 
 ---Fix all auto-fixable ruff lsp errors.
@@ -89,8 +89,8 @@ end
 ---@param dry_run boolean
 ---@param on_complete? FormatCallback
 local function fix_ruff_errors(bufnr, dry_run, on_complete)
-  commit_code_action_edit(bufnr, 'ruff_lsp', 'source.organizeImports', dry_run, function()
-    commit_code_action_edit(bufnr, 'ruff_lsp', 'source.fixAll', dry_run, on_complete)
+  fix_from_code_action(bufnr, 'ruff_lsp', 'source.organizeImports', dry_run, function()
+    fix_from_code_action(bufnr, 'ruff_lsp', 'source.fixAll', dry_run, on_complete)
   end)
 end
 
