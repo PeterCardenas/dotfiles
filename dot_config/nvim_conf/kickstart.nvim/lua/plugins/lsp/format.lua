@@ -123,6 +123,8 @@ local function apply_typescript_codefixes(bufnr, dry_run, on_complete)
     1308,
     -- Unreachable code detected.
     7027,
+    -- '{0}' refers to a UMD global, but the current file is a module. Consider adding an import instead.
+    2686,
   }
   -- Reference: https://github.com/microsoft/TypeScript/tree/main/src/services/codefixes
   local fix_names = {
