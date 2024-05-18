@@ -83,10 +83,6 @@ return {
         selection_caret = '❯ ',
         mappings = {
           i = {
-            ['<C-u>'] = false,
-            ['<C-d>'] = false,
-            ['<C-n>'] = telescope_actions.cycle_history_next,
-            ['<C-p>'] = telescope_actions.cycle_history_prev,
             ['<C-j>'] = telescope_actions.move_selection_next,
             ['<C-k>'] = telescope_actions.move_selection_previous,
           },
