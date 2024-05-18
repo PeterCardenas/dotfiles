@@ -5,38 +5,31 @@ local function keymap(key, action)
 end
 
 keymap('<C-u>', function()
-  local winid = vim.api.nvim_get_current_win()
-  require('neoscroll').scroll(-vim.wo.scroll, true, 150, 'sine', {}, winid)
+  require('neoscroll').scroll(-vim.wo.scroll, true, 150, 'sine', {})
 end)
 
 keymap('<C-d>', function()
-  local winid = vim.api.nvim_get_current_win()
-  require('neoscroll').scroll(vim.wo.scroll, true, 150, 'sine', {}, winid)
+  require('neoscroll').scroll(vim.wo.scroll, true, 150, 'sine', {})
 end)
 
 keymap('<C-y>', function()
-  local winid = vim.api.nvim_get_current_win()
-  require('neoscroll').scroll(-0.10, false, 75, '', {}, winid)
+  require('neoscroll').scroll(-0.10, false, 75, '', {})
 end)
 
 keymap('<C-e>', function()
-  local winid = vim.api.nvim_get_current_win()
-  require('neoscroll').scroll(0.10, false, 75, '', {}, winid)
+  require('neoscroll').scroll(0.10, false, 75, '', {})
 end)
 
 keymap('zt', function()
-  local winid = vim.api.nvim_get_current_win()
-  require('neoscroll').zt(75, 'sine', {}, winid)
+  require('neoscroll').zt(75, 'sine', {})
 end)
 
 keymap('zz', function()
-  local winid = vim.api.nvim_get_current_win()
-  require('neoscroll').zz(75, 'sine', {}, winid)
+  require('neoscroll').zz(75, 'sine', {})
 end)
 
 keymap('zb', function()
-  local winid = vim.api.nvim_get_current_win()
-  require('neoscroll').zb(75, 'sine', {}, winid)
+  require('neoscroll').zb(75, 'sine', {})
 end)
 
 -- TODO: Properly gg and G, currently this is way too slow.

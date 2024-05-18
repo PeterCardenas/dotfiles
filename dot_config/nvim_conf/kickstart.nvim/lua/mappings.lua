@@ -78,10 +78,10 @@ vim.keymap.set({ 'n', 'v' }, '<leader>ui', function()
   request_and_set_indent()
 end, { desc = 'Change indent setting' })
 vim.keymap.set({ 'n' }, '<leader>ud', function()
-  if vim.diagnostic.is_disabled(0) then
-    vim.diagnostic.enable(0)
+  if vim.diagnostic.is_enabled({ bufnr = 0 }) then
+    vim.diagnostic.enable(true, { bufnr = 0 })
   else
-    vim.diagnostic.disable(0)
+    vim.diagnostic.enable(false, { bufnr = 0 })
   end
 end, { desc = 'Toggle diagnostics' })
 
