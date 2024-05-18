@@ -105,6 +105,8 @@ end
 ---@param dry_run boolean
 ---@param on_complete? FormatCallback
 local function apply_typescript_codefixes(bufnr, dry_run, on_complete)
+  ---@type vim.lsp.Client|nil
+  ---@diagnostic disable-next-line: assign-type-mismatch
   local typescript_client = require('typescript-tools.utils').get_typescript_client(bufnr)
   if typescript_client == nil then
     if on_complete ~= nil then
@@ -172,6 +174,8 @@ local function remove_typescript_unused_imports(bufnr, dry_run, on_complete)
   local lsp_constants = require('typescript-tools.protocol.constants')
   ---@type OrganizeImportsParams
   local params = { file = vim.api.nvim_buf_get_name(bufnr), mode = lsp_constants.OrganizeImportsMode.RemoveUnused }
+  ---@type vim.lsp.Client|nil
+  ---@diagnostic disable-next-line: assign-type-mismatch
   local typescript_client = require('typescript-tools.utils').get_typescript_client(bufnr)
   if typescript_client == nil then
     if on_complete ~= nil then
@@ -357,7 +361,7 @@ local function update_format_diagnostic(bufnr, sources_needing_formatting)
   end
   local lnum = get_current_lnum()
   local col = vim.fn.col('.') or 0
-  ---@type Diagnostic
+  ---@type vim.Diagnostic
   local format_diagnostic = {
     bufnr = bufnr,
     col = vim.fn.col('.') or 0,

@@ -72,7 +72,7 @@ local function bazel_go_lint(abs_filepath)
         return
       end
 
-      ---@type table<string, Diagnostic[]>
+      ---@type table<string, lsp.Diagnostic[]>
       local file_diagnostics = {}
       vim.loop.read_start(stderr, function(err, data)
         assert(not err, err)
@@ -87,7 +87,7 @@ local function bazel_go_lint(abs_filepath)
             if line_num == nil or col_num == nil then
               return
             end
-            ---@type Diagnostic
+            ---@type lsp.Diagnostic
             local diagnostic = {
               source = 'bazel-go-build',
               message = error_msg,

@@ -34,9 +34,9 @@ function vswitch -d "Switch neovim configurations and sync versions" -a config_n
     print_error "Version file does not contain any version"
     return 1
   end
-  set version $version_file_contents[1]
+  set requested_version $version_file_contents[1]
   if test (count $version_file_contents) -ne 1
-    print_warn "Version file has an excessive amount of contents, using the first line as the version: $version"
+    print_warn "Version file has an excessive amount of contents, using the first line as the version: $requested_version"
   end
 
   # Remove the existing link if it exists.
@@ -53,7 +53,7 @@ function vswitch -d "Switch neovim configurations and sync versions" -a config_n
     return 1
   end
   # Let bob install the right neovim version.
-  print_info "Bob is syncing to version $version..."
+  print_info "Bob is syncing to version $requested_version..."
   bob sync
   if test $status -ne 0
     print_error "Bob failed to sync."
