@@ -3,7 +3,7 @@ local M = {}
 local LspMethod = vim.lsp.protocol.Methods
 
 --  Configures a language server after it attaches to a buffer.
----@param client lsp.Client
+---@param client vim.lsp.Client
 ---@param bufnr integer
 function M.on_attach(client, bufnr)
   if client.name == 'yamlls' then
@@ -80,7 +80,7 @@ function M.on_attach(client, bufnr)
   end, { desc = 'LSP: Signature Documentation', buffer = bufnr })
   if client.server_capabilities.inlayHintProvider then
     -- Enable inlay hints by default.
-    require('vim.lsp.inlay_hint')(bufnr, true)
+    vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
     vim.keymap.set({ 'n', 'i' }, '<C-i>', function()
       vim.lsp.inlay_hint(bufnr)
     end, { desc = 'LSP: Signature Documentation', buffer = bufnr })

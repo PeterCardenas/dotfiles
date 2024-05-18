@@ -34,6 +34,9 @@ end, { desc = '[F]ind [H]elp' })
 vim.keymap.set('n', '<leader>ld', function()
   require('trouble').open('document_diagnostics')
 end, { desc = '[L]anguage [D]iagnostic' })
+vim.keymap.set('n', '<leader>lD', function()
+  require('trouble').open('workspace_diagnostics')
+end, { desc = '[L]ist [D]iagnostics' })
 vim.keymap.set('n', '<leader>fr', function()
   require('telescope.builtin').resume()
 end, { desc = '[F]ind [R]resume' })
@@ -45,7 +48,7 @@ end, { desc = '[F]ind [N]otification' })
 return {
   -- Fuzzy Finder (files, lsp, etc)
   'nvim-telescope/telescope.nvim',
-  branch = '0.1.x',
+  branch = 'master',
   lazy = true,
   dependencies = {
     'nvim-lua/plenary.nvim',

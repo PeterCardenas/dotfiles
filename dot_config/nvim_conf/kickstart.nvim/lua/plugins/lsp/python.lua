@@ -2,7 +2,7 @@ local M = {}
 local LspMethod = vim.lsp.protocol.Methods
 
 --  Configures a language server after it attaches to a buffer.
----@param client lsp.Client
+---@param client vim.lsp.Client
 ---@param _ integer buffer number
 local function on_attach(client, _)
   if client.name == 'ruff_lsp' then
@@ -21,12 +21,15 @@ local function on_attach(client, _)
       for _, diagnostic in ipairs(diagnostics) do
         local should_filter = true
         -- Remove no-name-in-module pylint error for protobuf imports.
-        if diagnostic.source == 'pylint' and diagnostic.code == 'E0611' and diagnostic.message:find('_pb2') then
-          should_filter = false
-        end
-        -- False positive not-callable error for sqlalchemy.func.count.
-        if diagnostic.source == 'pylint' and diagnostic.code == 'E1102' and diagnostic.message:find('sqlalchemy.func.count') then
-          should_filter = false
+        local message = diagnostic.message
+        if type(message) == 'string' then
+          if diagnostic.source == 'pylint' and diagnostic.code == 'E0611' and message:find('_pb2') then
+            should_filter = false
+          end
+          -- False positive not-callable error for sqlalchemy.func.count.
+          if diagnostic.source == 'pylint' and diagnostic.code == 'E1102' and message:find('sqlalchemy.func.count') then
+            should_filter = false
+          end
         end
         if should_filter then
           table.insert(filtered_diagnostics, diagnostic)

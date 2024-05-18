@@ -1,4 +1,4 @@
----@param client lsp.Client
+---@param client vim.lsp.Client
 ---@param bufnr integer
 local function on_attach(client, bufnr)
   if client.name == require('typescript-tools.config').plugin_name then
