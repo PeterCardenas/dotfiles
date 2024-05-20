@@ -1,10 +1,10 @@
 -- [[ Setting options ]]
 -- Folding setup for nvim-ufo
-vim.opt.foldcolumn = '1'
-vim.opt.foldlevel = 99
-vim.opt.foldlevelstart = 99
-vim.opt.foldenable = true
-vim.opt.fillchars = 'eob: ,fold: ,foldopen:,foldsep:│,foldclose:'
+vim.o.foldcolumn = '1'
+vim.o.foldlevel = 99
+vim.o.foldlevelstart = 99
+vim.o.foldenable = true
+vim.o.fillchars = 'eob: ,fold: ,foldopen:,foldsep:│,foldclose:'
 
 local current_sessionoptions = vim.opt.sessionoptions:get()
 table.insert(current_sessionoptions, 'globals')
@@ -27,19 +27,19 @@ vim.g.loaded_netrwPlugin = 1
 
 -- Enable true color support.
 if vim.fn.has('termguicolors') == 1 then
-  vim.opt.termguicolors = true
+  vim.o.termguicolors = true
 end
 
 -- Make global status work
-vim.opt.laststatus = 3
+vim.o.laststatus = 3
 
 -- Highlight current text line of cursor
-vim.opt.cursorline = true
+vim.o.cursorline = true
 -- Number of lines to keep above and below the buffer
-vim.opt.scrolloff = 8
+vim.o.scrolloff = 8
 
 -- Make tabs default to 4 characters wide.
-vim.opt.tabstop = 4
+vim.o.tabstop = 4
 
 -- Make line numbers default
 vim.wo.number = true
@@ -116,8 +116,8 @@ vim.diagnostic.config({
 vim.on_key(function(char)
   if vim.fn.mode() == 'n' then
     local new_hlsearch = vim.tbl_contains({ '<CR>', 'n', 'N', '*', '#', '?', '/' }, vim.fn.keytrans(char))
-    if vim.opt.hlsearch ~= new_hlsearch then
-      vim.opt.hlsearch = new_hlsearch
+    if vim.o.hlsearch ~= new_hlsearch then
+      vim.o.hlsearch = new_hlsearch
     end
   end
 end, vim.api.nvim_create_namespace('auto_hlsearch'))
