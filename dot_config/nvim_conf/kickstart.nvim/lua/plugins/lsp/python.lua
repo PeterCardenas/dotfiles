@@ -213,7 +213,7 @@ function M.python_lsp_config()
     pylyzer = {
       enabled = false,
     },
-    -- Currently too slow and laggy in neovim.
+    -- Feature rich, but slowest lsp.
     pyright = {
       enabled = enable_pyright,
       -- Disabled for performance reasons.
