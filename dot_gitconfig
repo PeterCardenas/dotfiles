@@ -29,3 +29,5 @@
 	gpgSign = true
 [init]
 	defaultBranch = main
+[advice]
+	skippedCherryPicks = false
