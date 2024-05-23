@@ -23,7 +23,7 @@ return {
       settings = {
         tsserver_max_memory = 8192,
         separate_diagnostic_server = false,
-        complete_function_calls = true,
+        complete_function_calls = false,
         tsserver_file_preferences = {
           includeInlayEnumMemberValueHints = true,
           includeInlayParameterNameHints = 'literals',
