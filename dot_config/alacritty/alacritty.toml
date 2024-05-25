@@ -14,7 +14,7 @@ key = "V"
 mods = "CONTROL"
 action = "Paste"
 
-# TokyoNight Alacritty Colors
+# TokyoNight Storm Alacritty Colors
 [colors.primary]
 background = '0x24283b'
 foreground = '0xc0caf5'
