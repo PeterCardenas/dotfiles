@@ -17,6 +17,9 @@ abbr -e (abbr -l)
 # Enable vim keybindings
 set -g fish_key_bindings fish_vi_key_bindings
 
+# Allow mouse for less
+set -gx LESS "--mouse --wheel-lines=3"
+
 source "$HOME"/.config/fish/colors.fish
 source "$HOME"/.config/fish/completion_utils.fish
 
