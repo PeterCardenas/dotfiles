@@ -48,7 +48,7 @@ end, { desc = '[F]ind [N]otification' })
 return {
   -- Fuzzy Finder (files, lsp, etc)
   'nvim-telescope/telescope.nvim',
-  branch = 'master',
+  branch = '0.1.x',
   lazy = true,
   dependencies = {
     'nvim-lua/plenary.nvim',
