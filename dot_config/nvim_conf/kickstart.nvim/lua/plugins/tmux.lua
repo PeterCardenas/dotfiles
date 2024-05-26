@@ -54,59 +54,61 @@ local function unset_is_vim()
 end
 
 local nvim_is_open = true
-local tmux_navigator_group = vim.api.nvim_create_augroup('tmux_navigator_is_vim', { clear = true })
-vim.api.nvim_create_autocmd('VimEnter', {
-  desc = 'Tell TMUX we entered neovim',
-  group = tmux_navigator_group,
-  callback = function()
-    nvim_is_open = true
-    set_is_vim()
-  end,
-})
+local function setup_tmux_autocommands()
+  local tmux_navigator_group = vim.api.nvim_create_augroup('tmux_navigator_is_vim', { clear = true })
+  vim.api.nvim_create_autocmd('VimEnter', {
+    desc = 'Tell TMUX we entered neovim',
+    group = tmux_navigator_group,
+    callback = function()
+      nvim_is_open = true
+      set_is_vim()
+    end,
+  })
 
-vim.api.nvim_create_autocmd('VimLeavePre', {
-  desc = 'Tell TMUX we left neovim',
-  group = tmux_navigator_group,
-  callback = function()
-    nvim_is_open = false
-    unset_is_vim()
-    -- Hack for making sure vim doesn't exit with a non-zero exit code.
-    -- Reference: https://github.com/neovim/neovim/issues/21856#issuecomment-1514723887
-    vim.cmd('sleep 10m')
-  end,
-})
-vim.api.nvim_create_autocmd('VimSuspend', {
-  desc = 'Tell TMUX we suspended neovim',
-  group = tmux_navigator_group,
-  callback = function()
-    nvim_is_open = false
-    unset_is_vim()
-  end,
-})
-vim.api.nvim_create_autocmd('VimResume', {
-  desc = 'Tell TMUX we resumed neovim',
-  group = tmux_navigator_group,
-  callback = function()
-    nvim_is_open = true
-    set_is_vim()
-  end,
-})
+  vim.api.nvim_create_autocmd('VimLeavePre', {
+    desc = 'Tell TMUX we left neovim',
+    group = tmux_navigator_group,
+    callback = function()
+      nvim_is_open = false
+      unset_is_vim()
+      -- Hack for making sure vim doesn't exit with a non-zero exit code.
+      -- Reference: https://github.com/neovim/neovim/issues/21856#issuecomment-1514723887
+      vim.cmd('sleep 10m')
+    end,
+  })
+  vim.api.nvim_create_autocmd('VimSuspend', {
+    desc = 'Tell TMUX we suspended neovim',
+    group = tmux_navigator_group,
+    callback = function()
+      nvim_is_open = false
+      unset_is_vim()
+    end,
+  })
+  vim.api.nvim_create_autocmd('VimResume', {
+    desc = 'Tell TMUX we resumed neovim',
+    group = tmux_navigator_group,
+    callback = function()
+      nvim_is_open = true
+      set_is_vim()
+    end,
+  })
 
-vim.api.nvim_create_autocmd('FocusLost', {
-  desc = 'Dim the colors to appear unfocused',
-  group = tmux_navigator_group,
-  callback = function()
-    require('utils.colorscheme').set_unfocused_colors()
-  end,
-})
+  vim.api.nvim_create_autocmd('FocusLost', {
+    desc = 'Dim the colors to appear unfocused',
+    group = tmux_navigator_group,
+    callback = function()
+      require('utils.colorscheme').set_unfocused_colors()
+    end,
+  })
 
-vim.api.nvim_create_autocmd('FocusGained', {
-  desc = 'Brighten the colors to appear focused',
-  group = tmux_navigator_group,
-  callback = function()
-    require('utils.colorscheme').set_focused_colors()
-  end,
-})
+  vim.api.nvim_create_autocmd('FocusGained', {
+    desc = 'Brighten the colors to appear focused',
+    group = tmux_navigator_group,
+    callback = function()
+      require('utils.colorscheme').set_focused_colors()
+    end,
+  })
+end
 
 local function update_display_from_tmux()
   local tmux_display = vim.fn.systemlist("tmux showenv | string match -rg '^DISPLAY=(.*?)$'")[1]
@@ -139,12 +141,18 @@ local function poll_update_tmux_env()
   end
 end
 
-poll_update_tmux_env()
+if vim.env.TMUX_PANE and vim.env.TMUX then
+  setup_tmux_autocommands()
+  poll_update_tmux_env()
+end
 
 ---@type LazyPluginSpec
 return {
   -- Easy navigation between splits.
   'alexghergh/nvim-tmux-navigation',
+  cond = function()
+    return vim.env.TMUX_PANE and vim.env.TMUX
+  end,
   config = function()
     require('nvim-tmux-navigation').setup({
       keybindings = {
