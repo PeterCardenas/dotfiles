@@ -11,6 +11,12 @@ fish_add_path -P $PNPM_HOME\
  "/usr/local/go/bin"\
  "$HOME/.cargo/bin"
 
+set -l os (uname -s)
+if test $os = Darwin
+  fish_add_path -P "/Applications/WezTerm.app/Contents/MacOS"\
+  "/Applications/kitty.app/Contents/MacOS"
+end
+
 set -U async_prompt_inherit_variables all
 
 set -gx XDG_CONFIG_HOME $HOME/.config
