@@ -121,13 +121,12 @@ return {
       lua_ls = {
         settings = {
           Lua = {
-            workspace = { checkThirdParty = false },
+            workspace = {
+              checkThirdParty = false,
+              library = vim.api.nvim_get_runtime_file('', true),
+            },
             telemetry = { enable = false },
             hint = { enable = true, arrayIndex = 'Disable' },
-            library = vim.tbl_extend('keep', {
-              vim.fn.expand('$VIMRUNTIME/lua'),
-              vim.fn.stdpath('config') .. '/lua',
-            }, vim.api.nvim_get_runtime_file('', true)),
           },
         },
       },
