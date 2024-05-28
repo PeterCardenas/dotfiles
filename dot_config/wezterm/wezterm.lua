@@ -1,16 +1,12 @@
--- Pull in the wezterm module so we can use its configuration helpers
 local wezterm = require('wezterm')
 
--- This will hold the configuration.
 local config = wezterm.config_builder()
 
--- This is where you actually apply your config choices
-
--- For example, changing the color scheme:
 config.color_scheme = 'Tokyo Night Storm'
 config.font = wezterm.font({ family = 'MonaspiceKr Nerd Font' })
 config.font_rules = {
-  { italic = true, font = wezterm.font('MonaspiceRn Nerd Font') },
+  { italic = true, intensity = 'Bold', font = wezterm.font({ family = 'MonaspiceRn Nerd Font', weight = 'Bold' }) },
+  { italic = true, font = wezterm.font({ family = 'MonaspiceRn Nerd Font' }) },
 }
 config.font_size = 13
 config.window_decorations = 'RESIZE'
@@ -28,5 +24,4 @@ wezterm.on('gui-startup', function(cmd)
   window:gui_window():maximize()
 end)
 
--- and finally, return the configuration to wezterm
 return config
