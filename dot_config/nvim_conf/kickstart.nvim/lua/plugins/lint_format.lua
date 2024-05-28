@@ -181,6 +181,7 @@ return {
           bzl = { 'buildifier' },
           json = { 'jq' },
           jsonc = { 'jq' },
+          fish = { 'fish_indent' },
         },
         formatters = {
           buildifier = {
@@ -192,6 +193,9 @@ return {
           },
           golines = {
             args = { '--no-reformat-tags' },
+          },
+          fish_indent = {
+            args = { '--write' },
           },
         },
         notify_on_error = true,

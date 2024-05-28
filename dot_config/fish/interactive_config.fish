@@ -1,14 +1,14 @@
 function fish_greeting
-  # Only print fortune if it exists.
-  if command -q fortune
-  else
-    return 0
-  end
-  # Print empty line for some top "padding"
-  echo
-  set_color yellow
-  fortune
-  set_color normal
+    # Only print fortune if it exists.
+    if command -q fortune
+    else
+        return 0
+    end
+    # Print empty line for some top "padding"
+    echo
+    set_color yellow
+    fortune
+    set_color normal
 end
 
 # Clear all previous abbreviations
@@ -24,28 +24,28 @@ source "$HOME"/.config/fish/colors.fish
 source "$HOME"/.config/fish/completion_utils.fish
 
 # Set the SSH_AUTH_SOCK variable.
-eval (ssh-agent -c) > /dev/null
+eval (ssh-agent -c) >/dev/null
 
 # Add tmux variables to fish shell before a command is executed.
 function refresh_tmux_vars --on-event fish_preexec
-  if set -q TMUX
-    set -e XAUTHORITY
-    set -e SSH_CONNECTION
-    tmux showenv | string replace -rf '^((?:DISPLAY|SSH_CONNECTION).*?)=(.*?)$' 'set -gx $1 "$2"' | source
-    # Update the GPG_TTY variable.
-    set -gx GPG_TTY (tty)
-  end
+    if set -q TMUX
+        set -e XAUTHORITY
+        set -e SSH_CONNECTION
+        tmux showenv | string replace -rf '^((?:DISPLAY|SSH_CONNECTION).*?)=(.*?)$' 'set -gx $1 "$2"' | source
+        # Update the GPG_TTY variable.
+        set -gx GPG_TTY (tty)
+    end
 end
 
 # OS Specific
 set -l os (uname -s)
 # WSL
 if uname -a | grep -q WSL2
-  set -gx BROWSER "/mnt/c/Program\ Files/Mozilla\ Firefox/firefox.exe"
+    set -gx BROWSER "/mnt/c/Program\ Files/Mozilla\ Firefox/firefox.exe"
 else if test $os = Darwin
-  set -gx BROWSER "/Applications/Arc.app/Contents/MacOS/Arc"
-  # iTerm2 Shell Integration
-  source ~/.iterm2_shell_integration.fish
+    set -gx BROWSER "/Applications/Arc.app/Contents/MacOS/Arc"
+    # iTerm2 Shell Integration
+    source ~/.iterm2_shell_integration.fish
 end
 
 # Set default editor to neovim.
@@ -69,7 +69,7 @@ bind -M insert \cy accept-autosuggestion
 
 # Fix gopls install for nvim.
 # Reference: https://stackoverflow.com/questions/54415733/getting-gopath-error-go-cannot-use-pathversion-syntax-in-gopath-mode-in-ubun
-set -gx GO111MODULE "on"
+set -gx GO111MODULE on
 
 # Use .gitignore for fzf
 set -gx FZF_DEFAULT_COMMAND 'fd --type f --hidden --exclude .git --follow'
@@ -118,16 +118,16 @@ abbr -a gsa "git stash apply"
 # abbr -a gcp "git cherry-pick -S"
 abbr -a gcp "git cherry-pick"
 abbr -a nuke 'git rm --cached -r .; and GIT_LFS_SKIP_SMUDGE=1 git reset --hard'
-abbr -a lg "lazygit"
+abbr -a lg lazygit
 
 # Starship
 abbr -a p "starship prompt"
 set -gx STARSHIP_LOG error
 
 # Don't accidentally run vim
-abbr -a vim "nvim"
-abbr -a vi "nvim"
-abbr -a v "nvim"
+abbr -a vim nvim
+abbr -a vi nvim
+abbr -a v nvim
 
 # Got into a broken state once when didn't detach client. Keeping this here in case it happens again.
 # abbr -a t "tmux detach-client; and tmux attach; or tmux"
@@ -142,14 +142,16 @@ abbr -a ce "chezmoi edit"
 abbr -a ca "chezmoi re-add"
 
 # VSCode shell integration
-string match -q "$TERM_PROGRAM" "vscode"
+string match -q "$TERM_PROGRAM" vscode
 and . (code --locate-shell-integration-path fish)
 
 # ROS setup
 if test -e /opt/ros/noetic/setup.bash
-  bass source /opt/ros/noetic/setup.bash
+    bass source /opt/ros/noetic/setup.bash
 end
 
 
 # The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/petercardenas/google-cloud-sdk/path.fish.inc' ]; . '/Users/petercardenas/google-cloud-sdk/path.fish.inc'; end
+if [ -f '/Users/petercardenas/google-cloud-sdk/path.fish.inc' ]
+    . '/Users/petercardenas/google-cloud-sdk/path.fish.inc'
+end
