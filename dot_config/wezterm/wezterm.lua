@@ -9,6 +9,18 @@ config.font_rules = {
   { italic = true, font = wezterm.font({ family = 'MonaspiceRn Nerd Font' }) },
 }
 config.font_size = 13
+config.harfbuzz_features = {
+  'calt',
+  'ss01',
+  'ss02',
+  'ss03',
+  'ss04',
+  'ss05',
+  'ss07',
+  'ss08',
+  'ss09',
+  'liga',
+}
 config.window_decorations = 'RESIZE'
 config.window_padding = {
   top = 0,
