@@ -16,7 +16,6 @@ config.harfbuzz_features = {
   'ss03',
   'ss04',
   'ss05',
-  'ss07',
   'ss08',
   'ss09',
   'liga',
