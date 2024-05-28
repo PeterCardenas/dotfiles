@@ -1,4 +1,4 @@
 # fnm
 if type -q fnm
-  fnm env | source
+    fnm env | source
 end
