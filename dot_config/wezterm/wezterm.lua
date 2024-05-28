@@ -30,6 +30,7 @@ config.window_padding = {
 }
 config.enable_tab_bar = false
 config.automatically_reload_config = true
+config.strikethrough_position = '0.45cell'
 
 wezterm.on('gui-startup', function(cmd)
   local _, _, window = wezterm.mux.spawn_window(cmd or {})
