@@ -78,11 +78,9 @@ vim.keymap.set({ 'n', 'v' }, '<leader>ui', function()
   request_and_set_indent()
 end, { desc = 'Change indent setting' })
 vim.keymap.set({ 'n' }, '<leader>ud', function()
-  if vim.diagnostic.is_enabled({ bufnr = 0 }) then
-    vim.diagnostic.enable(true, { bufnr = 0 })
-  else
-    vim.diagnostic.enable(false, { bufnr = 0 })
-  end
+  local current_bufnr = vim.api.nvim_get_current_buf()
+  local is_enabled_for_buf = vim.diagnostic.is_enabled({ bufnr = current_bufnr })
+  vim.diagnostic.enable(not is_enabled_for_buf, { bufnr = current_bufnr })
 end, { desc = 'Toggle diagnostics' })
 
 vim.keymap.set('n', '<leader>S.', function()
