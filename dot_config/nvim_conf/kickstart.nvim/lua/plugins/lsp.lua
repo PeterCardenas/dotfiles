@@ -79,22 +79,73 @@ return {
       end,
     },
 
+    {
+      'p00f/clangd_extensions.nvim',
+      config = function()
+        require('clangd_extensions').setup({
+          ast = {
+            role_icons = {
+              type = '',
+              declaration = '',
+              expression = '',
+              specifier = '',
+              statement = '',
+              ['template argument'] = '',
+            },
+            kind_icons = {
+              Compound = '',
+              Recovery = '',
+              TranslationUnit = '',
+              PackExpansion = '',
+              TemplateTypeParm = '',
+              TemplateTemplateParm = '',
+              TemplateParamObject = '',
+            },
+          },
+        })
+      end,
+    },
+
     -- Additional lua configuration, makes nvim stuff amazing!
     'folke/neodev.nvim',
   },
   event = { 'BufReadPre', 'BufNewFile' },
   config = function()
+    ---@type fun(path: string): string?
+    local get_clangd_root = require('lspconfig.util').root_pattern('compile_commands.json')
+    local clangd_root = get_clangd_root(vim.fn.expand('%:p:h'))
+    local home = os.getenv('HOME')
+    local clangd_enabled = clangd_root ~= nil and home ~= nil
+    local compile_commands_dir = clangd_root ~= nil and '--compile-commands-dir=' .. clangd_root .. '/' or ''
+    local clangd_cmd = home ~= nil and home .. '/.local/share/nvim/mason/bin/clangd' or ''
     -- Enable the following language servers
     -- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
     ---@type table<string, lspconfig.Config>
     local servers = {
       clangd = {
+        enabled = clangd_enabled,
         filetypes = { 'c', 'cpp', 'objc', 'objcpp', 'cuda' },
         capabilities = {
           offsetEncoding = { 'utf-16' },
           general = {
             positionEncodings = { 'utf-16' },
           },
+        },
+        cmd = {
+          clangd_cmd,
+          '--header-insertion=never',
+          '--compile-commands-dir=' .. compile_commands_dir,
+          '--query-driver=**',
+          '--background-index',
+          '--clang-tidy',
+          '--completion-style=detailed',
+          '--function-arg-placeholders',
+          '--fallback-style=llvm',
+        },
+        init_options = {
+          usePlaceholders = true,
+          completeUnimported = true,
+          clangdFileStatus = true,
         },
       },
       gopls = gopls_config(),
