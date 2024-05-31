@@ -44,6 +44,10 @@ function M.on_attach(client, bufnr)
       end
     end
   end
+  if client.name == 'clangd' then
+    require('clangd_extensions.inlay_hints').setup_autocmd()
+    require('clangd_extensions.inlay_hints').set_inlay_hints()
+  end
 
   local function nmap(keys, func, desc)
     if desc then
