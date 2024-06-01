@@ -20,7 +20,7 @@ config.harfbuzz_features = {
   'ss09',
   'liga',
 }
-config.window_decorations = 'RESIZE'
+config.window_decorations = 'NONE'
 config.window_padding = {
   top = 0,
   bottom = 0,
