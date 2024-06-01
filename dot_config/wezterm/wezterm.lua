@@ -31,6 +31,14 @@ config.enable_tab_bar = false
 config.automatically_reload_config = true
 config.strikethrough_position = '0.45cell'
 
+config.keys = {
+  {
+    key = 'v',
+    mods = 'CTRL',
+    action = wezterm.action.PasteFrom('Clipboard'),
+  },
+}
+
 wezterm.on('gui-startup', function(cmd)
   local _, _, window = wezterm.mux.spawn_window(cmd or {})
   window:gui_window():maximize()
