@@ -11,5 +11,6 @@ window-padding-y = 0
 window-padding-x = 0
 
 keybind = ctrl+enter=unbind
+keybind = ctrl+v=paste_from_clipboard
 
 theme = "tokyonight-storm"
