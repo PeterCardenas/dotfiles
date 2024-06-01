@@ -7,4 +7,9 @@ font-family-italic = "MonaspiceRn Nerd Font"
 
 window-decoration = false
 
+window-padding-y = 0
+window-padding-x = 0
+
+keybind = ctrl+enter=unbind
+
 theme = "tokyonight-storm"
