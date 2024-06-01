@@ -33,6 +33,11 @@ config.strikethrough_position = '0.45cell'
 
 config.keys = {
   {
+    key = 'q',
+    mods = 'CTRL',
+    action = wezterm.action.QuitApplication,
+  },
+  {
     key = 'v',
     mods = 'CTRL',
     action = wezterm.action.PasteFrom('Clipboard'),
