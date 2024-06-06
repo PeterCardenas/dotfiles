@@ -86,10 +86,10 @@ set -gx BOB_CONFIG $HOME/.config/bob/config.json
 set TERM xterm-256color
 
 # apt aliases
-abbr -a aptupd "sudo apt update -y"
-abbr -a aptupgd "sudo apt upgrade -y && sudo apt autoremove -y"
-abbr -a aptinst "sudo apt install -y"
-abbr -a aptrm "sudo apt remove -y"
+abbr -a aptupd "sudo nala update"
+abbr -a aptupgd "sudo nala upgrade && sudo nala autoremove"
+abbr -a aptinst "sudo nala install"
+abbr -a aptrm "sudo nala remove"
 
 # git aliases
 # TODO: Execute all commands with -S.
