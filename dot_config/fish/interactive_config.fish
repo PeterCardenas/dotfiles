@@ -31,7 +31,7 @@ function refresh_tmux_vars --on-event fish_preexec
     if set -q TMUX
         set -e XAUTHORITY
         set -e SSH_CONNECTION
-        tmux showenv | string replace -rf '^((?:DISPLAY|SSH_CONNECTION).*?)=(.*?)$' 'set -gx $1 "$2"' | source
+        tmux showenv | string replace -rf '^((?:DISPLAY|SSH_CONNECTION|XAUTHORITY).*?)=(.*?)$' 'set -gx $1 "$2"' | source
         # Update the GPG_TTY variable.
         set -gx GPG_TTY (tty)
     end
