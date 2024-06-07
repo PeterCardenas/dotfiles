@@ -91,15 +91,6 @@ function M.on_attach(client, bufnr)
 
   -- Lesser used LSP functionality
   nmap('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
-
-  -- Create a command `:Format` local to the LSP buffer
-  vim.keymap.set({ 'n', 'v' }, '<leader>lf', function()
-    require('plugins.lsp.format').format(bufnr)
-  end, {
-    desc = 'LSP: Format buffer',
-    buffer = bufnr,
-  })
-  require('plugins.lsp.format').setup_formatting_diagnostic(bufnr)
 end
 
 return M

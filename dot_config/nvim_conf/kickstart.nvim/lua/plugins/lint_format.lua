@@ -167,6 +167,20 @@ local function get_buildifier_filetype(bufnr)
   end
 end
 
+vim.api.nvim_create_autocmd({ 'BufEnter' }, {
+  desc = 'Setup formatting',
+  callback = function()
+    local bufnr = vim.api.nvim_get_current_buf()
+    require('plugins.lsp.format').setup_formatting_diagnostic(bufnr)
+    vim.keymap.set({ 'n', 'v' }, '<leader>lf', function()
+      require('plugins.lsp.format').format(bufnr)
+    end, {
+      desc = 'LSP: Format buffer',
+      buffer = bufnr,
+    })
+  end,
+})
+
 ---@type LazyPluginSpec[]
 return {
   -- Formatting.
@@ -193,9 +207,6 @@ return {
           },
           golines = {
             args = { '--no-reformat-tags' },
-          },
-          fish_indent = {
-            args = { '--write' },
           },
         },
         notify_on_error = true,
