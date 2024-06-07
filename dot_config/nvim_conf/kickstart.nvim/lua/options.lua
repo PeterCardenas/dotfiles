@@ -19,6 +19,9 @@ vim.filetype.add({
     -- Add chezmoi file name.
     ['dot_gitconfig'] = 'gitconfig',
   },
+  extension = {
+    mdx = 'markdown.mdx',
+  },
 })
 
 -- Disable netrw
