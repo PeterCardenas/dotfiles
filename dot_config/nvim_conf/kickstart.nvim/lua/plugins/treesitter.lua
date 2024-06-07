@@ -78,5 +78,6 @@ return {
         },
       },
     })
+    vim.treesitter.language.register('markdown', 'markdown.mdx')
   end,
 }

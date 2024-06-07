@@ -118,6 +118,8 @@ return {
     local clangd_enabled = clangd_root ~= nil and home ~= nil
     local compile_commands_dir = clangd_root ~= nil and '--compile-commands-dir=' .. clangd_root .. '/' or ''
     local clangd_cmd = home ~= nil and home .. '/.local/share/nvim/mason/bin/clangd' or ''
+    local pnpm_home = os.getenv('PNPM_HOME')
+    local tsserver_lib = pnpm_home ~= nil and pnpm_home .. '/global/5/node_modules/typescript/lib' or ''
     -- Enable the following language servers
     -- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
     ---@type table<string, lspconfig.Config>
@@ -183,6 +185,13 @@ return {
       },
       bzl = {
         filetypes = { 'bzl', 'Bazelrc' },
+      },
+      mdx_analyzer = {
+        init_options = {
+          typescript = {
+            tsdk = tsserver_lib,
+          },
+        },
       },
     }
     local python_lsp_config = require('plugins.lsp.python').python_lsp_config()
