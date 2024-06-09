@@ -47,6 +47,11 @@ function M.on_attach(client, bufnr)
   if client.name == 'clangd' then
     require('clangd_extensions.inlay_hints').setup_autocmd()
   end
+  if client.name == 'fish_lsp' then
+    -- Defer to fish_indent for formatting.
+    client.server_capabilities.documentFormattingProvider = false
+    client.server_capabilities.documentRangeFormattingProvider = false
+  end
 
   local function nmap(keys, func, desc)
     if desc then
