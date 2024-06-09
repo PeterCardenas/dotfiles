@@ -9,7 +9,8 @@ fish_add_path -P $PNPM_HOME \
     "$HOME/.local/bin" \
     "$HOME/go/bin" \
     /usr/local/go/bin \
-    "$HOME/.cargo/bin"
+    "$HOME/.cargo/bin" \
+    "$HOME/.fish-lsp/bin"
 
 set -l os (uname -s)
 if test $os = Darwin
