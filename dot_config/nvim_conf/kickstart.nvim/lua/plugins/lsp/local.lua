@@ -15,14 +15,6 @@ function M.setup(capabilities)
         root_dir = require('lspconfig.util').root_pattern('.git'),
       },
     },
-    fishls = {
-      enabled = false,
-      cmd = { 'fish-ls', '--stdio' },
-      filetypes = { 'fish' },
-      default_config = {
-        root_dir = require('lspconfig.util').root_pattern('.git'),
-      },
-    },
     valels = {
       cmd = { 'vale-ls' },
       filetypes = { 'markdown', 'text', 'dosini', 'yaml' },
@@ -55,6 +47,10 @@ function M.setup(capabilities)
   for server_name, _ in pairs(custom_servers) do
     setup_server(server_name)
   end
+
+  require('lspconfig').fish_lsp.setup({
+    capabilities = capabilities,
+  })
 end
 
 return M
