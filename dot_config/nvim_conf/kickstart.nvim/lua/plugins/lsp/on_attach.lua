@@ -24,6 +24,11 @@ function M.on_attach(client, bufnr)
     client.server_capabilities.documentFormattingProvider = false
     client.server_capabilities.documentRangeFormattingProvider = false
   end
+  if client.name == 'bashls' then
+    -- Defer to shfmt for formatting.
+    client.server_capabilities.documentFormattingProvider = false
+    client.server_capabilities.documentRangeFormattingProvider = false
+  end
   if client.name == 'jsonls' then
     -- Defer to jq for formatting.
     client.server_capabilities.documentFormattingProvider = false
