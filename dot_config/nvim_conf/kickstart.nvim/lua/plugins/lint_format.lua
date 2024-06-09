@@ -196,6 +196,7 @@ return {
           json = { 'jq' },
           jsonc = { 'jq' },
           fish = { 'fish_indent' },
+          sh = { 'shfmt' },
         },
         formatters = {
           buildifier = {
