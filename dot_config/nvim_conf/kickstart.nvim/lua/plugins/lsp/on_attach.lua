@@ -67,7 +67,7 @@ function M.on_attach(client, bufnr)
   end
 
   vim.keymap.set('n', '<leader>lr', function()
-    return ':IncRename ' .. vim.fn.expand('<cword>')
+    vim.lsp.buf.rename()
   end, { expr = true, desc = '[L]anguage [R]ename' })
   nmap('<leader>la', function()
     require('actions-preview').code_actions()
