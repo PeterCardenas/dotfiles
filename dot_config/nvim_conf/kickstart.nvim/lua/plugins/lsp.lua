@@ -125,7 +125,7 @@ return {
     ---@type table<string, lspconfig.Config>
     local servers = {
       clangd = {
-        enabled = clangd_enabled,
+        enabled = clangd_enabled and require('utils.config').USE_CLANGD,
         filetypes = { 'c', 'cpp', 'objc', 'objcpp', 'cuda' },
         capabilities = {
           offsetEncoding = { 'utf-16' },

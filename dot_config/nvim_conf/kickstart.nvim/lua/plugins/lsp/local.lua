@@ -51,6 +51,11 @@ function M.setup(capabilities)
   require('lspconfig').fish_lsp.setup({
     capabilities = capabilities,
   })
+
+  require('lspconfig').ccls.setup({
+    enabled = not require('utils.config').USE_CLANGD,
+    capabilities = capabilities,
+  })
 end
 
 return M
