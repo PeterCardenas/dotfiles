@@ -193,10 +193,22 @@ return {
             {
               ---@diagnostic disable-next-line: undefined-field
               require('noice').api.status.mode.get,
-              ---@diagnostic disable-next-line: undefined-field
-              cond = require('noice').api.status.mode.has,
+              cond = function()
+                ---@diagnostic disable-next-line: undefined-field
+                local has_status = require('noice').api.status.mode.has()
+                if not has_status then
+                  return false
+                end
+                ---@type string
+                ---@diagnostic disable-next-line: undefined-field
+                local status = require('noice').api.status.mode.get()
+                return vim.startswith(status, 'recording')
+              end,
               color = { fg = '#ff9e64' },
             },
+            'encoding',
+            'fileformat',
+            'filetype',
           },
         },
       })
