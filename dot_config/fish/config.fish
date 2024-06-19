@@ -15,7 +15,9 @@ fish_add_path -P $PNPM_HOME \
 set -l os (uname -s)
 if test $os = Darwin
     fish_add_path -P "/Applications/WezTerm.app/Contents/MacOS" \
-        "/Applications/kitty.app/Contents/MacOS"
+        "/Applications/kitty.app/Contents/MacOS" \
+        /opt/local/bin \
+        /opt/local/sbin
 end
 
 set -U async_prompt_inherit_variables all
