@@ -10,10 +10,10 @@ format = "[$symbol$branch(:$remote_branch)]($style) "
 format = "[$duration]($style) "
 
 [zig]
-format = "[$symbol($version)]($style)"
+format = "[$symbol($version)]($style) "
 
 [python]
-format = "[${symbol}${pyenv_prefix}(${version} )(\\($virtualenv\\) )]($style)"
+format = "[${symbol}${pyenv_prefix}(${version} )(\\($virtualenv\\) )]($style) "
 
 [rust]
 format = "[$symbol($version)]($style) "
@@ -25,7 +25,7 @@ format = "[$symbol($version)]($style) "
 format = "[$symbol$version]($style) "
 
 [golang]
-format = "[$symbol]($style)"
+format = "[$symbol]($style) "
 
 [c]
 format = "[$symbol$version]($style) "
