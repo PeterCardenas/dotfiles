@@ -21,6 +21,10 @@ font-feature = "ss01"
 font-feature = "ss02"
 font-feature = "ss03"
 
+# Underline is a bit high (especially for replace mode in fish shell).
 adjust-underline-position = 3
+# Tmux doesn't respond well to calculating grapheme widths correctly.
+# TODO: Migrate away from tmux
+grapheme-width-method = legacy
 
 theme = "tokyonight-storm"
