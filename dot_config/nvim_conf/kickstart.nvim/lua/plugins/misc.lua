@@ -412,4 +412,14 @@ return {
       vim.keymap.set('', '<f1>', toggle_profile)
     end,
   },
+
+  -- Add ghostty completion + syntax
+  {
+    'ghostty',
+    dir = '/Applications/Ghostty.app/Contents/Resources/vim/vimfiles/',
+    lazy = false,
+    cond = function()
+      return vim.fn.executable('ghostty') == 1
+    end,
+  },
 }
