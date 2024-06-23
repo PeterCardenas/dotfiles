@@ -16,6 +16,15 @@ abbr -e (abbr -l)
 
 # Enable vim keybindings
 set -g fish_key_bindings fish_vi_key_bindings
+# Bar cursor for insert mode
+set -g fish_cursor_insert line
+# Block cursor for normal and visual mode
+set -g fish_cursor_default block
+# Underline cursor for replace mode
+set -g fish_cursor_replace_one underscore
+set -g fish_cursor_replace underscore
+# Force cursor for tmux (since it is supported).
+set -g fish_vi_force_cursor 1
 
 # Allow mouse for less
 set -gx LESS "--mouse --wheel-lines=3"
