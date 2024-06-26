@@ -104,12 +104,15 @@ return {
       },
     })
 
-    cmp.setup.cmdline('/', {
+    ---@type cmp.ConfigSchema
+    local search_config = {
       mapping = cmp.mapping.preset.cmdline(),
       sources = {
         { name = 'buffer' },
       },
-    })
+    }
+    cmp.setup.cmdline('/', search_config)
+    cmp.setup.cmdline('?', search_config)
     cmp.setup.cmdline(':', {
       mapping = cmp.mapping.preset.cmdline(),
       sources = cmp.config.sources({
