@@ -29,8 +29,8 @@ set -g fish_vi_force_cursor 1
 # Allow mouse for less
 set -gx LESS "--mouse --wheel-lines=3"
 
-source "$HOME"/.config/fish/colors.fish
-source "$HOME"/.config/fish/completion_utils.fish
+source $HOME/.config/fish/colors.fish
+source $HOME/.config/fish/completion_utils.fish
 
 # Set the SSH_AUTH_SOCK variable.
 eval (ssh-agent -c) >/dev/null
