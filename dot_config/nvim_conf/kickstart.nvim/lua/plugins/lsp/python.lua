@@ -1,6 +1,9 @@
 local M = {}
 local LspMethod = vim.lsp.protocol.Methods
 
+local enable_pyright = true
+local gen_files_path = 'bazel-out/k8-fastbuild/bin'
+
 --  Configures a language server after it attaches to a buffer.
 ---@param client vim.lsp.Client
 ---@param _ integer buffer number
@@ -12,6 +15,7 @@ local function on_attach(client, _)
   if client.name == 'pylsp' then
     -- Do not use code actions from pylsp since they are slow for now.
     client.server_capabilities.codeActionProvider = false
+    client.server_capabilities.documentSymbolProvider = not enable_pyright
     ---@param result lsp.PublishDiagnosticsParams
     ---@param ctx lsp.HandlerContext
     ---@param config any
@@ -54,9 +58,6 @@ function M.setup()
     end,
   })
 end
-
-local enable_pyright = true
-local gen_files_path = 'bazel-out/k8-fastbuild/bin'
 
 ---@return table<string, lspconfig.Config>
 local function pylsp_config()
