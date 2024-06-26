@@ -20,7 +20,7 @@ if test $os = Darwin
         /opt/local/sbin
 end
 
-set -U async_prompt_inherit_variables all
+set -g async_prompt_inherit_variables all
 
 set -gx XDG_CONFIG_HOME $HOME/.config
 
