@@ -132,6 +132,7 @@ return {
           },
         },
         routes = {
+          -- Filter out some unnecessary notifications
           {
             filter = {
               event = 'msg_show',
@@ -141,6 +142,7 @@ return {
                 { find = '; before #%d+' },
                 { find = '%d fewer lines' },
                 { find = '%d more lines' },
+                { find = 'No lines in buffer' },
               },
             },
             opts = { skip = true },
