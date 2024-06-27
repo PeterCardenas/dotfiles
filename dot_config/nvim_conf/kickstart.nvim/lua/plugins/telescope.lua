@@ -14,9 +14,10 @@ vim.keymap.set('n', '<leader>/', function()
   }))
 end, { desc = '[/] Fuzzily search in current buffer' })
 
-vim.keymap.set('n', '<leader>fb', function()
+vim.keymap.set('n', '<leader>bf', function()
   require('telescope.builtin').buffers({
-    ignore_current_buffer = true
+    ignore_current_buffer = true,
+    sort_mru = true,
   })
 end)
 

@@ -170,6 +170,9 @@ return {
     'nvim-lualine/lualine.nvim',
     -- See `:help lualine.txt`
     config = function()
+      local function get_modified_icon()
+        return ' '
+      end
       require('lualine').setup({
         options = {
           icons_enabled = true,
@@ -190,6 +193,15 @@ return {
                 hint = '󰛩 ',
               },
             },
+          },
+          lualine_c = {
+            {
+              get_modified_icon,
+              cond = function()
+                return vim.bo.modified
+              end,
+            },
+            'filename',
           },
           lualine_x = {
             {
