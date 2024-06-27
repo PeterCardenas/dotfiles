@@ -6,6 +6,8 @@ vim.o.foldlevelstart = 99
 vim.o.foldenable = true
 vim.o.fillchars = 'eob: ,fold: ,foldopen:,foldsep:│,foldclose:'
 
+vim.o.showtabline = require('utils.config').USE_TABLINE and 2 or 0
+
 local current_sessionoptions = vim.opt.sessionoptions:get()
 table.insert(current_sessionoptions, 'globals')
 vim.opt.sessionoptions = current_sessionoptions

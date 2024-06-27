@@ -2,6 +2,7 @@
 vim.keymap.set('n', '<leader>fo', function()
   require('telescope.builtin').oldfiles()
 end, { desc = '[F]ind [O]ld files' })
+
 vim.keymap.set('n', '<leader>/', function()
   -- You can pass additional configuration to telescope to change theme, layout, etc.
   require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes').get_dropdown({
@@ -12,15 +13,25 @@ vim.keymap.set('n', '<leader>/', function()
     },
   }))
 end, { desc = '[/] Fuzzily search in current buffer' })
+
+vim.keymap.set('n', '<leader>fb', function()
+  require('telescope.builtin').buffers({
+    ignore_current_buffer = true
+  })
+end)
+
 vim.keymap.set('n', '<leader>ff', function()
   require('telescope.builtin').find_files({ hidden = true })
 end, { desc = '[F]ind [F]iles' })
+
 vim.keymap.set('n', '<leader>fF', function()
   require('telescope.builtin').find_files({ hidden = true, no_ignore = true })
 end, { desc = '[F]ind Any [F]ile' })
+
 vim.keymap.set('n', '<leader>fw', function()
   require('telescope').extensions.live_grep_args.live_grep_args()
 end, { desc = '[F]ind [W]ords with ripgrep' })
+
 vim.keymap.set('n', '<leader>fW', function()
   require('telescope.builtin').live_grep({
     additional_args = function(args)
@@ -28,18 +39,23 @@ vim.keymap.set('n', '<leader>fW', function()
     end,
   })
 end, { desc = '[F]ind [W]ords with ripgrep across all files' })
+
 vim.keymap.set('n', '<leader>fh', function()
   require('telescope.builtin').help_tags()
 end, { desc = '[F]ind [H]elp' })
+
 vim.keymap.set('n', '<leader>ld', function()
   require('trouble').open('document_diagnostics')
 end, { desc = '[L]anguage [D]iagnostic' })
+
 vim.keymap.set('n', '<leader>lD', function()
   require('trouble').open('workspace_diagnostics')
 end, { desc = '[L]ist [D]iagnostics' })
+
 vim.keymap.set('n', '<leader>fr', function()
   require('telescope.builtin').resume()
 end, { desc = '[F]ind [R]resume' })
+
 vim.keymap.set('n', '<leader>fn', function()
   require('telescope').extensions.notify.notify()
 end, { desc = '[F]ind [N]otification' })

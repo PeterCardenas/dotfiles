@@ -1,8 +1,3 @@
--- Always show tabline
-vim.o.showtabline = 2
--- TODO: wtf is this?
-vim.cmd([[au FileType * if index(['wipe', 'delete'], &bufhidden) >= 0 | set nobuflisted | endif]])
-
 -- Autocmds to make the internal buffer list state in sync with the actual buffers.
 local function is_valid_buffer(bufnr)
   if not bufnr or bufnr < 1 then
@@ -206,7 +201,10 @@ local function register_autocmds()
   })
 end
 
-if require('utils.config').USE_HEIRLINE then
+if require('utils.config').USE_HEIRLINE and require('utils.config').USE_TABLINE then
+  -- TODO: wtf is this?
+  vim.cmd([[au FileType * if index(['wipe', 'delete'], &bufhidden) >= 0 | set nobuflisted | endif]])
+
   register_autocmds()
   add_keymaps()
 end
@@ -216,7 +214,7 @@ return {
   -- Tabline (Also has a winbar and statusline that are not currently used)
   'rebelot/heirline.nvim',
   cond = function()
-    return require('utils.config').USE_HEIRLINE
+    return require('utils.config').USE_HEIRLINE and require('utils.config').USE_TABLINE
   end,
   config = function()
     -- [[ Configure heirline ]]
