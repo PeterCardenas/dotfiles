@@ -34,6 +34,18 @@ local DROPBAR_CONFIG = {
       }
     end,
   },
+  sources = {
+    path = {
+      ---Add custom icon when buffer is modified.
+      ---@param sym dropbar_symbol_t
+      ---@return dropbar_symbol_t
+      modified = function(sym)
+        sym.name = sym.name .. ' '
+        sym.name_hl = 'DiagnosticWarn'
+        return sym
+      end,
+    },
+  },
 }
 
 vim.keymap.set({ 'n', 'v' }, '<C-o>', function()
