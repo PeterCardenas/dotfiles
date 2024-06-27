@@ -2,7 +2,7 @@ LspMethod = vim.lsp.protocol.Methods
 
 ---@alias FormatCallback fun(would_edit: boolean): nil
 
----@param client lsp.Client
+---@param client vim.lsp.Client
 local function get_client_offset_encoding(client)
   return (vim.lsp.get_client_by_id(client.id) or {}).offset_encoding or 'utf-16'
 end
@@ -95,7 +95,7 @@ local function fix_ruff_errors(bufnr, dry_run, on_complete)
 end
 
 ---@class BatchCodeActionParams
----@field diagnostics Diagnostic[]
+---@field diagnostics vim.Diagnostic[]
 ---@field bufnr integer
 ---@field error_codes integer[]
 ---@field fix_names string[]
