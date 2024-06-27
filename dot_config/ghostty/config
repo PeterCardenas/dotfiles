@@ -3,6 +3,8 @@
 
 font-family = "MonaspiceKr Nerd Font"
 font-family-bold-italic = "MonaspiceRn Nerd Font"
+font-style-bold-italic = "Bold"
+font-style-italic = "Medium"
 font-family-italic = "MonaspiceRn Nerd Font"
 
 window-decoration = false
