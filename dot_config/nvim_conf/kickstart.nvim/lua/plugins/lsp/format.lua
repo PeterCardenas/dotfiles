@@ -205,6 +205,13 @@ end
 ---@param dry_run boolean
 ---@param on_complete? FormatCallback
 local function fix_typescript_errors(bufnr, dry_run, on_complete)
+  local filetype = vim.api.nvim_get_option_value('filetype', { buf = bufnr })
+  if not vim.tbl_contains(require('utils.typescript').SUPPORTED_FT, filetype) then
+    if on_complete ~= nil then
+      on_complete(false)
+    end
+    return
+  end
   apply_typescript_codefixes(bufnr, dry_run, function(would_edit_from_codefix)
     remove_typescript_unused_imports(bufnr, dry_run, function(would_edit_from_remove_unused)
       if on_complete ~= nil then
