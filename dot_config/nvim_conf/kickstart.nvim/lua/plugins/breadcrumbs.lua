@@ -1,9 +1,14 @@
 ---@type dropbar_configs_t
 local DROPBAR_CONFIG = {
   icons = {
+    kinds = {
+      symbols = {
+        Folder = '',
+      },
+    },
     ui = {
       bar = {
-        separator = '> ',
+        separator = '/',
       },
       menu = {
         indicator = '> ',
@@ -13,7 +18,6 @@ local DROPBAR_CONFIG = {
   bar = {
     sources = function(buf, _)
       local sources = require('dropbar.sources')
-      local utils = require('dropbar.utils')
       if vim.bo[buf].ft == 'markdown' then
         return {
           sources.path,
@@ -27,10 +31,6 @@ local DROPBAR_CONFIG = {
       end
       return {
         sources.path,
-        utils.source.fallback({
-          sources.lsp,
-          sources.treesitter,
-        }),
       }
     end,
   },
