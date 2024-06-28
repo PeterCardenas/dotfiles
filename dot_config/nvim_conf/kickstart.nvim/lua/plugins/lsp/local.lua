@@ -52,9 +52,15 @@ function M.setup(capabilities)
     capabilities = capabilities,
   })
 
+  local ccls_capabilities = require('utils.table').merge_tables(capabilities, {
+    offsetEncoding = { 'utf-16' },
+    general = {
+      positionEncodings = { 'utf-16' },
+    },
+  })
   require('lspconfig').ccls.setup({
     enabled = not require('utils.config').USE_CLANGD,
-    capabilities = capabilities,
+    capabilities = ccls_capabilities,
   })
 end
 
