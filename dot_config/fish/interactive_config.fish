@@ -33,7 +33,9 @@ source $HOME/.config/fish/colors.fish
 source $HOME/.config/fish/completion_utils.fish
 
 # Set the SSH_AUTH_SOCK variable.
-eval (ssh-agent -c) >/dev/null
+if not set -q SSH_AUTH_SOCK
+    eval (ssh-agent -c) >/dev/null
+end
 
 # Add tmux variables to fish shell before a command is executed.
 function refresh_tmux_vars --on-event fish_preexec
@@ -41,7 +43,8 @@ function refresh_tmux_vars --on-event fish_preexec
         set -e XAUTHORITY
         set -e SSH_CONNECTION
         set -e SSH_TTY
-        tmux showenv | string replace -rf '^((?:DISPLAY|SSH_CONNECTION|SSH_TTY|XAUTHORITY).*?)=(.*?)$' 'set -gx $1 "$2"' | source
+        set -e SSH_AUTH_SOCK
+        tmux showenv | string replace -rf '^((?:DISPLAY|SSH_CONNECTION|SSH_TTY|XAUTHORITY|SSH_AUTH_SOCK).*?)=(.*?)$' 'set -gx $1 "$2"' | source
         # Update the GPG_TTY variable.
         set -gx GPG_TTY (tty)
     end
