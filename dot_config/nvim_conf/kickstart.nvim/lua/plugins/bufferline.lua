@@ -4,23 +4,25 @@ local function close_buffer(bufnum)
   require('bufdelete').bufdelete(bufnum, false)
 end
 
+local nmap = require('utils.keymap').nmap
+
 local function add_keymaps()
-  vim.keymap.set('n', '<leader>cc', function()
+  nmap('Close buffer', 'cc', function()
     local current_bufnr = vim.api.nvim_get_current_buf()
     close_buffer(current_bufnr)
-  end, { desc = 'Close buffer' })
+  end)
 
-  vim.keymap.set('n', '<leader>co', function()
+  nmap('Close all other buffers', 'co', function()
     require('bufferline').close_others()
-  end, { desc = 'Close all other buffers' })
+  end)
 
-  vim.keymap.set('n', '<leader>cl', function()
+  nmap('Close all buffers to the right', 'cl', function()
     require('bufferline').close_in_direction('right')
-  end, { desc = 'Close all buffers to the right' })
+  end)
 
-  vim.keymap.set('n', '<leader>ch', function()
+  nmap('Close all buffers to the left', 'ch', function()
     require('bufferline').close_in_direction('left')
-  end, { desc = 'Close all buffers to the left' })
+  end)
 
   vim.keymap.set('n', '<S-l>', function()
     local navigation_offset = vim.v.count > 0 and vim.v.count or 1
@@ -32,15 +34,15 @@ local function add_keymaps()
     require('bufferline').cycle(navigation_offset)
   end, { desc = 'Previous buffer' })
 
-  vim.keymap.set('n', '<leader>rl', function()
+  nmap('Move buffer tab right', 'rl', function()
     local move_offset = vim.v.count > 0 and vim.v.count or 1
     require('bufferline').move(move_offset)
-  end, { desc = 'Move buffer tab right' })
+  end)
 
-  vim.keymap.set('n', '<leader>rh', function()
+  nmap('Move buffer tab left', 'rh', function()
     local move_offset = -(vim.v.count > 0 and vim.v.count or 1)
     require('bufferline').move(move_offset)
-  end, { desc = 'Move buffer tab left' })
+  end)
 end
 
 if not require('utils.config').USE_HEIRLINE and require('utils.config').USE_TABLINE then

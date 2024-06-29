@@ -1,9 +1,11 @@
--- Telescope keymaps
-vim.keymap.set('n', '<leader>fo', function()
-  require('telescope.builtin').oldfiles()
-end, { desc = '[F]ind [O]ld files' })
+local nmap = require('utils.keymap').nmap
 
-vim.keymap.set('n', '<leader>/', function()
+-- Telescope keymaps
+nmap('[F]ind [O]ld files', 'fo', function()
+  require('telescope.builtin').oldfiles()
+end)
+
+nmap('[/] Fuzzily search in current buffer', '/', function()
   -- You can pass additional configuration to telescope to change theme, layout, etc.
   require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes').get_dropdown({
     winblend = 10,
@@ -12,54 +14,54 @@ vim.keymap.set('n', '<leader>/', function()
       width = 0.8,
     },
   }))
-end, { desc = '[/] Fuzzily search in current buffer' })
+end)
 
-vim.keymap.set('n', '<leader>bf', function()
+nmap('[F]ind [B]uffers', 'bf', function()
   require('telescope.builtin').buffers({
     ignore_current_buffer = true,
     sort_mru = true,
   })
 end)
 
-vim.keymap.set('n', '<leader>ff', function()
+nmap('[F]ind [F]iles', 'ff', function()
   require('telescope.builtin').find_files({ hidden = true })
-end, { desc = '[F]ind [F]iles' })
+end)
 
-vim.keymap.set('n', '<leader>fF', function()
+nmap('[F]ind Any [F]ile', 'fF', function()
   require('telescope.builtin').find_files({ hidden = true, no_ignore = true })
-end, { desc = '[F]ind Any [F]ile' })
+end)
 
-vim.keymap.set('n', '<leader>fw', function()
+nmap('[F]ind [W]ords with ripgrep', 'fw', function()
   require('telescope').extensions.live_grep_args.live_grep_args()
-end, { desc = '[F]ind [W]ords with ripgrep' })
+end)
 
-vim.keymap.set('n', '<leader>fW', function()
+nmap('[F]ind [W]ords with ripgrep across all files', 'fW', function()
   require('telescope.builtin').live_grep({
     additional_args = function(args)
       return vim.list_extend(args, { '--hidden', '--no-ignore' })
     end,
   })
-end, { desc = '[F]ind [W]ords with ripgrep across all files' })
+end)
 
-vim.keymap.set('n', '<leader>fh', function()
+nmap('[F]ind [H]elp', 'fh', function()
   require('telescope.builtin').help_tags()
-end, { desc = '[F]ind [H]elp' })
+end)
 
-vim.keymap.set('n', '<leader>ld', function()
+nmap('[L]anguage [D]iagnostic', 'ld', function()
   require('trouble').open('document_diagnostics')
-end, { desc = '[L]anguage [D]iagnostic' })
+end)
 
-vim.keymap.set('n', '<leader>lD', function()
+nmap('[L]ist [D]iagnostics', 'lD', function()
   require('trouble').open('workspace_diagnostics')
-end, { desc = '[L]ist [D]iagnostics' })
+end)
 
-vim.keymap.set('n', '<leader>fr', function()
+nmap('[F]ind [R]resume', 'fr', function()
   require('telescope.builtin').resume()
-end, { desc = '[F]ind [R]resume' })
+end)
 
-vim.keymap.set('n', '<leader>fn', function()
+nmap('[F]ind [N]otification', 'fn', function()
   require('telescope').extensions.notify.notify()
-end, { desc = '[F]ind [N]otification' })
+end)
 
 ---@type LazyPluginSpec
 return {
