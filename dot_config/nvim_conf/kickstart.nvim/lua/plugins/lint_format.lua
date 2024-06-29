@@ -1,4 +1,4 @@
-vim.api.nvim_create_autocmd({ 'BufWritePost' }, {
+vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter' }, {
   desc = 'Lint on write',
   group = vim.api.nvim_create_augroup('LintOnWrite', { clear = true }),
   callback = function()
@@ -128,7 +128,7 @@ local function bazel_go_lint(abs_filepath)
   vim.loop.close(handle)
 end
 
-vim.api.nvim_create_autocmd({ 'BufWritePost' }, {
+vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter' }, {
   desc = 'Lint from bazel build output on write',
   group = vim.api.nvim_create_augroup('GoBazelLint', { clear = true }),
   pattern = '*.go',
