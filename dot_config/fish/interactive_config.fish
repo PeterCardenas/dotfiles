@@ -37,6 +37,12 @@ if not set -q SSH_AUTH_SOCK
     eval (ssh-agent -c) >/dev/null
 end
 
+# Add ghostty completions
+set -l GHOSTTY_COMPLETION_PATH /Applications/Ghostty.app/Contents/Resources/fish/vendor_completions.d/ghostty.fish
+if test -e $GHOSTTY_COMPLETION_PATH
+    ln -s $GHOSTTY_COMPLETION_PATH $HOME/.config/fish/completions/ghostty.fish
+end
+
 # Add tmux variables to fish shell before a command is executed.
 function refresh_tmux_vars --on-event fish_preexec
     if set -q TMUX
