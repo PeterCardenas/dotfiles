@@ -313,6 +313,7 @@ return {
     event = { 'BufReadPre', 'BufNewFile' },
     config = function()
       require('leap').add_default_mappings()
+      require('leap').opts.substitute_chars = { ['{'] = 'b', ['}'] = 'b', ['('] = 'p', [')'] = 'p', ['['] = 'b', [']'] = 'b' }
     end,
   },
 
