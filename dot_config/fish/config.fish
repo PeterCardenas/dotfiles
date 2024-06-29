@@ -4,13 +4,16 @@ end
 
 # Update PATH for both interactive and non-interactive shells
 set -gx PNPM_HOME "$HOME/.local/share/pnpm"
+set -gx ZVM_INSTALL "$HOME/.zvm/self"
 fish_add_path -P $PNPM_HOME \
     "$HOME/.local/share/bob/nvim-bin" \
     "$HOME/.local/bin" \
     "$HOME/go/bin" \
     /usr/local/go/bin \
     "$HOME/.cargo/bin" \
-    "$HOME/.fish-lsp/bin"
+    "$HOME/.fish-lsp/bin" \
+    "$HOME/.zvm/bin" \
+    "$ZVM_INSTALL/"
 
 set -l os (uname -s)
 if test $os = Darwin
