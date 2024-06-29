@@ -407,7 +407,8 @@ function M.setup_formatting_diagnostic(bufnr)
   if #existing_autocmds > 0 then
     return
   end
-  vim.api.nvim_create_autocmd({ 'TextChanged' }, {
+  check_if_needs_formatting(bufnr)
+  vim.api.nvim_create_autocmd({ 'TextChanged', 'InsertLeave' }, {
     group = format_diagnostic_autocmd_group,
     buffer = bufnr,
     callback = function(args)
