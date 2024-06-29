@@ -123,6 +123,9 @@ function setup_unix() {
 	# Install pnpm
 	curl -fsSL https://get.pnpm.io/install.sh | sh -
 
+	# Install zig version manager
+	curl https://raw.githubusercontent.com/tristanisham/zvm/master/install.sh | bash
+
 	# Install Starship prompt
 	curl -sS https://starship.rs/install.sh | sh
 
