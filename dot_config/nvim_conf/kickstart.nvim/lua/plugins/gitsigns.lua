@@ -105,9 +105,11 @@ vim.api.nvim_create_user_command('GHFile', function()
   vim.fn.setreg('+', file_url)
 end, { nargs = 0, desc = 'Open/Copy GitHub file link on master for current file', range = true })
 
-vim.keymap.set({ 'n' }, '<leader>gh', function()
+local nmap = require('utils.keymap').nmap
+
+nmap('Show blame for current line', 'gh', function()
   require('gitsigns.actions').blame_line()
-end, { desc = 'Show blame for current line' })
+end)
 
 ---@type LazyPluginSpec
 return {

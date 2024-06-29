@@ -12,13 +12,15 @@ vim.api.nvim_create_autocmd('BufEnter', {
   end,
 })
 
-vim.keymap.set('n', '<leader>ot', function()
-  require('nvim-tree.actions').tree.toggle.fn({ find_file = true })
-end, { desc = 'Toggle file explorer tree' })
+local nmap = require('utils.keymap').nmap
 
-vim.keymap.set('n', '<leader>oo', function()
+nmap('Toggle file explorer tree', 'ot', function()
+  require('nvim-tree.actions').tree.toggle.fn({ find_file = true })
+end)
+
+nmap('Toggle oil file explorer', 'oo', function()
   require('oil').toggle_float()
-end, { desc = 'Toggle oil file explorer' })
+end)
 
 ---@type LazyPluginSpec[]
 return {

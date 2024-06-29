@@ -1,3 +1,5 @@
+local nmap = require('utils.keymap').nmap
+
 -- Autocmds to make the internal buffer list state in sync with the actual buffers.
 local function is_valid_buffer(bufnr)
   if not bufnr or bufnr < 1 then
@@ -90,7 +92,7 @@ local function add_keymaps()
     -- redraw tabline
     vim.cmd.redrawtabline()
   end
-  vim.keymap.set('n', '<leader>c', close_buf, { desc = 'Close buffer' })
+  nmap('Close buffer', 'c', close_buf)
   vim.keymap.set('n', '<S-l>', function()
     local navigation_offset = vim.v.count > 0 and vim.v.count or 1
     nav_buf(navigation_offset)
@@ -99,12 +101,12 @@ local function add_keymaps()
     local navigation_offset = -(vim.v.count > 0 and vim.v.count or 1)
     nav_buf(navigation_offset)
   end, { desc = 'Previous buffer' })
-  vim.keymap.set('n', '<leader>rl', function()
+  nmap('Move buffer tab right', 'rl', function()
     move_buf(vim.v.count > 0 and vim.v.count or 1)
-  end, { desc = 'Move buffer tab right' })
-  vim.keymap.set('n', '<leader>rh', function()
+  end)
+  nmap('Move buffer tab left', 'rh', function()
     move_buf(-(vim.v.count > 0 and vim.v.count or 1))
-  end, { desc = 'Move buffer tab left' })
+  end)
 end
 
 local function register_autocmds()
