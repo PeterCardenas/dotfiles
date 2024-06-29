@@ -66,9 +66,9 @@ function M.on_attach(client, bufnr)
     vim.keymap.set('n', keys, func, { buffer = bufnr, desc = desc })
   end
 
-  vim.keymap.set('n', '<leader>lr', function()
+  nmap('<leader>lr', function()
     vim.lsp.buf.rename()
-  end, { desc = '[L]anguage [R]ename' })
+  end, '[L]anguage [R]ename')
   nmap('<leader>la', function()
     require('actions-preview').code_actions()
   end, '[L]anguage [A]ction')

@@ -1,3 +1,5 @@
+local nmap = require('utils.keymap').nmap
+
 -- Set <space> as the leader key
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are required (otherwise wrong leader will be used)
@@ -28,9 +30,9 @@ vim.keymap.set('n', 'j', 'g<Down>', { silent = true })
 vim.keymap.set({ 'v', 'n' }, 'gj', '<C-i>', { desc = 'Go to next location' })
 vim.keymap.set({ 'v', 'n' }, 'gk', '<C-o>', { desc = 'Go to previous location' })
 
-vim.keymap.set('n', '<leader>gg', function()
+nmap('Open Floating LazyGit', 'gg', function()
   require('lazygit').lazygit()
-end, { desc = 'Open Floating LazyGit' })
+end)
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '[d', function()
@@ -39,9 +41,9 @@ end, { desc = 'Go to previous diagnostic message' })
 vim.keymap.set('n', ']d', function()
   vim.diagnostic.goto_next()
 end, { desc = 'Go to next diagnostic message' })
-vim.keymap.set('n', '<leader>ds', function()
+nmap('Show hovered diagnostic', 'ds', function()
   vim.diagnostic.open_float()
-end, { desc = 'Show hovered diagnostic' })
+end)
 
 -- Remap <leader>+v to trigger visual block mode because pasting from clipboard is mapped to Ctrl-V
 vim.keymap.set({ 'n', 'v' }, '<leader>v', '<C-v>', { desc = 'Visual block mode' })
@@ -77,19 +79,19 @@ end
 vim.keymap.set({ 'n', 'v' }, '<leader>ui', function()
   request_and_set_indent()
 end, { desc = 'Change indent setting' })
-vim.keymap.set({ 'n' }, '<leader>ud', function()
+nmap('Toggle diagnostics', 'ud', function()
   local current_bufnr = vim.api.nvim_get_current_buf()
   local is_enabled_for_buf = vim.diagnostic.is_enabled({ bufnr = current_bufnr })
   vim.diagnostic.enable(not is_enabled_for_buf, { bufnr = current_bufnr })
-end, { desc = 'Toggle diagnostics' })
+end)
 
-vim.keymap.set('n', '<leader>S.', function()
+nmap('Load current[.] directory [s]ession', 'S.', function()
   require('session_manager').load_current_dir_session()
-end, { desc = 'Load current directory session' })
-vim.keymap.set('n', '<leader>Ss', function()
+end)
+nmap('[S]ave current directory [s]ession', 'Ss', function()
   require('session_manager').save_current_dir_session()
-end, { desc = 'Save current directory session' })
+end)
 
-vim.keymap.set('n', '<leader>dn', function()
+nmap( '[D]ismiss [n]otification','dn', function()
   require('notify').dismiss({ pending = true, silent = true })
-end, { desc = '[D]ismiss [n]otification' })
+end)
