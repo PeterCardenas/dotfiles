@@ -34,6 +34,12 @@ nmap('Open Floating LazyGit', 'gg', function()
   require('lazygit').lazygit()
 end)
 
+if not require('utils.config').USE_TABLINE then
+  nmap('[C]lose current buffer', 'c', function()
+    require('bufdelete').bufdelete()
+  end)
+end
+
 -- Diagnostic keymaps
 vim.keymap.set('n', '[d', function()
   vim.diagnostic.goto_prev()
@@ -92,6 +98,6 @@ nmap('[S]ave current directory [s]ession', 'Ss', function()
   require('session_manager').save_current_dir_session()
 end)
 
-nmap( '[D]ismiss [n]otification','dn', function()
+nmap('[D]ismiss [n]otification', 'dn', function()
   require('notify').dismiss({ pending = true, silent = true })
 end)
