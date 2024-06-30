@@ -346,7 +346,7 @@ local function format_with_check(bufnr, dry_run, on_complete)
             async = true,
             dry_run = dry_run,
             quiet = dry_run,
-            lsp_fallback = false,
+            lsp_format = 'never',
           }, function(_, would_edit_from_formatter)
             if would_edit_from_formatter then
               table.insert(sources_with_edits, formatter_name)
