@@ -1,5 +1,24 @@
 LspMethod = vim.lsp.protocol.Methods
 
+---Lock for buffers to hold while formatting.
+---@type table<integer, boolean>
+local format_lock_map = {}
+
+---@param bufnr integer
+local function lock_buffer(bufnr)
+  format_lock_map[bufnr] = true
+end
+
+---@param bufnr integer
+local function unlock_buffer(bufnr)
+  format_lock_map[bufnr] = nil
+end
+
+---@param bufnr integer
+local function is_buffer_locked(bufnr)
+  return format_lock_map[bufnr] == true
+end
+
 ---@alias FormatCallback fun(would_edit: boolean): nil
 
 ---@param client vim.lsp.Client
@@ -382,6 +401,9 @@ end
 
 ---@param bufnr integer
 local function check_if_needs_formatting(bufnr)
+  if is_buffer_locked(bufnr) then
+    return
+  end
   format_with_check(bufnr, true, function(sources_needing_formatting)
     update_format_diagnostic(bufnr, sources_needing_formatting)
   end)
@@ -407,7 +429,10 @@ function M.setup_formatting_diagnostic(bufnr)
   if #existing_autocmds > 0 then
     return
   end
+  -- Check if the buffer needs formatting on enter.
   check_if_needs_formatting(bufnr)
+  -- Check if the buffer needs formatting on text change while in normal mode, or after leaving insert mode.
+  -- TODO: Ideally we would only check when changes have actually been made.
   vim.api.nvim_create_autocmd({ 'TextChanged', 'InsertLeave' }, {
     group = format_diagnostic_autocmd_group,
     buffer = bufnr,
@@ -426,8 +451,10 @@ end
 
 ---@param bufnr integer
 function M.format(bufnr)
-  format_with_check(bufnr, false, function(sources_needing_formatting)
-    update_format_diagnostic(bufnr, sources_needing_formatting)
+  lock_buffer(bufnr)
+  format_with_check(bufnr, false, function(_)
+    unlock_buffer(bufnr)
+    check_if_needs_formatting(bufnr)
   end)
 end
 
