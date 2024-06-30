@@ -40,6 +40,7 @@ end
 # Add ghostty completions
 set -l GHOSTTY_COMPLETION_PATH /Applications/Ghostty.app/Contents/Resources/fish/vendor_completions.d/ghostty.fish
 if test -e $GHOSTTY_COMPLETION_PATH
+    rm -f $HOME/.config/fish/completions/ghostty.fish
     ln -s $GHOSTTY_COMPLETION_PATH $HOME/.config/fish/completions/ghostty.fish
 end
 
