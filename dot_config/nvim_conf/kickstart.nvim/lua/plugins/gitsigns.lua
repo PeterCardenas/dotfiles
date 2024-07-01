@@ -37,25 +37,30 @@ vim.api.nvim_create_user_command('GHPR', function()
   end
   local lnum = vim.api.nvim_win_get_cursor(0)[1]
   local config = require('gitsigns.config').config
-  local blame_info = cache_entry:get_blame(lnum, config.current_line_blame_opts)
-  if not blame_info then
-    vim.notify('Blame has not been loaded yet.', vim.log.levels.ERROR)
-    return
-  end
-  if blame_info.commit.author == require('gitsigns.git').not_commited('').author then
-    vim.notify('Current line not committed yet.', vim.log.levels.ERROR)
-    return
-  end
-  local commit_sha = blame_info.commit.sha
-  local pr_url = get_pr_url(commit_sha)
-  if not pr_url then
-    local commit_url = get_commit_url(commit_sha)
-    vim.fn.setreg('+', commit_url)
-    vim.notify('No PR created yet.\nCopied commit link to clipboard:\n' .. commit_url, vim.log.levels.WARN)
-    return
-  end
-  vim.fn.setreg('+', pr_url)
-  vim.notify('Copied PR link to clipboard:\n' .. pr_url, vim.log.levels.INFO)
+  local async = require('gitsigns.async')
+  local run = async.create(function()
+    local blame_info = cache_entry:get_blame(lnum, config.current_line_blame_opts)
+    if not blame_info then
+      vim.notify('Blame has not been loaded yet.', vim.log.levels.ERROR)
+      return
+    end
+    local not_committed_sha = require('gitsigns.git.blame').get_blame_nc('', lnum).commit.sha
+    if blame_info.commit.sha == not_committed_sha then
+      vim.notify('Current line not committed yet.', vim.log.levels.ERROR)
+      return
+    end
+    local commit_sha = blame_info.commit.sha
+    local pr_url = get_pr_url(commit_sha)
+    if not pr_url then
+      local commit_url = get_commit_url(commit_sha)
+      vim.fn.setreg('+', commit_url)
+      vim.notify('No PR created yet.\nCopied commit link to clipboard:\n' .. commit_url, vim.log.levels.WARN)
+      return
+    end
+    vim.fn.setreg('+', pr_url)
+    vim.notify('Copied PR link to clipboard:\n' .. pr_url, vim.log.levels.INFO)
+  end)
+  run()
 end, { nargs = 0, desc = 'Open/Copy GitHub PR link for current line' })
 
 local function get_git_root()
