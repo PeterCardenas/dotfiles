@@ -79,6 +79,12 @@ function setup_ubuntu() {
 	curl -fSsL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor | tee /usr/share/keyrings/google-chrome.gpg >/dev/null
 	echo deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main | tee /etc/apt/sources.list.d/google-chrome.list
 
+	# Speedtest CLI
+	dpkg_third_party+=(
+		speedtest
+	)
+	curl -s https://packagecloud.io/install/repositories/ookla/speedtest-cli/script.deb.sh | sudo bash
+
 	sudo nala update -y
 	sudo nala install -y "${dpkg_third_party[@]}"
 
