@@ -17,7 +17,6 @@ function setup_ubuntu() {
 		git-lfs
 		openssh-server
 		gnupg2
-		xclip
 		pinentry-tty
 		fzf
 		pip
@@ -25,6 +24,7 @@ function setup_ubuntu() {
 		python3.10-venv
 		jq
 		flameshot
+		fortune
 		peek
 		ccls
 		btop
@@ -198,7 +198,7 @@ EOF
 if [ "$(uname)" == "Linux" ]; then
 	setup_ubuntu
 elif [ "$(uname)" == "Darwin" ]; then
-	echo "macOS specific setup not implemented"
+	setup_mac
 else
 	echo "Unsupported OS $(uname)"
 	exit 1
