@@ -1,7 +1,7 @@
 local M = {}
 local LspMethod = vim.lsp.protocol.Methods
 
-local enable_pyright = true
+local enable_pyright = not require('utils/config').USE_JEDI
 local gen_files_path = 'bazel-out/k8-fastbuild/bin'
 
 --  Configures a language server after it attaches to a buffer.
