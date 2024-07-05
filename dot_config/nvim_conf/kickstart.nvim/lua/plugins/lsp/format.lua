@@ -75,7 +75,7 @@ local function fix_from_code_action(bufnr, ls_name, action_type, dry_run, on_com
     ---@param ls_results lsp.CodeAction[]
     client.request(LspMethod.textDocument_codeAction, params, function(err, ls_results, _, _)
       if err then
-        vim.notify('Error running' .. ls_name .. ' code action: ' .. err, vim.log.levels.ERROR)
+        vim.notify('Error running ' .. ls_name .. ' code action: ' .. vim.inspect(err), vim.log.levels.ERROR)
       end
       local did_edit = false
       for _, ls_result in ipairs(ls_results or {}) do
