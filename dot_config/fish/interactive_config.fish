@@ -111,8 +111,6 @@ abbr -a aptrm "sudo nala remove"
 # git aliases
 # TODO: Execute all commands with -S.
 abbr -a gcom "git checkout master"
-# abbr -a gpm "git pull -S origin master"
-abbr -a gpm "git fetch origin master:master && git rebase master"
 abbr -a gpo "git pull -S origin"
 abbr -a gp "git push"
 abbr -a gpf "git push --force-with-lease"
