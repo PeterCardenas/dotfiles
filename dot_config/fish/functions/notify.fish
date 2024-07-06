@@ -1,4 +1,12 @@
 function notify -d "Send notifications via terminal escape sequences" -a title -a message
+    # Add the commandline to the message or title if not provided.
+    if test -z "$title"
+        set title (status current-commandline)
+        set message "Command completed"
+    end
+    if test -z "$message"
+        set message "Command completed: $(status current-commandline)"
+    end
     set -l osc_prefix
     if set -q TMUX
         # Assume that tmux sessions in ssh sessions are nested.
