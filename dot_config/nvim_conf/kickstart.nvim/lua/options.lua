@@ -8,6 +8,40 @@ vim.o.fillchars = 'eob: ,fold: ,foldopen:,foldsep:│,foldclose:'
 
 vim.o.showtabline = require('utils.config').USE_TABLINE and 2 or 0
 
+--- Use tmux-aware OSC 52 for clipboard
+--- @param clipboard string The clipboard to read from or write to
+--- @param content string The Base64 encoded contents to write to the clipboard, or '?' to read
+local function osc52(clipboard, content)
+  return require('utils.osc').osc(string.format(']52;%s;%s', clipboard, content))
+end
+
+---@param reg '+'|'*'
+---@return fun(lines: string[]): nil
+local function create_tmux_aware_copy_fn(reg)
+  local clipboard = reg == '+' and 'c' or 'p'
+  ---@param lines string[]
+  return function(lines)
+    local content = table.concat(lines, '\n')
+    vim.api.nvim_chan_send(2, osc52(clipboard, vim.base64.encode(content)))
+  end
+end
+
+local function paste_unsupported()
+  vim.notify('OSC 52 clipboard paste unsupported, use ctrl-v', vim.log.levels.ERROR)
+end
+
+vim.g.clipboard = {
+  name = 'Tmux-Aware OSC 52',
+  copy = {
+    ['+'] = create_tmux_aware_copy_fn('+'),
+    ['*'] = create_tmux_aware_copy_fn('*'),
+  },
+  paste = {
+    ['+'] = paste_unsupported,
+    ['*'] = paste_unsupported,
+  },
+}
+
 local current_sessionoptions = vim.opt.sessionoptions:get()
 table.insert(current_sessionoptions, 'globals')
 vim.opt.sessionoptions = current_sessionoptions
