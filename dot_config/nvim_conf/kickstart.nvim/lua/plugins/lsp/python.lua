@@ -15,7 +15,11 @@ local function on_attach(client, _)
   if client.name == 'pylsp' then
     -- Do not use code actions from pylsp since they are slow for now.
     client.server_capabilities.codeActionProvider = false
+    -- Disable language features that would be redundant with pyright.
     client.server_capabilities.documentSymbolProvider = not enable_pyright
+    client.server_capabilities.definitionProvider = not enable_pyright
+    client.server_capabilities.referencesProvider = not enable_pyright
+    client.server_capabilities.hoverProvider = not enable_pyright
     ---@param result lsp.PublishDiagnosticsParams
     ---@param ctx lsp.HandlerContext
     ---@param config any
