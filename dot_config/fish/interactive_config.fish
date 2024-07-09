@@ -83,6 +83,8 @@ bind -M insert \ch "tmux select-pane -L"
 # History search.
 bind -M insert \cp history-search-backward
 bind -M insert \cn history-search-forward
+bind -M visual \cp history-search-backward
+bind -M visual \cn history-search-forward
 
 # Easier autocomplete.
 bind -M insert \cy accept-autosuggestion
