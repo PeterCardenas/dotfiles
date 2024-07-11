@@ -421,11 +421,19 @@ return {
 
   -- Add ghostty completion + syntax
   {
-    'ghostty',
+    name = 'MacOS Ghostty',
     dir = '/Applications/Ghostty.app/Contents/Resources/vim/vimfiles/',
     lazy = false,
     cond = function()
-      return vim.fn.executable('ghostty') == 1
+      return vim.fn.executable('ghostty') == 1 and vim.fn.has('mac') == 1
+    end,
+  },
+  {
+    name = 'Linux Ghostty',
+    dir = os.getenv('HOME') .. '/.local/share/vim/vimfiles/',
+    lazy = false,
+    cond = function()
+      return vim.fn.executable('vim') == 1 and vim.fn.has('linux') == 1
     end,
   },
 }
