@@ -18,7 +18,6 @@ function setup_ubuntu() {
 		openssh-server
 		gnupg2
 		pinentry-tty
-		fzf
 		pip
 		et
 		python3.10-venv
@@ -112,7 +111,6 @@ function setup_mac() {
 		fd
 		fish
 		fortune
-		fzf
 		gh
 		git-lfs
 		gnupg2
@@ -144,6 +142,10 @@ function setup_unix() {
 	# Install chezmoi
 	sh -c "$(curl -fsLS get.chezmoi.io)"
 
+	# Install fzf
+	git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+	~/.fzf/install --xdg --no-bash --no-zsh --key-bindings --update-rc --no-completion
+
 	# Setup rust
 	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 	rust_packages=(
@@ -165,16 +167,17 @@ function setup_unix() {
 
 	# Manually cloned tooling
 	mkdir -p "$HOME/thirdparty"
-	pushd "$HOME/thirdparty" || exit
+	pushd "$HOME/thirdparty" || exit 1
 
 	# Install tmux
 	wget https://github.com/tmux/tmux/releases/download/3.4/tmux-3.4.tar.gz
 	tar xvzf tmux-3.4.tar.gz
 	pushd tmux-3.4 || exit
 	./configure && make && sudo make install
-	popd || exit
+	popd || exit 1
 
-	popd || exit
+	# Exit thirdparty to $HOME
+	popd || exit 1
 
 	# Clone and apply dotfiles
 	cat <<EOF >"$HOME/.ssh/config"
