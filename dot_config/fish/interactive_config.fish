@@ -41,7 +41,7 @@ end
 set -l GHOSTTY_COMPLETION_PATH /Applications/Ghostty.app/Contents/Resources/fish/vendor_completions.d/ghostty.fish
 if test -e $GHOSTTY_COMPLETION_PATH
     rm -f $HOME/.config/fish/completions/ghostty.fish
-    ln -s $GHOSTTY_COMPLETION_PATH $HOME/.config/fish/completions/ghostty.fish
+    cp $GHOSTTY_COMPLETION_PATH $HOME/.config/fish/completions/ghostty.fish
 end
 
 # Add tmux variables to fish shell before a command is executed.
