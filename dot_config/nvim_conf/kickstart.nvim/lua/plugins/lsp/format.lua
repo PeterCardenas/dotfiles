@@ -429,6 +429,10 @@ function M.setup_formatting_diagnostic(bufnr)
   if #existing_autocmds > 0 then
     return
   end
+  -- Format check is slow for large files, so disable them for now.
+  if vim.api.nvim_buf_line_count(bufnr) > 600 then
+    return
+  end
   -- Check if the buffer needs formatting on enter.
   check_if_needs_formatting(bufnr)
   -- Check if the buffer needs formatting on text change while in normal mode, or after leaving insert mode.
