@@ -1,3 +1,25 @@
+---@param bufnr integer
+---@param file_size_threshold integer
+---@return boolean
+local function is_buf_large(bufnr, file_size_threshold)
+  local file_name = vim.api.nvim_buf_get_name(bufnr)
+  local file_size = vim.fn.getfsize(file_name)
+  return file_size > file_size_threshold
+end
+
+local large_file_group = vim.api.nvim_create_augroup('Disable Large File Plugins', { clear = true })
+vim.api.nvim_create_autocmd('BufReadPre', {
+  desc = 'Conditionally load plugins for large files',
+  group = large_file_group,
+  callback = function(args)
+    --Disables at 512KB
+    local should_disable = is_buf_large(args.buf, 1024 * 512)
+    require('ibl').setup_buffer(args.buf, {
+      enabled = not should_disable,
+    })
+  end,
+})
+
 ---@type LazyPluginSpec[]
 return {
   -- Add a background color to colors defined in css.
@@ -275,6 +297,11 @@ return {
       require('treesitter-context').setup({
         mode = 'topline',
         line_numbers = true,
+        ---@param bufnr number
+        on_attach = function(bufnr)
+          -- Disable at 512KB
+          return not is_buf_large(bufnr, 1024 * 512)
+        end,
       })
     end,
   },
