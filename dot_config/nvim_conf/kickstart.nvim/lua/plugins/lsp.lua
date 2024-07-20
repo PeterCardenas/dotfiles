@@ -109,7 +109,28 @@ return {
     -- Additional lua configuration, makes nvim stuff amazing!
     'folke/neodev.nvim',
   },
-  event = { 'BufReadPre', 'BufNewFile' },
+  ft = {
+    'typescript',
+    'typescriptreact',
+    'javascript',
+    'javascriptreact',
+    'css',
+    'scss',
+    'cpp',
+    'python',
+    'go',
+    'json',
+    'lua',
+    'bzl',
+    'mdx',
+    'markdown',
+    'text',
+    'rust',
+    'yaml',
+    'sh',
+    'fish',
+    'toml',
+  },
   config = function()
     ---@type fun(path: string): string?
     local get_clangd_root = require('lspconfig.util').root_pattern('compile_commands.json')
