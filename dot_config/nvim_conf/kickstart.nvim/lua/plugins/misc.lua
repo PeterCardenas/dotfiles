@@ -463,4 +463,10 @@ return {
       return vim.fn.executable('vim') == 1 and vim.fn.has('linux') == 1
     end,
   },
+
+  -- Sudo write and read without executing nvim as root.
+  {
+    'lambdalisue/vim-suda',
+    cmd = { 'SudaRead', 'SudaWrite' },
+  },
 }
