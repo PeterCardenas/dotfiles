@@ -208,6 +208,7 @@ local function remove_typescript_unused_imports(bufnr, dry_run, on_complete)
     if err ~= nil then
       vim.notify('Error running typescript-tools remove unused imports: ' .. err.message, vim.log.levels.ERROR)
     else
+      -- vim.print(res)
       if not dry_run then
         vim.lsp.util.apply_workspace_edit(res, 'utf-8')
       end
@@ -431,8 +432,10 @@ function M.setup_formatting_diagnostic(bufnr)
   if #existing_autocmds > 0 then
     return
   end
-  -- Format check is slow for large files, so disable them for now.
-  if vim.api.nvim_buf_line_count(bufnr) > 600 then
+  -- Format check is slow for large typescript files, so disable them for now.
+  local filetype = vim.api.nvim_get_option_value('filetype', { buf = bufnr })
+  local is_typescript = vim.tbl_contains(require('utils.typescript').SUPPORTED_FT, filetype)
+  if vim.api.nvim_buf_line_count(bufnr) > 600 and is_typescript then
     return
   end
   -- Check if the buffer needs formatting on enter.
