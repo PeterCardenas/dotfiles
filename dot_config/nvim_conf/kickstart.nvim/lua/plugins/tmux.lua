@@ -110,12 +110,13 @@ local function setup_tmux_autocommands()
   })
 end
 
-local function update_display_from_tmux()
-  local tmux_display = vim.fn.systemlist("tmux showenv | string match -rg '^DISPLAY=(.*?)$'")[1]
-  if not tmux_display then
+local function update_ssh_connection_from_tmux()
+  local tmux_ssh_connection = vim.fn.systemlist("tmux showenv | string match -rg '^SSH_CONNECTION=(.*?)$'")[1]
+  if tmux_ssh_connection == '' then
+    vim.env.SSH_CONNECTION = nil
     return
   end
-  vim.env.DISPLAY = tmux_display
+  vim.env.SSH_CONNECTION = tmux_ssh_connection
 end
 
 TMUX_TIMER_ID = nil
@@ -127,7 +128,7 @@ local function poll_update_tmux_env()
   TMUX_TIMER_ID = vim.fn.timer_start(
     1000,
     vim.schedule_wrap(function()
-      update_display_from_tmux()
+      update_ssh_connection_from_tmux()
 
       -- The vim pane option is only set when vim is open.
       if nvim_is_open then
