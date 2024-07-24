@@ -58,6 +58,9 @@ vim.filetype.add({
   extension = {
     mdx = 'markdown.mdx',
   },
+  pattern = {
+    ['.*%.go%.flaky'] = 'go',
+  },
 })
 
 -- Disable netrw
