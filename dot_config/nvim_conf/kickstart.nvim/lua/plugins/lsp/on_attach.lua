@@ -2,7 +2,7 @@ local M = {}
 
 local LspMethod = vim.lsp.protocol.Methods
 
---  Configures a language server after it attaches to a buffer.
+---Configures a language server after it attaches to a buffer.
 ---@param client vim.lsp.Client
 ---@param bufnr integer
 function M.on_attach(client, bufnr)
@@ -35,6 +35,8 @@ function M.on_attach(client, bufnr)
     client.server_capabilities.documentRangeFormattingProvider = false
   end
   if client.name == 'gopls' then
+    -- workaround for gopls not supporting semanticTokensProvider
+    -- https://github.com/golang/go/issues/54531#issuecomment-1464982242
     if not client.server_capabilities.semanticTokensProvider then
       local semantic = client.config.capabilities.textDocument.semanticTokens
       if semantic then
@@ -56,6 +58,16 @@ function M.on_attach(client, bufnr)
     -- Defer to fish_indent for formatting.
     client.server_capabilities.documentFormattingProvider = false
     client.server_capabilities.documentRangeFormattingProvider = false
+  end
+
+  local filename = vim.api.nvim_buf_get_name(bufnr)
+  local git_root = require('utils.file').get_git_root()
+  local is_in_git_root = git_root ~= nil and require('utils.file').file_in_directory(filename, git_root)
+
+  if not is_in_git_root then
+    client.server_capabilities.documentFormattingProvider = false
+    client.server_capabilities.documentRangeFormattingProvider = false
+    client.handlers[LspMethod.textDocument_publishDiagnostics] = function() end
   end
 
   local function nmap(keys, func, desc)

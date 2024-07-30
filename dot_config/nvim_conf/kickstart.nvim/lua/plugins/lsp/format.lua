@@ -438,6 +438,12 @@ function M.setup_formatting_diagnostic(bufnr)
   if vim.api.nvim_buf_line_count(bufnr) > 600 and is_typescript then
     return
   end
+  local git_root_dir = require('utils.file').get_git_root()
+  local filename = vim.api.nvim_buf_get_name(bufnr)
+  --- Disable format checking when there's no git root or the file is not in the git root.
+  if git_root_dir == nil or not require('utils.file').file_in_directory(filename, git_root_dir) then
+    return
+  end
   -- Check if the buffer needs formatting on enter.
   check_if_needs_formatting(bufnr)
   -- Check if the buffer needs formatting on text change while in normal mode, or after leaving insert mode.
@@ -460,6 +466,12 @@ end
 
 ---@param bufnr integer
 function M.format(bufnr)
+  local filename = vim.api.nvim_buf_get_name(bufnr)
+  local git_root_dir = require('utils.file').get_git_root()
+  if git_root_dir == nil or not require('utils.file').file_in_directory(filename, git_root_dir) then
+    vim.notify('Cannot format files outside of the git root', vim.log.levels.ERROR)
+    return
+  end
   lock_buffer(bufnr)
   format_with_check(bufnr, false, function(_)
     unlock_buffer(bufnr)
