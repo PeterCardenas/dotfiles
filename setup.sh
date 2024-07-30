@@ -157,6 +157,7 @@ function setup_unix() {
 		ttyper
 		stylua
 		tree-sitter-cli
+		silicon
 	)
 	cargo install "${rust_packages[@]}"
 

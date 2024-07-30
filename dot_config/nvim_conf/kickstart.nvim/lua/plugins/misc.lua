@@ -20,6 +20,10 @@ vim.api.nvim_create_autocmd('BufReadPre', {
   end,
 })
 
+vim.api.nvim_create_user_command('SiliconCopy', function()
+  require('silicon').clip()
+end, { nargs = 0, range = true })
+
 ---@type LazyPluginSpec[]
 return {
   -- Add a background color to colors defined in css.
@@ -468,5 +472,19 @@ return {
   {
     'lambdalisue/vim-suda',
     cmd = { 'SudaRead', 'SudaWrite' },
+  },
+
+  -- Take screenshots of highlighted text.
+  {
+    'michaelrommel/nvim-silicon',
+    lazy = true,
+    config = function()
+      require('silicon').setup({
+        debug = true,
+        disable_defaults = true,
+        font = 'MonaspiceKr Nerd Font',
+        theme = 'Monokai Extended',
+      })
+    end,
   },
 }
