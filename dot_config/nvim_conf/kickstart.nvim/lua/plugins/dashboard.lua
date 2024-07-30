@@ -87,7 +87,17 @@ return {
     dashboard.section.header.opts.hl = 'AlphaHeader'
     dashboard.section.buttons.opts.hl = 'AlphaButtons'
     dashboard.section.footer.opts.hl = 'AlphaFooter'
+    dashboard.section.footer.opts.spacing = 1
+    dashboard.section.footer.type = 'group'
+    dashboard.section.footer.val = {
+      {
+        type = 'text',
+        val = 'v' .. vim.version().major .. '.' .. vim.version().minor .. '.' .. vim.version().patch,
+        opts = { hl = 'AlphaFooter', position = 'center' },
+      },
+    }
     dashboard.opts.layout[1].val = 8
+    dashboard.opts.margin = nil
     require('alpha').setup(require('alpha.themes.dashboard').config)
 
     -- Add autocmds.
@@ -119,7 +129,22 @@ return {
       callback = function()
         local stats = require('lazy').stats()
         local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
-        dashboard.section.footer.val = '⚡ Neovim loaded ' .. stats.count .. ' plugins in ' .. ms .. 'ms'
+        local current_footer = dashboard.section.footer.val
+        ---@type table
+        local footer
+        if type(current_footer) ~= 'table' then
+          vim.notify('dashboard.section.footer.val is not a table: ' .. dashboard.section.footer.val, vim.log.levels.ERROR)
+          footer = {}
+        else
+          -- Clone the table
+          footer = vim.tbl_deep_extend('force', {}, current_footer)
+        end
+        table.insert(footer, {
+          type = 'text',
+          opts = { position = 'center', hl = 'AlphaFooter' },
+          val = '⚡ Neovim loaded ' .. stats.count .. ' plugins in ' .. ms .. 'ms',
+        })
+        dashboard.section.footer.val = footer
         pcall(vim.cmd.AlphaRedraw)
       end,
     })
