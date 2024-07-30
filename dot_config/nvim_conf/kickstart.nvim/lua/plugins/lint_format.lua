@@ -83,7 +83,7 @@ local function bazel_go_lint(abs_filepath)
             if line_num == nil or col_num == nil then
               return
             end
-            ---@type lsp.Diagnostic
+            ---@type vim.Diagnostic
             local diagnostic = {
               source = 'bazel-go-build',
               message = error_msg,
@@ -106,15 +106,20 @@ local function bazel_go_lint(abs_filepath)
           end
         else
           stderr:close()
+          local function filename_to_bufnr(filename)
+            local file_uri = vim.uri_from_fname(workspace_root .. '/' .. filename)
+            local bufnr = vim.uri_to_bufnr(file_uri)
+            if not vim.api.nvim_buf_is_loaded(bufnr) then
+              vim.fn.bufload(bufnr)
+            end
+            vim.bo[bufnr].buflisted = true
+            return bufnr
+          end
+
           local function set_diagnostics()
             vim.diagnostic.reset(nogo_diagnostic_ns)
             for filename, diagnostics in pairs(file_diagnostics) do
-              local file_uri = vim.uri_from_fname(workspace_root .. '/' .. filename)
-              local bufnr = vim.uri_to_bufnr(file_uri)
-              if not vim.api.nvim_buf_is_loaded(bufnr) then
-                vim.fn.bufload(bufnr)
-              end
-              vim.bo[bufnr].buflisted = true
+              local bufnr = filename_to_bufnr(filename)
               vim.diagnostic.set(nogo_diagnostic_ns, bufnr, diagnostics, { underline = true })
               enqueue_next_bazel_go_lint()
             end
