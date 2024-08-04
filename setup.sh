@@ -105,7 +105,6 @@ function setup_mac() {
 
 	# Install MacPorts packages
 	ports=(
-		bat
 		btop
 		et
 		fd
@@ -160,6 +159,13 @@ function setup_unix() {
 		silicon
 	)
 	cargo install "${rust_packages[@]}"
+
+	# Setup delta/bat theme
+	mkdir -p "$(bat --config-dir)/themes"
+	pushd "$(bat --config-dir)/themes" || exit 1
+	wget https://github.com/folke/tokyonight.nvim/raw/main/extras/sublime/tokyonight_storm.tmTheme
+	bat cache --build
+	popd || exit 1
 
 	# Install go packages
 	go install github.com/jesseduffield/lazygit@latest
