@@ -32,7 +32,7 @@ function M.get_git_root(file_or_dir)
   local home_dir = vim.fn.expand('~')
   while target_dir ~= '' and target_dir ~= home_dir do
     local git_dir = target_dir .. '/.git'
-    if vim.fn.isdirectory(git_dir) == 1 then
+    if vim.fn.isdirectory(git_dir) == 1 or vim.fn.filereadable(git_dir) then
       return target_dir
     end
     target_dir = vim.fn.fnamemodify(target_dir, ':h')
