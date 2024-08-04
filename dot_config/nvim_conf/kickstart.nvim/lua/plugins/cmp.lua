@@ -34,12 +34,12 @@ return {
     local luasnip = require('luasnip')
     require('luasnip.loaders.from_vscode').lazy_load()
     luasnip.config.setup({})
-    vim.keymap.set({ 'i', 's' }, '<C-n>', function()
+    vim.keymap.set({ 'i', 's' }, '<Tab>', function()
       if luasnip.expand_or_jumpable() then
         return luasnip.expand_or_jump()
       end
     end)
-    vim.keymap.set({ 'i', 's' }, '<C-p>', function()
+    vim.keymap.set({ 'i', 's' }, '<S-Tab>', function()
       if luasnip.jumpable(-1) then
         return luasnip.jump(-1)
       end

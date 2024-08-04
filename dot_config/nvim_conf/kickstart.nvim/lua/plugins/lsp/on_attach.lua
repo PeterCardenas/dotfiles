@@ -110,6 +110,14 @@ function M.on_attach(client, bufnr)
     end, { desc = 'LSP: Toggle inlay hints', buffer = bufnr })
   end
 
+  -- Needed to override the inlay hints toggle keymap.
+  vim.keymap.set({ 'i', 's' }, '<Tab>', function()
+    local luasnip = require('luasnip')
+    if luasnip.expand_or_jumpable() then
+      return luasnip.expand_or_jump()
+    end
+  end)
+
   -- Lesser used LSP functionality
   nmap('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 end
