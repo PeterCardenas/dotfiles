@@ -67,7 +67,6 @@ function M.on_attach(client, bufnr)
   if not is_in_git_root then
     client.server_capabilities.documentFormattingProvider = false
     client.server_capabilities.documentRangeFormattingProvider = false
-    client.handlers[LspMethod.textDocument_publishDiagnostics] = function() end
   end
 
   local function nmap(keys, func, desc)
