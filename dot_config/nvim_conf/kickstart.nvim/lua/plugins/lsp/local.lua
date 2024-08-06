@@ -16,6 +16,7 @@ function M.setup(capabilities)
       },
     },
     valels = {
+      enabled = vim.fn.executable('vale-ls') == 1,
       cmd = { 'vale-ls' },
       filetypes = { 'markdown', 'text', 'dosini', 'yaml' },
       default_config = {
