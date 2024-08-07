@@ -86,7 +86,8 @@ local function relative_path_to_git_root()
 end
 
 local function common_ancestor_commit_with_master()
-  local commit_sha = vim.fn.systemlist('git merge-base HEAD origin/master')[1]
+  local default_branch = vim.fn.systemlist('git symbolic-ref refs/remotes/origin/HEAD | sed "s@^refs/remotes/origin/@@"')[1]
+  local commit_sha = vim.fn.systemlist('git merge-base HEAD origin/' .. default_branch)[1]
   return commit_sha
 end
 
