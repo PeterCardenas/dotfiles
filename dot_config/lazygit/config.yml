@@ -57,4 +57,4 @@ promptToReturnFromSubprocess: false
 disableStartupPopups: true
 quitOnTopLevelReturn: true
 os:
-  editPreset: 'nvim'
+  editPreset: 'nvim-remote'
