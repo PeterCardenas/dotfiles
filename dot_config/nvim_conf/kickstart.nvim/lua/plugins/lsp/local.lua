@@ -18,7 +18,7 @@ function M.setup(capabilities)
     valels = {
       enabled = vim.fn.executable('vale-ls') == 1,
       cmd = { 'vale-ls' },
-      filetypes = { 'markdown', 'text', 'dosini', 'yaml' },
+      filetypes = { 'markdown', 'text', 'dosini', 'yaml', 'markdown.mdx' },
       default_config = {
         root_dir = require('lspconfig.util').root_pattern('.vale.ini'),
       },
