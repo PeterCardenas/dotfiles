@@ -130,6 +130,7 @@ return {
     'sh',
     'fish',
     'toml',
+    'jsonc',
   },
   config = function()
     ---@type fun(path: string): string?
@@ -211,6 +212,23 @@ return {
         init_options = {
           typescript = {
             tsdk = tsserver_lib,
+          },
+        },
+      },
+      jsonls = {
+        filetypes = { 'json', 'jsonc' },
+        settings = {
+          json = {
+            schemas = {
+              {
+                fileMatch = { 'package.json' },
+                url = 'https://json.schemastore.org/package.json',
+              },
+              {
+                fileMatch = { 'tsconfig*.json' },
+                url = 'https://json.schemastore.org/tsconfig.json',
+              },
+            },
           },
         },
       },
