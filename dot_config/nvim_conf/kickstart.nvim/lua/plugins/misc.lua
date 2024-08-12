@@ -24,6 +24,20 @@ vim.api.nvim_create_user_command('SiliconCopy', function()
   require('silicon').clip()
 end, { nargs = 0, range = true })
 
+vim.api.nvim_create_user_command('DiffviewPR', function()
+  local default_branch = require('utils.git').get_default_branch()
+  vim.cmd('DiffviewOpen origin/' .. default_branch .. '...HEAD')
+end, { nargs = 0 })
+
+vim.api.nvim_create_user_command('DiffviewCurrentFileHistory', function(opts)
+  if opts.range == 0 then
+    vim.cmd('DiffviewFileHistory %')
+    return
+  else
+    vim.cmd([['<,'>DiffviewFileHistory %]])
+  end
+end, { nargs = 0, range = true })
+
 ---@type LazyPluginSpec[]
 return {
   -- Add a background color to colors defined in css.
