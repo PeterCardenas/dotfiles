@@ -4,6 +4,11 @@
 	editor = nvim
 	pager = delta
 	gpgpath = gpg
+[maintenance]
+	auto = false
+	strategy = incremental
+[checkout]
+	workers = -1
 [delta]
 	navigate = true # use n and N to move between diff sections
 [diff]
