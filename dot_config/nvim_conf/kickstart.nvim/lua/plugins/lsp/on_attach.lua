@@ -111,7 +111,7 @@ function M.on_attach(client, bufnr)
   end
 
   -- Needed to override the inlay hints toggle keymap.
-  vim.keymap.set({ 'i', 's' }, '<Tab>', function()
+  vim.keymap.set({ 'n', 'i', 's' }, '<Tab>', function()
     local luasnip = require('luasnip')
     if luasnip.expand_or_jumpable() then
       return luasnip.expand_or_jump()
