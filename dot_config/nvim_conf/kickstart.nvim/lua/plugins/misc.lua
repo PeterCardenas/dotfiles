@@ -488,6 +488,22 @@ return {
     cmd = { 'SudaRead', 'SudaWrite' },
   },
 
+  {
+    'nvim-pack/nvim-spectre',
+    cmd = { 'Spectre' },
+    config = function()
+      require('spectre').setup({
+        mapping = {
+          ['send_to_qf'] = {
+            map = '<leader>x',
+            cmd = "<cmd>lua require('spectre.actions').send_to_qf()<CR>",
+            desc = 'send all items to quickfix',
+          },
+        },
+      })
+    end,
+  },
+
   -- Take screenshots of highlighted text.
   {
     'michaelrommel/nvim-silicon',
