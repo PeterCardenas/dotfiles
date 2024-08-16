@@ -493,6 +493,7 @@ return {
     cmd = { 'Spectre' },
     config = function()
       require('spectre').setup({
+        use_trouble_qf = true,
         mapping = {
           ['send_to_qf'] = {
             map = '<leader>x',
