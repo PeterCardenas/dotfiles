@@ -228,6 +228,10 @@ return {
                 fileMatch = { 'tsconfig*.json' },
                 url = 'https://json.schemastore.org/tsconfig.json',
               },
+              {
+                fileMatch = { 'pyrightconfig.json' },
+                url = 'https://raw.githubusercontent.com/microsoft/pyright/main/packages/vscode-pyright/schemas/pyrightconfig.schema.json',
+              },
             },
           },
         },
