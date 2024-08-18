@@ -20,6 +20,10 @@ local function on_attach(client, _)
     client.server_capabilities.definitionProvider = not enable_pyright
     client.server_capabilities.referencesProvider = not enable_pyright
     client.server_capabilities.hoverProvider = not enable_pyright
+    if enable_pyright then
+      client.handlers[LspMethod.textDocument_completion] = function(_, _, _, _) end
+    end
+    -- Ignore and modify some pylsp diagnostics.
     ---@param result lsp.PublishDiagnosticsParams
     ---@param ctx lsp.HandlerContext
     ---@param config any
@@ -38,6 +42,10 @@ local function on_attach(client, _)
           if diagnostic.source == 'pylint' and diagnostic.code == 'E1102' and message:find('sqlalchemy.func.count') then
             should_filter = false
           end
+          -- False positive no-member error for alembic.op.
+          if diagnostic.source == 'pylint' and diagnostic.code == 'E1101' and message:find('alembic.op') then
+            should_filter = false
+          end
           -- Some mypy diagnostics range the entire function, so limit it to the first line.
           -- TODO: Limit this to the function signature.
           if diagnostic.source == 'mypy' then
@@ -45,9 +53,10 @@ local function on_attach(client, _)
               'Function is missing a type annotation for one or more arguments',
               'Function is missing a return type annotation',
               'Function is missing a type annotation',
+              'Use "-> None" if function does not return a value',
             }
-            local matching_messages = vim.tbl_filter(function(m)
-              return message:find(m) ~= nil
+            local matching_messages = vim.tbl_filter(function(function_message)
+              return string.find(message, function_message) ~= nil or function_message == message
             end, function_messages)
             if #matching_messages > 0 then
               diagnostic.range['end'].line = diagnostic.range.start.line
