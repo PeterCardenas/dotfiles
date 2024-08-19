@@ -231,9 +231,7 @@ return {
               },
             },
           },
-          lualine_c = {
-            'filename',
-          },
+          lualine_c = {},
           lualine_x = {
             {
               ---@diagnostic disable-next-line: undefined-field
