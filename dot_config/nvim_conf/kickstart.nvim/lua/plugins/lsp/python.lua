@@ -1,7 +1,7 @@
 local M = {}
 local LspMethod = vim.lsp.protocol.Methods
 
-local enable_pyright = not require('utils/config').USE_JEDI
+local enable_pyright = not require('utils.config').USE_JEDI
 local gen_files_path = 'bazel-out/k8-fastbuild/bin'
 
 --  Configures a language server after it attaches to a buffer.
@@ -12,17 +12,18 @@ local function on_attach(client, _)
     -- Defer to pylsp jedi plugin for hover documentation.
     client.server_capabilities.hoverProvider = false
   end
+  if client.name == 'pyright' then
+    -- TODO: Use pyright instead of jedi for all language features when venvPath works.
+    client.server_capabilities.definitionProvider = false
+    client.server_capabilities.hoverProvider = false
+  end
   if client.name == 'pylsp' then
     -- Do not use code actions from pylsp since they are slow for now.
     client.server_capabilities.codeActionProvider = false
     -- Disable language features that would be redundant with pyright.
     client.server_capabilities.documentSymbolProvider = not enable_pyright
-    client.server_capabilities.definitionProvider = not enable_pyright
     client.server_capabilities.referencesProvider = not enable_pyright
-    client.server_capabilities.hoverProvider = not enable_pyright
-    if enable_pyright then
-      client.handlers[LspMethod.textDocument_completion] = function(_, _, _, _) end
-    end
+    client.server_capabilities.renameProvider = not enable_pyright
     -- Ignore and modify some pylsp diagnostics.
     ---@param result lsp.PublishDiagnosticsParams
     ---@param ctx lsp.HandlerContext
@@ -127,7 +128,6 @@ local function pylsp_config()
   -- 'trailing-newlines'
   return {
     pylsp = {
-      cmd = { 'pylsp', '--log-file=/tmp/pylsp.log' },
       settings = {
         pylsp = {
           plugins = {
