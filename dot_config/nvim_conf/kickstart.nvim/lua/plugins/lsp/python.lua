@@ -24,54 +24,6 @@ local function on_attach(client, _)
     client.server_capabilities.documentSymbolProvider = not enable_pyright
     client.server_capabilities.referencesProvider = not enable_pyright
     client.server_capabilities.renameProvider = not enable_pyright
-    -- Ignore and modify some pylsp diagnostics.
-    ---@param result lsp.PublishDiagnosticsParams
-    ---@param ctx lsp.HandlerContext
-    ---@param config any
-    client.handlers[LspMethod.textDocument_publishDiagnostics] = function(_, result, ctx, config)
-      local diagnostics = result.diagnostics
-      local filtered_diagnostics = {}
-      for _, diagnostic in ipairs(diagnostics) do
-        local should_filter = true
-        -- Remove no-name-in-module pylint error for protobuf imports.
-        local message = diagnostic.message
-        if type(message) == 'string' then
-          if diagnostic.source == 'pylint' and diagnostic.code == 'E0611' and message:find('_pb2') then
-            should_filter = false
-          end
-          -- False positive not-callable error for sqlalchemy.func.count.
-          if diagnostic.source == 'pylint' and diagnostic.code == 'E1102' and message:find('sqlalchemy.func.count') then
-            should_filter = false
-          end
-          -- False positive no-member error for alembic.op.
-          if diagnostic.source == 'pylint' and diagnostic.code == 'E1101' and message:find('alembic.op') then
-            should_filter = false
-          end
-          -- Some mypy diagnostics range the entire function, so limit it to the first line.
-          -- TODO: Limit this to the function signature.
-          if diagnostic.source == 'mypy' then
-            local function_messages = {
-              'Function is missing a type annotation for one or more arguments',
-              'Function is missing a return type annotation',
-              'Function is missing a type annotation',
-              'Use "-> None" if function does not return a value',
-            }
-            local matching_messages = vim.tbl_filter(function(function_message)
-              return string.find(message, function_message) ~= nil or function_message == message
-            end, function_messages)
-            if #matching_messages > 0 then
-              diagnostic.range['end'].line = diagnostic.range.start.line
-              diagnostic.range['end'].character = 1000
-            end
-          end
-        end
-        if should_filter then
-          table.insert(filtered_diagnostics, diagnostic)
-        end
-      end
-      result.diagnostics = filtered_diagnostics
-      return vim.lsp.diagnostic.on_publish_diagnostics(_, result, ctx, config)
-    end
   end
 end
 
@@ -128,6 +80,56 @@ local function pylsp_config()
   -- 'trailing-newlines'
   return {
     pylsp = {
+      handlers = {
+        -- Ignore and modify some pylsp diagnostics.
+        ---@param result lsp.PublishDiagnosticsParams
+        ---@param ctx lsp.HandlerContext
+        ---@param config any
+        [LspMethod.textDocument_publishDiagnostics] = function(_, result, ctx, config)
+          local diagnostics = result.diagnostics
+          local filtered_diagnostics = {}
+          for _, diagnostic in ipairs(diagnostics) do
+            local should_filter = true
+            -- Remove no-name-in-module pylint error for protobuf imports.
+            local message = diagnostic.message
+            if type(message) == 'string' then
+              if diagnostic.source == 'pylint' and diagnostic.code == 'E0611' and message:find('_pb2') then
+                should_filter = false
+              end
+              -- False positive not-callable error for sqlalchemy.func.count.
+              if diagnostic.source == 'pylint' and diagnostic.code == 'E1102' and message:find('sqlalchemy.func.count') then
+                should_filter = false
+              end
+              -- False positive no-member error for alembic.op.
+              if diagnostic.source == 'pylint' and diagnostic.code == 'E1101' and message:find('alembic.op') then
+                should_filter = false
+              end
+              -- Some mypy diagnostics range the entire function, so limit it to the first line.
+              -- TODO: Limit this to the function signature.
+              if diagnostic.source == 'mypy' then
+                local function_messages = {
+                  'Function is missing a type annotation for one or more arguments',
+                  'Function is missing a return type annotation',
+                  'Function is missing a type annotation',
+                  'Use "-> None" if function does not return a value',
+                }
+                local matching_messages = vim.tbl_filter(function(function_message)
+                  return string.find(message, function_message) ~= nil or function_message == message
+                end, function_messages)
+                if #matching_messages > 0 then
+                  diagnostic.range['end'].line = diagnostic.range.start.line
+                  diagnostic.range['end'].character = 1000
+                end
+              end
+            end
+            if should_filter then
+              table.insert(filtered_diagnostics, diagnostic)
+            end
+          end
+          result.diagnostics = filtered_diagnostics
+          return vim.lsp.diagnostic.on_publish_diagnostics(_, result, ctx, config)
+        end,
+      },
       settings = {
         pylsp = {
           plugins = {
@@ -255,6 +257,30 @@ function M.python_lsp_config()
             dynamicRegistration = false,
           },
         },
+      },
+      handlers = {
+        ---@param _ lsp.ResponseError
+        ---@param result lsp.PublishDiagnosticsParams
+        ---@param ctx lsp.HandlerContext
+        ---@param config table
+        [LspMethod.textDocument_publishDiagnostics] = function(_, result, ctx, config)
+          local diagnostics = result.diagnostics
+          local filtered_diagnostics = {}
+          vim.print(result)
+          for _, diagnostic in ipairs(diagnostics) do
+            local should_filter = true
+            -- TODO: Remove this when pyright can read venvPath
+            vim.print(diagnostic)
+            if diagnostic.code == 'reportMissingImports' then
+              should_filter = false
+            end
+            if should_filter then
+              table.insert(filtered_diagnostics, diagnostic)
+            end
+          end
+          result.diagnostics = filtered_diagnostics
+          return vim.lsp.diagnostic.on_publish_diagnostics(_, result, ctx, config)
+        end,
       },
       settings = {
         python = {
