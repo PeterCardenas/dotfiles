@@ -63,7 +63,23 @@ return {
     'sindrets/diffview.nvim',
     cmd = { 'DiffviewOpen', 'DiffviewClose', 'DiffviewFileHistory' },
     config = function()
-      require('diffview').setup({})
+      require('diffview').setup({
+        watch_index = false,
+        show_help_hints = false,
+        enhanced_diff_hl = true,
+        view = {
+          merge_tool = {
+            layout = 'diff3_mixed',
+            disable_diagnostics = false,
+            winbar_info = true,
+          },
+        },
+        file_panel = {
+          win_config = {
+            width = 50,
+          },
+        },
+      })
     end,
   },
 
