@@ -149,7 +149,6 @@ function setup_unix() {
 	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 	rust_packages=(
 		git-delta
-		ripgrep
 		bob-nvim
 		fd-find
 		bat
@@ -159,6 +158,7 @@ function setup_unix() {
 		silicon
 	)
 	cargo install "${rust_packages[@]}"
+	cargo install --features 'pcre2' ripgrep
 
 	# Setup delta/bat theme
 	mkdir -p "$(bat --config-dir)/themes"
