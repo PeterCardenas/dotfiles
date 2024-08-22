@@ -247,7 +247,9 @@ return {
               },
             },
           },
-          lualine_c = {},
+          lualine_c = {
+            'filename',
+          },
           lualine_x = {
             {
               ---@diagnostic disable-next-line: undefined-field
@@ -513,18 +515,6 @@ return {
             map = '<leader>x',
             cmd = "<cmd>lua require('spectre.actions').send_to_qf()<CR>",
             desc = 'send all items to quickfix',
-          },
-        },
-        find_engine = {
-          ['rg'] = {
-            args = {
-              '--color=never',
-              '--no-heading',
-              '--with-filename',
-              '--line-number',
-              '--column',
-              '--pcre2',
-            },
           },
         },
       })
