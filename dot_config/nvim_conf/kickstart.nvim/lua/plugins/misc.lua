@@ -515,6 +515,18 @@ return {
             desc = 'send all items to quickfix',
           },
         },
+        find_engine = {
+          ['rg'] = {
+            args = {
+              '--color=never',
+              '--no-heading',
+              '--with-filename',
+              '--line-number',
+              '--column',
+              '--pcre2',
+            },
+          },
+        },
       })
     end,
   },
