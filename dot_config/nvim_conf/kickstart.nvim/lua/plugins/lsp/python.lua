@@ -266,11 +266,9 @@ function M.python_lsp_config()
         [LspMethod.textDocument_publishDiagnostics] = function(_, result, ctx, config)
           local diagnostics = result.diagnostics
           local filtered_diagnostics = {}
-          vim.print(result)
           for _, diagnostic in ipairs(diagnostics) do
             local should_filter = true
             -- TODO: Remove this when pyright can read venvPath
-            vim.print(diagnostic)
             if diagnostic.code == 'reportMissingImports' then
               should_filter = false
             end

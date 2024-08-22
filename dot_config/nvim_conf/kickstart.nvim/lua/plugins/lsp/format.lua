@@ -208,7 +208,6 @@ local function remove_typescript_unused_imports(bufnr, dry_run, on_complete)
     if err ~= nil then
       vim.notify('Error running typescript-tools remove unused imports: ' .. err.message, vim.log.levels.ERROR)
     else
-      -- vim.print(res)
       if not dry_run then
         vim.lsp.util.apply_workspace_edit(res, 'utf-8')
       end
