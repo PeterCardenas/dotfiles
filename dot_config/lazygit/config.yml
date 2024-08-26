@@ -14,7 +14,7 @@ gui:
     "main": "#9ece6a"
   theme:
     selectedLineBgColor:
-      - "#2a2e40"
+      - "#374261"
     activeBorderColor:
       - "#ff9e64"
       - "bold"
