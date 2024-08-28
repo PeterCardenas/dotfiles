@@ -517,6 +517,11 @@ return {
             desc = 'send all items to quickfix',
           },
         },
+        highlight = {
+          ui = 'String',
+          search = 'DiffAdd',
+          replace = 'DiffDelete',
+        },
       })
     end,
   },
