@@ -18,8 +18,10 @@ nmap('Toggle file explorer tree', 'ot', function()
   require('nvim-tree.actions').tree.toggle.fn({ find_file = true })
 end)
 
-nmap('Toggle oil file explorer', 'oo', function()
-  require('oil').toggle_float()
+nmap('Toggle mini file explorer', 'oo', function()
+  local current_buf = vim.api.nvim_get_current_buf()
+  local current_buf_filename = vim.api.nvim_buf_get_name(current_buf)
+  require('mini.files').open(current_buf_filename)
 end)
 
 ---@type LazyPluginSpec[]
@@ -52,6 +54,26 @@ return {
         default_file_explorer = true,
         view_options = {
           show_hidden = true,
+        },
+      })
+    end,
+  },
+
+  -- File explorer as a buffer and as a tree view
+  {
+    'echasnovski/mini.files',
+    version = false,
+    lazy = true,
+    config = function()
+      require('mini.files').setup({
+        windows = {
+          preview = true,
+        },
+        mappings = {
+          go_in = 'L',
+          go_in_plus = 'l',
+          go_out = 'H',
+          go_out_plus = 'h',
         },
       })
     end,
