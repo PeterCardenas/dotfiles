@@ -116,7 +116,7 @@ function M.on_attach(client, bufnr)
     if luasnip.expand_or_jumpable() then
       return luasnip.expand_or_jump()
     end
-  end)
+  end, { buffer = bufnr })
 
   -- Lesser used LSP functionality
   nmap('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
