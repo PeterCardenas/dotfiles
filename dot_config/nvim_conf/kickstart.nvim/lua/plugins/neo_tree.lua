@@ -74,6 +74,7 @@ return {
           go_in_plus = '<CR>',
           go_out = 'H',
           go_out_plus = '-',
+          synchronize = '<leader>s',
         },
       })
     end,
