@@ -7,6 +7,9 @@ local function on_attach(client, bufnr)
     client.server_capabilities.documentRangeFormattingProvider = false
   end
   require('plugins.lsp.on_attach').on_attach(client, bufnr)
+  vim.keymap.set({ 'n' }, 'gD', function()
+    require('typescript-tools.api').go_to_source_definition(false)
+  end, { buffer = bufnr })
 end
 
 ---@type LazyPluginSpec
