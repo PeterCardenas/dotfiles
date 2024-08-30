@@ -232,6 +232,26 @@ return {
                 fileMatch = { 'pyrightconfig.json' },
                 url = 'https://raw.githubusercontent.com/microsoft/pyright/main/packages/vscode-pyright/schemas/pyrightconfig.schema.json',
               },
+              {
+                fileMatch = { '.vscode/settings.json', 'vscode-settings.json' },
+                url = 'https://github.com/wraith13/vscode-schemas/raw/master/en/latest/schemas/settings/user.json',
+              },
+              {
+                fileMatch = { 'vscode-keybindings.json' },
+                url = 'https://github.com/wraith13/vscode-schemas/raw/master/en/latest/schemas/keybindings.json',
+              },
+              {
+                fileMatch = { '.vscode/launch.json' },
+                url = 'https://github.com/wraith13/vscode-schemas/raw/master/en/latest/schemas/launch.json',
+              },
+              {
+                fileMatch = { '.vscode/tasks.json' },
+                url = 'https://github.com/wraith13/vscode-schemas/raw/master/en/latest/schemas/tasks.json',
+              },
+              {
+                fileMatch = { '.vscode/extensions.json' },
+                url = 'https://github.com/wraith13/vscode-schemas/raw/master/en/latest/schemas/extensions.json',
+              },
             },
           },
         },
