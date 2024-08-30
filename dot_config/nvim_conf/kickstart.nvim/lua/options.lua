@@ -60,6 +60,7 @@ vim.filetype.add({
   },
   pattern = {
     ['.*%.go%.flaky'] = 'go',
+    ['%.vscode/%w*.json'] = 'jsonc',
   },
 })
 
