@@ -73,7 +73,7 @@ return {
           go_in = 'L',
           go_in_plus = '<CR>',
           go_out = 'H',
-          go_out_plus = 'h',
+          go_out_plus = '-',
         },
       })
     end,
