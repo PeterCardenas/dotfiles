@@ -33,6 +33,7 @@ return {
           importModuleSpecifierPreference = 'non-relative',
           quotePreference = 'single',
         },
+        tsserver_logs = 'verbose',
         jsx_close_tag = {
           enable = true,
         },
