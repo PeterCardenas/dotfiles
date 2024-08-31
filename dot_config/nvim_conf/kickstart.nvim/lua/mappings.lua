@@ -98,6 +98,11 @@ nmap('Toggle diagnostics', 'ud', function()
   local is_enabled_for_buf = vim.diagnostic.is_enabled({ bufnr = current_bufnr })
   vim.diagnostic.enable(not is_enabled_for_buf, { bufnr = current_bufnr })
 end)
+local is_showing_statusline = true
+nmap('Toggle status line', 'ul', function()
+  is_showing_statusline = not is_showing_statusline
+  require('lualine').hide({ unhide = is_showing_statusline, place = { 'statusline' } })
+end)
 
 nmap('Load current[.] directory [s]ession', 'S.', function()
   require('session_manager').load_current_dir_session()
