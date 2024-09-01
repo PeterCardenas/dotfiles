@@ -232,7 +232,7 @@ return {
                 url = 'https://json.schemastore.org/package.json',
               },
               {
-                fileMatch = { 'tsconfig*.json' },
+                fileMatch = { 'tsconfig.json', 'tsconfig.*.json' },
                 url = 'https://json.schemastore.org/tsconfig.json',
               },
               {
@@ -258,6 +258,10 @@ return {
               {
                 fileMatch = { '.vscode/extensions.json' },
                 url = 'https://github.com/wraith13/vscode-schemas/raw/master/en/latest/schemas/extensions.json',
+              },
+              {
+                fileMatch = { 'swc.json', 'swc.*.json', '.swcrc' },
+                url = 'https://json.schemastore.org/swcrc.json',
               },
             },
           },
