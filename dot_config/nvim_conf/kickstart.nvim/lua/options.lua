@@ -52,12 +52,12 @@ vim.g.skip_ts_context_commentstring_module = true
 vim.filetype.add({
   filename = {
     ['.bazelrc'] = 'Bazelrc',
-    ['.swcrc'] = 'json',
     -- Add chezmoi file name.
     ['dot_gitconfig'] = 'gitconfig',
   },
   extension = {
     mdx = 'markdown.mdx',
+    swcrc = 'json',
   },
   pattern = {
     ['.*%.go%.flaky'] = 'go',
