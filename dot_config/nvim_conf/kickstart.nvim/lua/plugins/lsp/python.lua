@@ -258,6 +258,8 @@ function M.python_lsp_config()
           },
         },
       },
+      -- Use for debugging pyright.
+      -- cmd = { os.getenv('HOME') .. '/thirdparty/pyright/packages/pyright/langserver.index.js', '--stdio' },
       handlers = {
         ---@param _ lsp.ResponseError
         ---@param result lsp.PublishDiagnosticsParams
