@@ -209,6 +209,17 @@ return {
             },
             telemetry = { enable = false },
             hint = { enable = true, arrayIndex = 'Disable' },
+            diagnostics = {
+              severity = {
+                ['await-in-sync'] = 'Error',
+              },
+              neededFileStatus = {
+                ['await-in-sync'] = 'Opened',
+                -- Remove some diagnostics that result from lua_ls not recognizing chezmoi source and target are the same.
+                ['duplicate-set-field'] = 'None',
+                ['duplicate-doc-field'] = 'None',
+              },
+            },
           },
         },
       },
