@@ -83,29 +83,6 @@ return {
     end,
   },
 
-  {
-    'nvim-tree/nvim-web-devicons',
-    lazy = true,
-    config = function()
-      ---@param icon_name string
-      local function get_config_icon(icon_name)
-        return {
-          icon = '',
-          color = '#4288b9',
-          name = icon_name,
-        }
-      end
-      require('nvim-web-devicons').setup({
-        override_by_filename = {
-          ['.bazelrc'] = get_config_icon('Bazelrc'),
-        },
-        override_by_extension = {
-          rc = get_config_icon('Rc'),
-        },
-      })
-    end,
-  },
-
   -- Better picker for LSP references, definitions, and diagnostics.
   {
     'folke/trouble.nvim',
@@ -221,9 +198,43 @@ return {
     lazy = true,
   },
 
+  --- Icons for files
+  --- Must be before any other plugin that calls this plugin so that setup can be called.
+  {
+    'nvim-tree/nvim-web-devicons',
+    lazy = false,
+    config = function()
+      ---@param icon_name string
+      local function get_config_icon(icon_name)
+        return {
+          icon = '',
+          color = '#4288b9',
+          name = icon_name,
+        }
+      end
+      local swcrc_icon_data = {
+        icon = '',
+        color = '#cbcb41',
+        name = 'swcrc',
+      }
+      -- Must be the only devicons require in this config function.
+      require('nvim-web-devicons').setup({
+        override_by_filename = {
+          ['.bazelrc'] = get_config_icon('Bazelrc'),
+          ['.swcrc'] = swcrc_icon_data,
+        },
+        override_by_extension = {
+          rc = get_config_icon('Rc'),
+          swcrc = swcrc_icon_data,
+        },
+      })
+    end,
+  },
+
   {
     -- Set lualine as statusline
     'nvim-lualine/lualine.nvim',
+    lazy = false,
     -- See `:help lualine.txt`
     config = function()
       require('lualine').setup({
