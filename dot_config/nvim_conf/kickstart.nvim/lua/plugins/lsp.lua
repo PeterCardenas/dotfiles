@@ -142,6 +142,13 @@ return {
     local clangd_cmd = home ~= nil and home .. '/.local/share/nvim/mason/bin/clangd' or ''
     local pnpm_home = os.getenv('PNPM_HOME')
     local tsserver_lib = pnpm_home ~= nil and pnpm_home .. '/global/5/node_modules/typescript/lib' or ''
+    -- Sometimes require statements need to be prefixed with `lua`
+    -- This should fix that.
+    local vim_runtime_paths = {} ---@type string[]
+    for _, path in ipairs(vim.api.nvim_get_runtime_file('', true)) do
+      table.insert(vim_runtime_paths, path)
+      table.insert(vim_runtime_paths, path .. '/lua')
+    end
     -- Enable the following language servers
     -- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
     ---@type table<string, lspconfig.Config>
@@ -198,7 +205,7 @@ return {
           Lua = {
             workspace = {
               checkThirdParty = false,
-              library = vim.api.nvim_get_runtime_file('', true),
+              library = vim_runtime_paths,
             },
             telemetry = { enable = false },
             hint = { enable = true, arrayIndex = 'Disable' },
