@@ -4,10 +4,15 @@ vim.api.nvim_create_autocmd('BufEnter', {
   callback = function()
     local stats = vim.loop.fs_stat(vim.api.nvim_buf_get_name(0))
     if stats and stats.type == 'directory' then
-      -- Open NvimTree with the current file's directory
-      require('nvim-tree.actions.tree').open.fn({
-        path = vim.fn.expand('%:p:h'),
-      })
+      local num_bufs = #vim.api.nvim_list_bufs()
+      if num_bufs == 1 then
+        -- Open NvimTree with the current file's directory
+        require('nvim-tree.actions.tree').open.fn({
+          path = vim.fn.expand('%:p:h'),
+        })
+      else
+        require('mini.files').open(vim.fn.expand('%:p:h'))
+      end
     end
   end,
 })
