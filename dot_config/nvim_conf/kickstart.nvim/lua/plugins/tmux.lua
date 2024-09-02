@@ -1,75 +1,101 @@
 -- [[ Neovim TMUX Integration ]]
 
----Create a tmux command with the given subcommand prepended with the tmux socket path.
+---@class TmuxCmd
+---@field pane_id string
+---@field socket string
+local TmuxCmd = {}
+TmuxCmd.__index = TmuxCmd
+
+---@param pane_id string
+---@param tmux_var string
+---@return TmuxCmd
+function TmuxCmd:new(pane_id, tmux_var)
+  local socket = vim.split(tmux_var, ',')[1]
+  ---@type TmuxCmd
+  local instance = {
+    pane_id = pane_id,
+    socket = socket,
+  }
+  setmetatable(instance, self)
+  return instance
+end
+
+function TmuxCmd:with_socket(subcommand)
+  return 'tmux -S ' .. self.socket .. ' ' .. subcommand
+end
+
+function TmuxCmd:with_set_option(subcommand)
+  return self:with_socket('set-option -t ' .. self.pane_id .. ' -p ' .. subcommand)
+end
+
+---@async
 ---@param subcommand string
----@return string
-local function with_tmux_socket(subcommand)
-  local tmux_socket = vim.fn.split(vim.env.TMUX, ',')[1]
-  if not tmux_socket then
-    error('TMUX socket is not found in env ' .. vim.env.TMUX)
+---@return boolean
+function TmuxCmd:set_option(subcommand)
+  local shell = require('utils.shell')
+  local success, output = shell.async_cmd('fish', { '-c', self:with_set_option(subcommand) })
+  if not success then
+    vim.notify('Failed to set tmux option: ' .. vim.inspect(output), vim.log.levels.ERROR)
   end
-  return 'tmux -S ' .. tmux_socket .. ' ' .. subcommand
+  return success
 end
 
----Create a tmux set-option command with the given subcommand prepended with the tmux pane id and tmux socket path.
----@param subcommand string
----@return string
-local function with_tmux_set_option(subcommand)
-  local tmux_pane_id = vim.env.TMUX_PANE
-  if not tmux_pane_id then
-    error('TMUX_PANE is not set')
+---@async
+function TmuxCmd:set_is_vim()
+  local success = self:set_option('@disable_vertical_pane_navigation yes')
+  if not success then
+    return
   end
-  return with_tmux_socket('set-option -t ' .. tmux_pane_id .. ' -p ' .. subcommand)
+  success = self:set_option('@disable_horizontal_pane_navigation yes')
 end
 
-local function set_is_vim()
-  local was_success, error_obj = pcall(function()
-    -- Set shell to bash for tmux navigation to be fast.
-    -- Reference: https://github.com/christoomey/vim-tmux-navigator/issues/72#issuecomment-873841679
-    -- TODO: Ideally fish isn't that slow, maybe we there's a way to make startup faster.
-    vim.o.shell = '/bin/bash'
-    local strict_cmd = require('utils.shell').strict_cmd
-    strict_cmd(with_tmux_set_option('@disable_vertical_pane_navigation yes'))
-    strict_cmd(with_tmux_set_option('@disable_horizontal_pane_navigation yes'))
-    vim.o.shell = 'fish'
-  end)
-  if not was_success then
-    vim.notify('Failed to set is_vim, error: ' .. vim.inspect(error_obj), vim.log.levels.ERROR)
+---@async
+function TmuxCmd:unset_is_vim()
+  local success = self:set_option('-u @disable_vertical_pane_navigation')
+  if not success then
+    return
   end
-end
-
-local function unset_is_vim()
-  local was_success, error_obj = pcall(function()
-    -- Set shell to bash for tmux navigation to be fast.
-    -- Reference: https://github.com/christoomey/vim-tmux-navigator/issues/72#issuecomment-873841679
-    vim.o.shell = '/bin/bash'
-    local strict_cmd = require('utils.shell').strict_cmd
-    strict_cmd(with_tmux_set_option('-u @disable_vertical_pane_navigation'))
-    strict_cmd(with_tmux_set_option('-u @disable_horizontal_pane_navigation'))
-    vim.o.shell = 'fish'
-  end)
-  if not was_success then
-    vim.notify('Failed to unset is_vim, error: ' .. vim.inspect(error_obj), vim.log.levels.ERROR)
-  end
+  success = self:set_option('-u @disable_horizontal_pane_navigation')
 end
 
 local nvim_is_open = true
+
+local function set_is_vim()
+  nvim_is_open = true
+  local tmux_cmd = TmuxCmd:new(vim.env.TMUX_PANE, vim.env.TMUX)
+  local async = require('plenary.async')
+  async.run(
+    ---@async
+    function()
+      tmux_cmd:set_is_vim()
+    end
+  )
+end
+
+local function unset_is_vim()
+  nvim_is_open = false
+  local tmux_cmd = TmuxCmd:new(vim.env.TMUX_PANE, vim.env.TMUX)
+  local async = require('plenary.async')
+  async.run(
+    ---@async
+    function()
+      tmux_cmd:unset_is_vim()
+    end
+  )
+end
+
 local function setup_tmux_autocommands()
   local tmux_navigator_group = vim.api.nvim_create_augroup('tmux_navigator_is_vim', { clear = true })
   vim.api.nvim_create_autocmd('VimEnter', {
     desc = 'Tell TMUX we entered neovim',
     group = tmux_navigator_group,
-    callback = function()
-      nvim_is_open = true
-      set_is_vim()
-    end,
+    callback = set_is_vim,
   })
 
   vim.api.nvim_create_autocmd('VimLeavePre', {
     desc = 'Tell TMUX we left neovim',
     group = tmux_navigator_group,
     callback = function()
-      nvim_is_open = false
       unset_is_vim()
       -- Hack for making sure vim doesn't exit with a non-zero exit code.
       -- Reference: https://github.com/neovim/neovim/issues/21856#issuecomment-1514723887
@@ -79,18 +105,12 @@ local function setup_tmux_autocommands()
   vim.api.nvim_create_autocmd('VimSuspend', {
     desc = 'Tell TMUX we suspended neovim',
     group = tmux_navigator_group,
-    callback = function()
-      nvim_is_open = false
-      unset_is_vim()
-    end,
+    callback = unset_is_vim,
   })
   vim.api.nvim_create_autocmd('VimResume', {
     desc = 'Tell TMUX we resumed neovim',
     group = tmux_navigator_group,
-    callback = function()
-      nvim_is_open = true
-      set_is_vim()
-    end,
+    callback = set_is_vim,
   })
 
   vim.api.nvim_create_autocmd('FocusLost', {
@@ -110,42 +130,53 @@ local function setup_tmux_autocommands()
   })
 end
 
+---@async
 local function update_ssh_connection_from_tmux()
-  local tmux_ssh_connection = vim.fn.systemlist("tmux showenv | string match -rg '^SSH_CONNECTION=(.*?)$'")[1]
-  if tmux_ssh_connection == '' then
-    vim.env.SSH_CONNECTION = nil
+  local shell = require('utils.shell')
+  local success, output = shell.async_cmd('fish', { '-c', "tmux showenv | string match -rg '^SSH_CONNECTION=(.*?)$'" })
+  if not success then
+    vim.notify('Failed to get tmux ssh connection: ' .. vim.inspect(output), vim.log.levels.ERROR)
     return
   end
-  vim.env.SSH_CONNECTION = tmux_ssh_connection
+  if #output ~= 1 then
+    vim.notify('Unexpected output from tmux showenv: ' .. vim.inspect(output), vim.log.levels.ERROR)
+    return
+  end
+  local tmux_ssh_connection = output[1]
+  vim.schedule(function()
+    if tmux_ssh_connection == '' then
+      vim.env.SSH_CONNECTION = nil
+      return
+    end
+    vim.env.SSH_CONNECTION = tmux_ssh_connection
+  end)
 end
-
-TMUX_TIMER_ID = nil
 
 local function poll_update_tmux_env()
-  if TMUX_TIMER_ID ~= nil then
-    vim.fn.timer_stop(TMUX_TIMER_ID)
-  end
-  TMUX_TIMER_ID = vim.fn.timer_start(
-    1000,
-    vim.schedule_wrap(function()
+  local tmux_cmd = TmuxCmd:new(vim.env.TMUX_PANE, vim.env.TMUX)
+  local async = require('plenary.async')
+  async.run(
+    ---@async
+    function()
       update_ssh_connection_from_tmux()
-
-      -- The vim pane option is only set when vim is open.
       if nvim_is_open then
-        set_is_vim()
+        tmux_cmd:set_is_vim()
       end
-    end),
-    { ['repeat'] = -1 }
+      require('utils.shell').sleep(1000)
+    end,
+    poll_update_tmux_env
   )
-  if TMUX_TIMER_ID == -1 then
-    vim.notify('Failed to start timer for updating tmux env', vim.log.levels.ERROR)
+end
+
+local function setup_tmux_navigation()
+  if vim.env.TMUX_PANE and vim.env.TMUX then
+    setup_tmux_autocommands()
+    local async = require('plenary.async')
+    async.run(poll_update_tmux_env)
   end
 end
 
-if vim.env.TMUX_PANE and vim.env.TMUX then
-  setup_tmux_autocommands()
-  poll_update_tmux_env()
-end
+setup_tmux_navigation()
 
 ---@type LazyPluginSpec
 return {
