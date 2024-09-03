@@ -207,36 +207,34 @@ return {
     lazy = true,
   },
 
-  --- Icons for files
-  --- Must be before any other plugin that calls this plugin so that setup can be called.
+  --- Utility icons for files
   {
-    'nvim-tree/nvim-web-devicons',
+    'echasnovski/mini.icons',
+    version = false,
     lazy = false,
     config = function()
-      ---@param icon_name string
-      local function get_config_icon(icon_name)
-        return {
-          icon = '',
-          color = '#4288b9',
-          name = icon_name,
-        }
-      end
-      local swcrc_icon_data = {
-        icon = '',
-        color = '#cbcb41',
-        name = 'swcrc',
-      }
-      -- Must be the only devicons require in this config function.
-      require('nvim-web-devicons').setup({
-        override_by_filename = {
-          ['.bazelrc'] = get_config_icon('Bazelrc'),
-          ['.swcrc'] = swcrc_icon_data,
+      require('mini.icons').setup({
+        file = {
+          ['.bazelrc'] = { glyph = '󰒓', hl = 'MiniIconsCyan' },
+          ['.swcrc'] = { glyph = '󰘦', hl = 'MiniIconsYellow' },
+          ['tsconfig.json'] = { glyph = '', hl = 'MiniIconsBlue' },
+          ['.npmrc'] = { glyph = '', hl = 'MiniIconsRed' },
+          ['package.json'] = { glyph = '', hl = 'MiniIconsRed' },
+          ['package-lock.json'] = { glyph = '', hl = 'MiniIconsRed' },
         },
-        override_by_extension = {
-          rc = get_config_icon('Rc'),
-          swcrc = swcrc_icon_data,
+        extension = {
+          rc = { glyph = '󰒓', hl = 'MiniIconsCyan' },
+          swcrc = { glyph = '', hl = 'MiniIconsYellow' },
+          ts = { glyph = '', hl = 'MiniIconsBlue' },
+          ['d.ts'] = { glyph = '', hl = 'MiniIconsOrange' },
+          ['test.ts'] = { glyph = '', hl = 'MiniIconsBlue' },
+          ['test.tsx'] = { glyph = '', hl = 'MiniIconsCyan' },
+        },
+        directory = {
+          ['.vscode'] = { glyph = '', hl = 'MiniIconsBlue' },
         },
       })
+      require('mini.icons').mock_nvim_web_devicons()
     end,
   },
 
