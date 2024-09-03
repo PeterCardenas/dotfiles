@@ -135,7 +135,6 @@ local function update_ssh_connection_from_tmux()
   local shell = require('utils.shell')
   local success, output = shell.async_cmd('fish', { '-c', "tmux showenv | string match -rg '^SSH_CONNECTION=(.*?)$'" })
   if not success then
-    vim.notify('Failed to get tmux ssh connection: ' .. vim.inspect(output), vim.log.levels.ERROR)
     return
   end
   if #output ~= 1 then
