@@ -39,7 +39,9 @@ local function bazel_go_lint(abs_filepath)
   local query_targets = string.format('kind(go_*, rdeps(//%s/..., %s, 1))', relative_parent_dir, relative_filepath)
   success, output = shell.async_cmd('fish', { '-c', string.format('bazel %s query --color=no "%s"', output_base_flag, query_targets) })
   if not success then
-    vim.notify('Failed to bazel query for go', vim.log.levels.ERROR)
+    vim.schedule(function()
+      vim.notify('Failed to bazel query for go', vim.log.levels.ERROR)
+    end)
     enqueue_next_bazel_go_lint()
     return
   end
