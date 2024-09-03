@@ -62,6 +62,7 @@ function M.setup(capabilities)
   require('lspconfig').ccls.setup({
     enabled = not require('utils.config').USE_CLANGD,
     capabilities = ccls_capabilities,
+    offset_encoding = 'utf-16',
   })
 end
 
