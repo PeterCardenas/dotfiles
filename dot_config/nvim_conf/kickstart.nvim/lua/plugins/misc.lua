@@ -559,4 +559,17 @@ return {
       })
     end,
   },
+
+  -- Faster LuaLS completions
+  {
+    'folke/lazydev.nvim',
+    ft = 'lua', -- only load on lua files
+    config = function()
+      require('lazydev').setup({
+        library = {
+          'lazy.nvim',
+        },
+      })
+    end,
+  },
 }
