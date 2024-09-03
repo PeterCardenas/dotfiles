@@ -124,7 +124,6 @@ return {
     'bzl',
     'mdx',
     'markdown',
-    'text',
     'rust',
     'yaml',
     'sh',
