@@ -154,6 +154,9 @@ return {
               neededFileStatus = {
                 ['await-in-sync'] = 'Opened',
               },
+              globals = {
+                'require',
+              },
             },
           },
         },
