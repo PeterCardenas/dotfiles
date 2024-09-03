@@ -7,29 +7,51 @@ vim.api.nvim_create_autocmd('BufWritePost', {
     if not filepath:find('^' .. os.getenv('HOME') .. '/.local/share/chezmoi') then
       return
     end
-    vim.system({ 'chezmoi', 'apply', '--source-path', filepath })
+    local async = require('plenary.async')
+    local shell = require('utils.shell')
+    async.void(
+      ---@async
+      function()
+        local success, output = shell.async_cmd('chezmoi', { 'apply', '--source-path', filepath })
+        if not success then
+          vim.notify('chezmoi apply failed: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
+          return
+        end
+      end
+    )()
   end,
   group = chezmoi_augroup,
   pattern = '*',
 })
 
+---@async
 local function track_lazy_lock()
+  local shell = require('utils.shell')
   local symlinked_lazy_lock_file_path = os.getenv('HOME') .. '/.config/nvim/lazy-lock.json'
-  local lazy_lock_file_path_unformatted = vim.system({ 'realpath', symlinked_lazy_lock_file_path }):wait().stdout
+  local success, output = shell.async_cmd('realpath', { symlinked_lazy_lock_file_path })
+  if not success then
+    vim.notify('realpath failed: ' .. symlinked_lazy_lock_file_path, vim.log.levels.ERROR)
+    return
+  end
+  local lazy_lock_file_path_unformatted = output[1]
   if not lazy_lock_file_path_unformatted then
     vim.notify('lazy-lock.json not found' .. symlinked_lazy_lock_file_path, vim.log.levels.ERROR)
     return
   end
+
   local lazy_lock_file_path = lazy_lock_file_path_unformatted:gsub('\n', '')
-  local chezmoi_add_metadata = vim.system({ 'chezmoi', 'add', lazy_lock_file_path }):wait()
-  if chezmoi_add_metadata.code ~= 0 then
-    vim.notify('chezmoi add failed: ' .. chezmoi_add_metadata.stderr, vim.log.levels.ERROR)
+  success, output = shell.async_cmd('chezmoi', { 'add', lazy_lock_file_path })
+  if not success then
+    vim.notify('chezmoi add failed: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
     return
   end
 end
 
 vim.api.nvim_create_autocmd('User', {
-  callback = track_lazy_lock,
+  callback = function()
+    local async = require('plenary.async')
+    async.void(track_lazy_lock)()
+  end,
   group = chezmoi_augroup,
   pattern = { 'LazyInstall', 'LazyUpdate', 'LazyClean', 'LazyDone', 'LazyReload' },
 })
