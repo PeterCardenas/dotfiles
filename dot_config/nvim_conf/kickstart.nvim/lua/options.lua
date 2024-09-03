@@ -119,8 +119,6 @@ vim.o.timeoutlen = 300
 -- Set completeopt to have a better completion experience
 vim.o.completeopt = 'menuone,noselect'
 
-vim.o.shell = 'env FAST_PROMPT=1 /usr/bin/fish'
-
 ---@class SignDefinition: vim.fn.sign_define.dict
 ---@field name string
 
