@@ -25,8 +25,16 @@ vim.api.nvim_create_user_command('SiliconCopy', function()
 end, { nargs = 0, range = true })
 
 vim.api.nvim_create_user_command('DiffviewPR', function()
-  local default_branch = require('utils.git').get_default_branch()
-  vim.cmd('DiffviewOpen origin/' .. default_branch .. '...HEAD')
+  local async = require('plenary.async')
+  async.void(
+    ---@async
+    function()
+      local default_branch = require('utils.git').get_default_branch()
+      vim.schedule(function()
+        vim.cmd('DiffviewOpen origin/' .. default_branch .. '...HEAD')
+      end)
+    end
+  )()
 end, { nargs = 0 })
 
 vim.api.nvim_create_user_command('DiffviewCurrentFileHistory', function(opts)
