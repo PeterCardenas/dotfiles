@@ -105,32 +105,8 @@ return {
         })
       end,
     },
-
-    -- Additional lua configuration, makes nvim stuff amazing!
-    'folke/neodev.nvim',
   },
-  ft = {
-    'typescript',
-    'typescriptreact',
-    'javascript',
-    'javascriptreact',
-    'css',
-    'scss',
-    'cpp',
-    'python',
-    'go',
-    'json',
-    'lua',
-    'bzl',
-    'mdx',
-    'markdown',
-    'rust',
-    'yaml',
-    'sh',
-    'fish',
-    'toml',
-    'jsonc',
-  },
+  ft = require('utils.lsp').FT_WITH_LSP,
   config = function()
     ---@type fun(path: string): string?
     local get_clangd_root = require('lspconfig.util').root_pattern('compile_commands.json')
@@ -275,20 +251,6 @@ return {
     }
     local python_lsp_config = require('plugins.lsp.python').python_lsp_config()
     servers = require('utils.table').merge_tables(servers, python_lsp_config)
-
-    -- Setup neovim lua configuration
-    -- Load plugins when editing overall configuration.
-    require('neodev').setup({
-      ---@param root_dir string
-      override = function(root_dir, library)
-        if root_dir:find('.local/share/chezmoi', 1, true) ~= nil then
-          library.enabled = true
-          library.plugins = true
-          library.runtime = true
-          library.types = true
-        end
-      end,
-    })
 
     -- nvim-cmp supports additional completion capabilities, so broadcast that to servers
     local capabilities = vim.lsp.protocol.make_client_capabilities()
