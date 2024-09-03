@@ -1,3 +1,5 @@
+local async = require('utils.async')
+
 vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter' }, {
   desc = 'Lint on write',
   group = vim.api.nvim_create_augroup('LintOnWrite', { clear = true }),
@@ -99,13 +101,12 @@ local function bazel_go_lint(abs_filepath)
     for filename, diagnostics in pairs(file_diagnostics) do
       local bufnr = filename_to_bufnr(filename)
       vim.diagnostic.set(nogo_diagnostic_ns, bufnr, diagnostics, { underline = true })
-      local async = require('plenary.async')
       async.void(
         ---@async
         function()
           enqueue_next_bazel_go_lint()
         end
-      )()
+      )
     end
   end
   vim.schedule(set_diagnostics)
@@ -121,13 +122,12 @@ vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter' }, {
       return
     end
     if #bazel_go_lint_queue == 0 then
-      local async = require('plenary.async')
       async.void(
         ---@async
         function()
           bazel_go_lint(abs_filepath)
         end
-      )()
+      )
     end
     bazel_go_lint_queue[abs_filepath] =
       ---@async

@@ -1,3 +1,5 @@
+local async = require('utils.async')
+
 ---@async
 ---@return string
 local function get_repo_url()
@@ -44,8 +46,7 @@ vim.api.nvim_create_user_command('GHPR', function()
   end
   local lnum = vim.api.nvim_win_get_cursor(0)[1]
   local config = require('gitsigns.config').config
-  local async = require('plenary.async')
-  local run = async.void(
+  async.void(
     ---@async
     function()
       local blame_info = cache_entry:get_blame(lnum, config.current_line_blame_opts)
@@ -70,7 +71,6 @@ vim.api.nvim_create_user_command('GHPR', function()
       vim.notify('Copied PR link to clipboard:\n' .. pr_url, vim.log.levels.INFO)
     end
   )
-  run()
 end, { nargs = 0, desc = 'Open/Copy GitHub PR link for current line' })
 
 local function relative_path_to_git_root()
@@ -109,8 +109,7 @@ vim.api.nvim_create_user_command('GHFile', function()
     vim.notify('Could not find relative path to git root', vim.log.levels.ERROR)
     return
   end
-  local async = require('plenary.async')
-  local run = async.void(
+  async.void(
     ---@async
     function()
       local repo_url = get_repo_url()
@@ -123,7 +122,6 @@ vim.api.nvim_create_user_command('GHFile', function()
       vim.fn.setreg('+', file_url)
     end
   )
-  run()
 end, { nargs = 0, desc = 'Open/Copy GitHub file link on master for current file', range = true })
 
 local nmap = require('utils.keymap').nmap
