@@ -1,3 +1,5 @@
+local async = require('utils.async')
+
 ---@param bufnr integer
 ---@param file_size_threshold integer
 ---@return boolean
@@ -25,7 +27,6 @@ vim.api.nvim_create_user_command('SiliconCopy', function()
 end, { nargs = 0, range = true })
 
 vim.api.nvim_create_user_command('DiffviewPR', function()
-  local async = require('plenary.async')
   async.void(
     ---@async
     function()
@@ -34,7 +35,7 @@ vim.api.nvim_create_user_command('DiffviewPR', function()
         vim.cmd('DiffviewOpen origin/' .. default_branch .. '...HEAD')
       end)
     end
-  )()
+  )
 end, { nargs = 0 })
 
 vim.api.nvim_create_user_command('DiffviewCurrentFileHistory', function(opts)

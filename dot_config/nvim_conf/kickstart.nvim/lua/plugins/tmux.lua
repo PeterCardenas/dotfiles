@@ -1,5 +1,7 @@
 -- [[ Neovim TMUX Integration ]]
 
+local async = require('utils.async')
+
 ---@class TmuxCmd
 ---@field pane_id string
 ---@field socket string
@@ -63,8 +65,7 @@ local nvim_is_open = true
 local function set_is_vim()
   nvim_is_open = true
   local tmux_cmd = TmuxCmd:new(vim.env.TMUX_PANE, vim.env.TMUX)
-  local async = require('plenary.async')
-  async.run(
+  async.void(
     ---@async
     function()
       tmux_cmd:set_is_vim()
@@ -75,8 +76,7 @@ end
 local function unset_is_vim()
   nvim_is_open = false
   local tmux_cmd = TmuxCmd:new(vim.env.TMUX_PANE, vim.env.TMUX)
-  local async = require('plenary.async')
-  async.run(
+  async.void(
     ---@async
     function()
       tmux_cmd:unset_is_vim()
@@ -154,7 +154,6 @@ end
 
 local function poll_update_tmux_env()
   local tmux_cmd = TmuxCmd:new(vim.env.TMUX_PANE, vim.env.TMUX)
-  local async = require('plenary.async')
   async.run(
     ---@async
     function()
@@ -171,8 +170,7 @@ end
 local function setup_tmux_navigation()
   if vim.env.TMUX_PANE and vim.env.TMUX then
     setup_tmux_autocommands()
-    local async = require('plenary.async')
-    async.run(poll_update_tmux_env)
+    async.void(poll_update_tmux_env)
   end
 end
 

@@ -1,3 +1,6 @@
+local async = require('utils.async')
+local shell = require('utils.shell')
+
 local chezmoi_augroup = vim.api.nvim_create_augroup('Chezmoi', { clear = true })
 
 vim.api.nvim_create_autocmd('BufWritePost', {
@@ -7,8 +10,6 @@ vim.api.nvim_create_autocmd('BufWritePost', {
     if not filepath:find('^' .. os.getenv('HOME') .. '/.local/share/chezmoi') then
       return
     end
-    local async = require('plenary.async')
-    local shell = require('utils.shell')
     async.void(
       ---@async
       function()
@@ -18,7 +19,7 @@ vim.api.nvim_create_autocmd('BufWritePost', {
           return
         end
       end
-    )()
+    )
   end,
   group = chezmoi_augroup,
   pattern = '*',
@@ -26,7 +27,6 @@ vim.api.nvim_create_autocmd('BufWritePost', {
 
 ---@async
 local function track_lazy_lock()
-  local shell = require('utils.shell')
   local symlinked_lazy_lock_file_path = os.getenv('HOME') .. '/.config/nvim/lazy-lock.json'
   local success, output = shell.async_cmd('realpath', { symlinked_lazy_lock_file_path })
   if not success then
@@ -49,8 +49,7 @@ end
 
 vim.api.nvim_create_autocmd('User', {
   callback = function()
-    local async = require('plenary.async')
-    async.void(track_lazy_lock)()
+    async.void(track_lazy_lock)
   end,
   group = chezmoi_augroup,
   pattern = { 'LazyInstall', 'LazyUpdate', 'LazyClean', 'LazyDone', 'LazyReload' },

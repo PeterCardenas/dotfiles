@@ -1,5 +1,5 @@
+--TODO: Make this lazy load
 local async = require('plenary.async')
-local Job = require('plenary.job')
 
 M = {}
 
@@ -20,6 +20,8 @@ M.async_cmd = async.wrap(
   ---@param done fun(success: boolean, output: string[])
   ---@return nil
   function(cmd, args, done)
+    local Job = require('plenary.job')
+
     ---@type string[]
     local output = {}
     ---@param data string
