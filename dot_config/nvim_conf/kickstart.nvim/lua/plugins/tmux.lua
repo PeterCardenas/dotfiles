@@ -37,7 +37,9 @@ function TmuxCmd:set_option(subcommand)
   local shell = require('utils.shell')
   local success, output = shell.async_cmd('fish', { '-c', self:with_set_option(subcommand) })
   if not success then
-    vim.notify('Failed to set tmux option: ' .. vim.inspect(output), vim.log.levels.ERROR)
+    vim.schedule(function()
+      vim.notify('Failed to set tmux option: ' .. vim.inspect(output), vim.log.levels.ERROR)
+    end)
   end
   return success
 end
@@ -138,7 +140,9 @@ local function update_ssh_connection_from_tmux()
     return
   end
   if #output ~= 1 then
-    vim.notify('Unexpected output from tmux showenv: ' .. vim.inspect(output), vim.log.levels.ERROR)
+    vim.schedule(function()
+      vim.notify('Unexpected output from tmux showenv: ' .. vim.inspect(output), vim.log.levels.ERROR)
+    end)
     return
   end
   local tmux_ssh_connection = output[1]

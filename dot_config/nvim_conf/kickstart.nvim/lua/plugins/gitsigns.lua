@@ -51,12 +51,16 @@ vim.api.nvim_create_user_command('GHPR', function()
     function()
       local blame_info = cache_entry:get_blame(lnum, config.current_line_blame_opts)
       if not blame_info then
-        vim.notify('Blame has not been loaded yet.', vim.log.levels.ERROR)
+        vim.schedule(function()
+          vim.notify('Blame has not been loaded yet.', vim.log.levels.ERROR)
+        end)
         return
       end
       local not_committed_sha = require('gitsigns.git.blame').get_blame_nc('', lnum).commit.sha
       if blame_info.commit.sha == not_committed_sha then
-        vim.notify('Current line not committed yet.', vim.log.levels.ERROR)
+        vim.schedule(function()
+          vim.notify('Current line not committed yet.', vim.log.levels.ERROR)
+        end)
         return
       end
       local commit_sha = blame_info.commit.sha
@@ -94,7 +98,7 @@ end
 local function common_ancestor_commit_with_master()
   local default_branch = require('utils.git').get_default_branch()
   local shell = require('utils.shell')
-  local _, output = shell.async('git merge-base HEAD origin/' .. default_branch)
+  local _, output = shell.async_cmd('git', { 'merge-base', 'HEAD', 'origin/' .. default_branch })
   local commit_sha = output[1]
   return commit_sha
 end
