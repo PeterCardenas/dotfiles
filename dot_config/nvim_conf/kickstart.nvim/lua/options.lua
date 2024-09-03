@@ -6,6 +6,9 @@ vim.o.foldlevelstart = 99
 vim.o.foldenable = true
 vim.o.fillchars = 'eob: ,fold: ,foldopen:,foldsep:│,foldclose:'
 
+-- Makes fish shell execution startup faster.
+vim.env.FAST_PROMPT = '1'
+
 vim.o.showtabline = require('utils.config').USE_TABLINE and 2 or 0
 
 --- Use tmux-aware OSC 52 for clipboard
