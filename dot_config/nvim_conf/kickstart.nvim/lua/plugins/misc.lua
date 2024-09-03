@@ -572,4 +572,38 @@ return {
       })
     end,
   },
+
+  -- Adds additional extensions for clangd.
+  {
+    'p00f/clangd_extensions.nvim',
+    enabled = function()
+      return require('utils.config').USE_CLANGD
+    end,
+    config = function()
+      require('clangd_extensions').setup({
+        ast = {
+          role_icons = {
+            type = '',
+            declaration = '',
+            expression = '',
+            specifier = '',
+            statement = '',
+            ['template argument'] = '',
+          },
+          kind_icons = {
+            Compound = '',
+            Recovery = '',
+            TranslationUnit = '',
+            PackExpansion = '',
+            TemplateTypeParm = '',
+            TemplateTemplateParm = '',
+            TemplateParamObject = '',
+          },
+        },
+      })
+    end,
+  },
+
+  -- Automatically install LSPs to stdpath for neovim
+  { 'williamboman/mason.nvim', config = true, cmd = { 'Mason' } },
 }

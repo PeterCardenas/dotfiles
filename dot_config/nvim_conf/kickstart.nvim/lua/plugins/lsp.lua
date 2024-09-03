@@ -61,8 +61,6 @@ return {
   -- LSP Configuration & Plugins
   'neovim/nvim-lspconfig',
   dependencies = {
-    -- Automatically install LSPs to stdpath for neovim
-    { 'williamboman/mason.nvim', config = true },
     'williamboman/mason-lspconfig.nvim',
 
     -- Useful status updates for LSP
@@ -74,33 +72,6 @@ return {
         require('fidget').setup({
           window = {
             winblend = 0,
-          },
-        })
-      end,
-    },
-
-    {
-      'p00f/clangd_extensions.nvim',
-      config = function()
-        require('clangd_extensions').setup({
-          ast = {
-            role_icons = {
-              type = '',
-              declaration = '',
-              expression = '',
-              specifier = '',
-              statement = '',
-              ['template argument'] = '',
-            },
-            kind_icons = {
-              Compound = '',
-              Recovery = '',
-              TranslationUnit = '',
-              PackExpansion = '',
-              TemplateTypeParm = '',
-              TemplateTemplateParm = '',
-              TemplateParamObject = '',
-            },
           },
         })
       end,
