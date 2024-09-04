@@ -612,4 +612,13 @@ return {
 
   -- Automatically install LSPs to stdpath for neovim
   { 'williamboman/mason.nvim', config = true, cmd = { 'Mason' } },
+
+  -- Easily surround characters
+  {
+    'kylechui/nvim-surround',
+    event = 'VeryLazy',
+    config = function()
+      require('nvim-surround').setup({})
+    end,
+  },
 }
