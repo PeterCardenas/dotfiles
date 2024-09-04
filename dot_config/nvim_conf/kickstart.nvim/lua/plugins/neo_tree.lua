@@ -1,8 +1,10 @@
 vim.api.nvim_create_autocmd('BufEnter', {
   desc = 'Open NvimTree on startup with directory',
   group = vim.api.nvim_create_augroup('nvim_tree_start', { clear = true }),
-  callback = function()
-    local stats = vim.loop.fs_stat(vim.api.nvim_buf_get_name(0))
+  callback = function(args)
+    ---@type integer
+    local buf = args.buf
+    local stats = vim.loop.fs_stat(vim.api.nvim_buf_get_name(buf))
     if stats and stats.type == 'directory' then
       local num_bufs = #vim.api.nvim_list_bufs()
       if num_bufs == 1 then
@@ -11,6 +13,8 @@ vim.api.nvim_create_autocmd('BufEnter', {
           path = vim.fn.expand('%:p:h'),
         })
       else
+        -- Close the newly opened buffer so that mini.files can be opened in a valid buffer.
+        require('bufdelete').bufdelete(buf)
         require('mini.files').open(vim.fn.expand('%:p:h'))
       end
     end
