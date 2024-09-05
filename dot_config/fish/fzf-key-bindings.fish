@@ -114,7 +114,8 @@ function fzf_key_bindings
     end
 
     function fzf-widget -a widget_name
-        tmux set-option -p @disable_vertical_pane_navigation yes
+        set -l pane_id (tmux display-message -p -F "#{pane_id}")
+        tmux set-option -t $pane_id -p @disable_vertical_pane_navigation yes
         switch $widget_name
             case file
                 fzf-file-widget
@@ -123,7 +124,7 @@ function fzf_key_bindings
             case cd
                 fzf-cd-widget
         end
-        tmux set-option -p -u @disable_vertical_pane_navigation
+        tmux set-option -t $pane_id -p -u @disable_vertical_pane_navigation
     end
 
     bind \ct "fzf-widget file"
