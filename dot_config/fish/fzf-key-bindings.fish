@@ -39,23 +39,11 @@ function fzf_key_bindings
     end
 
     function fzf-history-widget -d "Show command history"
-        test -n "$FZF_TMUX_HEIGHT"; or set FZF_TMUX_HEIGHT 40%
         begin
-            set -lx FZF_DEFAULT_OPTS "--height $FZF_TMUX_HEIGHT $FZF_DEFAULT_OPTS --bind=ctrl-r:toggle-sort,ctrl-z:ignore --no-sort $FZF_CTRL_R_OPTS +m"
+            set -lx FZF_DEFAULT_OPTS "--height 40% $FZF_DEFAULT_OPTS --bind=ctrl-r:toggle-sort,ctrl-z:ignore --no-sort $FZF_CTRL_R_OPTS +m"
 
-            set -l FISH_MAJOR (echo $version | cut -f1 -d.)
-            set -l FISH_MINOR (echo $version | cut -f2 -d.)
-
-            # history's -z flag is needed for multi-line support.
-            # history's -z flag was added in fish 2.4.0, so don't use it for versions
-            # before 2.4.0.
-            if [ "$FISH_MAJOR" -gt 2 -o \( "$FISH_MAJOR" -eq 2 -a "$FISH_MINOR" -ge 4 \) ]
-                history -z | eval (__fzfcmd) --read0 --print0 -q '(commandline)' | read -lz result
-                and commandline -- $result
-            else
-                history | eval (__fzfcmd) -q '(commandline)' | read -l result
-                and commandline -- $result
-            end
+            history -z | eval fzf --read0 --print0 -q '(commandline)' | read -lz result
+            and commandline -- $result
         end
         commandline -f repaint
     end
@@ -69,10 +57,9 @@ function fzf_key_bindings
         test -n "$FZF_ALT_C_COMMAND"; or set -l FZF_ALT_C_COMMAND "
     command find -L \$dir -mindepth 1 \\( -path \$dir'*/\\.*' -o -fstype 'sysfs' -o -fstype 'devfs' -o -fstype 'devtmpfs' \\) -prune \
     -o -type d -print 2> /dev/null | sed 's@^\./@@'"
-        test -n "$FZF_TMUX_HEIGHT"; or set FZF_TMUX_HEIGHT 40%
         begin
-            set -lx FZF_DEFAULT_OPTS "--height $FZF_TMUX_HEIGHT --reverse --bind=ctrl-z:ignore $FZF_DEFAULT_OPTS $FZF_ALT_C_OPTS"
-            eval "$FZF_ALT_C_COMMAND | "(__fzfcmd)' +m --query "'$fzf_query'"' | read -l result
+            set -lx FZF_DEFAULT_OPTS "--height 40% --reverse --bind=ctrl-z:ignore $FZF_DEFAULT_OPTS $FZF_ALT_C_OPTS"
+            eval "$FZF_ALT_C_COMMAND | "fzf' +m --query "'$fzf_query'"' | read -l result
 
             if [ -n "$result" ]
                 cd -- $result
@@ -84,18 +71,6 @@ function fzf_key_bindings
         end
 
         commandline -f repaint
-    end
-
-    function __fzfcmd
-        test -n "$FZF_TMUX"; or set FZF_TMUX 0
-        test -n "$FZF_TMUX_HEIGHT"; or set FZF_TMUX_HEIGHT 40%
-        if [ -n "$FZF_TMUX_OPTS" ]
-            echo "fzf-tmux $FZF_TMUX_OPTS -- "
-        else if [ $FZF_TMUX -eq 1 ]
-            echo "fzf-tmux -d$FZF_TMUX_HEIGHT -- "
-        else
-            echo fzf
-        end
     end
 
     function fzf-widget -a widget_name
