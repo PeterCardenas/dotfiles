@@ -7,6 +7,11 @@ local function highlight_symbol(client, bufnr)
   if not client.supports_method(LspMethod.textDocument_documentHighlight) then
     return
   end
+  local filetype = vim.api.nvim_get_option_value('filetype', { buf = bufnr })
+  -- fish-lsp document highlight sucks
+  if filetype == 'fish' then
+    return
+  end
 
   local group = vim.api.nvim_create_augroup('highlight_symbol', { clear = false })
 
