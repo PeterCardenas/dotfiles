@@ -226,9 +226,9 @@ return {
           config = { glyph = '󰒓', hl = 'MiniIconsCyan' },
         },
         extension = {
-          fish = { glyph = '󰅭', hl = 'MiniIconsGrey' },
-          bash = { glyph = '󰅭', hl = 'MiniIconsGrey' },
-          sh = { glyph = '󰅭', hl = 'MiniIconsGrey' },
+          fish = { glyph = '󰈺', hl = 'MiniIconsOrange' },
+          bash = { glyph = '', hl = 'MiniIconsGrey' },
+          sh = { glyph = '', hl = 'MiniIconsGrey' },
           rc = { glyph = '󰒓', hl = 'MiniIconsCyan' },
           ttf = { glyph = '', hl = 'MiniIconsGrey' },
           otf = { glyph = '', hl = 'MiniIconsGrey' },
@@ -240,6 +240,7 @@ return {
         },
         directory = {
           ['.vscode'] = { glyph = '', hl = 'MiniIconsBlue' },
+          ['.github'] = { glyph = '', hl = 'MiniIconsGrey' },
         },
       })
       require('mini.icons').mock_nvim_web_devicons()
