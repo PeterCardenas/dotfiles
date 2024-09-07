@@ -1,13 +1,11 @@
 local function make_buffer_entry()
   local icon_width = require('plenary.strings').strdisplaywidth((require('telescope.utils').get_devicons('fname')))
-  local opts = {
-    path_display = { smart = true },
-  }
+  local opts = {}
 
   local displayer = require('telescope.pickers.entry_display').create({
     separator = ' ',
     items = {
-      { width = 4 },
+      { width = 1 },
       { width = icon_width },
       { remaining = true },
     },
@@ -16,13 +14,13 @@ local function make_buffer_entry()
   local cwd = require('telescope.utils').path_expand(require('utils.file').get_cwd())
 
   local make_display = function(entry)
-    -- modes + icon + 3 spaces + : + lnum
-    opts.__prefix = 4 + icon_width + 3 + 1 + #tostring(entry.lnum)
+    -- icon + : + lnum
+    opts.__prefix = icon_width + 1 + #tostring(entry.lnum)
     local display_bufname = require('telescope.utils').transform_path(opts, entry.filename)
     local icon, hl_group = require('telescope.utils').get_devicons(entry.filename)
 
     return displayer({
-      { entry.indicator, 'TelescopeResultsComment' },
+      { entry.indicator, 'DiagnosticWarn' },
       { icon, hl_group },
       display_bufname .. ':' .. entry.lnum,
     })
@@ -33,10 +31,8 @@ local function make_buffer_entry()
     local Path = require('plenary.path')
     local bufname = filename and Path:new(filename):normalize(cwd) or '[No Name]'
 
-    local hidden = entry.info.hidden == 1 and 'h' or 'a'
-    local readonly = vim.api.nvim_get_option_value('readonly', { buf = entry.bufnr }) and '=' or ' '
-    local changed = entry.info.changed == 1 and '+' or ' '
-    local indicator = entry.flag .. hidden .. readonly .. changed
+    local changed = entry.info.changed == 1 and '' or ' '
+    local indicator = changed
     local lnum = 1
 
     -- account for potentially stale lnum as getbufinfo might not be updated or from resuming buffers picker
