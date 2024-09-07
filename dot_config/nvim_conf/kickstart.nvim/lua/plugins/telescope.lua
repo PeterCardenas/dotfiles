@@ -17,10 +17,7 @@ nmap('[/] Fuzzily search in current buffer', '/', function()
 end)
 
 nmap('[F]ind b[u]ffers', 'fu', function()
-  require('telescope.builtin').buffers({
-    ignore_current_buffer = true,
-    sort_mru = true,
-  })
+  require('plugins.telescope.buffer_picker').find_buffers()
 end)
 
 nmap('[F]ind [F]iles', 'ff', function()
