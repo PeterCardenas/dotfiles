@@ -4,7 +4,7 @@ local async = require('utils.async')
 ---@return string
 local function get_repo_url()
   local shell = require('utils.shell')
-  local _, output = shell.async_cmd('gh', { 'repo', 'view', '--json=url', '-q', '".url"' })
+  local _, output = shell.async_cmd('gh', { 'repo', 'view', '--json=url', '-q=.url' })
   local repo_url = output[1]
   return repo_url
 end
@@ -67,12 +67,16 @@ vim.api.nvim_create_user_command('GHPR', function()
       local pr_url = get_pr_url(commit_sha)
       if not pr_url then
         local commit_url = get_commit_url(commit_sha)
-        vim.fn.setreg('+', commit_url)
         vim.notify('No PR created yet.\nCopied commit link to clipboard:\n' .. commit_url, vim.log.levels.WARN)
+        vim.schedule(function()
+          vim.fn.setreg('+', commit_url)
+        end)
         return
       end
-      vim.fn.setreg('+', pr_url)
       vim.notify('Copied PR link to clipboard:\n' .. pr_url, vim.log.levels.INFO)
+      vim.schedule(function()
+        vim.fn.setreg('+', pr_url)
+      end)
     end
   )
 end, { nargs = 0, desc = 'Open/Copy GitHub PR link for current line' })
@@ -123,7 +127,9 @@ vim.api.nvim_create_user_command('GHFile', function()
         file_url = file_url .. '-L' .. end_lnum
       end
       vim.notify('Copied file link to clipboard:\n' .. file_url, vim.log.levels.INFO)
-      vim.fn.setreg('+', file_url)
+      vim.schedule(function()
+        vim.fn.setreg('+', file_url)
+      end)
     end
   )
 end, { nargs = 0, desc = 'Open/Copy GitHub file link on master for current file', range = true })
