@@ -5,19 +5,19 @@ local function keymap(key, action)
 end
 
 keymap('<C-u>', function()
-  require('neoscroll').scroll(-vim.wo.scroll, true, 150, 'sine', {})
+  require('neoscroll').new_scroll(-vim.wo.scroll, { duration = 150, easing = 'sine', move_cursor = true })
 end)
 
 keymap('<C-d>', function()
-  require('neoscroll').scroll(vim.wo.scroll, true, 150, 'sine', {})
+  require('neoscroll').new_scroll(vim.wo.scroll, { move_cursor = true, duration = 150, easing = 'sine' })
 end)
 
 keymap('<C-y>', function()
-  require('neoscroll').scroll(-0.10, false, 75, '', {})
+  require('neoscroll').new_scroll(-0.10, { move_cursor = false, duration = 75, easing = '' })
 end)
 
 keymap('<C-e>', function()
-  require('neoscroll').scroll(0.10, false, 75, '', {})
+  require('neoscroll').new_scroll(0.10, { move_cursor = false, duration = 75, easing = '' })
 end)
 
 keymap('zt', function()
