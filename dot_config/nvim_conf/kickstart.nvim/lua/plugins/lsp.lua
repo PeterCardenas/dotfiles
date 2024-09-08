@@ -209,7 +209,7 @@ return {
                 url = 'https://github.com/wraith13/vscode-schemas/raw/master/en/latest/schemas/extensions.json',
               },
               {
-                fileMatch = { 'swc.json', 'swc.*.json', '.swcrc' },
+                fileMatch = { 'swc.json', 'swc.*.json', '.swcrc', '.*.swcrc' },
                 url = 'https://json.schemastore.org/swcrc.json',
               },
             },
