@@ -61,6 +61,10 @@ function M.setup(capabilities)
       offset_encoding = 'utf-16',
     })
   end
+
+  require('lspconfig').starpls.setup({
+    capabilities = capabilities,
+  })
 end
 
 return M

@@ -140,7 +140,6 @@ return {
           },
         },
       },
-      starpls = {},
       pbls = {
         offset_encoding = 'utf-16',
         capabilities = {
