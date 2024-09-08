@@ -140,6 +140,7 @@ return {
           },
         },
       },
+      starpls = {},
       pbls = {
         offset_encoding = 'utf-16',
         capabilities = {
@@ -172,6 +173,8 @@ return {
         },
       },
       bzl = {
+        -- Prefer starpls for now.
+        enabled = false,
         filetypes = { 'bzl' },
       },
       mdx_analyzer = {
