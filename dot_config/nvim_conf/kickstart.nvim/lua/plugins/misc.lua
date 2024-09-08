@@ -47,6 +47,10 @@ vim.api.nvim_create_user_command('DiffviewCurrentFileHistory', function(opts)
   end
 end, { nargs = 0, range = true })
 
+vim.keymap.set({ 'n' }, '<leader>tr', function()
+  require('trouble').open()
+end)
+
 ---@type LazyPluginSpec[]
 return {
   -- Add a background color to colors defined in css.
@@ -99,15 +103,27 @@ return {
     lazy = true,
     config = function()
       require('trouble').setup({
-        use_diagnostic_signs = true,
-        position = 'right',
-        width = 100,
+        focus = true,
+        win = {
+          type = 'split',
+          position = 'right',
+          size = {
+            width = 0.5,
+          },
+        },
         auto_open = false,
         auto_close = true,
-        action_keys = {
-          toggle_fold = { 'zc', 'zo', 'o' },
+        auto_jump = true,
+        keys = {
+          ['<cr>'] = 'jump_close',
         },
-        include_declaration = { 'lsp_definitions' },
+        modes = {
+          lsp_references = {
+            params = {
+              include_declaration = false,
+            },
+          },
+        },
       })
     end,
   },
