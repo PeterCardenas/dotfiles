@@ -95,7 +95,7 @@ return {
   -- Better picker for LSP references, definitions, and diagnostics.
   {
     'folke/trouble.nvim',
-    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    dependencies = { 'echasnovski/mini.icons' },
     lazy = true,
     config = function()
       require('trouble').setup({
