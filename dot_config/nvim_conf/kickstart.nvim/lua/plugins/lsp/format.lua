@@ -312,56 +312,58 @@ end
 local function format_with_check(bufnr, dry_run, on_complete)
   ---@type string[]
   local sources_with_edits = {}
+  ---@type { [1]: string, [2]: fun(bufnr: integer, dry_run: boolean, on_complete: FormatCallback): nil }[]
+  local autofixers = {
+    { 'gopls', format_go_imports },
+    { 'ruff_lsp', fix_ruff_errors },
+    { 'typescript-tools', fix_typescript_errors },
+  }
 
-  -- TODO(@PeterPCardenas): Spawn a separate thread instead of using callbacks.
-  format_go_imports(bufnr, dry_run, function(would_edit_from_go_imports)
-    if would_edit_from_go_imports then
-      table.insert(sources_with_edits, 'gopls')
+  local possible_formatter_names = require('conform').list_formatters_for_buffer(bufnr)
+  local formatters = require('conform').resolve_formatters(possible_formatter_names, bufnr, not dry_run, false)
+  local formatter_index = 1
+  local autofixer_index = 1
+
+  local function format_next()
+    if formatter_index > #formatters then
+      lsp_format(bufnr, dry_run, function(clients_that_would_format)
+        for _, client in ipairs(clients_that_would_format) do
+          table.insert(sources_with_edits, client)
+        end
+        if on_complete ~= nil then
+          on_complete(sources_with_edits)
+        end
+      end)
+      return
     end
-    fix_ruff_errors(bufnr, dry_run, function(would_edit_from_ruff_errors)
-      if would_edit_from_ruff_errors then
-        table.insert(sources_with_edits, 'ruff_lsp')
-      end
-      fix_typescript_errors(bufnr, dry_run, function(would_edit_from_typescript_errors)
-        if would_edit_from_typescript_errors then
-          table.insert(sources_with_edits, 'typescript-tools')
+    if autofixer_index <= #autofixers then
+      local autofixer_name = autofixers[autofixer_index]
+      autofixer_name[2](bufnr, dry_run, function(would_edit_from_autofixer)
+        if would_edit_from_autofixer then
+          table.insert(sources_with_edits, autofixer_name)
         end
-        local possible_formatter_names = require('conform').list_formatters_for_buffer(bufnr)
-        local formatters = require('conform').resolve_formatters(possible_formatter_names, bufnr, not dry_run)
-        local index = 1
-
-        local function format_next()
-          if index > #formatters then
-            lsp_format(bufnr, dry_run, function(clients_that_would_format)
-              for _, client in ipairs(clients_that_would_format) do
-                table.insert(sources_with_edits, client)
-              end
-              if on_complete ~= nil then
-                on_complete(sources_with_edits)
-              end
-            end)
-            return
-          end
-          local formatter_name = formatters[index].name
-          require('conform').format({
-            formatters = { formatter_name },
-            async = true,
-            dry_run = dry_run,
-            quiet = dry_run,
-            lsp_format = 'never',
-          }, function(_, would_edit_from_formatter)
-            if would_edit_from_formatter then
-              table.insert(sources_with_edits, formatter_name)
-            end
-            index = index + 1
-            format_next()
-          end)
-        end
-
+        autofixer_index = autofixer_index + 1
         format_next()
       end)
+      return
+    end
+    local formatter_name = formatters[formatter_index].name
+    require('conform').format({
+      formatters = { formatter_name },
+      async = true,
+      dry_run = dry_run,
+      quiet = dry_run,
+      lsp_format = 'never',
+    }, function(_, would_edit_from_formatter)
+      if would_edit_from_formatter then
+        table.insert(sources_with_edits, formatter_name)
+      end
+      formatter_index = formatter_index + 1
+      format_next()
     end)
-  end)
+  end
+
+  format_next()
 end
 
 local format_diagnostic_autocmd_group = vim.api.nvim_create_augroup('FormatChecker', { clear = true })
