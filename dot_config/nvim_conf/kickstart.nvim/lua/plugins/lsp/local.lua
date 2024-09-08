@@ -7,14 +7,6 @@ function M.setup(capabilities)
   -- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
   ---@type table<string, lspconfig.Config>
   local custom_servers = {
-    pls = {
-      enabled = false,
-      cmd = { 'protobuf-ls', 'server', '--mode', 'stdio' },
-      filetypes = { 'proto' },
-      default_config = {
-        root_dir = require('lspconfig.util').root_pattern('.git'),
-      },
-    },
     valels = {
       enabled = vim.fn.executable('vale-ls') == 1,
       cmd = { 'vale-ls' },
