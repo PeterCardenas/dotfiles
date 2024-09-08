@@ -72,7 +72,7 @@ function M.setup(capabilities)
     capabilities = capabilities,
     cmd = { 'starpls', 'server', '--experimental_infer_ctx_attributes', '--experimental_use_code_flow_analysis' },
     cmd_env = {
-      RUST_BACKTRACE = '1',
+      RUST_BACKTRACE = 'full',
     },
   }
   require('lspconfig').starpls.setup(starpls_config)

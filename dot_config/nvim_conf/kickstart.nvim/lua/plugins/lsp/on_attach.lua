@@ -99,6 +99,27 @@ function M.on_attach(client, bufnr)
   local git_root = require('utils.file').get_git_root()
   local is_in_git_root = git_root ~= nil and require('utils.file').file_in_directory(filename, git_root)
 
+  if client.name == 'starpls' then
+    vim.api.nvim_buf_create_user_command(bufnr, 'StarlarkSyntaxTree', function()
+      local method = 'starpls/showSyntaxTree'
+
+      local params = {
+        textDocument = {
+          uri = vim.uri_from_bufnr(bufnr),
+        },
+      }
+
+      client.request(method, params, function(err, result, _)
+        if err then
+          vim.print('Error: ' .. err.message)
+          return
+        end
+
+        vim.print('Starlark syntax tree:', vim.inspect(result):gsub('\\n', '\n'))
+      end)
+    end, { nargs = 0 })
+  end
+
   if not is_in_git_root then
     client.server_capabilities.documentFormattingProvider = false
     client.server_capabilities.documentRangeFormattingProvider = false
