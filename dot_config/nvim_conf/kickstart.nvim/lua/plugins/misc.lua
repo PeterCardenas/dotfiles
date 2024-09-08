@@ -233,6 +233,7 @@ return {
           ttf = { glyph = '', hl = 'MiniIconsGrey' },
           otf = { glyph = '', hl = 'MiniIconsGrey' },
           swcrc = { glyph = '', hl = 'MiniIconsYellow' },
+          js = { glyph = '', hl = 'MiniIconsOrange' },
           ts = { glyph = '', hl = 'MiniIconsBlue' },
           ['d.ts'] = { glyph = '', hl = 'MiniIconsOrange' },
           ['test.ts'] = { glyph = '', hl = 'MiniIconsBlue' },
@@ -241,6 +242,9 @@ return {
         directory = {
           ['.vscode'] = { glyph = '', hl = 'MiniIconsBlue' },
           ['.github'] = { glyph = '', hl = 'MiniIconsGrey' },
+          ['bazel-out'] = { glyph = '', hl = 'MiniIconsGreen' },
+          ['bazel-testlogs'] = { glyph = '', hl = 'MiniIconsGreen' },
+          ['bazel-bin'] = { glyph = '', hl = 'MiniIconsGreen' },
         },
       })
       require('mini.icons').mock_nvim_web_devicons()
