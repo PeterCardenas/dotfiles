@@ -6,16 +6,7 @@ function M.setup(capabilities)
   -- Setup language servers found locally.
   -- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
   ---@type table<string, lspconfig.Config>
-  local custom_servers = {
-    valels = {
-      enabled = vim.fn.executable('vale-ls') == 1,
-      cmd = { 'vale-ls' },
-      filetypes = { 'markdown', 'text', 'dosini', 'yaml', 'markdown.mdx' },
-      default_config = {
-        root_dir = require('lspconfig.util').root_pattern('.vale.ini'),
-      },
-    },
-  }
+  local custom_servers = {}
 
   ---@param server_name string
   local function setup_server(server_name)
@@ -29,6 +20,7 @@ function M.setup(capabilities)
         filetypes = server_config.filetypes,
         -- Cannot have functions in settings since they are not serializable.
         settings = {},
+        ---@diagnostic disable-next-line: undefined-field
         root_dir = server_config.default_config.root_dir,
       },
     }
@@ -41,13 +33,24 @@ function M.setup(capabilities)
     setup_server(server_name)
   end
 
-  require('lspconfig').fish_lsp.setup({
+  ---@type lspconfig.Config
+  local vale_lsp_config = {
     capabilities = capabilities,
-  })
+    filetypes = { 'markdown', 'text', 'dosini', 'yaml', 'markdown.mdx' },
+  }
+  require('lspconfig').vale_ls.setup(vale_lsp_config)
 
-  require('lspconfig').bazelrc_lsp.setup({
+  ---@type lspconfig.Config
+  local fish_lsp_config = {
     capabilities = capabilities,
-  })
+  }
+  require('lspconfig').fish_lsp.setup(fish_lsp_config)
+
+  ---@type lspconfig.Config
+  local bazelrc_lsp_config = {
+    capabilities = capabilities,
+  }
+  require('lspconfig').bazelrc_lsp.setup(bazelrc_lsp_config)
 
   local ccls_capabilities = require('utils.table').merge_tables(capabilities, {
     offsetEncoding = { 'utf-16' },
@@ -56,15 +59,23 @@ function M.setup(capabilities)
     },
   })
   if not require('utils.config').USE_CLANGD then
-    require('lspconfig').ccls.setup({
+    ---@type lspconfig.Config
+    local ccls_config = {
       capabilities = ccls_capabilities,
       offset_encoding = 'utf-16',
-    })
+    }
+    require('lspconfig').ccls.setup(ccls_config)
   end
 
-  require('lspconfig').starpls.setup({
+  ---@type lspconfig.Config
+  local starpls_config = {
     capabilities = capabilities,
-  })
+    cmd = { 'starpls', 'server', '--experimental_infer_ctx_attributes', '--experimental_use_code_flow_analysis' },
+    cmd_env = {
+      RUST_BACKTRACE = '1',
+    },
+  }
+  require('lspconfig').starpls.setup(starpls_config)
 end
 
 return M
