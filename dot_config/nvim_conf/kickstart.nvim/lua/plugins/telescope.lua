@@ -45,11 +45,11 @@ nmap('[F]ind [H]elp', 'fh', function()
 end)
 
 nmap('[L]anguage [D]iagnostic', 'ld', function()
-  require('trouble').open('document_diagnostics')
+  require('trouble').open({ mode = 'diagnostics', auto_jump = false })
 end)
 
 nmap('[L]ist [D]iagnostics', 'lD', function()
-  require('trouble').open('workspace_diagnostics')
+  require('telescope.builtin').diagnostics({ bufnr = nil, no_unlisted = false })
 end)
 
 nmap('[F]ind [R]resume', 'fr', function()
