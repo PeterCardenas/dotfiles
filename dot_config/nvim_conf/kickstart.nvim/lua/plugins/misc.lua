@@ -376,7 +376,7 @@ return {
     dependencies = 'nvim-treesitter',
     config = function()
       vim.api.nvim_set_hl(0, 'TreesitterContext', { link = 'Normal' })
-      vim.api.nvim_set_hl(0, 'TreesitterContextSeparator', { link = 'Normal' })
+      vim.api.nvim_set_hl(0, 'TreesitterContextSeparator', { link = 'LineNr' })
       require('treesitter-context').setup({
         mode = 'topline',
         line_numbers = true,
