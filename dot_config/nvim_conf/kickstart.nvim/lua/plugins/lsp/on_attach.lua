@@ -89,6 +89,11 @@ function M.on_attach(client, bufnr)
     client.server_capabilities.documentFormattingProvider = false
     client.server_capabilities.documentRangeFormattingProvider = false
   end
+  if client.name == 'bzl' then
+    -- Prefer starpls for definition.
+    client.server_capabilities.definitionProvider = false
+    client.server_capabilities.hoverProvider = false
+  end
 
   local filename = vim.api.nvim_buf_get_name(bufnr)
   local git_root = require('utils.file').get_git_root()
