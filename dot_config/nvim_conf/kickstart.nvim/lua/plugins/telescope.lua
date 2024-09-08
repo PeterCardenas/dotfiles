@@ -95,7 +95,7 @@ return {
           },
         },
         sorting_strategy = 'ascending',
-        prompt_prefix = '  ',
+        prompt_prefix = ' ',
         selection_caret = '❯ ',
         mappings = {
           i = {
