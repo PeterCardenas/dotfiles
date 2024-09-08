@@ -355,9 +355,12 @@ return {
     event = { 'BufReadPre', 'BufNewFile' },
     dependencies = 'nvim-treesitter',
     config = function()
+      vim.api.nvim_set_hl(0, 'TreesitterContext', { link = 'Normal' })
+      vim.api.nvim_set_hl(0, 'TreesitterContextSeparator', { link = 'Normal' })
       require('treesitter-context').setup({
         mode = 'topline',
         line_numbers = true,
+        separator = '─',
         ---@param bufnr number
         on_attach = function(bufnr)
           -- Disable at 512KB
