@@ -172,8 +172,6 @@ return {
         },
       },
       bzl = {
-        -- Prefer starpls for now.
-        enabled = false,
         filetypes = { 'bzl' },
       },
       mdx_analyzer = {
