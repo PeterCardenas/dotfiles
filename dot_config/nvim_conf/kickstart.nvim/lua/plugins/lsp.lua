@@ -162,7 +162,7 @@ return {
         },
       },
       bzl = {
-        filetypes = { 'bzl', 'Bazelrc' },
+        filetypes = { 'bzl' },
       },
       mdx_analyzer = {
         init_options = {
