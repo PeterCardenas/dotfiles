@@ -22,6 +22,7 @@ M.FT_WITH_LSP = {
   'toml',
   'jsonc',
   'bazelrc',
+  'proto',
 }
 
 return M

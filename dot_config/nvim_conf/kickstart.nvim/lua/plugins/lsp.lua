@@ -94,6 +94,7 @@ return {
     local servers = {
       clangd = {
         enabled = clangd_enabled and require('utils.config').USE_CLANGD,
+        offset_encoding = 'utf-16',
         filetypes = { 'c', 'cpp', 'objc', 'objcpp', 'cuda' },
         capabilities = {
           offsetEncoding = { 'utf-16' },
@@ -136,6 +137,15 @@ return {
         settings = {
           stylelintplus = {
             autoFixOnFormat = true,
+          },
+        },
+      },
+      pbls = {
+        offset_encoding = 'utf-16',
+        capabilities = {
+          offsetEncoding = { 'utf-16' },
+          general = {
+            positionEncodings = { 'utf-16' },
           },
         },
       },
