@@ -53,17 +53,22 @@ function M.setup(capabilities)
     capabilities = capabilities,
   })
 
+  require('lspconfig').bazelrc_lsp.setup({
+    capabilities = capabilities,
+  })
+
   local ccls_capabilities = require('utils.table').merge_tables(capabilities, {
     offsetEncoding = { 'utf-16' },
     general = {
       positionEncodings = { 'utf-16' },
     },
   })
-  require('lspconfig').ccls.setup({
-    enabled = not require('utils.config').USE_CLANGD,
-    capabilities = ccls_capabilities,
-    offset_encoding = 'utf-16',
-  })
+  if not require('utils.config').USE_CLANGD then
+    require('lspconfig').ccls.setup({
+      capabilities = ccls_capabilities,
+      offset_encoding = 'utf-16',
+    })
+  end
 end
 
 return M

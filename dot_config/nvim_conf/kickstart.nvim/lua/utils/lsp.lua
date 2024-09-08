@@ -21,6 +21,7 @@ M.FT_WITH_LSP = {
   'fish',
   'toml',
   'jsonc',
+  'bazelrc',
 }
 
 return M
