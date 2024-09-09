@@ -232,8 +232,14 @@ return {
       require('mini.icons').setup({
         filetype = {
           bazelrc = { glyph = '', hl = 'MiniIconsCyan' },
+          rust = { glyph = '', hl = 'MiniIconsOrange' },
         },
         file = {
+          ['.bazelignore'] = { glyph = '', hl = 'MiniIconsPurple' },
+          ['.bazelversion'] = { glyph = '', hl = 'MiniIconsGreen' },
+          ['.nogo_config.json'] = { glyph = '󰟓', hl = 'MiniIconsCyan' },
+          ['compile_commands.json'] = { glyph = '󰙲', hl = 'MiniIconsCyan' },
+          ['pyproject.toml'] = { glyph = '', hl = 'MiniIconsCyan' },
           ['.swcrc'] = { glyph = '󰘦', hl = 'MiniIconsYellow' },
           ['tsconfig.json'] = { glyph = '', hl = 'MiniIconsBlue' },
           ['.npmrc'] = { glyph = '', hl = 'MiniIconsRed' },
@@ -252,7 +258,11 @@ return {
           otf = { glyph = '', hl = 'MiniIconsGrey' },
           swcrc = { glyph = '', hl = 'MiniIconsYellow' },
           js = { glyph = '', hl = 'MiniIconsOrange' },
+          cjs = { glyph = '', hl = 'MiniIconsOrange' },
+          mjs = { glyph = '', hl = 'MiniIconsOrange' },
           ts = { glyph = '', hl = 'MiniIconsBlue' },
+          mts = { glyph = '', hl = 'MiniIconsBlue' },
+          cts = { glyph = '', hl = 'MiniIconsBlue' },
           ['d.ts'] = { glyph = '', hl = 'MiniIconsOrange' },
           ['test.ts'] = { glyph = '', hl = 'MiniIconsBlue' },
           ['test.tsx'] = { glyph = '', hl = 'MiniIconsCyan' },
