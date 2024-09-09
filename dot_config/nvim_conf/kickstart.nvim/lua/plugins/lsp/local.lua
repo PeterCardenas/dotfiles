@@ -49,6 +49,9 @@ function M.setup(capabilities)
   ---@type lspconfig.Config
   local bazelrc_lsp_config = {
     capabilities = capabilities,
+    cmd_env = {
+      RUST_BACKTRACE = 'full',
+    },
   }
   require('lspconfig').bazelrc_lsp.setup(bazelrc_lsp_config)
 
