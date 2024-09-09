@@ -645,4 +645,11 @@ return {
       require('nvim-surround').setup({})
     end,
   },
+
+  -- Better rust tools
+  {
+    'mrcjkb/rustaceanvim',
+    version = '^5',
+    lazy = false,
+  },
 }
