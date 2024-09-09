@@ -56,7 +56,7 @@ return {
     dashboard.section.header.val = header
     dashboard.section.buttons.val = {
       create_button('f', '  Find file', function()
-        require('telescope.builtin').find_files()
+        require('telescope.builtin').find_files({ hidden = true })
       end),
       create_button('n', '  New file', function()
         vim.cmd('ene <BAR> startinsert')
