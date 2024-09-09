@@ -63,7 +63,7 @@ function __bazel_complete_targets --argument-names query
     #     return 0
     # end
 
-    if [ (count $query) -eq 0 ]
+    if test (count $query) -eq 0
         set query "//..."
     end
     bazel query -k $query 2>/dev/null
