@@ -666,4 +666,13 @@ return {
     version = '^5',
     lazy = false,
   },
+
+  -- Support textDocument/documentLink
+  {
+    'icholy/lsplinks.nvim',
+    lazy = true,
+    config = function()
+      require('lsplinks').setup()
+    end,
+  },
 }
