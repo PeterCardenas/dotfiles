@@ -249,6 +249,10 @@ return {
           ['.git-blame-ignore-revs'] = { glyph = '󰊢', hl = 'MiniIconsOrange' },
           ['lazy-lock.json'] = { glyph = '󰒲', hl = 'MiniIconsBlue' },
           config = { glyph = '󰒓', hl = 'MiniIconsCyan' },
+          ['Cargo.lock'] = { glyph = '', hl = 'MiniIconsOrange' },
+          ['Cargo.toml'] = { glyph = '', hl = 'MiniIconsOrange' },
+          ['rustfmt.toml'] = { glyph = '', hl = 'MiniIconsOrange' },
+          ['rust-toolchain.toml'] = { glyph = '', hl = 'MiniIconsOrange' },
         },
         extension = {
           fish = { glyph = '󰈺', hl = 'MiniIconsOrange' },
@@ -274,6 +278,7 @@ return {
           ['bazel-out'] = { glyph = '', hl = 'MiniIconsGreen' },
           ['bazel-testlogs'] = { glyph = '', hl = 'MiniIconsGreen' },
           ['bazel-bin'] = { glyph = '', hl = 'MiniIconsGreen' },
+          ['.cargo'] = { glyph = '', hl = 'MiniIconsOrange' },
         },
       })
       require('mini.icons').mock_nvim_web_devicons()
