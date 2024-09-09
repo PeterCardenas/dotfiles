@@ -1,12 +1,15 @@
 local async = require('utils.async')
 
 ---@async
----@return string
+---@return boolean, string
 local function get_repo_url()
   local shell = require('utils.shell')
-  local _, output = shell.async_cmd('gh', { 'repo', 'view', '--json=url', '-q=.url' })
+  local success, output = shell.async_cmd('gh', { 'repo', 'view', '--json=url', '-q=.url' })
+  if not success then
+    return false, table.concat(output, '\n')
+  end
   local repo_url = output[1]
-  return repo_url
+  return success, repo_url
 end
 
 ---@async
@@ -65,6 +68,7 @@ vim.api.nvim_create_user_command('GHPR', function()
       end
       local commit_sha = blame_info.commit.sha
       local pr_url = get_pr_url(commit_sha)
+      vim.notify('checked pr url: ' .. (pr_url or 'nil'), vim.log.levels.INFO)
       if not pr_url then
         local commit_url = get_commit_url(commit_sha)
         vim.notify('No PR created yet.\nCopied commit link to clipboard:\n' .. commit_url, vim.log.levels.WARN)
@@ -99,12 +103,20 @@ local function relative_path_to_git_root()
 end
 
 ---@async
+---@return boolean, string
 local function common_ancestor_commit_with_master()
-  local default_branch = require('utils.git').get_default_branch()
+  local default_branch_success, default_branch_output = require('utils.git').get_default_branch()
+  if not default_branch_success then
+    return false, default_branch_output
+  end
+  local default_branch = default_branch_output
   local shell = require('utils.shell')
-  local _, output = shell.async_cmd('git', { 'merge-base', 'HEAD', 'origin/' .. default_branch })
+  local success, output = shell.async_cmd('git', { 'merge-base', 'HEAD', 'origin/' .. default_branch })
+  if not success then
+    return false, table.concat(output, '\n')
+  end
   local commit_sha = output[1]
-  return commit_sha
+  return success, commit_sha
 end
 
 vim.api.nvim_create_user_command('GHFile', function()
@@ -120,8 +132,18 @@ vim.api.nvim_create_user_command('GHFile', function()
   async.void(
     ---@async
     function()
-      local repo_url = get_repo_url()
-      local commit_sha = common_ancestor_commit_with_master()
+      local success, output = get_repo_url()
+      if not success then
+        vim.notify('Could not get repo url:\n' .. output, vim.log.levels.ERROR)
+        return
+      end
+      local repo_url = output
+      success, output = common_ancestor_commit_with_master()
+      if not success then
+        vim.notify('Could not get common ancestor commit with default branch:\n' .. output, vim.log.levels.ERROR)
+        return
+      end
+      local commit_sha = output
       local file_url = repo_url .. '/blob/' .. commit_sha .. '/' .. filepath .. '#L' .. start_lnum
       if end_lnum ~= start_lnum then
         file_url = file_url .. '-L' .. end_lnum
