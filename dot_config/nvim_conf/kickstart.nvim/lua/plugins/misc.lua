@@ -380,6 +380,7 @@ return {
       require('treesitter-context').setup({
         mode = 'topline',
         line_numbers = true,
+        max_lines = 10,
         separator = '─',
         ---@param bufnr number
         on_attach = function(bufnr)
