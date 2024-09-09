@@ -125,6 +125,9 @@ function M.on_attach(client, bufnr)
     client.server_capabilities.documentRangeFormattingProvider = false
   end
 
+  ---@param keys string
+  ---@param func fun(): nil
+  ---@param desc string
   local function nmap(keys, func, desc)
     if desc then
       desc = 'LSP: ' .. desc
@@ -175,6 +178,14 @@ function M.on_attach(client, bufnr)
   end, { buffer = bufnr })
 
   highlight_symbol(client, bufnr)
+
+  if client.supports_method(LspMethod.textDocument_documentLink) then
+    -- Trigger setup
+    require('lsplinks')
+    nmap('gx', function()
+      require('lsplinks').gx()
+    end, 'Go to document link under cursor')
+  end
 
   -- Lesser used LSP functionality
   nmap('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
