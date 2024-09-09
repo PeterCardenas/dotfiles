@@ -44,22 +44,32 @@ function TmuxCmd:set_option(subcommand)
   return success
 end
 
+---@param subcommand string
+---@return boolean
+function TmuxCmd:set_option_sync(subcommand)
+  local shell = require('utils.shell')
+  local success, output = shell.sync_cmd('fish -c "' .. self:with_set_option(subcommand) .. '"')
+  if not success then
+    vim.notify('Failed to set tmux option: ' .. vim.inspect(output), vim.log.levels.ERROR)
+  end
+  return success
+end
+
 ---@async
 function TmuxCmd:set_is_vim()
-  local success = self:set_option('@disable_vertical_pane_navigation yes')
-  if not success then
-    return
-  end
-  success = self:set_option('@disable_horizontal_pane_navigation yes')
+  self:set_option('@disable_vertical_pane_navigation yes')
+  self:set_option('@disable_horizontal_pane_navigation yes')
 end
 
 ---@async
 function TmuxCmd:unset_is_vim()
-  local success = self:set_option('-u @disable_vertical_pane_navigation')
-  if not success then
-    return
-  end
-  success = self:set_option('-u @disable_horizontal_pane_navigation')
+  self:set_option('-u @disable_vertical_pane_navigation')
+  self:set_option('-u @disable_horizontal_pane_navigation')
+end
+
+function TmuxCmd:unset_is_vim_sync()
+  self:set_option_sync('-u @disable_vertical_pane_navigation')
+  self:set_option_sync('-u @disable_horizontal_pane_navigation')
 end
 
 local nvim_is_open = true
@@ -75,15 +85,11 @@ local function set_is_vim()
   )
 end
 
-local function unset_is_vim()
+local function unset_is_vim_sync()
   nvim_is_open = false
   local tmux_cmd = TmuxCmd:new(vim.env.TMUX_PANE, vim.env.TMUX)
-  async.void(
-    ---@async
-    function()
-      tmux_cmd:unset_is_vim()
-    end
-  )
+
+  tmux_cmd:unset_is_vim_sync()
 end
 
 local function setup_tmux_autocommands()
@@ -98,7 +104,7 @@ local function setup_tmux_autocommands()
     desc = 'Tell TMUX we left neovim',
     group = tmux_navigator_group,
     callback = function()
-      unset_is_vim()
+      unset_is_vim_sync()
       -- Hack for making sure vim doesn't exit with a non-zero exit code.
       -- Reference: https://github.com/neovim/neovim/issues/21856#issuecomment-1514723887
       vim.cmd('sleep 10m')
@@ -107,7 +113,7 @@ local function setup_tmux_autocommands()
   vim.api.nvim_create_autocmd('VimSuspend', {
     desc = 'Tell TMUX we suspended neovim',
     group = tmux_navigator_group,
-    callback = unset_is_vim,
+    callback = unset_is_vim_sync,
   })
   vim.api.nvim_create_autocmd('VimResume', {
     desc = 'Tell TMUX we resumed neovim',
