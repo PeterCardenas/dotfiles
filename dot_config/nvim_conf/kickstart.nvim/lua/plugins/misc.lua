@@ -230,8 +230,10 @@ return {
     lazy = false,
     config = function()
       require('mini.icons').setup({
+        filetype = {
+          bazelrc = { glyph = '', hl = 'MiniIconsCyan' },
+        },
         file = {
-          ['.bazelrc'] = { glyph = '󰒓', hl = 'MiniIconsCyan' },
           ['.swcrc'] = { glyph = '󰘦', hl = 'MiniIconsYellow' },
           ['tsconfig.json'] = { glyph = '', hl = 'MiniIconsBlue' },
           ['.npmrc'] = { glyph = '', hl = 'MiniIconsRed' },
