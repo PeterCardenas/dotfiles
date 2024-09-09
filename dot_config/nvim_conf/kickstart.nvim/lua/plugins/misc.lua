@@ -30,8 +30,12 @@ vim.api.nvim_create_user_command('DiffviewPR', function()
   async.void(
     ---@async
     function()
-      local default_branch = require('utils.git').get_default_branch()
+      local success, default_branch = require('utils.git').get_default_branch()
       vim.schedule(function()
+        if not success then
+          vim.notify('Could not get default branch:\n' .. default_branch, vim.log.levels.ERROR)
+          return
+        end
         vim.cmd('DiffviewOpen origin/' .. default_branch .. '...HEAD')
       end)
     end
