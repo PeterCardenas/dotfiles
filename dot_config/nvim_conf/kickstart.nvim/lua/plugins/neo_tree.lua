@@ -21,6 +21,26 @@ vim.api.nvim_create_autocmd('BufEnter', {
   end,
 })
 
+vim.api.nvim_create_autocmd('BufEnter', {
+  desc = 'Add mini.files mappings',
+  group = vim.api.nvim_create_augroup('mini_files_enter', { clear = true }),
+  callback = function(args)
+    ---@type integer
+    local buf = args.buf
+    local filetype = vim.api.nvim_get_option_value('filetype', { buf = buf })
+    if filetype ~= 'minifiles' then
+      return
+    end
+    vim.api.nvim_buf_set_keymap(buf, 'n', '<leader>q', '', {
+      noremap = true,
+      silent = true,
+      callback = function()
+        require('mini.files').close()
+      end,
+    })
+  end,
+})
+
 local nmap = require('utils.keymap').nmap
 
 nmap('Toggle file explorer tree', 'ot', function()
