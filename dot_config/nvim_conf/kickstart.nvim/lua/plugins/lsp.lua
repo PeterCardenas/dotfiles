@@ -120,7 +120,7 @@ return {
         },
       },
       gopls = gopls_config(),
-      rust_analyzer = {},
+      rust_analyzer = { enabled = false },
       -- Prefer to use nogo, but there is not language server for it yet.
       golangci_lint_ls = {
         init_options = {
