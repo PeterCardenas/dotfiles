@@ -134,6 +134,7 @@ abbr -a gsd "git stash drop"
 abbr -a gsa "git stash apply"
 abbr -a gcp "git cherry-pick -S"
 abbr -a nuke 'git rm --cached -r .; and GIT_LFS_SKIP_SMUDGE=1 git reset --hard'
+abbr -a glog 'git log --graph --pretty=\'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset\''
 abbr -a lg lazygit
 
 # Starship
