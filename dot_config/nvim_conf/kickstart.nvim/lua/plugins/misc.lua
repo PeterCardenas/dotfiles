@@ -238,6 +238,10 @@ return {
         filetype = {
           bazelrc = { glyph = '', hl = 'MiniIconsCyan' },
           rust = { glyph = '', hl = 'MiniIconsOrange' },
+          typescript = { glyph = '', hl = 'MiniIconsBlue' },
+          typescriptreact = { glyph = '', hl = 'MiniIconsBlue' },
+          javascript = { glyph = '', hl = 'MiniIconsBlue' },
+          javascriptreact = { glyph = '', hl = 'MiniIconsBlue' },
         },
         file = {
           ['.bazelignore'] = { glyph = '', hl = 'MiniIconsPurple' },
