@@ -452,8 +452,8 @@ return {
     dependencies = { 'tpope/vim-repeat' },
     event = { 'BufReadPre', 'BufNewFile' },
     config = function()
-      require('leap').add_default_mappings()
-      require('leap').opts.substitute_chars = { ['{'] = 'b', ['}'] = 'b', ['('] = 'p', [')'] = 'p', ['['] = 'b', [']'] = 'b' }
+      require('leap.user').add_default_mappings()
+      require('leap.opts').default.substitute_chars = { ['{'] = 'b', ['}'] = 'b', ['('] = 'p', [')'] = 'p', ['['] = 'b', [']'] = 'b' }
     end,
   },
 
