@@ -31,12 +31,12 @@ vim.api.nvim_create_autocmd('BufEnter', {
     if filetype ~= 'minifiles' then
       return
     end
-    vim.api.nvim_buf_set_keymap(buf, 'n', '<leader>q', '', {
+    vim.keymap.set('n', '<leader>q', function()
+      require('mini.files').close()
+    end, {
       noremap = true,
       silent = true,
-      callback = function()
-        require('mini.files').close()
-      end,
+      buffer = buf,
     })
   end,
 })
