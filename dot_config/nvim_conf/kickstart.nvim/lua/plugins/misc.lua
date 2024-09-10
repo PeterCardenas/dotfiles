@@ -52,7 +52,8 @@ vim.api.nvim_create_user_command('DiffviewCurrentFileHistory', function(opts)
 end, { nargs = 0, range = true })
 
 vim.keymap.set({ 'n' }, '<leader>tr', function()
-  require('trouble').open()
+  local last_mode = require('trouble').last_mode
+  require('trouble').open({ mode = last_mode })
 end)
 
 ---@type LazyPluginSpec[]
