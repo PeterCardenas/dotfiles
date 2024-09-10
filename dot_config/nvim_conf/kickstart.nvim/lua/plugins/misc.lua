@@ -257,6 +257,8 @@ return {
           ['Cargo.toml'] = { glyph = '', hl = 'MiniIconsOrange' },
           ['rustfmt.toml'] = { glyph = '', hl = 'MiniIconsOrange' },
           ['rust-toolchain.toml'] = { glyph = '', hl = 'MiniIconsOrange' },
+          ['tmux.conf'] = { glyph = '', hl = 'MiniIconsGreen' },
+          ['.tmux.conf'] = { glyph = '', hl = 'MiniIconsGreen' },
         },
         extension = {
           fish = { glyph = '󰈺', hl = 'MiniIconsOrange' },
