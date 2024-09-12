@@ -176,15 +176,6 @@ local function poll_update_tmux_env()
   )
 end
 
-local function setup_tmux_navigation()
-  if vim.env.TMUX_PANE and vim.env.TMUX then
-    setup_tmux_autocommands()
-    async.void(poll_update_tmux_env)
-  end
-end
-
-setup_tmux_navigation()
-
 ---@type LazyPluginSpec
 return {
   -- Easy navigation between splits.
@@ -193,6 +184,8 @@ return {
     return vim.env.TMUX_PANE and vim.env.TMUX
   end,
   config = function()
+    setup_tmux_autocommands()
+    async.void(poll_update_tmux_env)
     require('nvim-tmux-navigation').setup({
       keybindings = {
         left = '<C-h>',
