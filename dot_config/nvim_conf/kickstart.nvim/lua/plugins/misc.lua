@@ -239,9 +239,7 @@ return {
           bazelrc = { glyph = '', hl = 'MiniIconsCyan' },
           rust = { glyph = '', hl = 'MiniIconsOrange' },
           typescript = { glyph = '', hl = 'MiniIconsBlue' },
-          typescriptreact = { glyph = '', hl = 'MiniIconsBlue' },
           javascript = { glyph = '', hl = 'MiniIconsBlue' },
-          javascriptreact = { glyph = '', hl = 'MiniIconsBlue' },
         },
         file = {
           ['.bazelignore'] = { glyph = '', hl = 'MiniIconsPurple' },
@@ -279,8 +277,8 @@ return {
           mts = { glyph = '', hl = 'MiniIconsBlue' },
           cts = { glyph = '', hl = 'MiniIconsBlue' },
           ['d.ts'] = { glyph = '', hl = 'MiniIconsOrange' },
-          ['test.ts'] = { glyph = '', hl = 'MiniIconsBlue' },
-          ['test.tsx'] = { glyph = '', hl = 'MiniIconsCyan' },
+          ['test.ts'] = { glyph = '', hl = 'MiniIconsCyan' },
+          ['test.tsx'] = { glyph = '', hl = 'MiniIconsCyan' },
         },
         directory = {
           ['.vscode'] = { glyph = '', hl = 'MiniIconsBlue' },
