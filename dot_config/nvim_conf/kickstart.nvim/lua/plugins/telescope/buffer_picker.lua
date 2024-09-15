@@ -38,7 +38,7 @@ local function make_buffer_entry_display(configuration)
       elseif v.remaining ~= true then
         vim.notify('Should specify that the last item is taking the remaining space', vim.log.levels.ERROR)
       end
-      ---@alias BufferEntryDisplayItem { split_up_path: true, path: string, lnum: number }
+      ---@alias BufferEntryDisplayItem { split_up_path: true, path: string, lnum: number, has_error: boolean }
       ---@param item string | { [1]: string, [2]: string } | BufferEntryDisplayItem
       ---@param picker any
       table.insert(generator, function(item, picker)
@@ -60,7 +60,11 @@ local function make_buffer_entry_display(configuration)
               path_current_width = path_current_width - (#path_part - #path_parts[path_index])
               path_index = path_index + 1
             end
-            return table.concat(path_parts, '/') .. ':' .. item.lnum
+            local truncated_path_with_lnum = table.concat(path_parts, '/') .. ':' .. item.lnum
+            if item.has_error then
+              return truncated_path_with_lnum, 'DiagnosticError'
+            end
+            return truncated_path_with_lnum
           end
           return item[1], item[2]
         else
@@ -122,11 +126,13 @@ local function make_buffer_entry()
     opts.__prefix = icon_width + 1 + #tostring(entry.lnum)
     local display_bufname = require('telescope.utils').transform_path(opts, entry.filename)
     local icon, hl_group = require('telescope.utils').get_devicons(entry.filename)
+    local diagnostics = vim.diagnostic.count(entry.bufnr, { severity = vim.diagnostic.severity.ERROR })
+    local has_error = diagnostics[vim.diagnostic.severity.ERROR] ~= nil and diagnostics[vim.diagnostic.severity.ERROR] > 0
 
     return displayer({
       { entry.indicator, 'DiagnosticWarn' },
       { icon, hl_group },
-      { split_up_path = true, path = display_bufname, lnum = entry.lnum },
+      { split_up_path = true, path = display_bufname, lnum = entry.lnum, has_error = has_error },
     }, picker)
   end
 
