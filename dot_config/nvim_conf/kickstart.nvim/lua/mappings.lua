@@ -46,9 +46,36 @@ vim.keymap.set('n', 'j', 'g<Down>', { silent = true })
 vim.keymap.set({ 'v', 'n' }, 'gj', '<C-i>', { desc = 'Go to next location' })
 vim.keymap.set({ 'v', 'n' }, 'gk', '<C-o>', { desc = 'Go to previous location' })
 
-nmap('Open Floating LazyGit', 'gg', function()
-  require('lazygit').lazygit()
+nmap('Open LazyGit in buffer', 'gg', function()
+  local bufnrs = vim.api.nvim_list_bufs()
+  local lazygit_bufnr = vim.tbl_filter(function(bufnr)
+    local bufname = vim.api.nvim_buf_get_name(bufnr)
+    return bufname:match('term://.*lazygit')
+  end, bufnrs)[1]
+  if lazygit_bufnr ~= nil then
+    vim.api.nvim_set_current_buf(lazygit_bufnr)
+    return
+  end
+  vim.cmd('term lazygit')
 end)
+vim.api.nvim_create_autocmd('TermOpen', {
+  pattern = 'term://*lazygit',
+  callback = function(args)
+    ---@type integer
+    local bufnr = args.buf
+    vim.cmd('startinsert')
+    vim.api.nvim_buf_set_option(bufnr, 'number', false)
+    vim.api.nvim_buf_set_option(bufnr, 'foldcolumn', '0')
+  end,
+})
+vim.api.nvim_create_autocmd('TermClose', {
+  pattern = 'term://*lazygit',
+  callback = function(args)
+    ---@type integer
+    local bufnr = args.buf
+    require('bufdelete').bufdelete(bufnr)
+  end,
+})
 
 if not require('utils.config').USE_TABLINE then
   nmap('[C]lose current buffer', 'c', function()
