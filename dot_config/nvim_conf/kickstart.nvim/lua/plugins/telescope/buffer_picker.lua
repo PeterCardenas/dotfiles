@@ -152,6 +152,11 @@ local function make_buffer_entry()
     }, picker)
   end
 
+  ---@class BufferEntry
+  ---@field bufnr number
+  ---@field info vim.fn.getbufinfo.ret.item
+
+  ---@param entry BufferEntry
   return function(entry)
     local filename = entry.info.name ~= '' and entry.info.name or nil
     local Path = require('plenary.path')
@@ -193,6 +198,10 @@ function M.find_buffers()
     if bufnr == vim.api.nvim_get_current_buf() then
       return false
     end
+    local bufname = vim.api.nvim_buf_get_name(bufnr)
+    if bufname:match('term://.*lazygit') then
+      return false
+    end
 
     return true
   end, vim.api.nvim_list_bufs())
@@ -208,11 +217,8 @@ function M.find_buffers()
 
   local buffers = {}
   for _, bufnr in ipairs(bufnrs) do
-    local flag = bufnr == vim.fn.bufnr('') and '%' or (bufnr == vim.fn.bufnr('#') and '#' or ' ')
-
     local element = {
       bufnr = bufnr,
-      flag = flag,
       info = vim.fn.getbufinfo(bufnr)[1],
     }
 

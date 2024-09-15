@@ -58,3 +58,6 @@ disableStartupPopups: true
 quitOnTopLevelReturn: true
 os:
   editPreset: 'nvim-remote'
+  edit: '[ -z "$NVIM" ] && (nvim -- {{filename}}) || (nvim --server "$NVIM" --remote-send "<C-\\><C-n>:e {{filename}}<CR>")'
+  editAtLine: '[ -z "$NVIM" ] && (nvim +{{line}} -- {{filename}}) || (nvim --server "$NVIM" --remote-send "<C-\\><C-n>:e {{filename}}<CR>:{{line}}<CR>")'
+  openDirInEditor: '[ -z "$NVIM" ] && (nvim -- {{dir}}) || (nvim --server "$NVIM" --remote-send "<C-\\><C-n>:e {{dir}}<CR>")'
