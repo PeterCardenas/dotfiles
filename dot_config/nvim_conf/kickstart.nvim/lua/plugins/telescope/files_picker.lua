@@ -1,4 +1,7 @@
-local function make_files_entry()
+local M = {}
+
+---@return fun(filename: string): table
+function M.make_files_entry()
   local icon_width = require('plenary.strings').strdisplaywidth((require('telescope.utils').get_devicons('fname')))
   local opts = {}
 
@@ -48,8 +51,6 @@ local function make_files_entry()
   end
 end
 
-local M = {}
-
 ---@class FindFilesOpts
 ---@field show_ignore boolean
 
@@ -58,13 +59,12 @@ function M.find_files(find_opts)
   local pickers = require('telescope.pickers')
   local finders = require('telescope.finders')
   local conf = require('telescope.config').values
-  local entry_maker = require('telescope.make_entry')
   local command = { 'rg', '--files', '--color', 'never', '--hidden' }
   if find_opts.show_ignore then
     table.insert(command, '--no-ignore')
   end
   local opts = {
-    entry_maker = make_files_entry(),
+    entry_maker = M.make_files_entry(),
   }
 
   pickers
