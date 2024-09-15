@@ -46,8 +46,12 @@ local function make_buffer_entry_display(configuration)
           if item.split_up_path then
             local results_win = picker.results_border.content_win_id
             local results_width = vim.api.nvim_win_get_width(results_win)
-            local path_target_width = results_width - acc_width - #configuration.separator * (#configuration.items - 1) - #tostring(item.lnum) - 1
-            local path_current_width = #item.path
+            local path_target_width = results_width
+              - acc_width
+              - vim.fn.strdisplaywidth(configuration.separator) * (#configuration.items - 1)
+              - vim.fn.strdisplaywidth(tostring(item.lnum))
+              - 3
+            local path_current_width = vim.fn.strdisplaywidth(item.path)
             if path_current_width <= path_target_width then
               return item.path .. ':' .. item.lnum
             end
@@ -55,12 +59,13 @@ local function make_buffer_entry_display(configuration)
             local path_index = 2
             while path_index <= #path_parts and path_current_width > path_target_width do
               local path_part = path_parts[path_index]
-              local path_part_width = math.max(#path_part, path_current_width - path_target_width)
-              path_parts[path_index] = '…' .. string.sub(path_part, path_part_width)
-              path_current_width = path_current_width - (#path_part - #path_parts[path_index])
+              local length_to_truncate = vim.fn.strdisplaywidth(path_part) - (path_current_width - path_target_width)
+              path_parts[path_index] = vim.fn.strcharpart(path_part, 0, math.max(1, length_to_truncate - 1)) .. '…'
+              path_current_width = path_current_width - vim.fn.strdisplaywidth(path_part) + vim.fn.strdisplaywidth(path_parts[path_index])
               path_index = path_index + 1
             end
-            local truncated_path_with_lnum = table.concat(path_parts, '/') .. ':' .. item.lnum
+            local truncated_path = table.concat(path_parts, '/')
+            local truncated_path_with_lnum = truncated_path .. ':' .. item.lnum
             if item.has_error then
               return truncated_path_with_lnum, 'DiagnosticError'
             end
