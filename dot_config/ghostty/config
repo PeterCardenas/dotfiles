@@ -29,4 +29,6 @@ adjust-underline-position = 2
 # TODO: Migrate away from tmux
 grapheme-width-method = legacy
 
+auto-update = download
+
 theme = "tokyonight-storm"
