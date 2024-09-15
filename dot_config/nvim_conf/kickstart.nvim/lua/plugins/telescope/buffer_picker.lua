@@ -210,23 +210,17 @@ function M.find_buffers()
     table.insert(buffers, element)
   end
 
+  local resize_augroup = vim.api.nvim_create_augroup('BufferPickerResize', { clear = true })
   local opts = {}
 
   require('telescope.pickers')
     .new({}, {
       prompt_title = 'Buffers',
-      -- layout_strategy = 'vertical',
       results_title = false,
-      winblend = 20,
       layout_config = {
         prompt_position = 'top',
         width = 0.8,
         preview_width = 0.5,
-      },
-      borderchars = {
-        prompt = { '─', '│', ' ', '│', '╭', '╮', '│', '│' },
-        results = { '─', '│', '─', '│', '├', '┤', '╯', '╰' },
-        preview = { '─', '│', '─', '│', '╭', '╮', '╯', '╰' },
       },
       finder = require('telescope.finders').new_table({
         results = buffers,
@@ -234,7 +228,25 @@ function M.find_buffers()
       }),
       previewer = require('telescope.config').values.grep_previewer(opts),
       sorter = require('telescope.config').values.generic_sorter(opts),
-      attach_mappings = function(_, map)
+      attach_mappings = function(prompt_bufnr_, map)
+        local picker = require('telescope.actions.state').get_current_picker(prompt_bufnr_)
+        local results_win = picker.results_border.content_win_id
+        vim.api.nvim_create_autocmd('VimResized', {
+          group = resize_augroup,
+          callback = function()
+            picker:refresh()
+          end,
+        })
+        vim.api.nvim_create_autocmd('WinClosed', {
+          group = resize_augroup,
+          callback = function(args)
+            local closed_win = tonumber(args.match, 10)
+            if closed_win ~= results_win then
+              return
+            end
+            vim.api.nvim_del_augroup_by_id(resize_augroup)
+          end,
+        })
         map({ 'n', 'i' }, '<c-x>', function(prompt_bufnr)
           require('telescope.actions').delete_buffer(prompt_bufnr)
         end)
