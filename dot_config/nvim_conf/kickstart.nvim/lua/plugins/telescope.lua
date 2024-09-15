@@ -21,11 +21,11 @@ nmap('[F]ind b[u]ffers', 'fu', function()
 end)
 
 nmap('[F]ind [F]iles', 'ff', function()
-  require('telescope.builtin').find_files({ hidden = true })
+  require('plugins.telescope.files_picker').find_files({ show_ignore = false })
 end)
 
 nmap('[F]ind Any [F]ile', 'fF', function()
-  require('telescope.builtin').find_files({ hidden = true, no_ignore = true })
+  require('plugins.telescope.files_picker').find_files({ show_ignore = true })
 end)
 
 nmap('[F]ind [W]ords with ripgrep', 'fw', function()
