@@ -7,7 +7,7 @@ local M = {}
 ---@class EntryDisplayConfig
 ---@field items EntryDisplayConfigItem[]
 ---@field separator string
----@alias PathEntryDisplayItem { path: string, lnum?: number, has_error: boolean }
+---@alias PathEntryDisplayItem { path: string, lnum?: number, has_error?: boolean, has_warning?: boolean }
 ---@alias EntryDisplayItem string | { [1]: string, [2]: string } | PathEntryDisplayItem
 
 ---@param configuration EntryDisplayConfig
@@ -79,6 +79,8 @@ function M.make_entry_display(configuration)
             end
             if item.has_error then
               return truncated_path, 'DiagnosticError'
+            elseif item.has_warning then
+              return truncated_path, 'DiagnosticWarn'
             end
             return truncated_path
           end
