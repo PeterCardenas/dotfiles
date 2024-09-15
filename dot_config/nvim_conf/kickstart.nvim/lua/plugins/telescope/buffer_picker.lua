@@ -7,7 +7,7 @@ local M = {}
 ---@class EntryDisplayConfig
 ---@field items EntryDisplayConfigItem[]
 ---@field separator string
----@alias PathEntryDisplayItem { path: string, lnum?: number, has_error?: boolean, has_warning?: boolean }
+---@alias PathEntryDisplayItem { path: string, lnum?: number, has_error?: boolean, has_warning?: boolean, is_removed?: boolean}
 ---@alias EntryDisplayItem string | { [1]: string, [2]: string } | PathEntryDisplayItem
 
 ---@param configuration EntryDisplayConfig
@@ -45,49 +45,44 @@ function M.make_entry_display(configuration)
       ---@param item EntryDisplayItem
       ---@param picker Picker
       table.insert(generator, function(item, picker)
-        if type(item) == 'table' then
-          if item.path ~= nil then
-            local results_win = picker.results_border.content_win_id
-            local results_width = vim.api.nvim_win_get_width(results_win)
-            local lnum_str = item.lnum and tostring(item.lnum) or ''
-            local path_target_width = results_width
-              - acc_width
-              - vim.fn.strdisplaywidth(configuration.separator) * (#configuration.items + 1)
-              - vim.fn.strdisplaywidth(lnum_str)
-            if item.lnum ~= nil then
-              path_target_width = path_target_width - 1
-            end
-            local path_current_width = vim.fn.strdisplaywidth(item.path)
-            if path_current_width <= path_target_width then
-              if item.lnum ~= nil then
-                return item.path .. ':' .. item.lnum
-              end
-              return item.path
-            end
-            local path_parts = vim.split(item.path, '/')
-            local path_index = 2
-            while path_index <= #path_parts and path_current_width > path_target_width do
-              local path_part = path_parts[path_index]
-              local length_to_truncate = vim.fn.strdisplaywidth(path_part) - (path_current_width - path_target_width)
-              path_parts[path_index] = vim.fn.strcharpart(path_part, 0, math.max(1, length_to_truncate - 1)) .. '…'
-              path_current_width = path_current_width - vim.fn.strdisplaywidth(path_part) + vim.fn.strdisplaywidth(path_parts[path_index])
-              path_index = path_index + 1
-            end
-            local truncated_path = table.concat(path_parts, '/')
-            if item.lnum ~= nil then
-              truncated_path = truncated_path .. ':' .. item.lnum
-            end
-            if item.has_error then
-              return truncated_path, 'DiagnosticError'
-            elseif item.has_warning then
-              return truncated_path, 'DiagnosticWarn'
-            end
-            return truncated_path
-          end
-          return item[1], item[2]
-        else
+        if type(item) == 'string' then
           return item
         end
+        if item.path == nil then
+          return item[1], item[2]
+        end
+        local results_win = picker.results_border.content_win_id
+        local results_width = vim.api.nvim_win_get_width(results_win)
+        local lnum_str = item.lnum and tostring(item.lnum) or ''
+        local path_target_width = results_width
+          - acc_width
+          - vim.fn.strdisplaywidth(configuration.separator) * (#configuration.items + 1)
+          - vim.fn.strdisplaywidth(lnum_str)
+        if item.lnum ~= nil then
+          path_target_width = path_target_width - 1
+        end
+        local path_current_width = vim.fn.strdisplaywidth(item.path)
+        local path_parts = vim.split(item.path, '/')
+        local path_index = 2
+        while path_index <= #path_parts and path_current_width > path_target_width do
+          local path_part = path_parts[path_index]
+          local length_to_truncate = vim.fn.strdisplaywidth(path_part) - (path_current_width - path_target_width)
+          path_parts[path_index] = vim.fn.strcharpart(path_part, 0, math.max(1, length_to_truncate - 1)) .. '…'
+          path_current_width = path_current_width - vim.fn.strdisplaywidth(path_part) + vim.fn.strdisplaywidth(path_parts[path_index])
+          path_index = path_index + 1
+        end
+        local final_path = table.concat(path_parts, '/')
+        if item.lnum ~= nil then
+          final_path = final_path .. ':' .. item.lnum
+        end
+        if item.is_removed then
+          return final_path, 'Conceal'
+        elseif item.has_error then
+          return final_path, 'DiagnosticError'
+        elseif item.has_warning then
+          return final_path, 'DiagnosticWarn'
+        end
+        return final_path
       end)
     end
   end
@@ -146,11 +141,14 @@ local function make_buffer_entry()
     local icon, hl_group = require('telescope.utils').get_devicons(entry.filename)
     local diagnostics = vim.diagnostic.count(entry.bufnr, { severity = vim.diagnostic.severity.ERROR })
     local has_error = diagnostics[vim.diagnostic.severity.ERROR] ~= nil and diagnostics[vim.diagnostic.severity.ERROR] > 0
+    local Path = require('plenary.path')
+    local full_path = Path:new(entry.filename):expand()
+    local is_removed = vim.fn.filereadable(full_path) == 0
 
     return displayer({
       { entry.indicator, 'DiagnosticWarn' },
       { icon, hl_group },
-      { path = display_bufname, lnum = entry.lnum, has_error = has_error },
+      { path = display_bufname, lnum = entry.lnum, has_error = has_error, is_removed = is_removed },
     }, picker)
   end
 
