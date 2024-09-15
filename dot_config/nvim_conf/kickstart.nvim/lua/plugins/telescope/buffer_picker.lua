@@ -1,14 +1,18 @@
----@class BufferEntryDisplayConfigItem
+local M = {}
+
+---@class EntryDisplayConfigItem
 ---@field width? number
 ---@field right_justify? boolean
 ---@field remaining? boolean
----@class BufferEntryDisplayConfig
----@field items BufferEntryDisplayConfigItem[]
+---@class EntryDisplayConfig
+---@field items EntryDisplayConfigItem[]
 ---@field separator string
----
----@param configuration BufferEntryDisplayConfig
----@return function
-local function make_buffer_entry_display(configuration)
+---@alias PathEntryDisplayItem { path: string, lnum?: number, has_error: boolean }
+---@alias EntryDisplayItem string | { [1]: string, [2]: string } | PathEntryDisplayItem
+
+---@param configuration EntryDisplayConfig
+---@return fun(self: EntryDisplayItem[], picker: Picker): string, table
+function M.make_entry_display(configuration)
   local resolve = require('telescope.config.resolve')
   local strings = require('plenary.strings')
   local generator = {}
@@ -38,22 +42,27 @@ local function make_buffer_entry_display(configuration)
       elseif v.remaining ~= true then
         vim.notify('Should specify that the last item is taking the remaining space', vim.log.levels.ERROR)
       end
-      ---@alias BufferEntryDisplayItem { split_up_path: true, path: string, lnum: number, has_error: boolean }
-      ---@param item string | { [1]: string, [2]: string } | BufferEntryDisplayItem
-      ---@param picker any
+      ---@param item EntryDisplayItem
+      ---@param picker Picker
       table.insert(generator, function(item, picker)
         if type(item) == 'table' then
-          if item.split_up_path then
+          if item.path ~= nil then
             local results_win = picker.results_border.content_win_id
             local results_width = vim.api.nvim_win_get_width(results_win)
+            local lnum_str = item.lnum and tostring(item.lnum) or ''
             local path_target_width = results_width
               - acc_width
-              - vim.fn.strdisplaywidth(configuration.separator) * (#configuration.items - 1)
-              - vim.fn.strdisplaywidth(tostring(item.lnum))
-              - 3
+              - vim.fn.strdisplaywidth(configuration.separator) * (#configuration.items + 1)
+              - vim.fn.strdisplaywidth(lnum_str)
+            if item.lnum ~= nil then
+              path_target_width = path_target_width - 1
+            end
             local path_current_width = vim.fn.strdisplaywidth(item.path)
             if path_current_width <= path_target_width then
-              return item.path .. ':' .. item.lnum
+              if item.lnum ~= nil then
+                return item.path .. ':' .. item.lnum
+              end
+              return item.path
             end
             local path_parts = vim.split(item.path, '/')
             local path_index = 2
@@ -65,11 +74,13 @@ local function make_buffer_entry_display(configuration)
               path_index = path_index + 1
             end
             local truncated_path = table.concat(path_parts, '/')
-            local truncated_path_with_lnum = truncated_path .. ':' .. item.lnum
-            if item.has_error then
-              return truncated_path_with_lnum, 'DiagnosticError'
+            if item.lnum ~= nil then
+              truncated_path = truncated_path .. ':' .. item.lnum
             end
-            return truncated_path_with_lnum
+            if item.has_error then
+              return truncated_path, 'DiagnosticError'
+            end
+            return truncated_path
           end
           return item[1], item[2]
         else
@@ -115,7 +126,7 @@ local function make_buffer_entry()
   local icon_width = require('plenary.strings').strdisplaywidth((require('telescope.utils').get_devicons('fname')))
   local opts = {}
 
-  local displayer = make_buffer_entry_display({
+  local displayer = M.make_entry_display({
     separator = ' ',
     items = {
       { width = 1 },
@@ -137,7 +148,7 @@ local function make_buffer_entry()
     return displayer({
       { entry.indicator, 'DiagnosticWarn' },
       { icon, hl_group },
-      { split_up_path = true, path = display_bufname, lnum = entry.lnum, has_error = has_error },
+      { path = display_bufname, lnum = entry.lnum, has_error = has_error },
     }, picker)
   end
 
@@ -173,8 +184,6 @@ local function make_buffer_entry()
     }, opts)
   end
 end
-
-local M = {}
 
 function M.find_buffers()
   local bufnrs = vim.tbl_filter(function(bufnr)
