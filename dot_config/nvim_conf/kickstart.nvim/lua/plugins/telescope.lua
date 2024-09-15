@@ -2,7 +2,7 @@ local nmap = require('utils.keymap').nmap
 
 -- Telescope keymaps
 nmap('[F]ind [O]ld files', 'fo', function()
-  require('telescope.builtin').oldfiles()
+  require('telescope.builtin').oldfiles({ entry_maker = require('plugins.telescope.files_picker').make_files_entry() })
 end)
 
 nmap('[/] Fuzzily search in current buffer', '/', function()
