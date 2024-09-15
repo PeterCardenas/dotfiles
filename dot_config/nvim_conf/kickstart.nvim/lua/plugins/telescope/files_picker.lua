@@ -9,17 +9,31 @@ local function make_files_entry()
       { remaining = true },
     },
   })
+  local bufnrs = vim.api.nvim_list_bufs()
+  local fname_to_bufnr = {}
+  for _, bufnr in ipairs(bufnrs) do
+    local fname = vim.api.nvim_buf_get_name(bufnr)
+    fname_to_bufnr[fname] = bufnr
+  end
+
+  local cwd = require('utils.file').get_cwd()
 
   local make_display = function(entry, picker)
     opts.__prefix = icon_width
     local display_bufname = require('telescope.utils').transform_path(opts, entry.filename)
     local icon, hl_group = require('telescope.utils').get_devicons(entry.filename)
-    -- local diagnostics = vim.diagnostic.count(entry.bufnr, { severity = vim.diagnostic.severity.ERROR })
-    -- local has_error = diagnostics[vim.diagnostic.severity.ERROR] ~= nil and diagnostics[vim.diagnostic.severity.ERROR] > 0
+    local has_error = false
+    local has_warning = false
+    local maybe_bufnr = fname_to_bufnr[cwd .. '/' .. entry.filename]
+    if maybe_bufnr ~= nil then
+      local diagnostics = vim.diagnostic.count(maybe_bufnr, { severity = vim.diagnostic.severity.ERROR })
+      has_error = diagnostics[vim.diagnostic.severity.ERROR] ~= nil and diagnostics[vim.diagnostic.severity.ERROR] > 0
+      has_warning = vim.api.nvim_get_option_value('modified', { buf = maybe_bufnr })
+    end
 
     return displayer({
       { icon, hl_group },
-      { path = display_bufname },
+      { path = display_bufname, has_error = has_error, has_warning = has_warning },
     }, picker)
   end
 
