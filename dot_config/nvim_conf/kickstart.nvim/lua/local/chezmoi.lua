@@ -6,14 +6,26 @@ vim.api.nvim_create_autocmd('BufWritePost', {
   callback = function(args)
     local bufnr = args.buf
     local filepath = vim.api.nvim_buf_get_name(bufnr)
-    if not filepath:find('^' .. os.getenv('HOME') .. '/.local/share/chezmoi') then
+    local chezmoi_root = os.getenv('HOME') .. '/.local/share/chezmoi/'
+    if not filepath:find('^' .. chezmoi_root) then
+      return
+    end
+    local relative_filepath = filepath:sub(#chezmoi_root + 1)
+    -- Ignore files that should never be applied
+    if relative_filepath:match('^%.git') then
       return
     end
     local shell = require('utils.shell')
     async.void(
       ---@async
       function()
-        local success, output = shell.async_cmd('chezmoi', { 'apply', '--source-path', filepath })
+        -- Do not apply ignored files.
+        local success, output = shell.async_cmd('chezmoi', { 'ignored' })
+        if success and vim.tbl_contains(output, relative_filepath) then
+          return
+        end
+
+        success, output = shell.async_cmd('chezmoi', { 'apply', '--source-path', filepath })
         if not success then
           vim.schedule(function()
             vim.notify('chezmoi apply failed: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
