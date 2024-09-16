@@ -15,7 +15,8 @@ function install_ghostty() {
 		zig build -p "$HOME/.local" -Doptimize=ReleaseFast
 		popd || exit 1
 	elif [ "$(uname)" == "Darwin" ]; then
-		echo "Could not install ghostty on macOS"
+		gh release --repo ghostty-org/ghostty download tip --pattern ghostty-macos-universal.zip
+		unzip ghostty-macos-universal.zip -d /Applications
 	fi
 }
 
