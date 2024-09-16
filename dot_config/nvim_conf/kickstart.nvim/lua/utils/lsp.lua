@@ -15,6 +15,7 @@ M.FT_WITH_LSP = {
   'bzl',
   'mdx',
   'markdown',
+  'markdown.mdx',
   'rust',
   'yaml',
   'sh',
