@@ -20,10 +20,14 @@ local function get_pr_url(commit_sha)
   local success, output = shell.async_cmd('gh', {
     'pr',
     'list',
-    '--state=merged',
-    '--json=url,mergeCommit',
-    '--search="' .. commit_sha .. '"',
-    '--jq=\'.[]| select(.mergeCommit.oid == "' .. commit_sha .. '") | .url\'',
+    '--state',
+    'merged',
+    '--json',
+    'url,mergeCommit',
+    '--search',
+    commit_sha,
+    '--jq',
+    '.[]| select(.mergeCommit.oid == "' .. commit_sha .. '") | .url',
   })
   if not success or #output == 0 then
     return nil
@@ -35,7 +39,11 @@ end
 ---@param commit_sha string
 ---@return string
 local function get_commit_url(commit_sha)
-  local repo_url = get_repo_url()
+  local success, output = get_repo_url()
+  if not success then
+    return ''
+  end
+  local repo_url = output
   local commit_url = repo_url .. '/commit/' .. commit_sha
   return commit_url
 end
@@ -49,40 +57,53 @@ vim.api.nvim_create_user_command('GHPR', function()
   end
   local lnum = vim.api.nvim_win_get_cursor(0)[1]
   local config = require('gitsigns.config').config
-  async.void(
+  local gitsigns_async = require('gitsigns.async')
+  -- gitsigns async and plenary async are not compatible with each other
+  -- So use gitsigns async just for getting blame info.
+  ---@type fun(cb: fun(blame_info: Gitsigns.BlameInfo?): nil): nil
+  local run = gitsigns_async.create(
+    0,
     ---@async
+    ---@return Gitsigns.BlameInfo?
     function()
       local blame_info = cache_entry:get_blame(lnum, config.current_line_blame_opts)
-      if not blame_info then
-        vim.schedule(function()
-          vim.notify('Blame has not been loaded yet.', vim.log.levels.ERROR)
-        end)
-        return
-      end
-      local not_committed_sha = require('gitsigns.git.blame').get_blame_nc('', lnum).commit.sha
-      if blame_info.commit.sha == not_committed_sha then
-        vim.schedule(function()
-          vim.notify('Current line not committed yet.', vim.log.levels.ERROR)
-        end)
-        return
-      end
-      local commit_sha = blame_info.commit.sha
-      local pr_url = get_pr_url(commit_sha)
-      vim.notify('checked pr url: ' .. (pr_url or 'nil'), vim.log.levels.INFO)
-      if not pr_url then
-        local commit_url = get_commit_url(commit_sha)
-        vim.notify('No PR created yet.\nCopied commit link to clipboard:\n' .. commit_url, vim.log.levels.WARN)
-        vim.schedule(function()
-          vim.fn.setreg('+', commit_url)
-        end)
-        return
-      end
-      vim.notify('Copied PR link to clipboard:\n' .. pr_url, vim.log.levels.INFO)
-      vim.schedule(function()
-        vim.fn.setreg('+', pr_url)
-      end)
+      return blame_info
     end
   )
+  run(function(blame_info)
+    async.void(
+      ---@async
+      function()
+        if not blame_info then
+          vim.schedule(function()
+            vim.notify('Blame has not been loaded yet.', vim.log.levels.ERROR)
+          end)
+          return
+        end
+        local not_committed_sha = require('gitsigns.git.blame').get_blame_nc('', lnum).commit.sha
+        if blame_info.commit.sha == not_committed_sha then
+          vim.schedule(function()
+            vim.notify('Current line not committed yet.', vim.log.levels.ERROR)
+          end)
+          return
+        end
+        local commit_sha = blame_info.commit.sha
+        local pr_url = get_pr_url(commit_sha)
+        if not pr_url then
+          local commit_url = get_commit_url(commit_sha)
+          vim.notify('No PR created yet.\nCopied commit link to clipboard:\n' .. commit_url, vim.log.levels.WARN)
+          vim.schedule(function()
+            vim.fn.setreg('+', commit_url)
+          end)
+          return
+        end
+        vim.notify('Copied PR link to clipboard:\n' .. pr_url, vim.log.levels.INFO)
+        vim.schedule(function()
+          vim.fn.setreg('+', pr_url)
+        end)
+      end
+    )
+  end)
 end, { nargs = 0, desc = 'Open/Copy GitHub PR link for current line' })
 
 local function relative_path_to_git_root()
