@@ -5,6 +5,6 @@ function copy_pr_link
         echo "Failed to get PR link"
         return 1
     end
-    echo $github_link | xclip -selection clipboard
+    osc52_copy "$github_link"
     echo "Copied $github_link to clipboard"
 end
