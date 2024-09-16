@@ -240,6 +240,7 @@ return {
           rust = { glyph = '', hl = 'MiniIconsOrange' },
           typescript = { glyph = '', hl = 'MiniIconsBlue' },
           javascript = { glyph = '', hl = 'MiniIconsBlue' },
+          ['markdown.mdx'] = { glyph = '󰍔', hl = 'MiniIconsGrey' },
         },
         file = {
           ['.bazelignore'] = { glyph = '', hl = 'MiniIconsPurple' },
