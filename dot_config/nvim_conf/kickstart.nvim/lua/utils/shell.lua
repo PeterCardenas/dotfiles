@@ -41,7 +41,6 @@ M.async_cmd = async.wrap(
         handle_output(data)
       end,
       on_exit = function(_, code)
-        -- TODO: Use on_stderr and on_stdout to make the stderr and stdout come in order when aggregated.
         done(code == 0, output)
       end,
     }):start()
