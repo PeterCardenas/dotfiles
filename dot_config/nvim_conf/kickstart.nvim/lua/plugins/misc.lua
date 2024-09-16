@@ -672,7 +672,11 @@ return {
     'icholy/lsplinks.nvim',
     lazy = true,
     config = function()
-      require('lsplinks').setup()
+      vim.api.nvim_set_hl(0, 'LspLink', { underdotted = true })
+      require('lsplinks').setup({
+        highlight = true,
+        hl_group = 'LspLink',
+      })
     end,
   },
 }
