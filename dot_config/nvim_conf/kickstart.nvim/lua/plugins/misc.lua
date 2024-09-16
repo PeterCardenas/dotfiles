@@ -504,19 +504,6 @@ return {
     end,
   },
 
-  -- Add lazygit neovim integration.
-  {
-    lazy = true,
-    'kdheepak/lazygit.nvim',
-    -- optional for floating window border decoration
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-    },
-    config = function()
-      vim.g.lazygit_floating_window_scaling_factor = 1
-    end,
-  },
-
   -- Profile lua neovim config.
   {
     'stevearc/profile.nvim',
