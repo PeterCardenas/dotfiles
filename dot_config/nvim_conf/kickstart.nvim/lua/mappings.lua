@@ -66,6 +66,7 @@ vim.api.nvim_create_autocmd('TermOpen', {
     vim.cmd('startinsert')
     vim.api.nvim_buf_set_option(bufnr, 'number', false)
     vim.api.nvim_buf_set_option(bufnr, 'foldcolumn', '0')
+    vim.api.nvim_buf_set_option(bufnr, 'statuscolumn', '')
   end,
 })
 vim.api.nvim_create_autocmd('TermClose', {
