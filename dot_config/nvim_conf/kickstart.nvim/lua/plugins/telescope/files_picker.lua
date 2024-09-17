@@ -5,7 +5,7 @@ function M.make_files_entry()
   local icon_width = require('plenary.strings').strdisplaywidth((require('telescope.utils').get_devicons('fname')))
   local opts = {}
 
-  local displayer = require('plugins.telescope.buffer_picker').make_entry_display({
+  local displayer = require('plugins.telescope.entry_display').make_entry_display({
     separator = ' ',
     items = {
       { width = icon_width },
@@ -21,6 +21,11 @@ function M.make_files_entry()
 
   local cwd = require('utils.file').get_cwd()
 
+  ---@class FilePickerEntry
+  ---@field filename string
+
+  ---@param entry FilePickerEntry
+  ---@param picker Picker
   local make_display = function(entry, picker)
     opts.__prefix = icon_width
     local display_bufname = require('telescope.utils').transform_path(opts, entry.filename)
@@ -42,12 +47,14 @@ function M.make_files_entry()
 
   ---@param filename string
   return function(filename)
-    return require('telescope.make_entry').set_default_entry_mt({
+    ---@type FilePickerEntry
+    local entry = {
       value = filename,
       ordinal = filename,
       display = make_display,
       filename = filename,
-    }, opts)
+    }
+    return require('telescope.make_entry').set_default_entry_mt(entry, opts)
   end
 end
 
@@ -73,6 +80,11 @@ function M.find_files(find_opts)
       finder = finders.new_oneshot_job(command, opts),
       previewer = conf.file_previewer(opts),
       sorter = conf.file_sorter(opts),
+      attach_mappings = function(prompt_bufnr)
+        require('plugins.telescope.entry_display').create_autocommands(prompt_bufnr)
+
+        return true
+      end,
     })
     :find()
 end
