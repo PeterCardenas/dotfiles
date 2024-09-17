@@ -4,7 +4,7 @@ vim.api.nvim_create_autocmd('BufEnter', {
   callback = function(args)
     ---@type integer
     local buf = args.buf
-    local stats = vim.loop.fs_stat(vim.api.nvim_buf_get_name(buf))
+    local stats = vim.uv.fs_stat(vim.api.nvim_buf_get_name(buf))
     if stats and stats.type == 'directory' then
       local num_bufs = #vim.api.nvim_list_bufs()
       if num_bufs == 1 then
