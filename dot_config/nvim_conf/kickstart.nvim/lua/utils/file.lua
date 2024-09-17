@@ -16,22 +16,25 @@ function M.get_cwd()
   return os.getenv('PWD') or io.popen('cd'):read()
 end
 
+---@param target_filename string
+---@param start_path string | nil
+---@return string | nil
 function M.get_ancestor_dir(target_filename, start_path)
-  local target_dir = M.get_cwd()
+  local current_dir = M.get_cwd()
   if start_path ~= nil then
     if vim.fn.isdirectory(start_path) == 1 then
-      target_dir = start_path
+      current_dir = start_path
     else
-      target_dir = vim.fn.fnamemodify(start_path, ':h')
+      current_dir = vim.fn.fnamemodify(start_path, ':h')
     end
   end
   local home_dir = os.getenv('HOME')
-  while target_dir ~= '' and target_dir ~= home_dir do
-    local ancestor_dir = target_dir .. '/' .. target_filename
-    if vim.fn.isdirectory(ancestor_dir) == 1 or vim.fn.filereadable(ancestor_dir) then
-      return target_dir
+  while current_dir ~= '' and current_dir ~= '/' and current_dir ~= home_dir do
+    local current_filepath = current_dir .. '/' .. target_filename
+    if vim.fn.isdirectory(current_dir) == 1 and (vim.fn.filereadable(current_filepath) == 1 or vim.fn.isdirectory(current_filepath) == 1) then
+      return current_dir
     end
-    target_dir = vim.fn.fnamemodify(target_dir, ':h')
+    current_dir = vim.fn.fnamemodify(current_dir, ':h')
   end
   return nil
 end
