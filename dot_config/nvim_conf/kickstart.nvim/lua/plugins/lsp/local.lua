@@ -34,13 +34,6 @@ function M.setup(capabilities)
   end
 
   ---@type lspconfig.Config
-  local vale_lsp_config = {
-    capabilities = capabilities,
-    filetypes = { 'markdown', 'text', 'dosini', 'yaml', 'markdown.mdx' },
-  }
-  require('lspconfig').vale_ls.setup(vale_lsp_config)
-
-  ---@type lspconfig.Config
   local fish_lsp_config = {
     capabilities = capabilities,
   }
