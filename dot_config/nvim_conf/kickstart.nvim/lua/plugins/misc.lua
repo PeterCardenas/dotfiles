@@ -613,10 +613,14 @@ return {
       require('lazydev').setup({
         library = {
           'lazy.nvim',
+          { path = 'luvit-meta/library', words = { 'vim%.uv' } },
         },
       })
     end,
   },
+
+  --- Optional types for vim.uv
+  { 'Bilal2453/luvit-meta', lazy = true },
 
   -- Adds additional extensions for clangd.
   {
