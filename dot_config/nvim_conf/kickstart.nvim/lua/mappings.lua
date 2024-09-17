@@ -69,6 +69,12 @@ vim.api.nvim_create_autocmd('TermOpen', {
     vim.api.nvim_buf_set_option(bufnr, 'statuscolumn', '')
   end,
 })
+vim.api.nvim_create_autocmd('BufEnter', {
+  pattern = 'term://*lazygit',
+  callback = function()
+    vim.cmd('startinsert')
+  end,
+})
 vim.api.nvim_create_autocmd('TermClose', {
   pattern = 'term://*lazygit',
   callback = function(args)
