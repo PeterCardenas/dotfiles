@@ -10,6 +10,7 @@ format = "[$symbol$branch(:$remote_branch)]($style) "
 format = "[$duration]($style) "
 
 [zig]
+symbol = " "
 format = "[$symbol($version)]($style) "
 
 [python]
