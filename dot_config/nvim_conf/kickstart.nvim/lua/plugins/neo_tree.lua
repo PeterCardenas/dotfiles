@@ -34,8 +34,11 @@ vim.api.nvim_create_autocmd('BufEnter', {
     vim.keymap.set('n', '<leader>q', function()
       require('mini.files').close()
     end, {
-      noremap = true,
-      silent = true,
+      buffer = buf,
+    })
+    vim.keymap.set('n', '<ESC>', function()
+      require('mini.files').close()
+    end, {
       buffer = buf,
     })
   end,
