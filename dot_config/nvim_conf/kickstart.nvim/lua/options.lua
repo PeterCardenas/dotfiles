@@ -6,6 +6,19 @@ vim.o.foldlevelstart = 99
 vim.o.foldenable = true
 vim.o.fillchars = 'eob: ,fold: ,foldopen:,foldsep:│,foldclose:'
 
+function vim.brint(...)
+  for i = 1, select('#', ...) do
+    local o = select(i, ...)
+    if type(o) == 'string' then
+      vim.api.nvim_out_write(o)
+    else
+      vim.api.nvim_out_write(vim.inspect(o, { newline = '\n', indent = '  ' }))
+    end
+    vim.api.nvim_out_write(' ')
+  end
+  vim.api.nvim_out_write('\n')
+end
+
 -- Makes fish shell execution startup faster.
 vim.env.FAST_PROMPT = '1'
 
