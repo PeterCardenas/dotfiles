@@ -69,6 +69,15 @@ vim.api.nvim_create_autocmd('TermOpen', {
     vim.api.nvim_buf_set_option(bufnr, 'statuscolumn', '')
   end,
 })
+vim.api.nvim_create_autocmd('VimResized', {
+  callback = function()
+    local current_bufnr = vim.api.nvim_get_current_buf()
+    if vim.api.nvim_buf_get_name(current_bufnr):match('term://.*lazygit') then
+      vim.cmd('resize 0 0')
+      vim.cmd('resize 100 100')
+    end
+  end,
+})
 vim.api.nvim_create_autocmd('BufEnter', {
   pattern = 'term://*lazygit',
   callback = function()
