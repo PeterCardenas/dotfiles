@@ -94,7 +94,13 @@ return {
             require('luasnip').lsp_expand(args.body)
           end,
         },
-        mapping = cmp.mapping.preset.insert({
+        mapping = {
+          ['<Down>'] = {
+            i = cmp.mapping.select_next_item({ behavior = require('cmp.types').cmp.SelectBehavior.Select }),
+          },
+          ['<Up>'] = {
+            i = cmp.mapping.select_prev_item({ behavior = require('cmp.types').cmp.SelectBehavior.Select }),
+          },
           ['<C-j>'] = cmp.mapping.select_next_item(),
           ['<C-k>'] = cmp.mapping.select_prev_item(),
           ['<C-d>'] = cmp.mapping.scroll_docs(-4),
@@ -104,7 +110,7 @@ return {
             behavior = cmp.ConfirmBehavior.Replace,
             select = true,
           }),
-        }),
+        },
         sources = {
           { name = 'git' },
           { name = 'emoji' },
@@ -126,9 +132,38 @@ return {
         },
       })
 
+      ---@param fallback function
+      local function select_next_item(fallback)
+        if cmp.visible() then
+          cmp.select_next_item()
+        else
+          fallback()
+        end
+      end
+      ---@param fallback function
+      local function select_prev_item(fallback)
+        if cmp.visible() then
+          cmp.select_prev_item()
+        else
+          fallback()
+        end
+      end
       ---@type cmp.ConfigSchema
       local search_config = {
-        mapping = cmp.mapping.preset.cmdline(),
+        mapping = {
+          ['<Down>'] = {
+            c = select_next_item,
+          },
+          ['<Up>'] = {
+            c = select_prev_item,
+          },
+          ['<C-j>'] = {
+            c = select_next_item,
+          },
+          ['<C-k>'] = {
+            c = select_prev_item,
+          },
+        },
         sources = {
           { name = 'buffer' },
         },
@@ -136,7 +171,7 @@ return {
       cmp.setup.cmdline('/', search_config)
       cmp.setup.cmdline('?', search_config)
       cmp.setup.cmdline(':', {
-        mapping = cmp.mapping.preset.cmdline(),
+        mapping = search_config.mapping,
         sources = cmp.config.sources({
           {
             name = 'cmdline',
