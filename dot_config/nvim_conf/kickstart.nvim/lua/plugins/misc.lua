@@ -243,6 +243,7 @@ return {
           ['markdown.mdx'] = { glyph = '󰍔', hl = 'MiniIconsGrey' },
         },
         file = {
+          ['.babelrc'] = { glyph = '󰨥', hl = 'MiniIconsYellow' },
           ['.bazelignore'] = { glyph = '', hl = 'MiniIconsPurple' },
           ['.bazelversion'] = { glyph = '', hl = 'MiniIconsGreen' },
           ['.dev_docker_name'] = { glyph = '', hl = 'MiniIconsAzure' },
@@ -263,8 +264,15 @@ return {
           ['rust-toolchain.toml'] = { glyph = '', hl = 'MiniIconsOrange' },
           ['tmux.conf'] = { glyph = '', hl = 'MiniIconsGreen' },
           ['.tmux.conf'] = { glyph = '', hl = 'MiniIconsGreen' },
+          ['webpack.config.ts'] = { glyph = '', hl = 'MiniIconsBlue' },
+          ['webpack.config.js'] = { glyph = '', hl = 'MiniIconsOrange' },
+          ['.eslintrc.js'] = { glyph = '󰱺', hl = 'MiniIconsPurple' },
+          ['stylelint.config.js'] = { glyph = '', hl = 'MiniIconsGrey' },
+          ['.terraform-version'] = { glyph = '󱁢', hl = 'MiniIconsCyan' },
         },
         extension = {
+          bin = { glyph = '', hl = 'MiniIconsGrey' },
+          h = { glyph = '󰙲', hl = 'MiniIconsPurple' },
           fish = { glyph = '󰈺', hl = 'MiniIconsOrange' },
           bash = { glyph = '', hl = 'MiniIconsGrey' },
           sh = { glyph = '', hl = 'MiniIconsGrey' },
