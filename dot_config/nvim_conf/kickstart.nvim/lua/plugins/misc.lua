@@ -241,6 +241,9 @@ return {
           typescript = { glyph = '', hl = 'MiniIconsBlue' },
           javascript = { glyph = '', hl = 'MiniIconsBlue' },
           ['markdown.mdx'] = { glyph = '󰍔', hl = 'MiniIconsGrey' },
+          fish = { glyph = '󰈺', hl = 'MiniIconsOrange' },
+          bash = { glyph = '', hl = 'MiniIconsGrey' },
+          sh = { glyph = '', hl = 'MiniIconsGrey' },
         },
         file = {
           ['.babelrc'] = { glyph = '󰨥', hl = 'MiniIconsYellow' },
