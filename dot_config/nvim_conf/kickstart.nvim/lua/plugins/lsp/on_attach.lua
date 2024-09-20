@@ -13,7 +13,7 @@ local function highlight_symbol(client, bufnr)
     return
   end
 
-  local group = vim.api.nvim_create_augroup('highlight_symbol', { clear = false })
+  local group = vim.api.nvim_create_augroup('highlight_symbol', { clear = true })
 
   vim.api.nvim_clear_autocmds({ buffer = bufnr, group = group })
 
