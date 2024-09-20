@@ -21,15 +21,15 @@ keymap('<C-e>', function()
 end)
 
 keymap('zt', function()
-  require('neoscroll').zt(75, 'sine', {})
+  require('neoscroll').zt({ half_win_duration = 75, easing = 'sine' })
 end)
 
 keymap('zz', function()
-  require('neoscroll').zz(75, 'sine', {})
+  require('neoscroll').zz({ half_win_duration = 75, easing = 'sine' })
 end)
 
 keymap('zb', function()
-  require('neoscroll').zb(75, 'sine', {})
+  require('neoscroll').zb({ half_win_duration = 75, easing = 'sine' })
 end)
 
 -- TODO: Properly gg and G, currently this is way too slow.
