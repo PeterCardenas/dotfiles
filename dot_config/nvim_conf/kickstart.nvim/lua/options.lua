@@ -61,6 +61,7 @@ vim.g.clipboard = {
 local current_sessionoptions = vim.opt.sessionoptions:get()
 table.insert(current_sessionoptions, 'globals')
 vim.opt.sessionoptions = current_sessionoptions
+vim.api.nvim_set_hl(0, '@markup.link.label.markdown', { fg = '#2ac3de', underdotted = true, force = true })
 
 -- Faster loading of nvim-ts-context-commentstring plugin
 vim.g.skip_ts_context_commentstring_module = true
