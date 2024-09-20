@@ -228,6 +228,11 @@ return {
       },
       yamlls = {
         filetypes = { 'yaml' },
+        settings = {
+          yaml = {
+            ['schemaStore.enable'] = true,
+          },
+        },
         handlers = {
           -- [LspMethod.textDocument_publishDiagnostics] = function() end,
         },
