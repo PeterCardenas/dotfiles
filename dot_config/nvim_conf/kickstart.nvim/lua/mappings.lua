@@ -92,6 +92,17 @@ vim.api.nvim_create_autocmd('TermClose', {
     require('bufdelete').bufdelete(bufnr)
   end,
 })
+vim.api.nvim_create_autocmd('BufEnter', {
+  pattern = '*COMMIT_EDITMSG',
+  callback = function(args)
+    ---@type integer
+    local bufnr = args.buf
+    vim.cmd('startinsert')
+    vim.keymap.set('n', '<leader>q', function()
+      require('bufdelete').bufdelete(bufnr)
+    end, { buffer = bufnr })
+  end,
+})
 
 if not require('utils.config').USE_TABLINE then
   nmap('[C]lose current buffer', 'c', function()
