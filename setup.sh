@@ -205,6 +205,9 @@ function setup_unix() {
 	# Exit thirdparty to $HOME
 	popd || exit 1
 
+	# Install kitty and kitten cli
+	curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin
+
 	# Clone and apply dotfiles
 	cat <<EOF >"$HOME/.ssh/config"
 Host personal-github.com
