@@ -21,6 +21,8 @@ if test $os = Darwin
         "/Applications/kitty.app/Contents/MacOS" \
         /opt/local/bin \
         /opt/local/sbin
+else
+    fish_add_path -P "$HOME/.local/kitty.app/bin"
 end
 
 set -g async_prompt_inherit_variables all
