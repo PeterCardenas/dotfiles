@@ -183,6 +183,7 @@ return {
   cond = function()
     return vim.env.TMUX_PANE and vim.env.TMUX
   end,
+  event = 'VeryLazy',
   config = function()
     setup_tmux_autocommands()
     async.void(poll_update_tmux_env)
