@@ -48,6 +48,8 @@ function setup_ubuntu() {
 		software-properties-common apt-transport-https ca-certificates
 		# Unknown group
 		libevent-dev ncurses-dev build-essential bison pkg-config
+		# Used for 3rd/image.nvim plugin
+		lib-imagemagickwand-dev
 	)
 	sudo nala remove -y xsel
 	sudo nala install -y "${dpkg_packages[@]}"
@@ -134,6 +136,8 @@ function setup_mac() {
 		wget
 		# Needed for building Neovim, among other things
 		cmake gettext-runtime
+		# Used for 3rd/image.nvim plugin
+		imagemagick
 	)
 	sudo port install "${ports[@]}"
 }

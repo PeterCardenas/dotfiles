@@ -21,6 +21,7 @@ if test $os = Darwin
         "/Applications/kitty.app/Contents/MacOS" \
         /opt/local/bin \
         /opt/local/sbin
+    set -gx DYLD_LIBRARY_PATH /opt/local/lib
 else
     fish_add_path -P "$HOME/.local/kitty.app/bin"
 end
