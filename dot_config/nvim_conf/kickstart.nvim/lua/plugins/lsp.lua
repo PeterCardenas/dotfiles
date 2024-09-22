@@ -237,6 +237,7 @@ return {
           -- [LspMethod.textDocument_publishDiagnostics] = function() end,
         },
       },
+      taplo = {},
       vale_ls = {
         filetypes = { 'markdown', 'text', 'dosini', 'yaml', 'markdown.mdx' },
         root_dir = function(filename)
