@@ -175,6 +175,7 @@ function setup_unix() {
 		stylua
 		tree-sitter-cli
 		silicon
+		yazi-fm yazi-cli
 	)
 	cargo install "${rust_packages[@]}"
 	cargo install --features 'pcre2' ripgrep
