@@ -139,10 +139,13 @@ return {
     lazy = true,
   },
 
-  -- Enable copilot
+  -- Copilot AI autocompletion
   {
     'zbirenbaum/copilot.lua',
     event = 'InsertEnter',
+    cond = function()
+      return require('utils.config').USE_COPILOT
+    end,
     config = function()
       require('copilot').setup({
         suggestion = {
@@ -152,6 +155,24 @@ return {
           },
         },
       })
+    end,
+  },
+
+  -- Super fast AI autocompletion
+  {
+    'supermaven-inc/supermaven-nvim',
+    event = 'InsertEnter',
+    cond = function()
+      return not require('utils.config').USE_COPILOT
+    end,
+    config = function()
+      require('supermaven-nvim').setup({
+        keymaps = {
+          accept_suggestion = '<C-y>',
+        },
+        log_level = 'warn',
+      })
+      require('supermaven-nvim.api').use_free_version()
     end,
   },
 
