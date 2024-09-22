@@ -2,35 +2,60 @@ local async = require('utils.async')
 
 local chezmoi_augroup = vim.api.nvim_create_augroup('Chezmoi', { clear = true })
 
+---@async
+---Returns whether the apply errored and the error logs if errored.
+---@param filepath string
+---@return boolean, string[]
+local function apply_filepath(filepath)
+  local shell = require('utils.shell')
+  local chezmoi_root = os.getenv('HOME') .. '/.local/share/chezmoi/'
+  if not filepath:find('^' .. chezmoi_root) then
+    return false, {}
+  end
+  local relative_filepath = filepath:sub(#chezmoi_root + 1)
+  -- Ignore files that should never be applied
+  if relative_filepath:match('^%.git') then
+    return false, {}
+  end
+  -- Do not apply ignored files.
+  local success, output = shell.async_cmd('chezmoi', { 'ignored' })
+  if success and vim.tbl_contains(output, relative_filepath) then
+    return false, {}
+  end
+  success, output = shell.async_cmd('chezmoi', { 'target-path', filepath })
+  if not success then
+    return true, output
+  end
+  local target_filepath = output[1]
+  if not vim.fn.filereadable(target_filepath) then
+    local parent_dir = vim.fn.fnamemodify(target_filepath, ':h')
+    if vim.fn.isdirectory(parent_dir) == 0 then
+      success, output = shell.async_cmd('mkdir', { '-p', parent_dir })
+      if not success then
+        return true, output
+      end
+    end
+  end
+
+  success, output = shell.async_cmd('chezmoi', { 'apply', '--source-path', filepath })
+  if not success then
+    return true, output
+  end
+  return false, {}
+end
+
 vim.api.nvim_create_autocmd('BufWritePost', {
   callback = function(args)
     local bufnr = args.buf
     local filepath = vim.api.nvim_buf_get_name(bufnr)
-    local chezmoi_root = os.getenv('HOME') .. '/.local/share/chezmoi/'
-    if not filepath:find('^' .. chezmoi_root) then
-      return
-    end
-    local relative_filepath = filepath:sub(#chezmoi_root + 1)
-    -- Ignore files that should never be applied
-    if relative_filepath:match('^%.git') then
-      return
-    end
-    local shell = require('utils.shell')
     async.void(
       ---@async
       function()
-        -- Do not apply ignored files.
-        local success, output = shell.async_cmd('chezmoi', { 'ignored' })
-        if success and vim.tbl_contains(output, relative_filepath) then
-          return
-        end
-
-        success, output = shell.async_cmd('chezmoi', { 'apply', '--source-path', filepath })
-        if not success then
+        local errored, logs = apply_filepath(filepath)
+        if errored then
           vim.schedule(function()
-            vim.notify('chezmoi apply failed: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
+            vim.notify('chezmoi apply failed: ' .. table.concat(logs, '\n'), vim.log.levels.ERROR)
           end)
-          return
         end
       end
     )
