@@ -636,7 +636,7 @@ return {
   -- Adds additional extensions for clangd.
   {
     'p00f/clangd_extensions.nvim',
-    enabled = function()
+    cond = function()
       return require('utils.config').USE_CLANGD
     end,
     config = function()
