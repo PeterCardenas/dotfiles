@@ -34,6 +34,9 @@ return {
       'leafo/magick',
     },
     event = events,
+    cond = function()
+      return vim.env.SSH_CONNECTION == nil or vim.env.TMUX == nil
+    end,
     config = function()
       ---@diagnostic disable-next-line: missing-fields
       require('image').setup({
