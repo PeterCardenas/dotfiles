@@ -23,6 +23,7 @@ local events = vim
   :totable()
 
 table.insert(events, 'BufEnter *.md')
+table.insert(events, 'BufEnter *.mdx')
 
 ---@type LazyPluginSpec[]
 return {
@@ -36,6 +37,11 @@ return {
     config = function()
       ---@diagnostic disable-next-line: missing-fields
       require('image').setup({
+        integrations = {
+          markdown = {
+            filetypes = { 'markdown', 'vimwiki', 'markdown.mdx' },
+          },
+        },
         hijack_file_patterns = image_patterns,
       })
     end,
