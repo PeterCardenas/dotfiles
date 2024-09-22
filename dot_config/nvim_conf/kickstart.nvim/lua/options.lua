@@ -7,6 +7,10 @@ vim.o.foldenable = true
 vim.o.fillchars = 'eob: ,fold: ,foldopen:,foldsep:│,foldclose:'
 
 function vim.brint(...)
+  if vim.in_fast_event() then
+    print(...)
+    return
+  end
   for i = 1, select('#', ...) do
     local o = select(i, ...)
     if type(o) == 'string' then
@@ -14,6 +18,7 @@ function vim.brint(...)
     else
       vim.api.nvim_out_write(vim.inspect(o, { newline = '\n', indent = '  ' }))
     end
+    -- Use a space to separate the arguments.
     vim.api.nvim_out_write(' ')
   end
   vim.api.nvim_out_write('\n')
