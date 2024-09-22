@@ -5,7 +5,7 @@ if not set -q NVIM; or not test (count $argv) -eq 1
 end
 
 set -l filename $argv[1]
-nvim --server "$NVIM" --remote-send "<C-\\><C-N>:e $filename<CR>"
+nvim --server "$NVIM" --remote-expr "execute(\"lua vim.cmd([[e $filename]])\")"
 set -l started false
 set -l finished false
 while not $finished
