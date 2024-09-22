@@ -50,6 +50,8 @@ function setup_ubuntu() {
 		libevent-dev ncurses-dev build-essential bison pkg-config
 		# Used for 3rd/image.nvim plugin
 		lib-imagemagickwand-dev
+		# For lazy.nvim
+		luarocks
 	)
 	sudo nala remove -y xsel
 	sudo nala install -y "${dpkg_packages[@]}"
@@ -138,6 +140,8 @@ function setup_mac() {
 		cmake gettext-runtime
 		# Used for 3rd/image.nvim plugin
 		imagemagick
+		# For lazy.nvim
+		luarocks
 	)
 	sudo port install "${ports[@]}"
 }
