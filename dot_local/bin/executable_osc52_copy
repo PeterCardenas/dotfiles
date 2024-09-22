@@ -1,5 +1,17 @@
 #!/usr/bin/env fish
 
+set -l pty
+if set -q TMUX
+    set pty (tmux display -p '#{pane_tty}')
+else
+    set pty (tty)
+end
+
+if test "$pty" = "not a tty"
+    echo "Error: not a tty" >&2
+    exit 1
+end
+
 set -l contents $argv
 set -l osc_prefix
 if set -q TMUX
@@ -22,4 +34,4 @@ else
     set osc_suffix '\x1b\\'
 end
 set -l serialized_contents (echo -n $contents | base64 | tr -d '\r\n')
-echo -ne "$osc_prefix]52;c;$serialized_contents$osc_suffix"
+echo -ne "$osc_prefix]52;c;$serialized_contents$osc_suffix" >$pty

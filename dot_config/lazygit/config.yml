@@ -61,5 +61,4 @@ os:
   edit: '[ -z "$NVIM" ] && (nvim -- {{filename}}) || (nvim --server "$NVIM" --remote-send "<C-\\><C-n>:e {{filename}}<CR>")'
   editAtLine: '[ -z "$NVIM" ] && (nvim +{{line}} -- {{filename}}) || (nvim --server "$NVIM" --remote-send "<C-\\><C-n>:e {{filename}}<CR>:{{line}}<CR>")'
   openDirInEditor: '[ -z "$NVIM" ] && (nvim -- {{dir}}) || (nvim --server "$NVIM" --remote-send "<C-\\><C-n>:e {{dir}}<CR>")'
-  # Does not work
-  copyToClipboardCmd: osc52_copy {{text}} > /dev/tty
+  copyToClipboardCmd: osc52_copy {{text}}
