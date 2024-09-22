@@ -124,7 +124,6 @@ function setup_mac() {
 	ports=(
 		btop
 		et
-		fd
 		fish
 		fortune
 		gh
@@ -159,6 +158,7 @@ function setup_unix() {
 
 	# Install chezmoi
 	sh -c "$(curl -fsLS get.chezmoi.io)"
+	chezmoi completion fish >~/.config/fish/completions/chezmoi.fish
 
 	# Install fzf
 	git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
