@@ -64,6 +64,18 @@ vim.api.nvim_create_autocmd('TermOpen', {
     ---@type integer
     local bufnr = args.buf
     vim.cmd('startinsert')
+    vim.keymap.set({ 't' }, 'q', function()
+      local bufnrs = vim
+        .iter(vim.api.nvim_list_bufs())
+        :filter(function(filtered_bufnr)
+          return not vim.api.nvim_buf_get_name(filtered_bufnr):match('term://.*lazygit') and vim.fn.buflisted(filtered_bufnr) == 1
+        end)
+        :totable()
+      table.sort(bufnrs, function(bufnr_a, bufnr_b)
+        return vim.fn.getbufinfo(bufnr_a)[1].lastused > vim.fn.getbufinfo(bufnr_b)[1].lastused
+      end)
+      vim.api.nvim_set_current_buf(bufnrs[1])
+    end, { buffer = bufnr })
     vim.api.nvim_buf_set_option(bufnr, 'number', false)
     vim.api.nvim_buf_set_option(bufnr, 'foldcolumn', '0')
     vim.api.nvim_buf_set_option(bufnr, 'statuscolumn', '')
