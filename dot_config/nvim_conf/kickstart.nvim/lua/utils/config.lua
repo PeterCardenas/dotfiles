@@ -11,4 +11,6 @@ M.USE_CLANGD = os.getenv('USE_CLANGD') ~= nil
 
 M.USE_JEDI = os.getenv('USE_JEDI') ~= nil
 
+M.USE_COPILOT = os.getenv('USE_COPILOT') ~= nil
+
 return M
