@@ -1,6 +1,6 @@
 {
   "workspace.library": [
-    "$HOME/.config/lua/types"
+    "$HOME/.config/lua/types/wezterm"
   ],
   "runtime.version": "Lua 5.4"
 }
