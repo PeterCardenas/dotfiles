@@ -15,15 +15,29 @@ local image_patterns = vim
   end)
   :totable()
 
+local lazy_load_patterns = vim.list_extend({
+  '*.md',
+  '*.mdx',
+}, image_patterns)
+
 local events = vim
-  .iter(image_patterns)
+  .iter(lazy_load_patterns)
   :map(function(pattern)
     return string.format('BufEnter %s', pattern)
   end)
   :totable()
 
-table.insert(events, 'BufEnter *.md')
-table.insert(events, 'BufEnter *.mdx')
+vim.api.nvim_create_autocmd('BufReadCmd', {
+  pattern = image_patterns,
+  callback = function(args)
+    ---@type integer
+    local buf = args.buf
+    local win = vim.api.nvim_get_current_win()
+    local path = vim.api.nvim_buf_get_name(buf)
+
+    require('image').hijack_buffer(path, win, buf)
+  end,
+})
 
 ---@type LazyPluginSpec[]
 return {
@@ -35,6 +49,7 @@ return {
     },
     event = events,
     cond = function()
+      -- Nested tmux sessions are not supported.
       return vim.env.SSH_CONNECTION == nil or vim.env.TMUX == nil
     end,
     config = function()
@@ -45,7 +60,7 @@ return {
             filetypes = { 'markdown', 'vimwiki', 'markdown.mdx' },
           },
         },
-        hijack_file_patterns = image_patterns,
+        hijack_file_patterns = {},
       })
     end,
   },
