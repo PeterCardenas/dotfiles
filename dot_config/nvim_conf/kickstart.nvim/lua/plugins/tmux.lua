@@ -35,7 +35,7 @@ end
 ---@return boolean
 function TmuxCmd:set_option(subcommand)
   local shell = require('utils.shell')
-  local success, output = shell.async_cmd('fish', { '-c', self:with_set_option(subcommand) })
+  local success, output = shell.async_cmd('bash', { '-c', self:with_set_option(subcommand) })
   if not success then
     vim.schedule(function()
       vim.notify('Failed to set tmux option: ' .. vim.inspect(output), vim.log.levels.ERROR)
@@ -48,7 +48,7 @@ end
 ---@return boolean
 function TmuxCmd:set_option_sync(subcommand)
   local shell = require('utils.shell')
-  local success, output = shell.sync_cmd('fish -c "' .. self:with_set_option(subcommand) .. '"')
+  local success, output = shell.sync_cmd('bash -c "' .. self:with_set_option(subcommand) .. '"')
   if not success then
     vim.notify('Failed to set tmux option: ' .. vim.inspect(output), vim.log.levels.ERROR)
   end
@@ -57,19 +57,41 @@ end
 
 ---@async
 function TmuxCmd:set_is_vim()
-  self:set_option('@disable_vertical_pane_navigation yes')
-  self:set_option('@disable_horizontal_pane_navigation yes')
+  local shell = require('utils.shell')
+  local success, output = shell.async_cmd('bash', {
+    '-c',
+    self:with_set_option('@disable_vertical_pane_navigation yes') .. ' && ' .. self:with_set_option('@disable_horizontal_pane_navigation yes'),
+  })
+  if not success then
+    vim.schedule(function()
+      vim.notify('Failed to set is_vim: ' .. vim.inspect(output), vim.log.levels.ERROR)
+    end)
+  end
 end
 
 ---@async
 function TmuxCmd:unset_is_vim()
-  self:set_option('-u @disable_vertical_pane_navigation')
-  self:set_option('-u @disable_horizontal_pane_navigation')
+  local shell = require('utils.shell')
+  local success, output = shell.async_cmd('bash', {
+    '-c',
+    self:with_set_option('-u @disable_vertical_pane_navigation') .. ' && ' .. self:with_set_option('-u @disable_horizontal_pane_navigation'),
+  })
+  if not success then
+    vim.schedule(function()
+      vim.notify('Failed to unset is_vim: ' .. vim.inspect(output), vim.log.levels.ERROR)
+    end)
+  end
 end
 
 function TmuxCmd:unset_is_vim_sync()
-  self:set_option_sync('-u @disable_vertical_pane_navigation')
-  self:set_option_sync('-u @disable_horizontal_pane_navigation')
+  local shell = require('utils.shell')
+  shell.sync_cmd(
+    'bash -c "'
+      .. self:with_set_option('-u @disable_vertical_pane_navigation')
+      .. ' && '
+      .. self:with_set_option('-u @disable_horizontal_pane_navigation')
+      .. '"'
+  )
 end
 
 local nvim_is_open = true
