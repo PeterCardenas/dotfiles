@@ -1,0 +1,2 @@
+---@class yazi.Plugin
+return {}

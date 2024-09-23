@@ -222,6 +222,10 @@ return {
                 fileMatch = { 'swc.json', 'swc.*.json', '.swcrc', '.*.swcrc' },
                 url = 'https://json.schemastore.org/swcrc.json',
               },
+              {
+                fileMatch = { '.luarc.json' },
+                url = 'https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json',
+              },
             },
           },
         },
