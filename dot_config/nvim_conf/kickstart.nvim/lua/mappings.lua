@@ -79,31 +79,31 @@ vim.api.nvim_create_autocmd('TermOpen', {
     vim.api.nvim_buf_set_option(bufnr, 'number', false)
     vim.api.nvim_buf_set_option(bufnr, 'foldcolumn', '0')
     vim.api.nvim_buf_set_option(bufnr, 'statuscolumn', '')
-  end,
-})
-vim.api.nvim_create_autocmd('VimResized', {
-  callback = function()
-    local current_bufnr = vim.api.nvim_get_current_buf()
-    if vim.api.nvim_buf_get_name(current_bufnr):match('term://.*lazygit') then
-      vim.cmd('resize 0 0')
-      vim.defer_fn(function()
-        vim.cmd('resize 100 100')
-      end, 50)
-    end
-  end,
-})
-vim.api.nvim_create_autocmd('BufEnter', {
-  pattern = 'term://*lazygit',
-  callback = function()
-    vim.cmd('startinsert')
-  end,
-})
-vim.api.nvim_create_autocmd('TermClose', {
-  pattern = 'term://*lazygit',
-  callback = function(args)
-    ---@type integer
-    local bufnr = args.buf
-    require('bufdelete').bufdelete(bufnr)
+    vim.api.nvim_create_autocmd('VimResized', {
+      buffer = bufnr,
+      callback = function()
+        vim.cmd('resize 0 0')
+        vim.defer_fn(function()
+          vim.cmd('resize 100 100')
+        end, 50)
+      end,
+    })
+    vim.api.nvim_create_autocmd('BufEnter', {
+      buffer = bufnr,
+      callback = function()
+        vim.cmd('startinsert')
+        vim.cmd('resize 0 0')
+        vim.defer_fn(function()
+          vim.cmd('resize 100 100')
+        end, 50)
+      end,
+    })
+    vim.api.nvim_create_autocmd('TermClose', {
+      buffer = bufnr,
+      callback = function()
+        require('bufdelete').bufdelete(bufnr)
+      end,
+    })
   end,
 })
 vim.api.nvim_create_autocmd('BufEnter', {
