@@ -19,7 +19,7 @@ function rg_fzf_files
     set -lx FZF_DEFAULT_OPTS "--height 40% --reverse --bind=ctrl-z:ignore $FZF_DEFAULT_OPTS"
 
     set result (
-            rg --files 2> /dev/null | \
+            rg --files --hidden 2> /dev/null | \
             fzf --query "$INITIAL_QUERY" \
                 --bind "change:reload:sleep 0.1; rg --files --hidden 2> /dev/null | fzf --query {q} || true" \
                 --preview 'bat --style=numbers --color=always --line-range :500 {}' \
