@@ -74,6 +74,11 @@ vim.api.nvim_create_autocmd('TermOpen', {
       table.sort(bufnrs, function(bufnr_a, bufnr_b)
         return vim.fn.getbufinfo(bufnr_a)[1].lastused > vim.fn.getbufinfo(bufnr_b)[1].lastused
       end)
+      if #bufnrs == 0 then
+        vim.notify('No other buffers found', vim.log.levels.ERROR)
+        require('plugins.telescope.files_picker').find_files({ show_ignore = false })
+        return
+      end
       vim.api.nvim_set_current_buf(bufnrs[1])
     end, { buffer = bufnr })
     vim.api.nvim_buf_set_option(bufnr, 'number', false)
