@@ -52,7 +52,6 @@ end
 ---@type LazyPluginSpec
 return {
   'akinsho/bufferline.nvim',
-  dependencies = { 'nvim-tree/nvim-web-devicons' },
   cond = function()
     return not require('utils.config').USE_HEIRLINE and require('utils.config').USE_TABLINE
   end,
