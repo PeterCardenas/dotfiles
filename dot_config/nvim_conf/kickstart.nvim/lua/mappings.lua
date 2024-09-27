@@ -111,21 +111,26 @@ vim.api.nvim_create_autocmd('TermOpen', {
     })
   end,
 })
-vim.api.nvim_create_autocmd('BufEnter', {
+vim.api.nvim_create_autocmd('BufAdd', {
   pattern = '*COMMIT_EDITMSG',
   callback = function(args)
     ---@type integer
     local commit_bufnr = args.buf
     vim.cmd('startinsert')
-    local bufnrs = vim.api.nvim_list_bufs()
-    local lazygit_bufnr = vim.tbl_filter(function(bufnr)
+    local lazygit_bufnr = vim.iter(vim.api.nvim_list_bufs()):find(function(bufnr) ---@param bufnr integer
       local bufname = vim.api.nvim_buf_get_name(bufnr)
       return bufname:match('term://.*lazygit')
-    end, bufnrs)[1]
+    end)
     if lazygit_bufnr ~= nil then
       vim.keymap.set('n', '<leader>q', function()
         require('bufdelete').bufdelete(commit_bufnr)
       end, { buffer = commit_bufnr })
+      vim.api.nvim_create_autocmd('BufDelete', {
+        buffer = commit_bufnr,
+        callback = function()
+          vim.api.nvim_set_current_buf(lazygit_bufnr)
+        end,
+      })
     end
   end,
 })
