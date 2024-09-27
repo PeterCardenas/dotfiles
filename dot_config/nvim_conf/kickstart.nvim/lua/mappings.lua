@@ -125,12 +125,6 @@ vim.api.nvim_create_autocmd('BufAdd', {
       vim.keymap.set('n', '<leader>q', function()
         require('bufdelete').bufdelete(commit_bufnr)
       end, { buffer = commit_bufnr })
-      vim.api.nvim_create_autocmd('BufDelete', {
-        buffer = commit_bufnr,
-        callback = function()
-          vim.api.nvim_set_current_buf(lazygit_bufnr)
-        end,
-      })
     end
   end,
 })
