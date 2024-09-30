@@ -15,6 +15,7 @@ window-padding-x = 0
 keybind = ctrl+enter=unbind
 keybind = ctrl+v=paste_from_clipboard
 keybind = ctrl+q=quit
+keybind = global:alt+t=toggle_quick_terminal
 
 # Reference: https://fontdrop.info/#/?darkmode=true
 # Disable *** ligature.
