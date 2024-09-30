@@ -117,12 +117,19 @@ vim.api.nvim_create_autocmd('BufAdd', {
     ---@type integer
     local commit_bufnr = args.buf
     vim.cmd('startinsert')
-    local lazygit_bufnr = vim.iter(vim.api.nvim_list_bufs()):find(function(bufnr) ---@param bufnr integer
-      local bufname = vim.api.nvim_buf_get_name(bufnr)
-      return bufname:match('term://.*lazygit')
-    end)
-    if lazygit_bufnr ~= nil then
+    ---@return integer?
+    local function get_lazygit_bufnr()
+      return vim.iter(vim.api.nvim_list_bufs()):find(function(bufnr) ---@param bufnr integer
+        local bufname = vim.api.nvim_buf_get_name(bufnr)
+        return bufname:match('term://.*lazygit')
+      end)
+    end
+    if get_lazygit_bufnr() ~= nil then
       vim.keymap.set('n', '<leader>q', function()
+        local lazygit_bufnr = get_lazygit_bufnr()
+        if lazygit_bufnr ~= nil then
+          vim.api.nvim_set_current_buf(lazygit_bufnr)
+        end
         require('bufdelete').bufdelete(commit_bufnr)
       end, { buffer = commit_bufnr })
     end
