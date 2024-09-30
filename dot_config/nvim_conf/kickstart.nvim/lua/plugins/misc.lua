@@ -293,6 +293,7 @@ return {
           ['.eslintrc.js'] = { glyph = '󰱺', hl = 'MiniIconsPurple' },
           ['stylelint.config.js'] = { glyph = '', hl = 'MiniIconsGrey' },
           ['.terraform-version'] = { glyph = '󱁢', hl = 'MiniIconsCyan' },
+          ['init.lua'] = { glyph = '󰢱', hl = 'MiniIconsAzure' },
         },
         extension = {
           bin = { glyph = '', hl = 'MiniIconsGrey' },
