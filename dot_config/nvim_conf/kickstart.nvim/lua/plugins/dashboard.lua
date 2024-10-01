@@ -92,7 +92,7 @@ return {
     dashboard.section.footer.val = {
       {
         type = 'text',
-        val = 'v' .. vim.version().major .. '.' .. vim.version().minor .. '.' .. vim.version().patch,
+        val = 'v' .. vim.version().major .. '.' .. vim.version().minor .. '.' .. vim.version().patch .. '+' .. vim.version().build,
         opts = { hl = 'AlphaFooter', position = 'center' },
       },
     }
