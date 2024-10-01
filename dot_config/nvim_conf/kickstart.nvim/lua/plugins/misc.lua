@@ -265,6 +265,7 @@ return {
           fish = { glyph = '󰈺', hl = 'MiniIconsOrange' },
           bash = { glyph = '', hl = 'MiniIconsGrey' },
           sh = { glyph = '', hl = 'MiniIconsGrey' },
+          spectre_panel = { glyph = '', hl = 'MiniIconsOrange' },
         },
         file = {
           ['.babelrc'] = { glyph = '󰨥', hl = 'MiniIconsYellow' },
@@ -294,6 +295,7 @@ return {
           ['stylelint.config.js'] = { glyph = '', hl = 'MiniIconsGrey' },
           ['.terraform-version'] = { glyph = '󱁢', hl = 'MiniIconsCyan' },
           ['init.lua'] = { glyph = '󰢱', hl = 'MiniIconsAzure' },
+          ['nvim.version'] = { glyph = '', hl = 'MiniIconsGreen' },
         },
         extension = {
           bin = { glyph = '', hl = 'MiniIconsGrey' },
