@@ -26,4 +26,8 @@ M.FT_WITH_LSP = {
   'proto',
 }
 
+if vim.fn.has('mac') == 1 then
+  table.insert(M.FT_WITH_LSP, 'swift')
+end
+
 return M

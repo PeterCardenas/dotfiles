@@ -72,6 +72,12 @@ function M.setup(capabilities)
     },
   }
   require('lspconfig').starpls.setup(starpls_config)
+
+  ---@type lspconfig.Config
+  local sourcekit_config = {
+    capabilities = capabilities,
+  }
+  require('lspconfig').sourcekit.setup(sourcekit_config)
 end
 
 return M
