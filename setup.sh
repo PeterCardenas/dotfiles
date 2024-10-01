@@ -142,6 +142,8 @@ function setup_mac() {
 		imagemagick
 		# For lazy.nvim
 		luarocks
+		# MacOS/iOS development in neovim
+		xcode-build-server
 	)
 	sudo port install "${ports[@]}"
 }
