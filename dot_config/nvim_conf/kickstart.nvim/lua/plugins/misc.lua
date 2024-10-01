@@ -719,4 +719,13 @@ return {
       })
     end,
   },
+
+  -- XCode features in neovim
+  {
+    'wojciech-kulik/xcodebuild.nvim',
+    ft = { 'swift' },
+    config = function()
+      require('xcodebuild').setup({})
+    end,
+  },
 }
