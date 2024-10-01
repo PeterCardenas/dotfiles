@@ -79,6 +79,7 @@ vim.filetype.add({
   extension = {
     mdx = 'markdown.mdx',
     swcrc = 'json',
+    swiftinterface = 'swift',
   },
   pattern = {
     ['.*%.bazelrc'] = 'bazelrc',
