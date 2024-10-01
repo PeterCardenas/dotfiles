@@ -34,6 +34,10 @@ format = "[$symbol$version]($style) "
 [cmake]
 format = "[$symbol$version]($style) "
 
+[swift]
+symbol = "󰛥 "
+format = "[$symbol($version )]($style)"
+
 [package]
 format = "[$symbol$version]($style) "
 
