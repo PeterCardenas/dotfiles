@@ -648,7 +648,7 @@ return {
       require('lazydev').setup({
         library = {
           'lazy.nvim',
-          { path = 'luvit-meta/library', words = { 'vim%.uv' } },
+          { path = 'luvit-meta/library', words = { 'vim%.uv', 'vim%.loop' } },
         },
       })
     end,
