@@ -1,4 +1,4 @@
-LspMethod = vim.lsp.protocol.Methods
+local LspMethod = vim.lsp.protocol.Methods
 
 ---Lock for buffers to hold while formatting.
 ---@type table<integer, boolean>

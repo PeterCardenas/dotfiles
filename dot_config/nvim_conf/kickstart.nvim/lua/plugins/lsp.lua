@@ -1,6 +1,6 @@
 -- [[ Configure LSP ]]
 
-LspMethod = vim.lsp.protocol.Method
+local LspMethod = vim.lsp.protocol.Method
 
 vim.api.nvim_create_autocmd('LspAttach', {
   group = vim.api.nvim_create_augroup('UserLspConfig', { clear = true }),
