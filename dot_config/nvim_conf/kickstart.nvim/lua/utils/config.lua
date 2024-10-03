@@ -13,4 +13,6 @@ M.USE_JEDI = os.getenv('USE_JEDI') ~= nil
 
 M.USE_COPILOT = os.getenv('USE_COPILOT') ~= nil
 
+M.USE_TELESCOPE = os.getenv('USE_FZF_LUA') == nil
+
 return M

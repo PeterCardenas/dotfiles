@@ -1,70 +1,72 @@
-local nmap = require('utils.keymap').nmap
+local function create_keymaps()
+  local nmap = require('utils.keymap').nmap
 
--- Telescope keymaps
-nmap('[F]ind [O]ld files', 'fo', function()
-  require('telescope.builtin').oldfiles({ entry_maker = require('plugins.telescope.files_picker').make_files_entry() })
-end)
+  -- Telescope keymaps
+  nmap('[F]ind [O]ld files', 'fo', function()
+    require('telescope.builtin').oldfiles({ entry_maker = require('plugins.telescope.files_picker').make_files_entry() })
+  end)
 
-nmap('[/] Fuzzily search in current buffer', '/', function()
-  -- You can pass additional configuration to telescope to change theme, layout, etc.
-  require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes').get_dropdown({
-    winblend = 10,
-    previewer = true,
-    layout_config = {
-      width = 0.8,
-    },
-  }))
-end)
+  nmap('[/] Fuzzily search in current buffer', '/', function()
+    -- You can pass additional configuration to telescope to change theme, layout, etc.
+    require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes').get_dropdown({
+      winblend = 10,
+      previewer = true,
+      layout_config = {
+        width = 0.8,
+      },
+    }))
+  end)
 
-nmap('[F]ind b[u]ffers', 'fu', function()
-  require('plugins.telescope.buffer_picker').find_buffers()
-end)
+  nmap('[F]ind b[u]ffers', 'fu', function()
+    require('plugins.telescope.buffer_picker').find_buffers()
+  end)
 
-nmap('[F]ind [F]iles', 'ff', function()
-  require('plugins.telescope.files_picker').find_files({ show_ignore = false })
-end)
+  nmap('[F]ind [F]iles', 'ff', function()
+    require('plugins.telescope.files_picker').find_files({ show_ignore = false })
+  end)
 
-nmap('[F]ind Any [F]ile', 'fF', function()
-  require('plugins.telescope.files_picker').find_files({ show_ignore = true })
-end)
+  nmap('[F]ind Any [F]ile', 'fF', function()
+    require('plugins.telescope.files_picker').find_files({ show_ignore = true })
+  end)
 
-nmap('[F]ind [W]ords with ripgrep', 'fw', function()
-  require('telescope').extensions.live_grep_args.live_grep_args()
-end)
+  nmap('[F]ind [W]ords with ripgrep', 'fw', function()
+    require('telescope').extensions.live_grep_args.live_grep_args()
+  end)
 
-nmap('[F]ind [W]ords with ripgrep across all files', 'fW', function()
-  require('telescope.builtin').live_grep({
-    additional_args = function(args)
-      return vim.list_extend(args, { '--hidden', '--no-ignore' })
-    end,
-  })
-end)
+  nmap('[F]ind [W]ords with ripgrep across all files', 'fW', function()
+    require('telescope.builtin').live_grep({
+      additional_args = function(args)
+        return vim.list_extend(args, { '--hidden', '--no-ignore' })
+      end,
+    })
+  end)
 
-nmap('[F]ind [H]elp', 'fh', function()
-  require('telescope.builtin').help_tags()
-end)
+  nmap('[F]ind [H]elp', 'fh', function()
+    require('telescope.builtin').help_tags()
+  end)
 
-nmap('[L]anguage [D]iagnostic', 'ld', function()
-  require('trouble').open({ mode = 'diagnostics', auto_jump = false })
-end)
+  nmap('[L]ist [D]iagnostics', 'lD', function()
+    require('telescope.builtin').diagnostics({ bufnr = nil, no_unlisted = false })
+  end)
 
-nmap('[L]ist [D]iagnostics', 'lD', function()
-  require('telescope.builtin').diagnostics({ bufnr = nil, no_unlisted = false })
-end)
+  nmap('[F]ind [R]resume', 'fr', function()
+    require('telescope.builtin').resume()
+  end)
 
-nmap('[F]ind [R]resume', 'fr', function()
-  require('telescope.builtin').resume()
-end)
+  nmap('[F]ind [N]otification', 'fn', function()
+    require('telescope').extensions.notify.notify()
+  end)
+end
 
-nmap('[F]ind [N]otification', 'fn', function()
-  require('telescope').extensions.notify.notify()
-end)
+if require('utils.config').USE_TELESCOPE then
+  create_keymaps()
+end
 
 ---@type LazyPluginSpec
 return {
   -- Fuzzy Finder (files, lsp, etc)
   'nvim-telescope/telescope.nvim',
-  lazy = true,
+  cmd = { 'Telescope' },
   dependencies = {
     'nvim-lua/plenary.nvim',
     -- Fuzzy Finder Algorithm which requires local dependencies to be built.
