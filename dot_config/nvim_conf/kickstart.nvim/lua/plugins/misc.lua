@@ -51,9 +51,14 @@ vim.api.nvim_create_user_command('DiffviewCurrentFileHistory', function(opts)
   end
 end, { nargs = 0, range = true })
 
-vim.keymap.set({ 'n' }, '<leader>tr', function()
+local nmap = require('utils.keymap').nmap
+nmap('Resume trouble', 'tr', function()
   local last_mode = require('trouble').last_mode
   require('trouble').open({ mode = last_mode })
+end)
+
+nmap('[L]anguage [D]iagnostic', 'ld', function()
+  require('trouble').open({ mode = 'diagnostics', auto_jump = false })
 end)
 
 ---@type LazyPluginSpec[]
