@@ -1,5 +1,7 @@
 -- [[ Configure LSP ]]
 
+LspMethod = vim.lsp.protocol.Method
+
 vim.api.nvim_create_autocmd('LspAttach', {
   group = vim.api.nvim_create_augroup('UserLspConfig', { clear = true }),
   callback = function(args)
@@ -147,6 +149,10 @@ return {
           general = {
             positionEncodings = { 'utf-16' },
           },
+        },
+        handlers = {
+          -- Diagnostics are wrong for pbls currently.
+          [LspMethod.textDocument_publishDiagnostics] = function() end,
         },
       },
       lua_ls = {
