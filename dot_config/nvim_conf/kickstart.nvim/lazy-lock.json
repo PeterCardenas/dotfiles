@@ -65,7 +65,7 @@
   "rustaceanvim": { "branch": "master", "commit": "dc0ab4e36f9944901ed8a59878f92c2f818799a7" },
   "sg.nvim": { "branch": "master", "commit": "76c97d91f8d8818a4fcf14817fadd98412aa44c8" },
   "statuscol.nvim": { "branch": "main", "commit": "1022f922b77b44c36f8057ac29adbfd89ce86958" },
-  "supermaven-nvim": { "branch": "main", "commit": "40bde487fe31723cdd180843b182f70c6a991226" },
+  "supermaven-nvim": { "branch": "main", "commit": "aecec7090f1da456ad5683f5c6c3640c2a745dc1" },
   "telescope-fzf-native.nvim": { "branch": "main", "commit": "cf48d4dfce44e0b9a2e19a008d6ec6ea6f01a83b" },
   "telescope-live-grep-args.nvim": { "branch": "master", "commit": "649b662a8f476fd2c0289570764459e95ebaa3f3" },
   "telescope.nvim": { "branch": "master", "commit": "cb3f98d935842836cc115e8c9e4b38c1380fbb6b" },
