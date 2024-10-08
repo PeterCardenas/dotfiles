@@ -177,7 +177,13 @@ return {
         },
         log_level = 'warn',
       })
-      require('supermaven-nvim.api').use_free_version()
+      -- Assumes the next buffer created will be the SuperMaven activation popup.
+      vim.api.nvim_create_autocmd('BufNew', {
+        once = true,
+        callback = function()
+          require('supermaven-nvim.binary.binary_handler'):close_popup()
+        end,
+      })
     end,
   },
 
