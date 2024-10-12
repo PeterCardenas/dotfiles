@@ -72,10 +72,6 @@ vim.api.nvim_set_hl(0, '@markup.link.label.markdown', { fg = '#2ac3de', underdot
 vim.g.skip_ts_context_commentstring_module = true
 
 vim.filetype.add({
-  filename = {
-    -- Add chezmoi file name.
-    ['dot_gitconfig'] = 'gitconfig',
-  },
   extension = {
     mdx = 'markdown.mdx',
     swcrc = 'json',
@@ -84,6 +80,8 @@ vim.filetype.add({
   pattern = {
     ['.*%.bazelrc'] = 'bazelrc',
     ['%.vscode/%w*%.json'] = 'jsonc',
+    ['.*/git/ignore'] = 'gitignore',
+    ['.*/git/config'] = 'gitconfig',
   },
 })
 
