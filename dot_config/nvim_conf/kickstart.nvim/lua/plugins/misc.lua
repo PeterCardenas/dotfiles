@@ -288,6 +288,7 @@ return {
           ['pyproject.toml'] = { glyph = '', hl = 'MiniIconsCyan' },
           ['.swcrc'] = { glyph = '󰘦', hl = 'MiniIconsYellow' },
           ['tsconfig.json'] = { glyph = '', hl = 'MiniIconsBlue' },
+          ['tsconfig.base.json'] = { glyph = '', hl = 'MiniIconsBlue' },
           ['.npmrc'] = { glyph = '', hl = 'MiniIconsRed' },
           ['package.json'] = { glyph = '', hl = 'MiniIconsRed' },
           ['package-lock.json'] = { glyph = '', hl = 'MiniIconsRed' },
