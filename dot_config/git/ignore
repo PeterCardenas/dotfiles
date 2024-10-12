@@ -3,7 +3,7 @@
 
 # Artifacts from xcodebuild.nvim neovim plugin
 buildServer.json
-.nvim/xcodebuild
+**/.nvim/xcodebuild
 
 # Cache for ccls language server
-.ccls-cache/
+**/.ccls-cache/
