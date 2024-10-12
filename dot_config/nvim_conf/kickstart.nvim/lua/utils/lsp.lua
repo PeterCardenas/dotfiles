@@ -24,6 +24,7 @@ M.FT_WITH_LSP = {
   'jsonc',
   'bazelrc',
   'proto',
+  'zig',
 }
 
 if vim.fn.has('mac') == 1 then
