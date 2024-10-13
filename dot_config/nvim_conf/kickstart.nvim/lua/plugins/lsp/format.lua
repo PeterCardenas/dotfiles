@@ -325,7 +325,18 @@ local function format_with_check(bufnr, dry_run, on_complete)
   local autofixer_index = 1
 
   local function format_next()
-    if formatter_index > #formatters then
+    if autofixer_index <= #autofixers then
+      local autofixer_pair = autofixers[autofixer_index]
+      local autofixer_name, autofix_fn = autofixer_pair[1], autofixer_pair[2]
+      autofix_fn(bufnr, dry_run, function(would_edit_from_autofixer)
+        if would_edit_from_autofixer then
+          table.insert(sources_with_edits, autofixer_name)
+        end
+        autofixer_index = autofixer_index + 1
+        format_next()
+      end)
+      return
+    elseif formatter_index > #formatters then
       lsp_format(bufnr, dry_run, function(clients_that_would_format)
         for _, client in ipairs(clients_that_would_format) do
           table.insert(sources_with_edits, client)
@@ -333,17 +344,6 @@ local function format_with_check(bufnr, dry_run, on_complete)
         if on_complete ~= nil then
           on_complete(sources_with_edits)
         end
-      end)
-      return
-    end
-    if autofixer_index <= #autofixers then
-      local autofixer_name = autofixers[autofixer_index]
-      autofixer_name[2](bufnr, dry_run, function(would_edit_from_autofixer)
-        if would_edit_from_autofixer then
-          table.insert(sources_with_edits, autofixer_name)
-        end
-        autofixer_index = autofixer_index + 1
-        format_next()
       end)
       return
     end
