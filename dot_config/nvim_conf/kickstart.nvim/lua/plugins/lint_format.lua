@@ -160,15 +160,22 @@ local function get_buildifier_filetype(bufnr)
   end
 end
 
-vim.api.nvim_create_autocmd({ 'BufAdd' }, {
+---@type table<number, boolean>
+local bufs_setup = {}
+vim.api.nvim_create_autocmd({ 'BufEnter' }, {
   desc = 'Setup formatting',
-  callback = function()
-    local bufnr = vim.api.nvim_get_current_buf()
+  callback = function(args)
+    ---@type number
+    local bufnr = args.buf
+    if bufs_setup[bufnr] then
+      return
+    end
+    bufs_setup[bufnr] = true
     require('plugins.lsp.format').setup_formatting_diagnostic(bufnr)
     vim.keymap.set({ 'n', 'v' }, '<leader>lf', function()
       require('plugins.lsp.format').format(bufnr)
     end, {
-      desc = 'LSP: Format buffer',
+      desc = 'Format buffer',
       buffer = bufnr,
     })
   end,
