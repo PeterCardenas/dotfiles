@@ -15,18 +15,20 @@ local function create_keymaps()
   end)
 
   nmap('[F]ind b[u]ffers', 'fu', function()
-    require('fzf-lua.providers.buffers').buffers({ ignore_current_file = true })
+    -- TODO: Convert custom telescope buffer picker to fzf-lua
+    -- require('fzf-lua.providers.buffers').buffers({ ignore_current_file = true })
+    require('plugins.telescope.buffer_picker').find_buffers()
   end)
 
   nmap('[F]ind [F]iles', 'ff', function()
     require('fzf-lua.providers.files').files({
-      cmd = 'rg --files --hidden',
+      cmd = 'rg --files --color=never --hidden -g "!.git"',
     })
   end)
 
   nmap('[F]ind Any [F]ile', 'fF', function()
     require('fzf-lua.providers.files').files({
-      cmd = 'rg --files --hidden --no-ignore',
+      cmd = 'rg --files --hidden -g "!.git" --no-ignore',
     })
   end)
 
@@ -78,6 +80,16 @@ return {
             ['<C-D>'] = 'preview-page-down',
             ['<C-U>'] = 'preview-page-up',
           },
+        },
+        winopts = {
+          height = 0.98,
+          width = 0.98,
+        },
+        files = {
+          git_icons = false,
+        },
+        grep = {
+          git_icons = false,
         },
       })
     end,
