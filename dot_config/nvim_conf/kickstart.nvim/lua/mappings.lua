@@ -46,6 +46,64 @@ vim.keymap.set('n', 'j', 'g<Down>', { silent = true })
 vim.keymap.set({ 'v', 'n' }, 'gj', '<C-i>', { desc = 'Go to next location' })
 vim.keymap.set({ 'v', 'n' }, 'gk', '<C-o>', { desc = 'Go to previous location' })
 
+local function setup_lazygit_buffer()
+  vim.api.nvim_create_autocmd('TermOpen', {
+    pattern = 'term://*lazygit',
+    once = true,
+    callback = function(args)
+      ---@type integer
+      local bufnr = args.buf
+      local function correct_size()
+        vim.cmd('resize 0 0')
+        vim.defer_fn(function()
+          vim.cmd('resize 100 100')
+        end, 50)
+      end
+      vim.cmd('startinsert')
+      vim.keymap.set({ 't' }, 'q', function()
+        local bufnrs = vim
+          .iter(vim.api.nvim_list_bufs())
+          :filter(function(filtered_bufnr)
+            return not vim.api.nvim_buf_get_name(filtered_bufnr):match('term://.*lazygit') and vim.fn.buflisted(filtered_bufnr) == 1
+          end)
+          :totable()
+        table.sort(bufnrs, function(bufnr_a, bufnr_b)
+          return vim.fn.getbufinfo(bufnr_a)[1].lastused > vim.fn.getbufinfo(bufnr_b)[1].lastused
+        end)
+        if #bufnrs == 0 then
+          vim.notify('No other buffers found', vim.log.levels.ERROR)
+          require('plugins.telescope.files_picker').find_files({ show_ignore = false })
+          return
+        end
+        vim.api.nvim_set_current_buf(bufnrs[1])
+      end, { buffer = bufnr })
+      vim.api.nvim_buf_set_option(bufnr, 'number', false)
+      vim.api.nvim_buf_set_option(bufnr, 'foldcolumn', '0')
+      vim.api.nvim_buf_set_option(bufnr, 'statuscolumn', '')
+      vim.api.nvim_create_autocmd('VimResized', {
+        buffer = bufnr,
+        callback = function()
+          correct_size()
+        end,
+      })
+      vim.api.nvim_create_autocmd('BufEnter', {
+        buffer = bufnr,
+        callback = function()
+          vim.cmd('startinsert')
+          vim.api.nvim_feedkeys('2R', 't', false)
+          correct_size()
+        end,
+      })
+      vim.api.nvim_create_autocmd('TermClose', {
+        buffer = bufnr,
+        callback = function()
+          require('bufdelete').bufdelete(bufnr)
+        end,
+      })
+    end,
+  })
+end
+
 nmap('Open LazyGit in buffer', 'gg', function()
   local bufnrs = vim.api.nvim_list_bufs()
   local lazygit_bufnr = vim.tbl_filter(function(bufnr)
@@ -53,65 +111,17 @@ nmap('Open LazyGit in buffer', 'gg', function()
     return bufname:match('term://.*lazygit')
   end, bufnrs)[1]
   if lazygit_bufnr ~= nil then
+    local bufinfo = vim.fn.getbufinfo(lazygit_bufnr)[1]
+    if bufinfo.loaded == 0 then
+      setup_lazygit_buffer()
+    end
     vim.api.nvim_set_current_buf(lazygit_bufnr)
     return
   end
+  setup_lazygit_buffer()
   vim.cmd('term lazygit')
 end)
-vim.api.nvim_create_autocmd('TermOpen', {
-  pattern = 'term://*lazygit',
-  callback = function(args)
-    ---@type integer
-    local bufnr = args.buf
-    local function correct_size()
-      vim.cmd('resize 0 0')
-      vim.defer_fn(function()
-        vim.cmd('resize 100 100')
-      end, 50)
-    end
-    vim.cmd('startinsert')
-    vim.keymap.set({ 't' }, 'q', function()
-      local bufnrs = vim
-        .iter(vim.api.nvim_list_bufs())
-        :filter(function(filtered_bufnr)
-          return not vim.api.nvim_buf_get_name(filtered_bufnr):match('term://.*lazygit') and vim.fn.buflisted(filtered_bufnr) == 1
-        end)
-        :totable()
-      table.sort(bufnrs, function(bufnr_a, bufnr_b)
-        return vim.fn.getbufinfo(bufnr_a)[1].lastused > vim.fn.getbufinfo(bufnr_b)[1].lastused
-      end)
-      if #bufnrs == 0 then
-        vim.notify('No other buffers found', vim.log.levels.ERROR)
-        require('plugins.telescope.files_picker').find_files({ show_ignore = false })
-        return
-      end
-      vim.api.nvim_set_current_buf(bufnrs[1])
-    end, { buffer = bufnr })
-    vim.api.nvim_buf_set_option(bufnr, 'number', false)
-    vim.api.nvim_buf_set_option(bufnr, 'foldcolumn', '0')
-    vim.api.nvim_buf_set_option(bufnr, 'statuscolumn', '')
-    vim.api.nvim_create_autocmd('VimResized', {
-      buffer = bufnr,
-      callback = function()
-        correct_size()
-      end,
-    })
-    vim.api.nvim_create_autocmd('BufEnter', {
-      buffer = bufnr,
-      callback = function()
-        vim.cmd('startinsert')
-        vim.api.nvim_feedkeys('2R', 't', false)
-        correct_size()
-      end,
-    })
-    vim.api.nvim_create_autocmd('TermClose', {
-      buffer = bufnr,
-      callback = function()
-        require('bufdelete').bufdelete(bufnr)
-      end,
-    })
-  end,
-})
+
 vim.api.nvim_create_autocmd('BufAdd', {
   pattern = '*COMMIT_EDITMSG',
   callback = function(args)
