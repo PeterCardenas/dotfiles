@@ -54,18 +54,35 @@ return {
     local header = DOOM_HEADER
 
     dashboard.section.header.val = header
+    -- TODO: Create shared functions to combat desync
     dashboard.section.buttons.val = {
       create_button('f', '  Find file', function()
-        require('telescope.builtin').find_files({ hidden = true })
+        if require('utils.config').USE_TELESCOPE then
+          require('plugins.telescope.files_picker').find_files({ show_ignore = false })
+        else
+          require('fzf-lua.providers.files').files({
+            cmd = 'rg --files --hidden',
+          })
+        end
       end),
       create_button('n', '  New file', function()
         vim.cmd('ene <BAR> startinsert')
       end),
       create_button('r', '  Recent files', function()
-        require('telescope.builtin').oldfiles()
+        if require('utils.config').USE_TELESCOPE then
+          require('telescope.builtin').oldfiles({ entry_maker = require('plugins.telescope.files_picker').make_files_entry() })
+        else
+          require('fzf-lua.providers.oldfiles').oldfiles()
+        end
       end),
       create_button('w', '  Find text', function()
-        require('telescope').extensions.live_grep_args.live_grep_args()
+        if require('utils.config').USE_TELESCOPE then
+          require('telescope').extensions.live_grep_args.live_grep_args()
+        else
+          require('fzf-lua.providers.grep').live_grep_native({
+            cmd = 'rg --hidden',
+          })
+        end
       end),
       create_button('g', '  LazyGit', function()
         vim.cmd('term lazygit')

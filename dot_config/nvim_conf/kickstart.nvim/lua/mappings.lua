@@ -119,6 +119,7 @@ nmap('Open LazyGit in buffer', 'gg', function()
     return
   end
   setup_lazygit_buffer()
+  -- TODO: Open term in a persistent buffer in a floating window instead.
   vim.cmd('term lazygit')
 end)
 
