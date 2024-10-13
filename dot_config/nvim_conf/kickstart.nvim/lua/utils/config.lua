@@ -13,6 +13,6 @@ M.USE_JEDI = os.getenv('USE_JEDI') ~= nil
 
 M.USE_COPILOT = os.getenv('USE_SUPERMAVEN') == nil
 
-M.USE_TELESCOPE = os.getenv('USE_FZF_LUA') == nil
+M.USE_TELESCOPE = os.getenv('USE_TELESCOPE') ~= nil
 
 return M
