@@ -112,11 +112,9 @@ function M.create_keymaps()
   end)
 
   nmap('[F]ind [N]otification', 'fn', function()
-    if require('utils.config').USE_TELESCOPE then
-      require('telescope').extensions.notify.notify()
-    else
-      require('noice.integrations.fzf').open()
-    end
+    require('telescope').extensions.notify.notify()
+    -- TODO: Errors with no notifications and enter does not open in a floating window
+    -- require('noice.integrations.fzf').open()
   end)
 end
 
