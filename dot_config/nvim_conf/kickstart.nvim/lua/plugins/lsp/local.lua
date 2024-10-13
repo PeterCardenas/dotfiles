@@ -78,6 +78,12 @@ function M.setup(capabilities)
     capabilities = capabilities,
   }
   require('lspconfig').sourcekit.setup(sourcekit_config)
+
+  ---@type lspconfig.Config
+  local protols_config = {
+    capabilities = capabilities,
+  }
+  require('lspconfig').protols.setup(protols_config)
 end
 
 return M
