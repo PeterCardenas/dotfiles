@@ -14,6 +14,7 @@ return {
 
     -- Add your own debuggers here
     'leoluz/nvim-dap-go',
+    'jbyuki/one-small-step-for-vimkind',
   },
   lazy = true,
   keys = {
@@ -44,6 +45,14 @@ return {
         require('dap').step_out()
       end,
       desc = 'Debug: Step Out',
+    },
+    {
+      '<F4>',
+      function()
+        require('osv').launch({ port = 8086 })
+      end,
+      desc = 'Launch debugee server',
+      remap = true,
     },
     {
       '<leader><leader>b',
@@ -118,5 +127,18 @@ return {
 
     -- Install golang specific config
     require('dap-go').setup()
+
+    -- Setup neovim lua debugging
+    dap.configurations.lua = {
+      {
+        type = 'nlua',
+        request = 'attach',
+        name = "Attach to running Neovim instance",
+      }
+    }
+    dap.adapters.nlua = function(callback, config)
+      ---@diagnostic disable-next-line: undefined-field
+      callback({ type = 'server', host = config.host or "127.0.0.1", port = config.port or 8086 })
+    end
   end,
 }

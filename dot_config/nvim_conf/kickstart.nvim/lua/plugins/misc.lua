@@ -520,8 +520,14 @@ return {
             click = 'v:lua.ScSa',
           },
           { text = { builtin.lnumfunc }, click = 'v:lua.ScLa' },
+          -- Debugger icons
           {
-            sign = { namespace = { 'gitsigns' }, maxwidth = 2, colwidth = 1, wrap = true },
+            sign = { name = { '.*' }, colwidth = 1 },
+            auto = true,
+            click = 'v:lua.ScSa',
+          },
+          {
+            sign = { namespace = { 'gitsigns' }, colwidth = 1 },
             click = 'v:lua.ScSa',
           },
         },
