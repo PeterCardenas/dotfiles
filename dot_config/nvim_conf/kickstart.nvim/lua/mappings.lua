@@ -63,6 +63,12 @@ vim.api.nvim_create_autocmd('TermOpen', {
   callback = function(args)
     ---@type integer
     local bufnr = args.buf
+    local function correct_size()
+      vim.cmd('resize 0 0')
+      vim.defer_fn(function()
+        vim.cmd('resize 100 100')
+      end, 50)
+    end
     vim.cmd('startinsert')
     vim.keymap.set({ 't' }, 'q', function()
       local bufnrs = vim
@@ -87,20 +93,15 @@ vim.api.nvim_create_autocmd('TermOpen', {
     vim.api.nvim_create_autocmd('VimResized', {
       buffer = bufnr,
       callback = function()
-        vim.cmd('resize 0 0')
-        vim.defer_fn(function()
-          vim.cmd('resize 100 100')
-        end, 50)
+        correct_size()
       end,
     })
     vim.api.nvim_create_autocmd('BufEnter', {
       buffer = bufnr,
       callback = function()
         vim.cmd('startinsert')
-        vim.cmd('resize 0 0')
-        vim.defer_fn(function()
-          vim.cmd('resize 100 100')
-        end, 50)
+        vim.api.nvim_feedkeys('2R', 't', false)
+        correct_size()
       end,
     })
     vim.api.nvim_create_autocmd('TermClose', {
