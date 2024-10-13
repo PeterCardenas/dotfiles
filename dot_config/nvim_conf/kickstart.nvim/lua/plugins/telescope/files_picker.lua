@@ -66,7 +66,7 @@ function M.find_files(find_opts)
   local pickers = require('telescope.pickers')
   local finders = require('telescope.finders')
   local conf = require('telescope.config').values
-  local command = { 'rg', '--files', '--color', 'never', '--hidden' }
+  local command = { 'rg', '--files', '--color', 'never', '--hidden', '-g', '!.git' }
   if find_opts.show_ignore then
     table.insert(command, '--no-ignore')
   end
