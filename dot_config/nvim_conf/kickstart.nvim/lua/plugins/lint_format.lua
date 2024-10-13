@@ -160,7 +160,7 @@ local function get_buildifier_filetype(bufnr)
   end
 end
 
-vim.api.nvim_create_autocmd({ 'BufEnter' }, {
+vim.api.nvim_create_autocmd({ 'BufAdd' }, {
   desc = 'Setup formatting',
   callback = function()
     local bufnr = vim.api.nvim_get_current_buf()

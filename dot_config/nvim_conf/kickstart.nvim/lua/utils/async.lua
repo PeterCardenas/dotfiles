@@ -14,6 +14,7 @@ end
 ---@return nil
 function M.run(async_func, callback)
   local async = require('plenary.async')
+  ---@diagnostic disable-next-line: await-in-sync
   async.run(async_func, callback)
 end
 

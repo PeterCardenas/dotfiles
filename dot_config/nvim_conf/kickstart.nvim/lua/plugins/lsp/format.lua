@@ -445,24 +445,35 @@ function M.setup_formatting_diagnostic(bufnr)
   if git_root_dir == nil or not require('utils.file').file_in_directory(filename, git_root_dir) then
     return
   end
-  -- Check if the buffer needs formatting on enter.
-  check_if_needs_formatting(bufnr)
-  -- Check if the buffer needs formatting on text change while in normal mode, or after leaving insert mode.
-  -- TODO: Ideally we would only check when changes have actually been made.
-  vim.api.nvim_create_autocmd({ 'TextChanged', 'InsertLeave' }, {
-    group = format_diagnostic_autocmd_group,
-    buffer = bufnr,
-    callback = function(args)
-      check_if_needs_formatting(args.buf)
-    end,
-  })
-  vim.api.nvim_create_autocmd({ 'CursorMoved' }, {
-    group = format_diagnostic_autocmd_group,
-    buffer = bufnr,
-    callback = function(args)
-      update_formatting_diagnostic_position(args.buf)
-    end,
-  })
+  require('utils.async').void(
+    ---@async
+    function()
+      local success, _ = require('utils.shell').async_cmd('git', { 'check-ignore', '--quiet', filename })
+      if success then
+        return
+      end
+      vim.schedule(function()
+        -- Check if the buffer needs formatting on enter.
+        check_if_needs_formatting(bufnr)
+        -- Check if the buffer needs formatting on text change while in normal mode, or after leaving insert mode.
+        -- TODO: Ideally we would only check when changes have actually been made.
+        vim.api.nvim_create_autocmd({ 'TextChanged', 'InsertLeave' }, {
+          group = format_diagnostic_autocmd_group,
+          buffer = bufnr,
+          callback = function(args)
+            check_if_needs_formatting(args.buf)
+          end,
+        })
+        vim.api.nvim_create_autocmd({ 'CursorMoved' }, {
+          group = format_diagnostic_autocmd_group,
+          buffer = bufnr,
+          callback = function(args)
+            update_formatting_diagnostic_position(args.buf)
+          end,
+        })
+      end)
+    end
+  )
 end
 
 ---@param bufnr integer
