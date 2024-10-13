@@ -142,19 +142,6 @@ return {
           },
         },
       },
-      pbls = {
-        offset_encoding = 'utf-16',
-        capabilities = {
-          offsetEncoding = { 'utf-16' },
-          general = {
-            positionEncodings = { 'utf-16' },
-          },
-        },
-        handlers = {
-          -- Diagnostics are wrong for pbls currently.
-          [LspMethod.textDocument_publishDiagnostics] = function() end,
-        },
-      },
       lua_ls = {
         settings = {
           Lua = {
