@@ -22,12 +22,10 @@ function M.find_words()
   if require('utils.config').USE_TELESCOPE then
     require('telescope').extensions.live_grep_args.live_grep_args()
   else
-    require('fzf-lua.providers.grep').live_grep_glob_mt({
-      cmd = 'rg --hidden -g "!.git"',
+    require('fzf-lua.providers.grep').live_grep_glob({
+      cmd = 'rg --hidden -g "!.git" --column --line-number --no-heading --color=always --smart-case --max-columns=4096 -e',
+      multiprocess = true,
       git_icons = false,
-      file_icons = false,
-      path_shorten = false,
-      formatter = false,
     })
   end
 end
