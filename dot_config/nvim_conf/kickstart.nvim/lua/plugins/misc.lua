@@ -498,7 +498,9 @@ return {
     dependencies = { 'tpope/vim-repeat' },
     event = { 'BufReadPre', 'BufNewFile' },
     config = function()
-      require('leap.user').add_default_mappings()
+      vim.keymap.set({ 'n', 'v', 'x', 'o' }, 's', '<Plug>(leap-forward)')
+      vim.keymap.set({ 'n', 'v', 'x', 'o' }, 'S', '<Plug>(leap-backward)')
+      vim.keymap.set({ 'n', 'v', 'x', 'o' }, 'gs', '<Plug>(leap-from-window)')
       require('leap.opts').default.substitute_chars = { ['{'] = 'b', ['}'] = 'b', ['('] = 'p', [')'] = 'p', ['['] = 'b', [']'] = 'b' }
     end,
   },
