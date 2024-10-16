@@ -308,6 +308,7 @@ return {
           ['.terraform-version'] = { glyph = '󱁢', hl = 'MiniIconsCyan' },
           ['init.lua'] = { glyph = '󰢱', hl = 'MiniIconsAzure' },
           ['nvim.version'] = { glyph = '', hl = 'MiniIconsGreen' },
+          mdx = { glyph = '󰍔', hl = 'MiniIconsGrey' },
         },
         extension = {
           bin = { glyph = '', hl = 'MiniIconsGrey' },
@@ -328,6 +329,7 @@ return {
           ['d.ts'] = { glyph = '', hl = 'MiniIconsOrange' },
           ['test.ts'] = { glyph = '', hl = 'MiniIconsCyan' },
           ['test.tsx'] = { glyph = '', hl = 'MiniIconsCyan' },
+          mdx = {},
         },
         directory = {
           ['.vscode'] = { glyph = '', hl = 'MiniIconsBlue' },
