@@ -220,6 +220,7 @@ return {
     'mfussenegger/nvim-lint',
     lazy = true,
     config = function()
+      ---@diagnostic disable-next-line: missing-fields
       require('lint').linters.golint = {
         name = 'golint',
         cmd = 'golint',
