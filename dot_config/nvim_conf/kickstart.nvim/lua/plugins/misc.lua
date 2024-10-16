@@ -670,6 +670,9 @@ return {
           'lazy.nvim',
           { path = 'luvit-meta/library', words = { 'vim%.uv', 'vim%.loop' } },
         },
+        enabled = function(root_dir)
+          return not vim.uv.fs_stat(root_dir .. '/.luarc.json')
+        end,
       })
     end,
   },
