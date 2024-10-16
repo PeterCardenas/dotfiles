@@ -14,7 +14,7 @@ return {
   {
     'CopilotC-Nvim/CopilotChat.nvim',
     branch = 'canary',
-    cmd = { 'CopilotChatToggle' },
+    cmd = { 'CopilotChat' },
     dependencies = {
       { 'zbirenbaum/copilot.lua' },
       { 'nvim-lua/plenary.nvim' },
