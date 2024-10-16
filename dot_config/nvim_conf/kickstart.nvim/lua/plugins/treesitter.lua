@@ -45,6 +45,7 @@ return {
             ['ic'] = '@class.inner',
             ['ai'] = '@conditional.outer',
             ['ii'] = '@conditional.inner',
+            ['gb'] = '@comment.outer',
           },
         },
         move = {
