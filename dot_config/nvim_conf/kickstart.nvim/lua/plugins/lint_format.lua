@@ -55,7 +55,10 @@ local function bazel_go_lint(abs_filepath)
     end
   end
 
-  success, output = shell.async_cmd('fish', { '-c', string.format('bazel %s build --color=no %s', output_base_flag, table.concat(matched_targets, ' ')) })
+  success, output = shell.async_cmd(
+    'fish',
+    { '-c', string.format('bazel %s build --unified_protos=false --config=dev --color=no %s', output_base_flag, table.concat(matched_targets, ' ')) }
+  )
   ---@type table<string, lsp.Diagnostic[]>
   local file_diagnostics = {}
   ---@param line string
