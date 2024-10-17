@@ -8,12 +8,12 @@ return {
   {
     -- Adds a number of user-friendly snippets
     'rafamadriz/friendly-snippets',
-    ft = require('utils.lsp').FT_WITH_LSP,
+    event = { 'InsertEnter' },
   },
   {
     -- Snippet Engine & its associated nvim-cmp source
     'L3MON4D3/LuaSnip',
-    ft = require('utils.lsp').FT_WITH_LSP,
+    event = { 'InsertEnter' },
     config = function()
       local luasnip = require('luasnip')
       require('luasnip.loaders.from_vscode').lazy_load()
@@ -58,6 +58,9 @@ return {
 
       -- Emoji completion
       'hrsh7th/cmp-emoji',
+
+      -- omnifunc completion
+      'hrsh7th/cmp-omni',
     },
     event = { 'InsertEnter', 'CmdlineEnter' },
     config = function()
@@ -113,7 +116,6 @@ return {
         },
         sources = {
           { name = 'git' },
-          { name = 'emoji' },
           {
             name = 'nvim_lsp',
             ---@param entry cmp.Entry
@@ -123,7 +125,9 @@ return {
               return entry.completion_item.kind ~= require('cmp.types').lsp.CompletionItemKind.Text
             end,
           },
+          { name = 'omni' },
           { name = 'luasnip' },
+          { name = 'emoji' },
           { name = 'fish' },
           {
             name = 'lazydev',
