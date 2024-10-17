@@ -26,6 +26,7 @@ function M.find_words()
       cmd = 'rg --hidden -g "!.git" --column --line-number --no-heading --color=always --smart-case --max-columns=4096 -e',
       multiprocess = true,
       git_icons = false,
+      multiline = 1,
     })
   end
 end
