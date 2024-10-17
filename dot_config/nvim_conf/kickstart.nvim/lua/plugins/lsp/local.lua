@@ -76,6 +76,7 @@ function M.setup(capabilities)
   ---@type lspconfig.Config
   local sourcekit_config = {
     capabilities = capabilities,
+    filetypes = { 'swift', 'objc', 'objcpp' },
   }
   require('lspconfig').sourcekit.setup(sourcekit_config)
 
