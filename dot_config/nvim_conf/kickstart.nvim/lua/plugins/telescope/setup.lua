@@ -4,7 +4,9 @@ function M.find_recent_files()
   if require('utils.config').USE_TELESCOPE then
     require('telescope.builtin').oldfiles({ entry_maker = require('plugins.telescope.files_picker').make_files_entry() })
   else
-    require('fzf-lua.providers.oldfiles').oldfiles()
+    require('fzf-lua.providers.oldfiles').oldfiles({
+      include_current_session = true,
+    })
   end
 end
 
