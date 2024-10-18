@@ -167,7 +167,7 @@ end
 local function common_ancestor_commit_with_master()
   local default_branch_success, default_branch_output = require('utils.git').get_default_branch()
   if not default_branch_success then
-    return false, default_branch_output
+    return false, 'failed to get default branch:\n' .. default_branch_output
   end
   local default_branch = default_branch_output
   local shell = require('utils.shell')
