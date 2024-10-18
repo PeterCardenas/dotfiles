@@ -69,7 +69,7 @@ return {
         require('plugins.telescope.setup').find_words()
       end),
       create_button('g', '  LazyGit', function()
-        vim.cmd('term lazygit')
+        require('local.lazygit').open_lazygit()
       end),
       create_button('s', '  Restore Session', function()
         require('session_manager').load_current_dir_session()
