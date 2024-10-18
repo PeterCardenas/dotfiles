@@ -31,7 +31,7 @@ M.async_cmd = async.wrap(
         vim.list_extend(output, lines)
       end
     end
-    Job:new({
+    local job = Job:new({
       command = cmd,
       args = args,
       on_stdout = function(_, data)
@@ -43,7 +43,8 @@ M.async_cmd = async.wrap(
       on_exit = function(_, code)
         done(code == 0, output)
       end,
-    }):start()
+    })
+    job:start()
   end,
   3
 )
