@@ -47,6 +47,8 @@ local function setup_lazygit_buffer()
         buffer = bufnr,
         callback = function()
           vim.cmd('startinsert')
+          -- Focus the files panel and refresh it.
+          -- TODO: Wait for the lazygit UI to render before refreshing.
           vim.api.nvim_feedkeys('2R', 't', false)
           correct_size()
         end,
