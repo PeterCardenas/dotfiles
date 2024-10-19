@@ -1,3 +1,9 @@
+vim.api.nvim_create_user_command('DapToggleUI', function()
+  require('dapui').toggle()
+end, {
+  nargs = 0,
+})
+
 -- Primarily focused on configuring the debugger for Go, but can
 -- be extended to other languages as well. That's why it's called
 ---@type LazyPluginSpec
@@ -133,12 +139,12 @@ return {
       {
         type = 'nlua',
         request = 'attach',
-        name = "Attach to running Neovim instance",
-      }
+        name = 'Attach to running Neovim instance',
+      },
     }
     dap.adapters.nlua = function(callback, config)
       ---@diagnostic disable-next-line: undefined-field
-      callback({ type = 'server', host = config.host or "127.0.0.1", port = config.port or 8086 })
+      callback({ type = 'server', host = config.host or '127.0.0.1', port = config.port or 8086 })
     end
   end,
 }
