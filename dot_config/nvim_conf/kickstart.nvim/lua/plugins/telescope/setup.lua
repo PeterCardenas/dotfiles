@@ -4,10 +4,13 @@ function M.find_recent_files()
   if require('utils.config').USE_TELESCOPE then
     require('telescope.builtin').oldfiles({ entry_maker = require('plugins.telescope.files_picker').make_files_entry() })
   else
-    require('fzf-lua.providers.oldfiles').oldfiles({
-      include_current_session = true,
-    })
+    require('fzf-lua.providers.oldfiles').oldfiles()
   end
+end
+
+---@param show_ignore boolean
+function M.rg_files_cmd(show_ignore)
+  return 'rg --files --color=never --hidden -g "!.git"' .. (show_ignore and ' --no-ignore' or '')
 end
 
 ---@param show_ignore boolean
@@ -16,9 +19,15 @@ function M.find_files(show_ignore)
     require('plugins.telescope.files_picker').find_files({ show_ignore = show_ignore })
   else
     require('fzf-lua.providers.files').files({
-      cmd = 'rg --files --color=never --hidden -g "!.git"' .. (show_ignore and ' --no-ignore' or ''),
+      cmd = M.rg_files_cmd(show_ignore),
     })
   end
+end
+
+---@param show_ignore boolean
+function M.rg_words_cmd(show_ignore)
+  return 'rg --hidden -g "!.git" --column --line-number --no-heading --color=always --smart-case --max-columns=4096 -e'
+    .. (show_ignore and ' --no-ignore' or '')
 end
 
 ---@param show_ignore boolean
@@ -35,11 +44,7 @@ function M.find_words(show_ignore)
     })
   else
     require('fzf-lua.providers.grep').live_grep_glob({
-      cmd = 'rg --hidden -g "!.git" --column --line-number --no-heading --color=always --smart-case --max-columns=4096 -e'
-        .. (show_ignore and ' --no-ignore' or ''),
-      multiprocess = true,
-      git_icons = false,
-      multiline = 1,
+      cmd = M.rg_words_cmd(show_ignore),
     })
   end
 end
