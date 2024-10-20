@@ -9,6 +9,8 @@ return {
     },
     cmd = { 'FzfLua' },
     config = function()
+      -- Clear fuzzy toggle for grep
+      require('fzf-lua.defaults').defaults.grep.actions = {}
       require('fzf-lua').setup({
         keymap = {
           builtin = {
