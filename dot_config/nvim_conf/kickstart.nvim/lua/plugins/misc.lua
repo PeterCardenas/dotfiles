@@ -307,6 +307,7 @@ return {
           ['.terraform-version'] = { glyph = '󱁢', hl = 'MiniIconsCyan' },
           ['init.lua'] = { glyph = '󰢱', hl = 'MiniIconsAzure' },
           ['nvim.version'] = { glyph = '', hl = 'MiniIconsGreen' },
+          ['gpg-agent.conf'] = { glyph = '', hl = 'MiniIconsYellow' },
         },
         extension = {
           bin = { glyph = '', hl = 'MiniIconsGrey' },
