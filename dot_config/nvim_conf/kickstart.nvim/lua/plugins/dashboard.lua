@@ -57,7 +57,7 @@ return {
     -- TODO: Create shared functions to combat desync
     dashboard.section.buttons.val = {
       create_button('f', '  Find file', function()
-        require('plugins.telescope.setup').find_files()
+        require('plugins.telescope.setup').find_files(false)
       end),
       create_button('n', '  New file', function()
         vim.cmd('ene <BAR> startinsert')
@@ -66,7 +66,7 @@ return {
         require('plugins.telescope.setup').find_recent_files()
       end),
       create_button('w', '  Find text', function()
-        require('plugins.telescope.setup').find_words()
+        require('plugins.telescope.setup').find_words(false)
       end),
       create_button('g', '  LazyGit', function()
         require('local.lazygit').open_lazygit()

@@ -10,22 +10,33 @@ function M.find_recent_files()
   end
 end
 
-function M.find_files()
+---@param show_ignore boolean
+function M.find_files(show_ignore)
   if require('utils.config').USE_TELESCOPE then
-    require('plugins.telescope.files_picker').find_files({ show_ignore = false })
+    require('plugins.telescope.files_picker').find_files({ show_ignore = show_ignore })
   else
     require('fzf-lua.providers.files').files({
-      cmd = 'rg --files --color=never --hidden -g "!.git"',
+      cmd = 'rg --files --color=never --hidden -g "!.git"' .. (show_ignore and ' --no-ignore' or ''),
     })
   end
 end
 
-function M.find_words()
+---@param show_ignore boolean
+function M.find_words(show_ignore)
   if require('utils.config').USE_TELESCOPE then
-    require('telescope').extensions.live_grep_args.live_grep_args()
+    require('telescope').extensions.live_grep_args.live_grep_args({
+      additional_args = function(args)
+        local additional_args = vim.list_extend({ '--hidden' }, args)
+        if show_ignore then
+          table.insert(additional_args, '--no-ignore')
+        end
+        return additional_args
+      end,
+    })
   else
     require('fzf-lua.providers.grep').live_grep_glob({
-      cmd = 'rg --hidden -g "!.git" --column --line-number --no-heading --color=always --smart-case --max-columns=4096 -e',
+      cmd = 'rg --hidden -g "!.git" --column --line-number --no-heading --color=always --smart-case --max-columns=4096 -e'
+        .. (show_ignore and ' --no-ignore' or ''),
       multiprocess = true,
       git_icons = false,
       multiline = 1,
@@ -64,32 +75,20 @@ function M.create_keymaps()
     require('plugins.telescope.buffer_picker').find_buffers()
   end)
 
-  nmap('[F]ind [F]iles', 'ff', M.find_files)
-
-  nmap('[F]ind Any [F]ile', 'fF', function()
-    if require('utils.config').USE_TELESCOPE then
-      require('plugins.telescope.files_picker').find_files({ show_ignore = true })
-    else
-      require('fzf-lua.providers.files').files({
-        cmd = 'rg --files --hidden -g "!.git" --no-ignore',
-      })
-    end
+  nmap('[F]ind [F]iles', 'ff', function()
+    M.find_files(false)
   end)
 
-  nmap('[F]ind [W]ords with ripgrep', 'fw', M.find_words)
+  nmap('[F]ind Any [F]ile', 'fF', function()
+    M.find_files(true)
+  end)
+
+  nmap('[F]ind [W]ords with ripgrep', 'fw', function()
+    M.find_words(false)
+  end)
 
   nmap('[F]ind [W]ords with ripgrep across all files', 'fW', function()
-    if require('utils.config').USE_TELESCOPE then
-      require('telescope.builtin').live_grep({
-        additional_args = function(args)
-          return vim.list_extend(args, { '--hidden', '--no-ignore' })
-        end,
-      })
-    else
-      require('fzf-lua.providers.grep').live_grep_native({
-        cmd = 'rg --hidden -g "!.git" --no-ignore',
-      })
-    end
+    M.find_words(true)
   end)
 
   nmap('[F]ind [H]elp', 'fh', function()
