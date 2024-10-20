@@ -25,6 +25,7 @@ M.FT_WITH_LSP = {
   'bazelrc',
   'proto',
   'zig',
+  'vim',
 }
 
 if vim.fn.has('mac') == 1 then
