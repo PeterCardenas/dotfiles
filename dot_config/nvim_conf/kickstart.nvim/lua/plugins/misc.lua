@@ -459,6 +459,7 @@ return {
         line_numbers = true,
         max_lines = 10,
         separator = '─',
+        multiwindow = true,
         ---@param bufnr number
         on_attach = function(bufnr)
           -- Disable at 512KB
