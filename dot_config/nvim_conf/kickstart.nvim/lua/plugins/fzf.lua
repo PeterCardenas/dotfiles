@@ -22,9 +22,18 @@ return {
         },
         files = {
           git_icons = false,
+          -- TODO: Make this hide ignored files by default once this can be toggled.
+          cmd = require('plugins.telescope.setup').rg_files_cmd(true),
         },
         grep = {
           git_icons = false,
+          -- TODO: Make this hide ignored files by default once this can be toggled.
+          cmd = require('plugins.telescope.setup').rg_words_cmd(true),
+          multiprocess = true,
+          multiline = 1,
+        },
+        oldfiles = {
+          include_current_session = true,
         },
       })
     end,
