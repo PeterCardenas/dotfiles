@@ -20,7 +20,12 @@ return {
       ignore_install = {},
       sync_install = false,
 
-      highlight = { enable = true },
+      highlight = {
+        enable = true,
+        disable = function(lang, bufnr)
+          return lang == 'yaml' and vim.api.nvim_buf_get_name(bufnr):match('%.template%.yaml$')
+        end,
+      },
       indent = { enable = true },
       incremental_selection = {
         enable = true,
