@@ -1,6 +1,20 @@
 -- [[ Configure LSP ]]
 
-local LspMethod = vim.lsp.protocol.Methods
+-- local LspMethod = vim.lsp.protocol.Methods
+
+-- Removes default behavior of autoformatting on save for zig
+vim.api.nvim_create_autocmd('BufEnter', {
+  pattern = '*.zig',
+  callback = function()
+    local ok, zig_autocmds = pcall(vim.api.nvim_get_autocmds, { group = 'vim-zig' })
+    if not ok then
+      return
+    end
+    if zig_autocmds[1] then
+      vim.api.nvim_del_augroup_by_id(zig_autocmds[1].group)
+    end
+  end,
+})
 
 vim.api.nvim_create_autocmd('LspAttach', {
   group = vim.api.nvim_create_augroup('UserLspConfig', { clear = true }),
