@@ -73,6 +73,13 @@ return {
       end),
       create_button('s', '  Restore Session', function()
         require('session_manager').load_current_dir_session()
+        local lazygit_bufnr = vim.iter(vim.api.nvim_list_bufs()):find(function(bufnr) ---@param bufnr integer
+          local bufname = vim.api.nvim_buf_get_name(bufnr)
+          return bufname:match('term://.*lazygit')
+        end)
+        if lazygit_bufnr ~= nil then
+          require('bufdelete').bufdelete(lazygit_bufnr)
+        end
       end),
       create_button('l', '⏾  Lazy', function()
         require('lazy').show()
