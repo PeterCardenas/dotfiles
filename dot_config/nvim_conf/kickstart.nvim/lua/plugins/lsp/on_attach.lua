@@ -38,8 +38,8 @@ local M = {}
 function M.on_attach(client, bufnr)
   if client.name == 'yamlls' then
     local file_name = vim.api.nvim_buf_get_name(bufnr)
-    -- If file name ends with .template.yaml, then we disable yamlls diagnostics since jinja templates cannot be parsed correctly.
-    local template_yaml_extension = '.template.yaml'
+    -- If file name ends with template.yaml, then we disable yamlls diagnostics since jinja templates cannot be parsed correctly.
+    local template_yaml_extension = 'template.yaml'
     if file_name:sub(-#template_yaml_extension) == template_yaml_extension then
       client.handlers[LspMethod.textDocument_publishDiagnostics] = function() end
     end

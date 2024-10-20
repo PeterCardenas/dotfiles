@@ -23,7 +23,7 @@ return {
       highlight = {
         enable = true,
         disable = function(lang, bufnr)
-          return lang == 'yaml' and vim.api.nvim_buf_get_name(bufnr):match('%.template%.yaml$')
+          return lang == 'yaml' and vim.api.nvim_buf_get_name(bufnr):match('template%.yaml$')
         end,
       },
       indent = { enable = true },
