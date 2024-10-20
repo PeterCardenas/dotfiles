@@ -156,7 +156,16 @@ function M.on_attach(client, bufnr)
   end, '[G]oto [I]mplementation')
   nmap('<leader>D', vim.lsp.buf.type_definition, 'Type [D]efinition')
   nmap('<leader>ls', function()
-    require('telescope.builtin').lsp_document_symbols()
+    if require('utils.config').USE_TELESCOPE then
+      require('telescope.builtin').lsp_document_symbols()
+    else
+      require('fzf-lua.providers.lsp').document_symbols({
+        winopts = {
+          height = 0.9,
+          width = 0.65,
+        },
+      })
+    end
   end, '[L]anguage [S]ymbols')
   nmap('<leader>lS', function()
     require('telescope.builtin').lsp_dynamic_workspace_symbols()
