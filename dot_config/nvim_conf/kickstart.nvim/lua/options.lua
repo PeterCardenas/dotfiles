@@ -65,6 +65,12 @@ vim.g.clipboard = {
 
 local current_sessionoptions = vim.opt.sessionoptions:get()
 table.insert(current_sessionoptions, 'globals')
+current_sessionoptions = vim
+  .iter(current_sessionoptions)
+  :filter(function(opt)
+    return opt ~= 'folds'
+  end)
+  :totable()
 vim.opt.sessionoptions = current_sessionoptions
 vim.api.nvim_set_hl(0, '@markup.link.label.markdown', { fg = '#2ac3de', underdotted = true, force = true })
 
