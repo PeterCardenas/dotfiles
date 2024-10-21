@@ -6,6 +6,7 @@ return {
     'ibhagwan/fzf-lua',
     dependencies = {
       'echasnovski/mini.icons',
+      'nvim-treesitter/nvim-treesitter',
     },
     cmd = { 'FzfLua' },
     config = function()
