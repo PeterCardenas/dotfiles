@@ -162,7 +162,7 @@ function M.on_attach(client, bufnr)
       require('fzf-lua.providers.lsp').document_symbols({
         winopts = {
           height = 0.9,
-          width = 0.65,
+          width = 0.85,
         },
       })
     end
