@@ -176,6 +176,11 @@ function setup_unix() {
 
 	# Setup rust
 	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+	# Install cargo binstall
+	curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+
+	# Install rust packages with cargo binstall
 	rust_packages=(
 		git-delta
 		bob-nvim
@@ -187,7 +192,8 @@ function setup_unix() {
 		silicon
 		yazi-fm yazi-cli
 	)
-	cargo install "${rust_packages[@]}"
+	cargo binstall --no-confirm "${rust_packages[@]}"
+	# --features isn't supported by cargo binstall
 	cargo install --features 'pcre2' ripgrep
 
 	# Setup delta/bat theme
