@@ -462,8 +462,14 @@ return {
         multiwindow = true,
         ---@param bufnr number
         on_attach = function(bufnr)
-          -- Disable at 512KB
-          return not is_buf_large(bufnr, 1024 * 512)
+          local filetype = vim.api.nvim_get_option_value('filetype', { buf = bufnr })
+          -- Default disable at 512KB
+          local file_size_threshold = 1024 * 512
+          -- YAML files can be handled at 1.75MB
+          if filetype == 'yaml' then
+            file_size_threshold = 1024 * 768 + 1024 * 1024
+          end
+          return not is_buf_large(bufnr, file_size_threshold)
         end,
       })
     end,
