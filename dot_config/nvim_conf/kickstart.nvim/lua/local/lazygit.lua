@@ -29,7 +29,7 @@ local function setup_lazygit_buffer()
         end)
         if #bufnrs == 0 then
           vim.notify('No other buffers found', vim.log.levels.ERROR)
-          require('plugins.telescope.files_picker').find_files({ show_ignore = false })
+          require('plugins.telescope.setup').find_files(false)
           return
         end
         vim.api.nvim_set_current_buf(bufnrs[1])
