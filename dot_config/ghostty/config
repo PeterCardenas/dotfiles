@@ -13,7 +13,6 @@ window-decoration = false
 
 window-padding-y = 0
 window-padding-x = 0
-window-padding-color = extend-always
 
 keybind = ctrl+enter=unbind
 keybind = ctrl+v=paste_from_clipboard
