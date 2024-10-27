@@ -24,6 +24,16 @@ function vim.brint(...)
   vim.api.nvim_out_write('\n')
 end
 
+---Workaround https://github.com/hrsh7th/cmp-omni/pull/10
+---@diagnostic disable-next-line: duplicate-set-field
+vim.treesitter.query.omnifunc = function(...)
+  local ret = require('vim.treesitter._query_linter').omnifunc(...)
+  if type(ret) ~= 'table' or type(ret.words) ~= 'table' then
+    return ret
+  end
+  return require('utils.table').remove_duplicates(ret.words)
+end
+
 -- Makes fish shell execution startup faster.
 vim.env.FAST_PROMPT = '1'
 
