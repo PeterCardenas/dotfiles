@@ -33,6 +33,9 @@ local DROPBAR_CONFIG = {
         sources.path,
       }
     end,
+    enable = function(buf, win)
+      return vim.fn.win_gettype(win) == '' and vim.wo[win].winbar == '' and vim.bo[buf].bt == '' and (buf and vim.api.nvim_buf_is_valid(buf) and true or false)
+    end,
   },
   sources = {
     path = {
@@ -45,11 +48,6 @@ local DROPBAR_CONFIG = {
         return sym
       end,
     },
-  },
-  general = {
-    enable = function(buf, win)
-      return vim.fn.win_gettype(win) == '' and vim.wo[win].winbar == '' and vim.bo[buf].bt == '' and (buf and vim.api.nvim_buf_is_valid(buf) and true or false)
-    end,
   },
 }
 
