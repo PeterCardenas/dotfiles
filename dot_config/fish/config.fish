@@ -21,12 +21,6 @@ if test $os = Darwin
         "/Applications/kitty.app/Contents/MacOS" \
         /opt/local/bin \
         /opt/local/sbin
-    # TODO: How to optionally add this only for image.nvim
-    if set -q DYLD_LIBRARY_PATH
-        set -gx DYLD_LIBRARY_PATH /opt/local/lib:$DYLD_LIBRARY_PATH
-    else
-        set -gx DYLD_LIBRARY_PATH /opt/local/lib
-    end
 else
     fish_add_path -P "$HOME/.local/kitty.app/bin"
 end
