@@ -108,7 +108,7 @@ return {
         opts = { hl = 'AlphaFooter', position = 'center' },
       },
     }
-    dashboard.opts.layout[1].val = 8
+    dashboard.opts.layout[1].val = 2
     dashboard.opts.margin = nil
     require('alpha').setup(require('alpha.themes.dashboard').config)
 
