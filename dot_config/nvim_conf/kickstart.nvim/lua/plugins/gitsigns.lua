@@ -181,9 +181,6 @@ end
 
 vim.api.nvim_create_user_command('GHFile', function()
   local start_lnum, end_lnum = vim.fn.line("'<"), vim.fn.line("'>")
-  if start_lnum == 0 or end_lnum == 0 then
-    start_lnum, end_lnum = vim.fn.line('.'), vim.fn.line('.')
-  end
   local filepath = relative_path_to_git_root()
   if not filepath then
     vim.notify('Could not find relative path to git root', vim.log.levels.ERROR)
@@ -204,9 +201,12 @@ vim.api.nvim_create_user_command('GHFile', function()
         return
       end
       local commit_sha = output
-      local file_url = repo_url .. '/blob/' .. commit_sha .. '/' .. filepath .. '#L' .. start_lnum
-      if end_lnum ~= start_lnum then
-        file_url = file_url .. '-L' .. end_lnum
+      local file_url = repo_url .. '/blob/' .. commit_sha .. '/' .. filepath
+      if start_lnum ~= 0 then
+        file_url = file_url .. '#L' .. start_lnum
+        if end_lnum ~= start_lnum then
+          file_url = file_url .. '-L' .. end_lnum
+        end
       end
       vim.notify('Copied file link to clipboard:\n' .. file_url, vim.log.levels.INFO)
       vim.schedule(function()
