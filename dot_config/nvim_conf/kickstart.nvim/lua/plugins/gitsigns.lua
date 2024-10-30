@@ -225,6 +225,29 @@ end)
 ---@type LazyPluginSpec[]
 return {
   {
+    -- Adds GitHub integration
+    'pwntester/octo.nvim',
+    cmd = { 'Octo' },
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'ibhagwan/fzf-lua',
+      'echasnovski/mini.icons',
+    },
+    config = function()
+      require('octo').setup({
+        ssh_aliases = {
+          ['personal-github.com'] = 'github.com',
+          ['work-github.com'] = 'github.com',
+        },
+        picker = 'fzf-lua',
+        default_merge_method = 'rebase',
+        suppress_missing_scope = {
+          projects_v2 = true,
+        },
+      })
+    end,
+  },
+  {
     -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
     event = { 'BufReadPre', 'BufNewFile' },
