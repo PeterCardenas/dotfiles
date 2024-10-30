@@ -94,6 +94,10 @@ function M.on_attach(client, bufnr)
     client.server_capabilities.definitionProvider = false
     client.server_capabilities.hoverProvider = false
   end
+  -- Setup github issues and PR completion.
+  -- This overrides the lsp omnifunc.
+  require('octo.completion').setup()
+  vim.api.nvim_set_option_value('omnifunc', 'v:lua.octo_omnifunc', { buf = bufnr })
 
   local filename = vim.api.nvim_buf_get_name(bufnr)
   local git_root = require('utils.file').get_git_root()
