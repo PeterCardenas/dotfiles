@@ -168,7 +168,6 @@ local bufs_setup = {}
 vim.api.nvim_create_autocmd({ 'BufEnter' }, {
   desc = 'Setup formatting',
   callback = function(args)
-    ---@type number
     local bufnr = args.buf
     if bufs_setup[bufnr] then
       return

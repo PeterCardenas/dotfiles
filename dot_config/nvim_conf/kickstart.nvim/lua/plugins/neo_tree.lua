@@ -2,7 +2,6 @@ vim.api.nvim_create_autocmd('BufEnter', {
   desc = 'Open NvimTree on startup with directory',
   group = vim.api.nvim_create_augroup('nvim_tree_start', { clear = true }),
   callback = function(args)
-    ---@type integer
     local buf = args.buf
     local stats = vim.uv.fs_stat(vim.api.nvim_buf_get_name(buf))
     if stats and stats.type == 'directory' then
@@ -25,7 +24,6 @@ vim.api.nvim_create_autocmd('BufEnter', {
   desc = 'Add mini.files mappings',
   group = vim.api.nvim_create_augroup('mini_files_enter', { clear = true }),
   callback = function(args)
-    ---@type integer
     local buf = args.buf
     local filetype = vim.api.nvim_get_option_value('filetype', { buf = buf })
     if filetype ~= 'minifiles' then
