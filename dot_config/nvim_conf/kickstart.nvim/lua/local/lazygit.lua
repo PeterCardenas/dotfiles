@@ -8,7 +8,6 @@ local function setup_lazygit_buffer()
     pattern = 'term://*lazygit',
     once = true,
     callback = function(args)
-      ---@type integer
       local bufnr = args.buf
       local function correct_size()
         vim.cmd('resize 0 0')
@@ -102,7 +101,6 @@ function M.set_keymap()
   vim.api.nvim_create_autocmd('BufAdd', {
     pattern = '*COMMIT_EDITMSG',
     callback = function(args)
-      ---@type integer
       local commit_bufnr = args.buf
       vim.cmd('startinsert')
       ---@return integer?

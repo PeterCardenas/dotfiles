@@ -30,7 +30,6 @@ local events = vim
 vim.api.nvim_create_autocmd('BufReadCmd', {
   pattern = image_patterns,
   callback = function(args)
-    ---@type integer
     local buf = args.buf
     local win = vim.api.nvim_get_current_win()
     local path = vim.api.nvim_buf_get_name(buf)
