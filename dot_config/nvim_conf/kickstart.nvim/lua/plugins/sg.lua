@@ -40,4 +40,19 @@ return {
       })
     end,
   },
+  {
+    'yetone/avante.nvim',
+    build = 'make',
+    lazy = false,
+    dependencies = {
+      'nvim-treesitter/nvim-treesitter',
+      'stevearc/dressing.nvim',
+      'nvim-lua/plenary.nvim',
+      'MunifTanjim/nui.nvim',
+      'echasnovski/mini.icons',
+    },
+    config = function()
+      require('avante').setup()
+    end,
+  },
 }
