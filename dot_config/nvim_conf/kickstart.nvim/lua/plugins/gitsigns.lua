@@ -240,6 +240,13 @@ vim.keymap.set({ 'n', 'v' }, '<leader>gk', function()
   require('gitsigns.actions').nav_hunk('prev')
 end, { desc = 'Jump to previous hunk' })
 
+vim.api.nvim_create_autocmd('BufEnter', {
+  callback = function(args)
+    require('octo.completion').setup()
+    vim.api.nvim_set_option_value('omnifunc', 'v:lua.octo_omnifunc', { buf = args.buf })
+  end,
+})
+
 ---@type LazyPluginSpec[]
 return {
   {
