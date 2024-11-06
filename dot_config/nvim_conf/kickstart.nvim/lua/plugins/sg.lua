@@ -26,7 +26,8 @@ return {
         callback = function(args)
           vim.cmd('vert rightbelow wincmd L')
           -- Get the total width of the Neovim window
-          local total_width = vim.api.nvim_get_option_value('columns', { buf = args.buf })
+          -- Does not work rn
+          -- local total_width = vim.api.nvim_get_option_value('columns', { buf = args.buf })
 
           -- Calculate 30% of the total width
           local split_width = math.floor(total_width * 0.3)
