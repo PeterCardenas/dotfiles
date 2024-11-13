@@ -186,6 +186,7 @@ vim.api.nvim_create_user_command('GHFile', function()
     vim.notify('Could not find relative path to git root', vim.log.levels.ERROR)
     return
   end
+  local current_line_nr = vim.fn.line('.')
   async.void(
     ---@async
     function()
@@ -207,6 +208,8 @@ vim.api.nvim_create_user_command('GHFile', function()
         if end_lnum ~= start_lnum then
           file_url = file_url .. '-L' .. end_lnum
         end
+      else -- If no visual selection, then just copy the link to the current line
+        file_url = file_url .. '#L' .. current_line_nr
       end
       vim.notify('Copied file link to clipboard:\n' .. file_url, vim.log.levels.INFO)
       vim.schedule(function()
