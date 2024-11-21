@@ -19,7 +19,7 @@ local function is_buffer_locked(bufnr)
   return format_lock_map[bufnr] == true
 end
 
----@alias FormatCallback fun(would_edit: boolean): nil
+---@alias FormatCallback fun(would_edit: boolean, did_cancel?: boolean): nil
 
 ---@param client vim.lsp.Client
 local function get_client_offset_encoding(client)
@@ -163,10 +163,24 @@ local function apply_typescript_codefixes(bufnr, dry_run, on_complete)
     fix_names = fix_names,
   }
 
+  local did_finish = false
+  vim.defer_fn(function()
+    if not did_finish then
+      vim.notify('Timed out waiting for typescript-tools to respond', vim.log.levels.ERROR)
+      if on_complete ~= nil then
+        on_complete(false, true)
+      end
+    end
+    did_finish = true
+  end, 1000)
+
   local lsp_constants = require('typescript-tools.protocol.constants')
   ---@param err lsp.ResponseError|nil
   ---@param res lsp.CodeAction
   typescript_client.request(lsp_constants.CustomMethods.BatchCodeActions, params, function(err, res)
+    if did_finish then
+      return
+    end
     local did_edit = false
     if err ~= nil then
       vim.notify('Error running typescript-tools code fixes: ' .. err.message, vim.log.levels.ERROR)
@@ -176,6 +190,7 @@ local function apply_typescript_codefixes(bufnr, dry_run, on_complete)
         vim.lsp.util.apply_workspace_edit(res.edit, 'utf-8')
       end
     end
+    did_finish = true
     if on_complete ~= nil then
       on_complete(did_edit)
     end
@@ -232,7 +247,15 @@ local function fix_typescript_errors(bufnr, dry_run, on_complete)
     end
     return
   end
-  apply_typescript_codefixes(bufnr, dry_run, function(would_edit_from_codefix)
+  apply_typescript_codefixes(bufnr, dry_run, function(would_edit_from_codefix, did_cancel)
+    -- Exit early when cancelled.
+    -- TODO: Make formatting more robust so that it doesn't timeout.
+    if did_cancel then
+      if on_complete ~= nil then
+        on_complete(false, true)
+      end
+      return
+    end
     remove_typescript_unused_imports(bufnr, dry_run, function(would_edit_from_remove_unused)
       if on_complete ~= nil then
         on_complete(would_edit_from_codefix or would_edit_from_remove_unused)
