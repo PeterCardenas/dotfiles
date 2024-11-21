@@ -149,7 +149,7 @@ return {
     'zbirenbaum/copilot.lua',
     event = 'InsertEnter',
     cond = function()
-      return require('utils.config').USE_COPILOT
+      return false
     end,
     config = function()
       require('copilot').setup({
@@ -169,7 +169,7 @@ return {
     'supermaven-inc/supermaven-nvim',
     event = 'InsertEnter',
     cond = function()
-      return not require('utils.config').USE_COPILOT
+      return require('utils.config').USE_SUPERMAVEN
     end,
     config = function()
       require('supermaven-nvim').setup({

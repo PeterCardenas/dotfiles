@@ -30,8 +30,8 @@ return {
           -- local total_width = vim.api.nvim_get_option_value('columns', { buf = args.buf })
 
           -- Calculate 30% of the total width
-          local split_width = math.floor(total_width * 0.3)
-          vim.cmd('vertical resize ' .. split_width)
+          -- local split_width = math.floor(total_width * 0.3)
+          -- vim.cmd('vertical resize ' .. split_width)
         end,
       })
       require('CopilotChat').setup({
@@ -54,7 +54,11 @@ return {
       'echasnovski/mini.icons',
     },
     config = function()
-      require('avante').setup()
+      require('avante').setup({
+        behaviour = {
+          auto_suggestions = not require('utils.config').USE_SUPERMAVEN,
+        },
+      })
     end,
   },
 }
