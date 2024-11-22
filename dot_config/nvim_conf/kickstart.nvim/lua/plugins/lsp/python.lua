@@ -59,6 +59,7 @@ local function pylsp_config()
     -- Below have been delegated to mypy.
     'too-many-function-args',
     'undefined-variable',
+    'no-member',
     -- Below have been delegated to ruff.
     'trailing-whitespace',
     'missing-function-docstring',
@@ -99,12 +100,6 @@ local function pylsp_config()
               -- False positive not-callable error for sqlalchemy.func.count.
               if diagnostic.source == 'pylint' and diagnostic.code == 'E1102' and message:find('sqlalchemy.func.count') then
                 should_filter = false
-              end
-              -- False positive no-member error for alembic.op.
-              if diagnostic.source == 'pylint' and diagnostic.code == 'E1101' then
-                if message:find('alembic.op') or message:find("Instance of 'sessionmaker' has no 'begin' member") then
-                  should_filter = false
-                end
               end
               -- Some mypy diagnostics range the entire function, so limit it to the first line.
               -- TODO: Limit this to the function signature.
