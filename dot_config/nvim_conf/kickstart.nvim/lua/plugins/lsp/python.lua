@@ -102,7 +102,7 @@ local function pylsp_config()
               end
               -- False positive no-member error for alembic.op.
               if diagnostic.source == 'pylint' and diagnostic.code == 'E1101' then
-                if message:find('alembic.op') or message:find("Instance of 'session_maker' has no 'begin' member") then
+                if message:find('alembic.op') or message:find("Instance of 'sessionmaker' has no 'begin' member") then
                   should_filter = false
                 end
               end
