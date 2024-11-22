@@ -462,7 +462,6 @@ return {
         max_lines = 10,
         separator = '─',
         multiwindow = true,
-        ---@param bufnr number
         on_attach = function(bufnr)
           local filetype = vim.api.nvim_get_option_value('filetype', { buf = bufnr })
           -- Default disable at 512KB
@@ -471,7 +470,22 @@ return {
           if filetype == 'yaml' then
             file_size_threshold = 1024 * 768 + 1024 * 1024
           end
-          return not is_buf_large(bufnr, file_size_threshold)
+          local is_enabled = not is_buf_large(bufnr, file_size_threshold)
+          if is_enabled then
+            ---HACK: This prevents the diagnostics from being out of date in the context window.
+            ---Source: https://github.com/nvim-treesitter/nvim-treesitter-context/issues/509#issuecomment-2445262074
+            vim.api.nvim_create_autocmd({ 'DiagnosticChanged' }, {
+              callback = function()
+                local tsc = require('treesitter-context')
+                if tsc.enabled() then
+                  tsc.disable()
+                  tsc.enable()
+                end
+              end,
+              buffer = bufnr,
+            })
+          end
+          return is_enabled
         end,
       })
     end,
