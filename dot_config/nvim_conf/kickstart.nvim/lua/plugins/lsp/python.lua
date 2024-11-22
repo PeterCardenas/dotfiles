@@ -101,8 +101,10 @@ local function pylsp_config()
                 should_filter = false
               end
               -- False positive no-member error for alembic.op.
-              if diagnostic.source == 'pylint' and diagnostic.code == 'E1101' and message:find('alembic.op') then
-                should_filter = false
+              if diagnostic.source == 'pylint' and diagnostic.code == 'E1101' then
+                if message:find('alembic.op') or message:find("Instance of 'session_maker' has no 'begin' member") then
+                  should_filter = false
+                end
               end
               -- Some mypy diagnostics range the entire function, so limit it to the first line.
               -- TODO: Limit this to the function signature.
@@ -112,6 +114,7 @@ local function pylsp_config()
                   'Function is missing a return type annotation',
                   'Function is missing a type annotation',
                   'Use "-> None" if function does not return a value',
+                  'Missing return statement',
                 }
                 local matching_messages = vim.tbl_filter(function(function_message)
                   return string.find(message, function_message) ~= nil or function_message == message
