@@ -5,6 +5,8 @@ return {
   priority = 1000,
   config = function()
     vim.cmd('colorscheme tokyonight-storm')
+    -- TODO: Change/remove this to something more unique when modules have semantic highlighting.
+    vim.api.nvim_set_hl(0, '@module.python', { link = '@variable' })
     -- Make comments foreground brighter.
     vim.cmd([[highlight Comment cterm=italic gui=italic guifg=#7c7c7c]])
     -- More contrast for selected tab.
