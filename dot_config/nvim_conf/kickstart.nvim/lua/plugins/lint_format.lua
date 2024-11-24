@@ -207,6 +207,7 @@ return {
           jsonc = { 'jq' },
           fish = { 'fish_indent' },
           sh = { 'shfmt' },
+          gitcommit = { 'commitmsgfmt' },
         },
         formatters = {
           buildifier = {
