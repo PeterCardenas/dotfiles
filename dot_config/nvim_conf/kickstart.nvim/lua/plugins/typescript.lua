@@ -18,7 +18,6 @@ return {
   dependencies = { 'nvim-lua/plenary.nvim', 'neovim/nvim-lspconfig' },
   ft = require('utils.typescript').SUPPORTED_FT,
   config = function()
-    -- Still uncertain if we should enable this by default.
     -- Following issues remain:
     --  - Cannot view document symbols while project is loading.
     require('typescript-tools').setup({
