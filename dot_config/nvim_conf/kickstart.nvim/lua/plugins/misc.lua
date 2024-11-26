@@ -463,6 +463,7 @@ return {
         max_lines = 10,
         separator = '─',
         multiwindow = true,
+        zindex = 41,
         on_attach = function(bufnr)
           local filetype = vim.api.nvim_get_option_value('filetype', { buf = bufnr })
           -- Default disable at 512KB
