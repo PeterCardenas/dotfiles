@@ -2,8 +2,8 @@
 unlet b:current_syntax
 try
   syn include @JINJA syntax/jinja.vim
-  syn region yamlTemplate start=+{%+ end=+%}+ oneline contains=@JINJA
-  syn region yamlTemplateVar start=+{{+ end=+}}+ oneline contains=@JINJA
+  syn region yamlTemplate start=+{%+ end=+%}+ contains=@JINJA keepend transparent
+  syn region yamlTemplateVar start=+{{+ end=+}}+ oneline contains=@JINJA containedin=yamlFlowString,yamlPlainScalar keepend
 catch
 endtry
 let b:current_syntax = "yaml"
