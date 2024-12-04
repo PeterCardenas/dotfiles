@@ -52,12 +52,6 @@ local function setup_lazygit_buffer()
           correct_size()
         end,
       })
-      vim.api.nvim_create_autocmd('TermClose', {
-        buffer = bufnr,
-        callback = function()
-          require('bufdelete').bufdelete(bufnr)
-        end,
-      })
     end,
   })
 end
