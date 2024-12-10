@@ -2,7 +2,6 @@ local image_ft = {
   'png',
   'jpg',
   'jpeg',
-  'gif',
   'bmp',
   'webp',
   'svg',
@@ -27,17 +26,6 @@ local events = vim
   end)
   :totable()
 
-vim.api.nvim_create_autocmd('BufReadCmd', {
-  pattern = image_patterns,
-  callback = function(args)
-    local buf = args.buf
-    local win = vim.api.nvim_get_current_win()
-    local path = vim.api.nvim_buf_get_name(buf)
-
-    require('image').hijack_buffer(path, win, buf)
-  end,
-})
-
 ---@type LazyPluginSpec[]
 return {
   -- Support viewing images.
@@ -59,7 +47,7 @@ return {
             filetypes = { 'markdown', 'vimwiki', 'markdown.mdx' },
           },
         },
-        hijack_file_patterns = {},
+        hijack_file_patterns = image_patterns,
       })
     end,
   },
