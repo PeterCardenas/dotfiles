@@ -198,6 +198,7 @@ return {
     'stevearc/conform.nvim',
     lazy = true,
     config = function()
+      local file_utils = require('utils.file')
       require('conform').setup({
         formatters_by_ft = {
           lua = { 'stylua' },
@@ -208,6 +209,7 @@ return {
           fish = { 'fish_indent' },
           sh = { 'shfmt' },
           gitcommit = { 'commitmsgfmt' },
+          proto = { 'clang-format' },
         },
         formatters = {
           buildifier = {
