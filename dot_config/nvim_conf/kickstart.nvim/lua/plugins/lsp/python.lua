@@ -208,6 +208,7 @@ local function ruff_lsp_config()
   }
   local ignored_rules = {
     'W191', -- tab-indentation https://docs.astral.sh/ruff/rules/tab-indentation/
+    'E203', -- whitespace before ':' https://docs.astral.sh/ruff/rules/whitespace-before-colon/, this comes up with false positives
   }
   local used_in_repo = {
     'W605', -- invalid escape sequence https://docs.astral.sh/ruff/rules/invalid-escape-sequence/
