@@ -83,11 +83,13 @@ return {
     -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
     {
       'j-hui/fidget.nvim',
-      tag = 'legacy',
+      tag = 'v1.5.0',
       config = function()
         require('fidget').setup({
-          window = {
-            winblend = 0,
+          notification = {
+            window = {
+              winblend = 0,
+            },
           },
         })
       end,
