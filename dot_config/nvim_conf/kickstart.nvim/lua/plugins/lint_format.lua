@@ -233,9 +233,39 @@ return {
         ignore_exitcode = true,
         parser = require('lint.parser').from_pattern('([^:]+):([0-9]+):([0-9]+): (.+)', { 'filename', 'lnum', 'col', 'message' }),
       }
+      local venv_path = require('plugins.lsp.python').VENV_PATH
+      local mypy_args = require('lint').linters.mypy.args or {}
+      local mypypath = table.concat({ cwd, cwd .. '/' .. require('plugins.lsp.python').GEN_FILES_PATH }, ':')
+      vim.brint(mypypath)
+      require('lint').linters.mypy.env = {
+        VIRTUAL_ENV = venv_path,
+        COLUMNS = 1000,
+        PYTHONPATH = cwd .. ':' .. cwd .. '/' .. require('plugins.lsp.python').GEN_FILES_PATH,
+        MYPYPATH = mypypath,
+      }
+      local mypy_config_path = cwd .. 'mypy.ini'
+      table.insert(mypy_args, '--config-file')
+      table.insert(mypy_args, mypy_config_path)
+      require('lint').linters.mypy.args = mypy_args
+      require('lint').linters.mypy.cmd = venv_path .. '/bin/mypy'
+      require('lint').linters.pylint.cmd = venv_path .. '/bin/pylint'
+      require('lint').linters.pylint.env = {
+        VIRTUAL_ENV = venv_path,
+        PYTHONPATH = cwd .. ':' .. cwd .. '/' .. require('plugins.lsp.python').GEN_FILES_PATH,
+      }
+      require('lint').linters.pylint.args = {
+        '-f',
+        'json',
+        '--from-stdin',
+        '--disable=' .. table.concat(require('plugins.lsp.python').DISABLED_PYLINT_RULES, ','),
+        function()
+          return vim.api.nvim_buf_get_name(0)
+        end,
+      }
       require('lint').linters_by_ft = {
         bzl = { 'buildifier' },
         go = { 'golint' },
+        python = { 'mypy', 'pylint' },
       }
     end,
   },
