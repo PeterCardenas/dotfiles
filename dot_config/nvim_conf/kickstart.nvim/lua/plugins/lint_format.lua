@@ -278,19 +278,23 @@ return {
       require('lint').linters.buf_lint.args = buf_lint_args
       require('lint').linters.buf_lint.cwd = cwd
       local venv_path = require('plugins.lsp.python').VENV_PATH
-      local mypy_args = require('lint').linters.mypy.args or {}
       local mypypath = table.concat({ cwd, cwd .. '/' .. require('plugins.lsp.python').GEN_FILES_PATH }, ':')
-      vim.brint(mypypath)
       require('lint').linters.mypy.env = {
         VIRTUAL_ENV = venv_path,
         COLUMNS = 1000,
-        PYTHONPATH = mypypath,
         MYPYPATH = mypypath,
       }
       local mypy_config_path = cwd .. 'mypy.ini'
-      table.insert(mypy_args, '--config-file')
-      table.insert(mypy_args, mypy_config_path)
-      vim.brint(mypy_args)
+      local mypy_args = {
+        '--show-column-numbers',
+        '--show-error-end',
+        '--hide-error-context',
+        '--no-color-output',
+        '--no-error-summary',
+        '--no-pretty',
+        '--config-file',
+        mypy_config_path,
+      }
       require('lint').linters.mypy.args = mypy_args
       require('lint').linters.mypy.cmd = venv_path .. '/bin/mypy'
       require('lint').linters.pylint.cmd = venv_path .. '/bin/pylint'
