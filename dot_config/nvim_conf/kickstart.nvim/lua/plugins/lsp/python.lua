@@ -212,6 +212,7 @@ local function ruff_lsp_config()
   }
   local used_in_repo = {
     'W605', -- invalid escape sequence https://docs.astral.sh/ruff/rules/invalid-escape-sequence/
+    'W293', -- trailing whitespace https://docs.astral.sh/ruff/rules/trailing-whitespace/
   }
   local ruff_args = {
     -- Enable preview mode for some additional rules.
