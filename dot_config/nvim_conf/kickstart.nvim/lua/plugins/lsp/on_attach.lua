@@ -94,6 +94,11 @@ function M.on_attach(client, bufnr)
     client.server_capabilities.definitionProvider = false
     client.server_capabilities.hoverProvider = false
   end
+  if client.name == 'protols' then
+    -- Defer to clang-format for formatting.
+    client.server_capabilities.documentFormattingProvider = false
+    client.server_capabilities.documentRangeFormattingProvider = false
+  end
   -- Setup github issues and PR completion.
   -- This overrides the lsp omnifunc.
   require('octo.completion').setup()
