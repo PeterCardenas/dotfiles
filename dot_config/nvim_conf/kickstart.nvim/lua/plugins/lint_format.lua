@@ -1,10 +1,46 @@
 local async = require('utils.async')
 
-vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter' }, {
+local LINT_POLL_INTERVAL_MS = 50
+local lint_poll_timer = nil
+
+local function update_lint_notification()
+  local running_linters = require('lint').get_running()
+  if #running_linters > 0 then
+    require('fidget').notify('Running ' .. table.concat(running_linters, ', ') .. '...', vim.log.levels.INFO, {
+      group = 'lint_status',
+      key = 'lint_status',
+      annote = '',
+    })
+  else
+    require('fidget').notification.remove('lint_status', 'lint_status')
+  end
+end
+
+vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter', 'BufNewFile' }, {
   desc = 'Lint on write',
   group = vim.api.nvim_create_augroup('LintOnWrite', { clear = true }),
   callback = function()
     require('lint').try_lint()
+
+    -- Start polling timer if not already running
+    if not lint_poll_timer then
+      lint_poll_timer = vim.loop.new_timer()
+      lint_poll_timer:start(
+        0,
+        LINT_POLL_INTERVAL_MS,
+        vim.schedule_wrap(function()
+          update_lint_notification()
+
+          -- Stop timer if no linters running
+          if #require('lint').get_running() == 0 then
+            if lint_poll_timer then
+              lint_poll_timer:stop()
+              lint_poll_timer = nil
+            end
+          end
+        end)
+      )
+    end
   end,
 })
 
@@ -233,6 +269,14 @@ return {
         ignore_exitcode = true,
         parser = require('lint.parser').from_pattern('([^:]+):([0-9]+):([0-9]+): (.+)', { 'filename', 'lnum', 'col', 'message' }),
       }
+      local buf_lint_args = { 'lint', '--error-format', 'json' }
+      local file_utils = require('utils.file')
+      local cwd = file_utils.get_cwd()
+      local buf_config_path = cwd .. 'buf.yaml'
+      table.insert(buf_lint_args, '--config')
+      table.insert(buf_lint_args, buf_config_path)
+      require('lint').linters.buf_lint.args = buf_lint_args
+      require('lint').linters.buf_lint.cwd = cwd
       local venv_path = require('plugins.lsp.python').VENV_PATH
       local mypy_args = require('lint').linters.mypy.args or {}
       local mypypath = table.concat({ cwd, cwd .. '/' .. require('plugins.lsp.python').GEN_FILES_PATH }, ':')
@@ -240,12 +284,13 @@ return {
       require('lint').linters.mypy.env = {
         VIRTUAL_ENV = venv_path,
         COLUMNS = 1000,
-        PYTHONPATH = cwd .. ':' .. cwd .. '/' .. require('plugins.lsp.python').GEN_FILES_PATH,
+        PYTHONPATH = mypypath,
         MYPYPATH = mypypath,
       }
       local mypy_config_path = cwd .. 'mypy.ini'
       table.insert(mypy_args, '--config-file')
       table.insert(mypy_args, mypy_config_path)
+      vim.brint(mypy_args)
       require('lint').linters.mypy.args = mypy_args
       require('lint').linters.mypy.cmd = venv_path .. '/bin/mypy'
       require('lint').linters.pylint.cmd = venv_path .. '/bin/pylint'
@@ -265,6 +310,7 @@ return {
       require('lint').linters_by_ft = {
         bzl = { 'buildifier' },
         go = { 'golint' },
+        proto = { 'buf_lint' },
         python = { 'mypy', 'pylint' },
       }
     end,
