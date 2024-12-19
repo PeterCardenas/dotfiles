@@ -2,7 +2,7 @@ local M = {}
 local LspMethod = vim.lsp.protocol.Methods
 
 local enable_pyright = not require('utils.config').USE_JEDI
-local gen_files_path = 'bazel-out/k8-fastbuild/bin'
+M.GEN_FILES_PATH = 'bazel-out/k8-fastbuild/bin'
 
 --  Configures a language server after it attaches to a buffer.
 ---@param client vim.lsp.Client
@@ -41,42 +41,44 @@ function M.setup()
   })
 end
 
+M.VENV_PATH = os.getenv('HOME') .. '/.local/share/nvim/mason/packages/python-lsp-server/venv'
+-- TODO(@PeterCardenas): Replace all useful pylint rules with ruff rules.
+M.DISABLED_PYLINT_RULES = {
+  'invalid-name',
+  'missing-module-docstring',
+  'wrong-import-position',
+  'unused-argument',
+  'too-few-public-methods',
+  'unused-import',
+  'logging-fstring-interpolation',
+  'wrong-import-order',
+  'consider-using-f-string',
+  -- Line length checking is most often just annoying.
+  'line-too-long',
+  -- Below have been delegated to mypy.
+  'too-many-function-args',
+  'undefined-variable',
+  'no-member',
+  -- Below have been delegated to ruff.
+  'trailing-whitespace',
+  'missing-function-docstring',
+  'missing-class-docstring',
+  'f-string-without-interpolation',
+  'too-many-branches',
+  'protected-access',
+  'unspecified-encoding',
+  'unnecessary-comprehension',
+  'bare-except',
+  'consider-using-get',
+  'unexpected-special-method-signature',
+  'broad-exception-raised',
+  'cell-var-from-loop',
+  'logging-too-few-args',
+  'logging-too-many-args',
+}
+
 ---@return table<string, lspconfig.Config>
 local function pylsp_config()
-  VENV_PATH = os.getenv('HOME') .. '/.local/share/nvim/mason/packages/python-lsp-server/venv'
-  local disabled_pylint_rules = {
-    'invalid-name',
-    'missing-module-docstring',
-    'wrong-import-position',
-    'unused-argument',
-    'too-few-public-methods',
-    'unused-import',
-    'logging-fstring-interpolation',
-    'wrong-import-order',
-    'consider-using-f-string',
-    -- Line length checking is most often just annoying.
-    'line-too-long',
-    -- Below have been delegated to mypy.
-    'too-many-function-args',
-    'undefined-variable',
-    'no-member',
-    -- Below have been delegated to ruff.
-    'trailing-whitespace',
-    'missing-function-docstring',
-    'missing-class-docstring',
-    'f-string-without-interpolation',
-    'too-many-branches',
-    'protected-access',
-    'unspecified-encoding',
-    'unnecessary-comprehension',
-    'bare-except',
-    'consider-using-get',
-    'unexpected-special-method-signature',
-    'broad-exception-raised',
-    'cell-var-from-loop',
-    'logging-too-few-args',
-    'logging-too-many-args',
-  }
   -- The following are rules that we want from pylint, but are not supported elsewhere.
   -- 'trailing-newlines'
   return {
@@ -134,34 +136,11 @@ local function pylsp_config()
             jedi = {
               enabled = not enable_pyright,
               extra_paths = {
-                gen_files_path,
+                M.GEN_FILES_PATH,
               },
             },
-            -- TODO(@PeterCardenas): Replace all useful pylint rules with ruff rules.
             pylint = {
-              enabled = true,
-              args = {
-                '--disable=' .. table.concat(disabled_pylint_rules, ','),
-              },
-              -- Enables pylint to run in live mode.
-              -- executable = VENV_PATH .. '/bin/pylint',
-              -- TODO(@PeterCardenas): The following is for adding additional paths
-              -- for pylint to search for modules. This is made possible by this fork:
-              -- https://github.com/PeterCardenas/python-lsp-server
-              -- However, I am not enabling this because .pyi files are not taken into
-              -- consideration when a .py file with the same module name exists.
-              -- Relevant issue: https://github.com/pylint-dev/pylint/issues/6281
-              -- extra_paths = {
-              --   gen_files_path,
-              -- }
-            },
-            pylsp_mypy = {
-              enabled = true,
-              live_mode = true,
-              report_progress = true,
-              -- Currently using a fork of pylsp-mypy to support venv.
-              -- https://github.com/PeterCardenas/pylsp-mypy
-              venv_path = VENV_PATH,
+              enabled = false,
             },
             -- Disable other default formatters and linters in favor of ruff and pylint.
             black = {
@@ -287,7 +266,7 @@ function M.python_lsp_config()
           analysis = {
             autoImportCompletions = true,
             extraPaths = {
-              gen_files_path,
+              M.GEN_FILES_PATH,
             },
             -- TODO(@PeterPCardenas): Re-enable this when pyright is more performant.
             -- diagnosticMode = 'workspace',
