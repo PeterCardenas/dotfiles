@@ -244,7 +244,7 @@ return {
             ---@type fun(self: conform.JobFormatterConfig, ctx: conform.Context): string|string[]
             args = function(_, ctx)
               local filetype = get_buildifier_filetype(ctx.buf)
-              return { '-lint=fix', '-warnings=all', '-type', filetype }
+              return { '-lint=fix', '--warnings=all', '-warnings=-native-cc', '-type', filetype }
             end,
           },
           golines = {
