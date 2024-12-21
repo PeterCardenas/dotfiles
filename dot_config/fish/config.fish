@@ -20,7 +20,8 @@ if test $os = Darwin
     fish_add_path -P "/Applications/WezTerm.app/Contents/MacOS" \
         "/Applications/kitty.app/Contents/MacOS" \
         /opt/local/bin \
-        /opt/local/sbin
+        /opt/local/sbin \
+        /usr/local/bin
     if set -q DYLD_FALLBACK_LIBRARY_PATH
         set -gx DYLD_FALLBACK_LIBRARY_PATH /opt/local/lib:$DYLD_FALLBACK_LIBRARY_PATH
     else
