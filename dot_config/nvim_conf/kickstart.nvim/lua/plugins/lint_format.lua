@@ -258,7 +258,8 @@ return {
 
   -- Diagnostics from lint tools.
   {
-    'mfussenegger/nvim-lint',
+    'PeterCardenas/nvim-lint',
+    branch = 'fix-parallel-try-lint-lag',
     lazy = true,
     config = function()
       ---@diagnostic disable-next-line: missing-fields
