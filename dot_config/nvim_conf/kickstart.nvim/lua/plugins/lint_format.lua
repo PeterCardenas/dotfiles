@@ -279,13 +279,17 @@ return {
       require('lint').linters.buf_lint.cwd = cwd
       local venv_path = require('plugins.lsp.python').VENV_PATH
       local mypypath = table.concat({ cwd, cwd .. '/' .. require('plugins.lsp.python').GEN_FILES_PATH }, ':')
-      require('lint').linters.mypy.env = {
+      require('lint').linters.dmypy.env = {
         VIRTUAL_ENV = venv_path,
         COLUMNS = 1000,
         MYPYPATH = mypypath,
       }
       local mypy_config_path = cwd .. 'mypy.ini'
-      local mypy_args = {
+      local dmypy_args = {
+        'run',
+        '--timeout',
+        '50000',
+        '--',
         '--show-column-numbers',
         '--show-error-end',
         '--hide-error-context',
@@ -295,8 +299,8 @@ return {
         '--config-file',
         mypy_config_path,
       }
-      require('lint').linters.mypy.args = mypy_args
-      require('lint').linters.mypy.cmd = venv_path .. '/bin/mypy'
+      require('lint').linters.dmypy.args = dmypy_args
+      require('lint').linters.dmypy.cmd = venv_path .. '/bin/dmypy'
       require('lint').linters.pylint.cmd = venv_path .. '/bin/pylint'
       require('lint').linters.pylint.env = {
         VIRTUAL_ENV = venv_path,
@@ -315,7 +319,7 @@ return {
         bzl = { 'buildifier' },
         go = { 'golint' },
         proto = { 'buf_lint' },
-        python = { 'mypy', 'pylint' },
+        python = { 'dmypy', 'pylint' },
       }
     end,
   },
