@@ -49,7 +49,7 @@
   "nvim-dap": { "branch": "master", "commit": "7ff6936010b7222fea2caea0f67ed77f1b7c60dd" },
   "nvim-dap-go": { "branch": "main", "commit": "6aa88167ea1224bcef578e8c7160fe8afbb44848" },
   "nvim-dap-ui": { "branch": "master", "commit": "ffa89839f97bad360e78428d5c740fdad9a0ff02" },
-  "nvim-lint": { "branch": "master", "commit": "1fea92f1d9908eaa5eb8bafe08b4293d7aadaa55" },
+  "nvim-lint": { "branch": "fix-parallel-try-lint-lag", "commit": "0764c2c3f4b191a7c3b4a8aca2cff9fda01bd3a2" },
   "nvim-lspconfig": { "branch": "master", "commit": "28b205ebe73a18f401e040585106f9bafd8ff21f" },
   "nvim-nio": { "branch": "master", "commit": "a428f309119086dc78dd4b19306d2d67be884eee" },
   "nvim-notify": { "branch": "master", "commit": "fbef5d32be8466dd76544a257d3f3dce20082a07" },
