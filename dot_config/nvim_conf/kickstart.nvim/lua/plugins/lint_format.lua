@@ -277,6 +277,7 @@ return {
       local buf_config_path = cwd .. '/buf.yaml'
       table.insert(buf_lint_args, '--config')
       table.insert(buf_lint_args, buf_config_path)
+      table.insert(buf_lint_args, '--path')
       require('lint').linters.buf_lint.args = buf_lint_args
       require('lint').linters.buf_lint.cwd = cwd
       local venv_path = require('plugins.lsp.python').VENV_PATH
