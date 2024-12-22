@@ -1,6 +1,9 @@
 # Config for pbls protobuf language server
 .pbls.toml
 
+# dmypy config
+.dmypy.json
+
 # Artifacts from xcodebuild.nvim neovim plugin
 buildServer.json
 **/.nvim/xcodebuild
