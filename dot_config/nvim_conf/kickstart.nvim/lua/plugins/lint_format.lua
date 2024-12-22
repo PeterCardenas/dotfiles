@@ -282,7 +282,7 @@ return {
       local buf_lint_args = { 'lint', '--error-format', 'json' }
       local file_utils = require('utils.file')
       local cwd = file_utils.get_cwd()
-      local buf_config_path = cwd .. 'buf.yaml'
+      local buf_config_path = cwd .. '/buf.yaml'
       table.insert(buf_lint_args, '--config')
       table.insert(buf_lint_args, buf_config_path)
       require('lint').linters.buf_lint.args = buf_lint_args
@@ -294,7 +294,7 @@ return {
         COLUMNS = 1000,
         MYPYPATH = mypypath,
       }
-      local mypy_config_path = cwd .. 'mypy.ini'
+      local mypy_config_path = cwd .. '/mypy.ini'
       local dmypy_args = {
         'run',
         '--timeout',
