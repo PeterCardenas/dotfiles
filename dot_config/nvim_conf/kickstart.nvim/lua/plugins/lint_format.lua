@@ -1,6 +1,6 @@
 local async = require('utils.async')
 
-local LINT_POLL_INTERVAL_MS = 50
+local LINT_POLL_INTERVAL_MS = 500
 local lint_poll_timer = nil
 
 local function update_lint_notification()
