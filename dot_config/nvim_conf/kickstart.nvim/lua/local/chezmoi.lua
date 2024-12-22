@@ -27,7 +27,7 @@ local function apply_filepath(filepath)
     return true, output
   end
   local target_filepath = output[1]
-  if not vim.fn.filereadable(target_filepath) then
+  if vim.fn.filereadable(target_filepath) == 0 then
     local parent_dir = vim.fn.fnamemodify(target_filepath, ':h')
     if vim.fn.isdirectory(parent_dir) == 0 then
       success, output = shell.async_cmd('mkdir', { '-p', parent_dir })
