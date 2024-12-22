@@ -258,6 +258,7 @@ return {
 
   -- Diagnostics from lint tools.
   {
+    -- TODO: Revert back to main repo once https://github.com/mfussenegger/nvim-lint/pull/688 is merged.
     'PeterCardenas/nvim-lint',
     branch = 'fix-parallel-try-lint-lag',
     lazy = true,
