@@ -287,6 +287,36 @@ return {
         COLUMNS = 1000,
         MYPYPATH = mypypath,
       }
+      local original_mypy_parser = require('lint').linters.dmypy.parser
+      require('lint').linters.dmypy.parser = function(output, bufnr, linter_cwd)
+        local diagnostics = original_mypy_parser(output, bufnr, linter_cwd)
+        ---@type vim.Diagnostic[]
+        local filtered_diagnostics = {}
+        for _, diagnostic in ipairs(diagnostics) do
+          local should_filter = true
+          local message = diagnostic.message
+          -- Some mypy diagnostics range the entire function, so limit it to the first line.
+          -- TODO: Limit this to the function signature.
+          local function_messages = {
+            'Function is missing a type annotation for one or more arguments',
+            'Function is missing a return type annotation',
+            'Function is missing a type annotation',
+            'Use "-> None" if function does not return a value',
+            'Missing return statement',
+          }
+          local matching_messages = vim.tbl_filter(function(function_message)
+            return string.find(message, function_message) ~= nil or function_message == message
+          end, function_messages)
+          if #matching_messages > 0 then
+            diagnostic.end_lnum = diagnostic.lnum
+            diagnostic.end_col = 1000
+          end
+          if should_filter then
+            table.insert(filtered_diagnostics, diagnostic)
+          end
+        end
+        return filtered_diagnostics
+      end
       local mypy_config_path = cwd .. '/mypy.ini'
       local dmypy_args = {
         'run',
