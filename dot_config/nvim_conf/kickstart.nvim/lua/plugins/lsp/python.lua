@@ -103,24 +103,6 @@ local function pylsp_config()
               if diagnostic.source == 'pylint' and diagnostic.code == 'E1102' and message:find('sqlalchemy.func.count') then
                 should_filter = false
               end
-              -- Some mypy diagnostics range the entire function, so limit it to the first line.
-              -- TODO: Limit this to the function signature.
-              if diagnostic.source == 'mypy' then
-                local function_messages = {
-                  'Function is missing a type annotation for one or more arguments',
-                  'Function is missing a return type annotation',
-                  'Function is missing a type annotation',
-                  'Use "-> None" if function does not return a value',
-                  'Missing return statement',
-                }
-                local matching_messages = vim.tbl_filter(function(function_message)
-                  return string.find(message, function_message) ~= nil or function_message == message
-                end, function_messages)
-                if #matching_messages > 0 then
-                  diagnostic.range['end'].line = diagnostic.range.start.line
-                  diagnostic.range['end'].character = 1000
-                end
-              end
             end
             if should_filter then
               table.insert(filtered_diagnostics, diagnostic)
