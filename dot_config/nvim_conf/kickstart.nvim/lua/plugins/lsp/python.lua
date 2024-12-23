@@ -83,35 +83,6 @@ local function pylsp_config()
   -- 'trailing-newlines'
   return {
     pylsp = {
-      handlers = {
-        -- Ignore and modify some pylsp diagnostics.
-        ---@param result lsp.PublishDiagnosticsParams
-        ---@param ctx lsp.HandlerContext
-        ---@param config any
-        [LspMethod.textDocument_publishDiagnostics] = function(_, result, ctx, config)
-          local diagnostics = result.diagnostics
-          local filtered_diagnostics = {}
-          for _, diagnostic in ipairs(diagnostics) do
-            local should_filter = true
-            -- Remove no-name-in-module pylint error for protobuf imports.
-            local message = diagnostic.message
-            if type(message) == 'string' then
-              if diagnostic.source == 'pylint' and diagnostic.code == 'E0611' and message:find('_pb2') then
-                should_filter = false
-              end
-              -- False positive not-callable error for sqlalchemy.func.count.
-              if diagnostic.source == 'pylint' and diagnostic.code == 'E1102' and message:find('sqlalchemy.func.count') then
-                should_filter = false
-              end
-            end
-            if should_filter then
-              table.insert(filtered_diagnostics, diagnostic)
-            end
-          end
-          result.diagnostics = filtered_diagnostics
-          return vim.lsp.diagnostic.on_publish_diagnostics(_, result, ctx, config)
-        end,
-      },
       settings = {
         pylsp = {
           plugins = {
