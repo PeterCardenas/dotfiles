@@ -142,6 +142,9 @@ local function pylsp_config()
             pylint = {
               enabled = false,
             },
+            pylsp_mypy = {
+              enabled = false,
+            },
             -- Disable other default formatters and linters in favor of ruff and pylint.
             black = {
               enabled = false,
