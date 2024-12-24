@@ -87,7 +87,7 @@ local function pylsp_config()
         pylsp = {
           plugins = {
             jedi = {
-              enabled = not enable_pyright,
+              enabled = true,
               extra_paths = {
                 M.GEN_FILES_PATH,
               },
