@@ -12,6 +12,8 @@
 	workers = -1
 [delta]
 	navigate = true # use n and N to move between diff sections
+	minus-style = syntax auto
+	minus-emph-style = syntax auto
 [diff]
 	tool = vimdiff
 [diff "vimdiff"]
