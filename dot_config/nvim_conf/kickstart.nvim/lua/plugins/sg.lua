@@ -54,6 +54,13 @@ return {
       'echasnovski/mini.icons',
     },
     config = function()
+      local filepath = vim.fn.expand('~/.local/share/anthropic/api_key')
+      local lines = vim.fn.readfile(filepath)
+      if #lines == 0 or lines[1] == '' then
+        vim.notify('Unable to load avante.nvim, Anthropic API key not found at ' .. filepath, vim.log.levels.ERROR)
+        return
+      end
+      vim.env.ANTHROPIC_API_KEY = lines[1]
       require('avante').setup({
         behaviour = {
           auto_suggestions = not require('utils.config').USE_SUPERMAVEN,
