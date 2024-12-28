@@ -473,28 +473,6 @@ return {
             file_size_threshold = 1024 * 768 + 1024 * 1024
           end
           local is_enabled = not is_buf_large(bufnr, file_size_threshold)
-          if is_enabled then
-            local timer = vim.uv.new_timer()
-            ---HACK: This prevents the diagnostics from being out of date in the context window.
-            ---Source: https://github.com/nvim-treesitter/nvim-treesitter-context/issues/509#issuecomment-2445262074
-            vim.api.nvim_create_autocmd({ 'DiagnosticChanged' }, {
-              callback = function()
-                timer:stop()
-                timer:start(
-                  3000,
-                  0,
-                  vim.schedule_wrap(function()
-                    local tsc = require('treesitter-context')
-                    if tsc.enabled() then
-                      tsc.disable()
-                      tsc.enable()
-                    end
-                  end)
-                )
-              end,
-              buffer = bufnr,
-            })
-          end
           return is_enabled
         end,
       })
