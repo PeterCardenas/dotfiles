@@ -26,7 +26,7 @@ return {
         previewers = {
           builtin = {
             treesitter = {
-              context = false,
+              context = true,
             },
           },
         },
