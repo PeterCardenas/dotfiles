@@ -176,6 +176,7 @@ return {
               globals = {
                 'require',
               },
+              unusedLocalExclude = { '_*' },
             },
           },
         },
