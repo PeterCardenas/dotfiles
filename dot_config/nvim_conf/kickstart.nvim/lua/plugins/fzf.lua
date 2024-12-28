@@ -23,6 +23,13 @@ return {
           height = 0.98,
           width = 0.98,
         },
+        previewers = {
+          builtin = {
+            treesitter = {
+              context = false,
+            },
+          },
+        },
         files = {
           git_icons = false,
           -- TODO: Make this hide ignored files by default once this can be toggled.
