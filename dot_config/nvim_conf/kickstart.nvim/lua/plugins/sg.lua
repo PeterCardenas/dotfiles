@@ -23,7 +23,7 @@ return {
       vim.api.nvim_create_autocmd('BufEnter', {
         once = true,
         pattern = 'copilot-chat',
-        callback = function(args)
+        callback = function(_args)
           vim.cmd('vert rightbelow wincmd L')
           -- Get the total width of the Neovim window
           -- Does not work rn
