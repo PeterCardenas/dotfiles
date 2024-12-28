@@ -91,6 +91,14 @@ return {
               winblend = 0,
             },
           },
+          integration = {
+            ['nvim-tree'] = {
+              enable = false,
+            },
+            ['xcodebuild-nvim'] = {
+              enable = false,
+            },
+          },
         })
       end,
     },
