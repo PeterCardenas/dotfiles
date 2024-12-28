@@ -31,6 +31,7 @@ require('lazy').setup({
     enabled = false,
     notify = false,
   },
+  install = { colorscheme = { 'tokyonight' } },
   ui = {
     border = 'rounded',
     title = 'Lazy Plugins',
