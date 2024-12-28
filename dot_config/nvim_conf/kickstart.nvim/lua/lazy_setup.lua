@@ -32,6 +32,22 @@ require('lazy').setup({
     notify = false,
   },
   install = { colorscheme = { 'tokyonight' } },
+  performance = {
+    cache = {
+      enabled = true,
+    },
+    rtp = {
+      disabled_plugins = {
+        'gzip',
+        'rplugin',
+        'netrwPlugin',
+        'tarPlugin',
+        'tohtml',
+        'tutor',
+        'zipPlugin',
+      },
+    },
+  },
   ui = {
     border = 'rounded',
     title = 'Lazy Plugins',
