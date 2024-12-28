@@ -77,14 +77,14 @@ return {
           {
             debug_name = 'github_issues_and_pr',
             trigger_character = '#',
-            action = function(sources, trigger_char, callback, params, git_info)
+            action = function(sources, trigger_char, callback, _params, git_info)
               return sources.github:get_issues_and_prs(callback, git_info, trigger_char)
             end,
           },
           {
             debug_name = 'github_mentions',
             trigger_character = '@',
-            action = function(sources, trigger_char, callback, params, git_info)
+            action = function(sources, trigger_char, callback, _params, git_info)
               return sources.github:get_mentions(callback, git_info, trigger_char)
             end,
           },
@@ -119,8 +119,8 @@ return {
           {
             name = 'nvim_lsp',
             ---@param entry cmp.Entry
-            ---@param context cmp.Context
-            entry_filter = function(entry, context)
+            ---@param _context cmp.Context
+            entry_filter = function(entry, _context)
               -- Gets rid of noisy buffer word completion.
               return entry.completion_item.kind ~= require('cmp.types').lsp.CompletionItemKind.Text
             end,
