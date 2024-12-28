@@ -279,6 +279,7 @@ return {
           bash = { glyph = '', hl = 'MiniIconsGrey' },
           sh = { glyph = '', hl = 'MiniIconsGrey' },
           spectre_panel = { glyph = '', hl = 'MiniIconsOrange' },
+          ghostty = { glyph = '󰒓', hl = 'MiniIconsCyan' },
         },
         file = {
           ['.babelrc'] = { glyph = '󰨥', hl = 'MiniIconsYellow' },
