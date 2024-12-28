@@ -1,6 +1,7 @@
 # Ref:
 # https://github.com/mitchellh/ghostty/blob/main/src/config/Config.zig
 config-file = ?config_macbook
+config-file = ?config_linux
 
 font-family = "MonaspiceKr Nerd Font"
 font-family-bold-italic = "MonaspiceRn Nerd Font"
