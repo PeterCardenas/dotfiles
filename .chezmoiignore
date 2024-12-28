@@ -2,9 +2,10 @@ README.md
 .git-blame-ignore-revs
 setup.sh
 # Only add fishify for linux
-{{- if eq .chezmoi.os "linux" }}
+{{- if ne .chezmoi.os "linux" }}
 .local/bin/fishify
+.config/ghostty/config_linux
 {{- end }}
-{{- if eq .chezmoi.os "macos" }}
+{{- if ne .chezmoi.os "macos" }}
 .config/ghostty/config_macbook
 {{- end }}
