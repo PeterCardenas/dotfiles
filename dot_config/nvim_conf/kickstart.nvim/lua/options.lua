@@ -190,6 +190,16 @@ vim.diagnostic.config({
   },
 })
 
+-- Expand ghostty filetype for filename prefixed with "config"
+vim.api.nvim_create_autocmd({ 'BufRead', 'BufNewFile' }, {
+  pattern = '*/ghostty/config*',
+  callback = function(args)
+    ---@type number
+    local buf = args.buf
+    vim.api.nvim_set_option_value('filetype', 'ghostty', { buf = buf })
+  end,
+})
+
 -- Set highlight based on whether searching is done.
 vim.on_key(function(char)
   if vim.fn.mode() == 'n' then
