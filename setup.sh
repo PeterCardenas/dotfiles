@@ -163,6 +163,9 @@ function setup_unix() {
 	# Setup tmux plugin manager (tpm)
 	git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
+	# Add ghostty shaders
+	git clone https://github.com/m-ahdal/ghostty-shaders.git ~/thirdparty/ghostty-shaders
+
 	# Change login shell to fish
 	sudo chsh -s /usr/bin/fish
 
@@ -233,7 +236,7 @@ Host personal-github.com
 	IdentityFile ~/.ssh/id_ed25519_personal
 EOF
 	ssh-keygen -t ed25519 -C "111733365+PeterCardenas@users.noreply.github.com" -f "$HOME/.ssh/id_ed25519_personal"
-	gh auth login
+	gh auth login --git-protocol ssh --hostname github.com
 	gh ssh-key add "$HOME/.ssh/id_ed25519_personal.pub" --title "Automated ssh key upload"
 	chezmoi init --apply personal-github.com:PeterCardenas/dotfiles.git
 
