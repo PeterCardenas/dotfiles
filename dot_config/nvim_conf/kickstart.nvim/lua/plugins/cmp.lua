@@ -54,7 +54,10 @@ return {
     'hrsh7th/nvim-cmp',
     dependencies = {
       -- Git/GitHub completion
-      'petertriho/cmp-git',
+      {
+        'PeterCardenas/cmp-git',
+        branch = 'add-ssh-aliases-config',
+      },
 
       -- Emoji completion
       'hrsh7th/cmp-emoji',
@@ -68,6 +71,10 @@ return {
       require('cmp_git').setup({
         -- Enable completion for all filetypes to get them in comments.
         filetypes = { '*' },
+        ssh_aliases = {
+          ['personal-github.com'] = 'github.com',
+          ['work-github.com'] = 'github.com',
+        },
         github = {
           issues = {
             filter = 'subscribed',
