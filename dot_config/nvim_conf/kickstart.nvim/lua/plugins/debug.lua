@@ -4,6 +4,16 @@ end, {
   nargs = 0,
 })
 
+local function debug_nvim_lua()
+  require('osv').launch({ port = 8086 })
+end
+
+vim.api.nvim_create_user_command('DapDebugNvimLua', function()
+  debug_nvim_lua()
+end, {
+  nargs = 0,
+})
+
 -- Primarily focused on configuring the debugger for Go, but can
 -- be extended to other languages as well. That's why it's called
 ---@type LazyPluginSpec
@@ -25,7 +35,7 @@ return {
   lazy = true,
   keys = {
     {
-      '<F5>',
+      '<F4>',
       function()
         require('dap').continue()
       end,
@@ -51,14 +61,6 @@ return {
         require('dap').step_out()
       end,
       desc = 'Debug: Step Out',
-    },
-    {
-      '<F4>',
-      function()
-        require('osv').launch({ port = 8086 })
-      end,
-      desc = 'Launch debugee server',
-      remap = true,
     },
     {
       '<leader><leader>b',
