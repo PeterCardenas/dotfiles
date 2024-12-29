@@ -271,6 +271,7 @@ return {
       },
       zls = {},
       vimls = {},
+      glsl_analyzer = {},
     }
     local python_lsp_config = require('plugins.lsp.python').python_lsp_config()
     servers = require('utils.table').merge_tables(servers, python_lsp_config)
