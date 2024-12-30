@@ -36,6 +36,7 @@ local function setup_lazygit_buffer()
       vim.api.nvim_buf_set_option(bufnr, 'number', false)
       vim.api.nvim_buf_set_option(bufnr, 'foldcolumn', '0')
       vim.api.nvim_buf_set_option(bufnr, 'statuscolumn', '')
+      vim.api.nvim_buf_set_option(bufnr, 'buflisted', false)
       vim.api.nvim_create_autocmd('VimResized', {
         buffer = bufnr,
         callback = function()
