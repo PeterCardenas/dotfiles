@@ -227,6 +227,78 @@ return {
     lazy = true,
     config = function()
       local file_utils = require('utils.file')
+      -- Buildifier warnings in 7.3.1
+      local buildifier_warnings = {
+        'attr-applicable_licenses',
+        'attr-cfg',
+        'attr-license',
+        'attr-licenses',
+        'attr-non-empty',
+        'attr-output-default',
+        'attr-single-file',
+        'build-args-kwargs',
+        'bzl-visibility',
+        'confusing-name',
+        'constant-glob',
+        'ctx-actions',
+        'ctx-args',
+        'deprecated-function',
+        'depset-items',
+        'depset-iteration',
+        'depset-union',
+        'dict-concatenation',
+        'dict-method-named-arg',
+        'duplicated-name',
+        'filetype',
+        'function-docstring',
+        'function-docstring-args',
+        'function-docstring-header',
+        'function-docstring-return',
+        'git-repository',
+        'http-archive',
+        'integer-division',
+        'keyword-positional-params',
+        'list-append',
+        'load',
+        'module-docstring',
+        'name-conventions',
+        'native-android',
+        'native-build',
+        'native-cc',
+        'native-java',
+        'native-package',
+        'native-proto',
+        'native-py',
+        'no-effect',
+        'output-group',
+        'overly-nested-depset',
+        'package-name',
+        'package-on-top',
+        'positional-args',
+        'print',
+        'provider-params',
+        'redefined-variable',
+        'repository-name',
+        'return-value',
+        'rule-impl-return',
+        'skylark-comment',
+        'skylark-docstring',
+        'string-iteration',
+        'uninitialized',
+        'unnamed-macro',
+        'unreachable',
+        'unsorted-dict-items',
+        'unused-variable',
+      }
+      local ignored_buildifier_warnings = {
+        ['native-cc'] = true,
+      }
+      ---@type string[]
+      local filtered_buildifier_warnings = vim.tbl_filter(function(warning)
+        return ignored_buildifier_warnings[warning] == nil
+      end, buildifier_warnings)
+      local buildifier_warnings_arg = '--warnings=' .. table.concat(filtered_buildifier_warnings, ',')
+
       require('conform').setup({
         formatters_by_ft = {
           lua = { 'stylua' },
@@ -250,7 +322,7 @@ return {
             ---@type fun(self: conform.JobFormatterConfig, ctx: conform.Context): string|string[]
             args = function(_, ctx)
               local filetype = get_buildifier_filetype(ctx.buf)
-              return { '-lint=fix', '--warnings=all', '-warnings=-native-cc', '-type', filetype }
+              return { '-lint=fix', buildifier_warnings_arg, '-type', filetype }
             end,
           },
           golines = {
