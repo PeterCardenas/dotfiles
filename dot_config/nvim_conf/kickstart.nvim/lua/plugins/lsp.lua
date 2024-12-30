@@ -272,6 +272,12 @@ return {
       zls = {},
       vimls = {},
       glsl_analyzer = {},
+      starpls = {
+        cmd = { 'starpls', 'server', '--experimental_infer_ctx_attributes', '--experimental_use_code_flow_analysis' },
+        cmd_env = {
+          RUST_BACKTRACE = 'full',
+        },
+      },
     }
     local python_lsp_config = require('plugins.lsp.python').python_lsp_config()
     servers = require('utils.table').merge_tables(servers, python_lsp_config)
