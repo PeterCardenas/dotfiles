@@ -47,10 +47,21 @@ local function setup_lazygit_buffer()
         buffer = bufnr,
         callback = function()
           vim.cmd('startinsert')
-          -- Focus the files panel and refresh it.
-          -- TODO: Wait for the lazygit UI to render before refreshing.
-          vim.api.nvim_feedkeys('2R', 't', false)
           correct_size()
+          -- Wait for lazygit to load
+          local timer = vim.loop.new_timer()
+          timer:start(
+            0,
+            100,
+            vim.schedule_wrap(function()
+              local last_line_content = vim.api.nvim_buf_get_lines(bufnr, -2, -1, false)[1]
+              if last_line_content:match('Donate') then
+                -- Focus the files panel, go to the top, and refresh it.
+                vim.api.nvim_feedkeys('2<R', 't', false)
+                timer:stop()
+              end
+            end)
+          )
         end,
       })
     end,
