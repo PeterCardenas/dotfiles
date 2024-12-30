@@ -1,35 +1,5 @@
 local LspMethod = vim.lsp.protocol.Methods
 
----Add document highlight of the current word on hover.
----@param client vim.lsp.Client
----@param bufnr integer
-local function highlight_symbol(client, bufnr)
-  if not client.supports_method(LspMethod.textDocument_documentHighlight) then
-    return
-  end
-  local filetype = vim.api.nvim_get_option_value('filetype', { buf = bufnr })
-  -- fish-lsp document highlight sucks
-  if filetype == 'fish' then
-    return
-  end
-
-  local group = vim.api.nvim_create_augroup('highlight_symbol', { clear = true })
-
-  vim.api.nvim_clear_autocmds({ buffer = bufnr, group = group })
-
-  vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
-    group = group,
-    buffer = bufnr,
-    callback = vim.lsp.buf.document_highlight,
-  })
-
-  vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
-    group = group,
-    buffer = bufnr,
-    callback = vim.lsp.buf.clear_references,
-  })
-end
-
 local M = {}
 
 ---Configures a language server after it attaches to a buffer.
@@ -200,8 +170,6 @@ function M.on_attach(client, bufnr)
       return luasnip.expand_or_jump()
     end
   end, { buffer = bufnr })
-
-  highlight_symbol(client, bufnr)
 
   if client.supports_method(LspMethod.textDocument_documentLink) then
     -- Trigger setup
