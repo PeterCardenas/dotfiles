@@ -219,6 +219,29 @@ vim.api.nvim_create_user_command('GHFile', function()
   )
 end, { nargs = 0, desc = 'Open/Copy GitHub file link on master for current file', range = true })
 
+vim.api.nvim_create_user_command('CreatePR', function()
+  require('octo.commands').create_pr()
+end, { nargs = 0, desc = 'Create a PR for the current branch' })
+
+vim.api.nvim_create_user_command('EditPR', function()
+  async.void(
+    ---@async
+    function()
+      local success, output = require('utils.shell').async_cmd('gh', { 'pr', 'view', '--json=number', '--jq=.number' })
+      if not success then
+        vim.schedule(function()
+          vim.notify('Could not find PR for current branch\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
+        end)
+        return
+      end
+      local pr_number = output[1]
+      vim.schedule(function()
+        require('octo.utils').get_pull_request(pr_number)
+      end)
+    end
+  )
+end, { nargs = 0, desc = 'Edit the PR for the current branch' })
+
 local nmap = require('utils.keymap').nmap
 
 nmap('Show blame for current line', 'gh', function()
@@ -260,6 +283,8 @@ return {
           ['personal-github.com'] = 'github.com',
           ['work-github.com'] = 'github.com',
         },
+        github_hostname = 'github.com',
+        remotes = { 'origin', 'upstream' },
         picker = 'fzf-lua',
         default_merge_method = 'rebase',
         suppress_missing_scope = {
