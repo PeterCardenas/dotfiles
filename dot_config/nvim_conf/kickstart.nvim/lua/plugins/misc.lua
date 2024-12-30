@@ -827,7 +827,6 @@ return {
         -- scroll = { enabled = true },
         input = { enabled = true },
         quickfile = { enabled = true },
-        -- TODO: Double check if need to disable for fish filetype
         words = { enabled = true },
         rename = { enabled = true },
         -- TODO: Re-enable when profiler is equal or better than profile.nvim
