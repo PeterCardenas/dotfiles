@@ -64,16 +64,6 @@ function M.setup(capabilities)
   end
 
   ---@type lspconfig.Config
-  local starpls_config = {
-    capabilities = capabilities,
-    cmd = { 'starpls', 'server', '--experimental_infer_ctx_attributes', '--experimental_use_code_flow_analysis' },
-    cmd_env = {
-      RUST_BACKTRACE = 'full',
-    },
-  }
-  require('lspconfig').starpls.setup(starpls_config)
-
-  ---@type lspconfig.Config
   local sourcekit_config = {
     capabilities = capabilities,
     filetypes = { 'swift', 'objc', 'objcpp' },
