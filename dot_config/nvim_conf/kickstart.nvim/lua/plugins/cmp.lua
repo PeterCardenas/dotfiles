@@ -58,10 +58,7 @@ return {
     'hrsh7th/nvim-cmp',
     dependencies = {
       -- Git/GitHub completion
-      {
-        'PeterCardenas/cmp-git',
-        branch = 'add-ssh-aliases-config',
-      },
+      'petertriho/cmp-git',
 
       -- Emoji completion
       'hrsh7th/cmp-emoji',
