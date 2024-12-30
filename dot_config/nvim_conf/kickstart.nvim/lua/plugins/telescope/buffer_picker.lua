@@ -89,10 +89,6 @@ function M.find_buffers()
     if bufnr == vim.api.nvim_get_current_buf() then
       return false
     end
-    local bufname = vim.api.nvim_buf_get_name(bufnr)
-    if bufname:match('term://.*lazygit') then
-      return false
-    end
 
     return true
   end, vim.api.nvim_list_bufs())
