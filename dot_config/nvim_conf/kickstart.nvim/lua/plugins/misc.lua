@@ -778,4 +778,63 @@ return {
       require('zen-mode').setup()
     end,
   },
+
+  {
+    'folke/snacks.nvim',
+    priority = 1009,
+    lazy = false,
+    config = function()
+      -- ---@param key string
+      -- ---@param action fun(): nil
+      -- local function keymap(key, action)
+      --   vim.keymap.set({ 'n', 'v' }, key, action, { noremap = true, silent = true })
+      -- end
+      -- ---@param fraction number
+      -- local function get_lines_from_win_fraction(fraction)
+      --   local winid = vim.api.nvim_get_current_win()
+      --   local height_fraction = fraction * vim.api.nvim_win_get_height(winid)
+      --   local lines
+      --   if height_fraction < 0 then
+      --     lines = -math.floor(math.abs(height_fraction) + 0.5)
+      --   else
+      --     lines = math.floor(height_fraction + 0.5)
+      --   end
+      --   if lines == 0 then
+      --     return fraction < 0 and -1 or 1
+      --   end
+      --   return lines
+      -- end
+      -- keymap('<C-e>', function()
+      --   local lines = get_lines_from_win_fraction(0.1)
+      --   local ctrl_e = vim.api.nvim_replace_termcodes('<C-e>', false, false, true)
+      --   vim.cmd.normal({ bang = true, args = { tostring(lines) .. ctrl_e } })
+      -- end)
+      -- keymap('<C-y>', function()
+      --   local lines = get_lines_from_win_fraction(0.1)
+      --   local ctrl_y = vim.api.nvim_replace_termcodes('<C-y>', false, false, true)
+      --   vim.cmd('normal! ' .. tostring(lines) .. ctrl_y)
+      -- end)
+      vim.api.nvim_create_autocmd('User', {
+        pattern = 'MiniFilesActionRename',
+        callback = function(event)
+          Snacks.rename.on_rename_file(event.data.from, event.data.to)
+        end,
+      })
+      require('snacks').setup({
+        -- TODO: Re-enable when indent is equal or better than indent-blankline
+        -- indent = { enabled = true },
+        -- TODO: Re-enable when scroll is equal or better than neoscroll
+        -- scroll = { enabled = true },
+        input = { enabled = true },
+        quickfile = { enabled = true },
+        -- TODO: Double check if need to disable for fish filetype
+        words = { enabled = true },
+        rename = { enabled = true },
+        -- TODO: Re-enable when profiler is equal or better than profile.nvim
+        -- profiler = { enabled = true },
+        -- TODO: Re-enable when dashboard is equal or better than alpha.nvim
+        -- dashboard = { enabled = true },
+      })
+    end,
+  },
 }
