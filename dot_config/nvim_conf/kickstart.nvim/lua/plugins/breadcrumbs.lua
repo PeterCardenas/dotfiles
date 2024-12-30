@@ -24,7 +24,8 @@ local DROPBAR_CONFIG = {
           sources.markdown,
         }
       end
-      if vim.bo[buf].buftype == 'terminal' then
+      local bufname = vim.api.nvim_buf_get_name(buf)
+      if vim.bo[buf].buftype == 'terminal' or bufname:match('octo://') then
         return {
           sources.terminal,
         }
