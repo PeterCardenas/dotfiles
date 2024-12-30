@@ -270,8 +270,7 @@ end, { desc = 'Jump to previous hunk' })
 return {
   {
     -- Adds GitHub integration
-    'PeterCardenas/octo.nvim',
-    branch = 'fix-git-str-match',
+    'pwntester/octo.nvim',
     cmd = { 'Octo' },
     dependencies = {
       'nvim-lua/plenary.nvim',
