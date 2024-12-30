@@ -232,7 +232,13 @@ return {
           lua = { 'stylua' },
           go = { 'golines' },
           bzl = { 'buildifier' },
-          json = { 'jq' },
+          json = function(bufnr)
+            local bufname = vim.api.nvim_buf_get_name(bufnr)
+            if vim.endswith(bufname, 'lazy-lock.json') then
+              return {}
+            end
+            return { 'jq' }
+          end,
           jsonc = { 'jq' },
           fish = { 'fish_indent' },
           sh = { 'shfmt' },
