@@ -58,6 +58,8 @@ function M.on_attach(client, bufnr)
     -- Defer to fish_indent for formatting.
     client.server_capabilities.documentFormattingProvider = false
     client.server_capabilities.documentRangeFormattingProvider = false
+    -- Document highlights are pretty bad in fish-lsp (highlights the entire scope, e.g. if, functions)
+    client.server_capabilities.documentHighlightProvider = false
   end
   if client.name == 'bzl' then
     -- Prefer starpls for definition.
