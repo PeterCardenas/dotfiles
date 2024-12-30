@@ -23,7 +23,8 @@ return {
       highlight = {
         enable = true,
         disable = function(lang, bufnr)
-          return (lang == 'yaml' and vim.api.nvim_buf_get_name(bufnr):match('template%.yaml$')) or lang == 'tmux'
+          -- TODO: Maybe use dockerfile treesitter highlighting when the following is fixed: https://github.com/camdencheek/tree-sitter-dockerfile/issues/51
+          return (lang == 'yaml' and vim.api.nvim_buf_get_name(bufnr):match('template%.yaml$')) or lang == 'tmux' or lang == 'dockerfile'
         end,
       },
       indent = { enable = true },
