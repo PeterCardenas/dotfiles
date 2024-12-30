@@ -17,7 +17,6 @@
 function rg_fzf_files
     set INITIAL_QUERY $argv
     set -lx FZF_DEFAULT_OPTS "--height 40% --reverse --bind=ctrl-z:ignore $FZF_DEFAULT_OPTS"
-
     set result (
             rg --files --hidden 2> /dev/null | \
             fzf --query "$INITIAL_QUERY" \
@@ -32,6 +31,7 @@ function rg_fzf_files
 end
 
 function fzf-file-widget -d "List files and folders"
+    set cmd (commandline -o)
     commandline -i (rg_fzf_files)
     commandline -f repaint
 end
