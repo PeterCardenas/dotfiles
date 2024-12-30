@@ -11,6 +11,10 @@ return {
     event = { 'InsertEnter' },
   },
   {
+    'amarakon/nvim-cmp-fonts',
+    ft = 'ghostty',
+  },
+  {
     -- Snippet Engine & its associated nvim-cmp source
     'L3MON4D3/LuaSnip',
     event = { 'InsertEnter' },
@@ -64,6 +68,9 @@ return {
 
       -- omnifunc completion
       'hrsh7th/cmp-omni',
+
+      -- File path completion
+      'https://codeberg.org/FelipeLema/cmp-async-path',
     },
     event = { 'InsertEnter', 'CmdlineEnter' },
     config = function()
@@ -136,10 +143,16 @@ return {
           { name = 'luasnip' },
           { name = 'emoji' },
           { name = 'fish' },
+          { name = 'async_path' },
           {
             name = 'lazydev',
             group_index = 0, -- set group index to 0 to skip loading LuaLS completions
           },
+        },
+      })
+      cmp.setup.filetype('ghostty', {
+        sources = {
+          { name = 'fonts', option = { space_filter = '-' } },
         },
       })
 
