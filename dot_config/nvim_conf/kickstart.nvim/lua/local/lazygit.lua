@@ -52,7 +52,7 @@ local function setup_lazygit_buffer()
           local timer = vim.loop.new_timer()
           timer:start(
             0,
-            100,
+            50,
             vim.schedule_wrap(function()
               local last_line_content = vim.api.nvim_buf_get_lines(bufnr, -2, -1, false)[1]
               if last_line_content:match('Donate') then
