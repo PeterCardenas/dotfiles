@@ -20,9 +20,7 @@ function rg_fzf_files
     set result (
             rg --files --hidden 2> /dev/null | \
             fzf --query "$INITIAL_QUERY" \
-                --bind "change:reload:sleep 0.1; rg --files --hidden 2> /dev/null | fzf --query {q} || true" \
-                --preview 'bat --style=numbers --color=always --line-range :500 {}' \
-                --preview-window 'right:60%'
+                --bind "change:reload:sleep 0.1; rg --files --hidden 2> /dev/null | fzf --query {q} || true"
         )
 
     if test -n "$result"
