@@ -33,6 +33,7 @@
 	manyFiles = true
 [rebase]
 	updateRefs = true
+	autoStash = true
 [commit]
 	gpgSign = true
 [init]
