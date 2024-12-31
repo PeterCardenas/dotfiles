@@ -407,6 +407,7 @@ return {
         '--no-color-output',
         '--no-error-summary',
         '--no-pretty',
+        '--follow-imports',
         '--config-file',
         mypy_config_path,
       }
