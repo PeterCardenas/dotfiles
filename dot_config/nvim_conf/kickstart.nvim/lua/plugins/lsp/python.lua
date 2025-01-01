@@ -210,6 +210,12 @@ function M.python_lsp_config()
             if diagnostic.code == 'reportMissingImports' then
               should_filter = false
             end
+            local message = diagnostic.message
+            if type(message) == 'string' then
+              if message:match('^"_%w+" is not accessed$') then
+                should_filter = false
+              end
+            end
             if should_filter then
               table.insert(filtered_diagnostics, diagnostic)
             end
