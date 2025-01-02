@@ -207,7 +207,11 @@ function M.python_lsp_config()
           for _, diagnostic in ipairs(diagnostics) do
             local should_filter = true
             -- TODO: Remove this when pyright can read venvPath
-            if diagnostic.code == 'reportMissingImports' then
+            if
+              diagnostic.code == 'reportMissingImports'
+              or diagnostic.code == 'reportAttributeAccessIssue'
+              or diagnostic.code == 'reportMissingModuleSource'
+            then
               should_filter = false
             end
             local message = diagnostic.message
