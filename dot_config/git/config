@@ -34,6 +34,9 @@
 [rebase]
 	updateRefs = true
 	autoStash = true
+[rerere]
+	enabled = true
+	autoUpdate = true
 [commit]
 	gpgSign = true
 [init]
