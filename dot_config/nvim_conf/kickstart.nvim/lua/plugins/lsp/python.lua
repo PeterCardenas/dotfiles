@@ -216,7 +216,7 @@ function M.python_lsp_config()
             end
             local message = diagnostic.message
             if type(message) == 'string' then
-              if message:match('^"_%w+" is not accessed$') then
+              if message:match('^"_[%w_]+" is not accessed$') then
                 should_filter = false
               end
             end
