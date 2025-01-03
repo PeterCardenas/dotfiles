@@ -245,7 +245,8 @@ end, { nargs = 0, desc = 'Edit the PR for the current branch' })
 local nmap = require('utils.keymap').nmap
 
 nmap('Show blame for current line', 'gh', function()
-  require('gitsigns.actions').blame_line()
+  local config = require('gitsigns.config').config
+  require('gitsigns.actions').blame_line(config.current_line_blame_opts)
 end)
 vim.keymap.set({ 'n', 'v' }, '<leader>gp', function()
   require('gitsigns.actions').preview_hunk()
@@ -310,6 +311,9 @@ return {
         -- Currently causing performance issues with gopls, so disabled for now.
         -- Hint: Maybe inlay hints are causing this issue.
         current_line_blame = false,
+        current_line_blame_opts = {
+          extra_opts = { '-C' },
+        },
         on_attach = function(bufnr) end,
       })
     end,
