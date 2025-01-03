@@ -8,9 +8,14 @@ function M.find_recent_files()
   end
 end
 
+local function common_rg_args()
+  -- TODO Share with rg_words_cmd
+  return '--hidden -g "!.git" -g "!.mypy_cache" -g "!.ccls_cache"'
+end
+
 ---@param show_ignore boolean
 function M.rg_files_cmd(show_ignore)
-  return 'rg --files --color=never --hidden -g "!.git"' .. (show_ignore and ' --no-ignore' or '')
+  return 'rg --files --color=never ' .. common_rg_args() .. (show_ignore and ' --no-ignore' or '')
 end
 
 ---@param show_ignore boolean
