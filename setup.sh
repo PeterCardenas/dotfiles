@@ -194,6 +194,7 @@ function setup_unix() {
 		tree-sitter-cli
 		silicon
 		yazi-fm yazi-cli
+		aichat
 	)
 	cargo binstall --no-confirm "${rust_packages[@]}"
 	# --features isn't supported by cargo binstall
