@@ -134,7 +134,7 @@ function setup_mac() {
 		git-lfs
 		gnupg2
 		go
-		vim
+		vim +python311
 		wget
 		# Needed for building Neovim, among other things
 		cmake gettext-runtime
