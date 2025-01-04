@@ -14,7 +14,7 @@ local function apply_filepath(filepath)
   end
   local relative_filepath = filepath:sub(#chezmoi_root + 1)
   -- Ignore files that should never be applied
-  if relative_filepath:match('^%.git') then
+  if relative_filepath:match('^%.git') or relative_filepath:match('^%.chezmoi') then
     return false, {}
   end
   -- Do not apply ignored files.
