@@ -311,9 +311,6 @@ return {
         -- Currently causing performance issues with gopls, so disabled for now.
         -- Hint: Maybe inlay hints are causing this issue.
         current_line_blame = false,
-        current_line_blame_opts = {
-          extra_opts = { '-C' },
-        },
         on_attach = function(bufnr) end,
       })
     end,
