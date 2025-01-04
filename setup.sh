@@ -200,6 +200,9 @@ function setup_unix() {
 	# --features isn't supported by cargo binstall
 	cargo install --features 'pcre2' ripgrep
 
+	# Add aichat completions
+	curl -L https://github.com/sigoden/aichat/raw/refs/heads/main/scripts/completions/aichat.fish -o ~/.config/fish/completions/aichat.fish
+
 	# Setup delta/bat theme
 	mkdir -p "$(bat --config-dir)/themes"
 	pushd "$(bat --config-dir)/themes" || exit 1
