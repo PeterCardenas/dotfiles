@@ -503,6 +503,10 @@ end
 function M.format(bufnr)
   local filename = vim.api.nvim_buf_get_name(bufnr)
   local git_root_dir = require('utils.file').get_git_root()
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    vim.notify('Cannot format invalid buffer', vim.log.levels.ERROR)
+    return
+  end
   if git_root_dir == nil or not require('utils.file').file_in_directory(filename, git_root_dir) then
     vim.notify('Cannot format files outside of the git root', vim.log.levels.ERROR)
     return
