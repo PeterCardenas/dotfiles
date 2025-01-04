@@ -1,24 +1,23 @@
 local M = {}
 
--- TODO(@PeterCardenas): Figure out how to use variables for these colors.
--- link currently does not work.
-
 function M.set_focused_colors()
-  vim.cmd([[highlight Normal guibg=#24283b]])
-  vim.cmd([[highlight NormalSB guibg=#24283b]])
-  vim.cmd([[highlight NormalNC guibg=#24283b]])
-  vim.cmd([[highlight NormalFloat guibg=#24283b]])
-  vim.cmd([[highlight CursorLine guibg=#2a2e40]])
-  vim.api.nvim_set_hl(0, 'TreesitterContextSeparator', { foreground = '#3b4261', background = '#24283b' })
+  local background = '#24283b'
+  vim.api.nvim_set_hl(0, 'Normal', { background = background })
+  vim.api.nvim_set_hl(0, 'NormalSB', { background = background })
+  vim.api.nvim_set_hl(0, 'NormalNC', { background = background })
+  vim.api.nvim_set_hl(0, 'NormalFloat', { background = background })
+  vim.api.nvim_set_hl(0, 'CursorLine', { background = '#2a2e40' })
+  vim.api.nvim_set_hl(0, 'TreesitterContextSeparator', { foreground = '#3b4261', background = background })
 end
 
 function M.set_unfocused_colors()
-  vim.cmd([[highlight Normal guibg=#1f2335]])
-  vim.cmd([[highlight NormalSB guibg=#1f2335]])
-  vim.cmd([[highlight NormalNC guibg=#1f2335]])
-  vim.cmd([[highlight NormalFloat guibg=#1f2335]])
-  vim.cmd([[highlight CursorLine guibg=#1f2335]])
-  vim.api.nvim_set_hl(0, 'TreesitterContextSeparator', { foreground = '#3b4261', background = '#1f2335' })
+  local background = '#1f2335'
+  vim.api.nvim_set_hl(0, 'Normal', { background = background })
+  vim.api.nvim_set_hl(0, 'NormalSB', { background = background })
+  vim.api.nvim_set_hl(0, 'NormalNC', { background = background })
+  vim.api.nvim_set_hl(0, 'NormalFloat', { background = background })
+  vim.api.nvim_set_hl(0, 'CursorLine', { background = background })
+  vim.api.nvim_set_hl(0, 'TreesitterContextSeparator', { foreground = '#3b4261', background = background })
 end
 
 return M
