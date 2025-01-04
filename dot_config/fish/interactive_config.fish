@@ -114,7 +114,6 @@ abbr -a aptinst "sudo nala install"
 abbr -a aptrm "sudo nala remove"
 
 # git aliases
-# TODO: Execute all commands with -S.
 abbr -a gcom "git checkout master"
 abbr -a gpo "git pull -S origin"
 abbr -a gp "git push"

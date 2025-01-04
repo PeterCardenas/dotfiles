@@ -127,8 +127,6 @@ function M.on_attach(client, bufnr)
   nmap('gd', function()
     require('trouble').open('lsp_definitions')
   end, '[G]oto [D]efinition')
-  -- The fname option here is not good enough.
-  -- TODO Find a way to display path in a smart way.
   nmap('gr', function()
     require('trouble').open('lsp_references')
   end, '[G]oto [R]eferences')
