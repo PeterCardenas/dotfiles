@@ -1,11 +1,13 @@
 README.md
 .git-blame-ignore-revs
 setup.sh
-# Only add fishify for linux
+# Ignore config files specific to linux
 {{- if ne .chezmoi.os "linux" }}
 .local/bin/fishify
 .config/ghostty/config_linux
+.local/bin/xdg-open
 {{- end }}
+# Ignore config files specific to macos
 {{- if ne .chezmoi.os "macos" }}
 .config/ghostty/config_macbook
 {{- end }}
