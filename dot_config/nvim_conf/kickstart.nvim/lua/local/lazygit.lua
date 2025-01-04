@@ -83,7 +83,6 @@ function M.open_lazygit()
     return
   end
   setup_lazygit_buffer()
-  -- TODO: Open term in a persistent buffer in a floating window instead.
   vim.cmd('term lazygit')
 end
 
@@ -92,18 +91,6 @@ function M.set_keymap()
   nmap('Open LazyGit in buffer', 'gg', M.open_lazygit)
   -- Close the lazygit buffer when exiting Neovim.
   -- When restoring a session the lazygit buffer isn't created correctly.
-  -- TODO causes neovim to hang when exiting.
-  -- vim.api.nvim_create_autocmd('VimLeavePre', {
-  --   callback = function()
-  --     local lazygit_bufnr = vim.iter(vim.api.nvim_list_bufs()):find(function(bufnr) ---@param bufnr integer
-  --       local bufname = vim.api.nvim_buf_get_name(bufnr)
-  --       return bufname:match('term://.*lazygit')
-  --     end)
-  --     if lazygit_bufnr ~= nil then
-  --       require('bufdelete').bufdelete(lazygit_bufnr)
-  --     end
-  --   end,
-  -- })
   vim.api.nvim_create_autocmd('BufAdd', {
     pattern = '*COMMIT_EDITMSG',
     callback = function(args)
