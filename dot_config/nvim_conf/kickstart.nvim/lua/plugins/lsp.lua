@@ -167,6 +167,7 @@ return {
         },
       },
       lua_ls = {
+        enabled = not require('utils.config').USE_RUST_LUA_LS,
         settings = {
           Lua = {
             workspace = {
