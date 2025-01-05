@@ -58,7 +58,7 @@ return {
     'hrsh7th/nvim-cmp',
     dependencies = {
       -- Git/GitHub completion
-      'petertriho/cmp-git',
+      { 'PeterCardenas/cmp-git', branch = 'working-state' },
 
       -- Emoji completion
       'hrsh7th/cmp-emoji',
@@ -81,15 +81,19 @@ return {
         },
         github = {
           issues = {
-            filter = 'subscribed',
+            filter = 'assigned',
+            limit = 100,
+          },
+          mentions = {
+            limit = math.huge,
           },
         },
         trigger_actions = {
           {
-            debug_name = 'github_issues_and_pr',
+            debug_name = 'github_issues',
             trigger_character = '#',
             action = function(sources, trigger_char, callback, _params, git_info)
-              return sources.github:get_issues_and_prs(callback, git_info, trigger_char)
+              return sources.github:get_issues(callback, git_info, trigger_char)
             end,
           },
           {
