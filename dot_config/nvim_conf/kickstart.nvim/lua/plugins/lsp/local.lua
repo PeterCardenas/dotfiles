@@ -6,7 +6,16 @@ function M.setup(capabilities)
   -- Setup language servers found locally.
   -- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
   ---@type table<string, lspconfig.Config>
-  local custom_servers = {}
+  local custom_servers = {
+    emmylua_ls = {
+      enabled = vim.fn.executable('emmylua_ls') == 1 and require('utils.config').USE_RUST_LUA_LS,
+      cmd = { 'emmylua_ls' },
+      filetypes = { 'lua' },
+      default_config = {
+        root_dir = require('lspconfig.util').root_pattern('.git'),
+      },
+    },
+  }
 
   ---@param server_name string
   local function setup_server(server_name)
