@@ -77,7 +77,7 @@ M.DISABLED_PYLINT_RULES = {
   'logging-too-many-args',
 }
 
----@return table<string, lspconfig.Config>
+---@return table<string, custom.LspConfig>
 local function pylsp_config()
   -- The following are rules that we want from pylint, but are not supported elsewhere.
   -- 'trailing-newlines'
@@ -124,7 +124,7 @@ local function pylsp_config()
   }
 end
 
----@return table<string, lspconfig.Config>
+---@return table<string, custom.LspConfig>
 local function ruff_lsp_config()
   local additional_rules = {
     'D', -- pydocstyle: https://docs.astral.sh/ruff/rules/#pydocstyle-d
@@ -173,9 +173,9 @@ local function ruff_lsp_config()
   }
 end
 
----@return table<string, lspconfig.Config>
+---@return table<string, custom.LspConfig>
 function M.python_lsp_config()
-  ---@type table<string, lspconfig.Config>
+  ---@type table<string, custom.LspConfig>
   local server_configs = {
     -- Fastest lsp, but not feature rich enough.
     pylyzer = {
