@@ -196,6 +196,7 @@ function M.python_lsp_config()
       },
       -- Use for debugging pyright.
       -- cmd = { os.getenv('HOME') .. '/thirdparty/pyright/packages/pyright/langserver.index.js', '--stdio' },
+      -- TODO: Add code action handle for adding an import. This involves sending a completion request and resolving the matching completion that results in auto-import.
       handlers = {
         ---@param _ lsp.ResponseError
         ---@param result lsp.PublishDiagnosticsParams
