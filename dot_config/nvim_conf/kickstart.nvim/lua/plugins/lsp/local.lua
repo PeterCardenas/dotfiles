@@ -42,13 +42,13 @@ function M.setup(capabilities)
     setup_server(server_name)
   end
 
-  ---@type lspconfig.Config
+  ---@type custom.LspConfig
   local fish_lsp_config = {
     capabilities = capabilities,
   }
   require('lspconfig').fish_lsp.setup(fish_lsp_config)
 
-  ---@type lspconfig.Config
+  ---@type custom.LspConfig
   local bazelrc_lsp_config = {
     capabilities = capabilities,
     cmd_env = {
@@ -64,7 +64,7 @@ function M.setup(capabilities)
     },
   })
   if not require('utils.config').USE_CLANGD then
-    ---@type lspconfig.Config
+    ---@type custom.LspConfig
     local ccls_config = {
       capabilities = ccls_capabilities,
       offset_encoding = 'utf-16',
@@ -72,14 +72,14 @@ function M.setup(capabilities)
     require('lspconfig').ccls.setup(ccls_config)
   end
 
-  ---@type lspconfig.Config
+  ---@type custom.LspConfig
   local sourcekit_config = {
     capabilities = capabilities,
     filetypes = { 'swift', 'objc', 'objcpp' },
   }
   require('lspconfig').sourcekit.setup(sourcekit_config)
 
-  ---@type lspconfig.Config
+  ---@type custom.LspConfig
   local protols_config = {
     capabilities = capabilities,
   }

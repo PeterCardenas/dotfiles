@@ -2,6 +2,9 @@
 
 -- local LspMethod = vim.lsp.protocol.Methods
 
+--- @class custom.LspConfig : lspconfig.Config
+--- @field cmd? string[]|fun(dispatchers: vim.lsp.rpc.Dispatchers): vim.lsp.rpc.PublicClient
+
 -- Removes default behavior of autoformatting on save for zig
 vim.api.nvim_create_autocmd('BufEnter', {
   pattern = '*.zig',
@@ -27,9 +30,9 @@ vim.api.nvim_create_autocmd('LspAttach', {
   end,
 })
 
----@return lspconfig.Config
+---@return custom.LspConfig
 local function gopls_config()
-  --- @type lspconfig.Config
+  --- @type custom.LspConfig
   local config = {
     -- Disabled for performance reasons.
     -- Reference: https://github.com/neovim/neovim/issues/23291
@@ -116,7 +119,7 @@ return {
     local tsserver_lib = pnpm_home ~= nil and pnpm_home .. '/global/5/node_modules/typescript/lib' or ''
     -- Enable the following language servers
     -- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
-    ---@type table<string, lspconfig.Config>
+    ---@type table<string, custom.LspConfig>
     local servers = {
       clangd = {
         enabled = clangd_enabled and require('utils.config').USE_CLANGD,
@@ -296,7 +299,8 @@ return {
     local mason_lspconfig = require('mason-lspconfig')
 
     mason_lspconfig.setup({
-      ensure_installed = vim.tbl_keys(servers),
+      ensure_installed = {},
+      automatic_installation = true,
     })
 
     mason_lspconfig.setup_handlers({
