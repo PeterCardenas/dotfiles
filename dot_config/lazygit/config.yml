@@ -59,6 +59,7 @@ disableStartupPopups: true
 quitOnTopLevelReturn: true
 os:
   editPreset: 'nvim-remote'
+  # TODO: Directly calling nvim or any other editor doesn't work on MacOS
   edit: '[ -z "$NVIM" ] && (nvim -- {{filename}}) || (nvim --server "$NVIM" --remote-expr "execute(\"lua vim.cmd([[e {{filename}}]])\")")'
   editAtLine: '[ -z "$NVIM" ] && (nvim +{{line}} -- {{filename}}) || (nvim --server "$NVIM" --remote-expr "execute(\"lua vim.cmd([[e +{{line}} {{filename}}]])\")")'
   openDirInEditor: '[ -z "$NVIM" ] && (nvim -- {{dir}}) || (nvim --server "$NVIM" --remote-expr "execute(\"lua vim.cmd([[e {{dir}}]])\")")'
