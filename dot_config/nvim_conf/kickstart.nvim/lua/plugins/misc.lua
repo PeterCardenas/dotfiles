@@ -246,6 +246,17 @@ return {
             },
             opts = { skip = true },
           },
+          -- HACK: ignore this false positive notifications from octo.nvim
+          -- TODO: Investigate why this notifications is popping up
+          {
+            filter = {
+              event = 'notify',
+              any = {
+                { find = 'You are not logged into any accounts on' },
+              },
+            },
+            opts = { skip = true },
+          },
         },
         -- you can enable a preset for easier configuration
         presets = {
