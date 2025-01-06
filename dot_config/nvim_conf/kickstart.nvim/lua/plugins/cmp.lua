@@ -153,6 +153,8 @@ return {
       })
       cmp.setup.filetype('ghostty', {
         sources = {
+          { name = 'omni' },
+          { name = 'async_path' },
           { name = 'fonts', option = { space_filter = '-' } },
         },
       })
