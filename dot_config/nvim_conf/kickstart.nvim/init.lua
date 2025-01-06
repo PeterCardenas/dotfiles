@@ -5,6 +5,7 @@ if profile_env ~= nil then
     local snacks = vim.fn.stdpath('data') .. '/lazy/snacks.nvim'
     vim.opt.rtp:append(snacks)
     if profile_startup then
+      ---@diagnostic disable-next-line: missing-fields
       require('snacks.profiler').startup({
         startup = {
           event = 'VeryLazy',
