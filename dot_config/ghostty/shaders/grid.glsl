@@ -102,11 +102,11 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     float ratio = iResolution.y / iResolution.x,
     fw = max(fwidth(uv.x), fwidth(uv.y));
 
-    vec2 puv = floor(uv * vec2(60., 60. * ratio)) / 60.;
+    vec2 puv = floor(uv * vec2(120., 120. * ratio)) / 120.;
     puv +=
         (smoothstep(0., 0.7, noise2D(puv)) - 0.5) * 0.05 - vec2(0., iTime * 0.08);
 
-    uv = fract(vec2(uv.x, uv.y * ratio) * 10.);
+    uv = fract(vec2(uv.x, uv.y * ratio) * 20.);
     float d = roundRectSDF((sd + 0.01) * (uv - .5), sdh, 0.075),
     d2 = roundRectSDF((sd + 0.065) * (fract(uv * 6.) - .5), sdh, 0.2),
     noiseTime = iTime * 0.03, noise = snoise(vec3(puv, noiseTime));
