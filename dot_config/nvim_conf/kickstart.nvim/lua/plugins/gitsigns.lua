@@ -267,6 +267,18 @@ vim.keymap.set({ 'n', 'v' }, '<leader>gk', function()
   require('gitsigns.actions').nav_hunk('prev')
 end, { desc = 'Jump to previous hunk' })
 
+vim.api.nvim_create_autocmd({ 'BufEnter' }, {
+  pattern = 'octo://*',
+  group = vim.api.nvim_create_augroup('octo.reviews.thread-panel', {}),
+  callback = function(opts)
+    ---@type integer
+    local bufnr = opts.buf
+    vim.keymap.set('n', '<leader>rt', function()
+      require('octo.reviews.thread-panel').show_review_threads({ jump_to_buffer = true })
+    end, { buffer = bufnr, desc = 'Review thread' })
+  end,
+})
+
 ---@type LazyPluginSpec[]
 return {
   {
@@ -290,6 +302,29 @@ return {
         default_merge_method = 'rebase',
         suppress_missing_scope = {
           projects_v2 = true,
+        },
+        reviews = {
+          auto_show_threads = false,
+        },
+        mappings = {
+          pull_request = {
+            -- Unmap from <C-y> default
+            copy_url = { lhs = '<leader>pu', desc = 'copy url to system clipboard' },
+          },
+          issue = {
+            -- Unmap from <C-y> default
+            copy_url = { lhs = '<leader>pu', desc = 'copy url to system clipboard' },
+          },
+          review_thread = {
+            add_comment = { lhs = '<leader>rc', desc = 'add comment' },
+            add_suggestion = { lhs = '<leader>rs', desc = 'add suggestion' },
+            react_confused = { lhs = '<leader>rf', desc = 'react with confused' },
+          },
+          review_diff = {
+            add_comment = { lhs = '<leader>rc', desc = 'add comment' },
+            add_suggestion = { lhs = '<leader>rs', desc = 'add suggestion' },
+            react_confused = { lhs = '<leader>rf', desc = 'react with confused' },
+          },
         },
       })
     end,
