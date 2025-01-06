@@ -198,6 +198,7 @@ return {
       vim.o.timeoutlen = 300
     end,
     config = function()
+      ---@diagnostic disable-next-line: missing-fields
       require('which-key').setup({
         disable = {
           filetypes = { 'TelescopePrompt' },
@@ -219,6 +220,7 @@ return {
       require('notify').setup({
         top_down = false,
       })
+      ---@diagnostic disable-next-line: missing-fields
       require('noice').setup({
         lsp = {
           -- override markdown rendering so that **cmp** and other plugins use **Treesitter**
@@ -627,6 +629,7 @@ return {
         local prof = require('profile')
         if prof.is_recording() then
           prof.stop()
+          ---@diagnostic disable-next-line: missing-fields
           vim.ui.input({ prompt = 'Save profile to:', completion = 'file', default = '/tmp/neovim_lua_profile.json' }, function(filename)
             if filename then
               prof.export(filename)
@@ -706,6 +709,7 @@ return {
     'folke/lazydev.nvim',
     ft = 'lua', -- only load on lua files
     config = function()
+      ---@diagnostic disable-next-line: missing-fields
       require('lazydev').setup({
         library = {
           'lazy.nvim',
