@@ -17,4 +17,6 @@ M.USE_TELESCOPE = os.getenv('USE_TELESCOPE') ~= nil
 
 M.USE_RUST_LUA_LS = os.getenv('USE_RUST_LUA_LS') ~= nil
 
+M.USE_SNACKS_PROFILER = os.getenv('USE_SNACKS_PROFILER') ~= nil
+
 return M
