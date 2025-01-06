@@ -276,6 +276,22 @@ vim.api.nvim_create_autocmd({ 'BufEnter' }, {
     vim.keymap.set('n', '<leader>rt', function()
       require('octo.reviews.thread-panel').show_review_threads({ jump_to_buffer = true })
     end, { buffer = bufnr, desc = 'Review thread' })
+    vim.keymap.set({ 'n', 'v' }, '<leader>rca', function()
+      require('octo.reviews').add_review_comment(false)
+    end, { buffer = bufnr, desc = 'Add comment to review thread' })
+    vim.keymap.set({ 'n', 'v' }, '<leader>rs', function()
+      require('octo.reviews').add_review_comment(true)
+    end, { buffer = bufnr, desc = 'Add suggestion to review thread' })
+    vim.keymap.set({ 'n', 'v' }, '<leader>rf', function()
+      require('octo.reviews').react_to_review_comment('THUMBS_DOWN')
+    end, { buffer = bufnr, desc = 'React with confused to review thread' })
+    vim.keymap.set({ 'n', 'v' }, '<leader>rcd', function()
+      require('octo.commands').delete_comment()
+    end, { buffer = bufnr, desc = 'Delete review comment' })
+    -- Re-add leap keymaps
+    vim.keymap.set({ 'n', 'v', 'x', 'o' }, 's', '<Plug>(leap-forward)', { buffer = bufnr })
+    vim.keymap.set({ 'n', 'v', 'x', 'o' }, 'S', '<Plug>(leap-backward)', { buffer = bufnr })
+    vim.keymap.set({ 'n', 'v', 'x', 'o' }, 'gs', '<Plug>(leap-from-window)', { buffer = bufnr })
   end,
 })
 
