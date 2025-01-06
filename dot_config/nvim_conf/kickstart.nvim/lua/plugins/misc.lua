@@ -607,10 +607,8 @@ return {
   {
     'stevearc/profile.nvim',
     cond = function()
-      return os.getenv('NVIM_PROFILE') ~= nil
+      return os.getenv('NVIM_PROFILE') ~= nil and not require('utils.config').USE_SNACKS_PROFILER
     end,
-    -- MUST be the first plugin to load.
-    -- TODO: this doesn't ensure that with other lazy=false plugins.
     priority = 100000,
     lazy = false,
     config = function()
@@ -618,12 +616,6 @@ return {
       if not profile_env then
         error('NVIM_PROFILE is not set')
         return
-      end
-      require('profile').instrument_autocmds()
-      if profile_env:lower():match('^start') then
-        require('profile').start('*')
-      else
-        require('profile').instrument('*')
       end
       local function toggle_profile()
         local prof = require('profile')
@@ -640,7 +632,7 @@ return {
           prof.start('*')
         end
       end
-      vim.keymap.set('', '<f1>', toggle_profile)
+      vim.api.nvim_create_user_command('ToggleProfile', toggle_profile, { nargs = 0 })
     end,
   },
 
@@ -846,6 +838,15 @@ return {
           Snacks.rename.on_rename_file(event.data.from, event.data.to)
         end,
       })
+      if require('utils.config') then
+        vim.api.nvim_create_user_command('ToggleProfile', function()
+          if Snacks.profiler.running() then
+            Snacks.profiler.stop()
+          else
+            Snacks.profiler.start()
+          end
+        end, { nargs = 0 })
+      end
       require('snacks').setup({
         -- TODO: Re-enable when indent is equal or better than indent-blankline
         -- indent = { enabled = true },
@@ -855,8 +856,8 @@ return {
         quickfile = { enabled = true },
         words = { enabled = true },
         rename = { enabled = true },
-        -- TODO: Re-enable when profiler is equal or better than profile.nvim
-        -- profiler = { enabled = true },
+        -- TODO: Fully enable when trouble picker works
+        profiler = { enabled = require('utils.config').USE_SNACKS_PROFILER },
         -- TODO: Re-enable when dashboard is equal or better than alpha.nvim
         -- dashboard = { enabled = true },
       })
