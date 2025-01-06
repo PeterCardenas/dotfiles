@@ -344,7 +344,6 @@ return {
           changedelete = { text = '~' },
         },
         current_line_blame = false,
-        on_attach = function(bufnr) end,
       })
     end,
   },
