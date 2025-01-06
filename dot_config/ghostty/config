@@ -3,7 +3,7 @@
 config-file = ?config_macbook
 config-file = ?config_linux
 
-custom-shader = ../../thirdparty/ghostty-shaders/cubes.glsl
+custom-shader = shaders/cubes.glsl
 custom-shader-animation = always
 
 font-family = "MonaspiceKr Nerd Font"

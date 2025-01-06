@@ -164,9 +164,6 @@ function setup_unix() {
 	git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 	~/.tmux/plugins/tpm/bin/install_plugins
 
-	# Add ghostty shaders
-	git clone https://github.com/m-ahdal/ghostty-shaders.git ~/thirdparty/ghostty-shaders
-
 	# Change login shell to fish
 	sudo chsh -s /usr/bin/fish
 
