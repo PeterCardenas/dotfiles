@@ -13,7 +13,7 @@
   "cmp-cmdline": { "branch": "main", "commit": "d250c63aa13ead745e3a40f61fdd3470efde3923" },
   "cmp-emoji": { "branch": "main", "commit": "e8398e2adf512a03bb4e1728ca017ffeac670a9f" },
   "cmp-fish": { "branch": "main", "commit": "3a23492e2aead05522a9887ec685d70e8c987323" },
-  "cmp-git": { "branch": "working-state", "commit": "43d8f0c7c17ddf91c125087d3698d25538e3eea4" },
+  "cmp-git": { "branch": "working-state", "commit": "0e39b5b6d1ce673dc13167fa8444982104e5a2d4" },
   "cmp-nvim-lsp": { "branch": "main", "commit": "99290b3ec1322070bcfb9e846450a46f6efa50f0" },
   "cmp-omni": { "branch": "main", "commit": "4ef610bbd85a5ee4e97e09450c0daecbdc60de86" },
   "cmp_luasnip": { "branch": "master", "commit": "98d9cb5c2c38532bd9bdb481067b20fea8f32e90" },
