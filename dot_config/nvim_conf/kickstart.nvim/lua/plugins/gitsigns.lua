@@ -300,6 +300,10 @@ vim.api.nvim_create_autocmd({ 'BufEnter' }, {
   end,
 })
 
+vim.api.nvim_create_user_command('ReviewablePRs', function()
+  require('octo.pickers.telescope.provider').search({ prompt = 'is:pr sort:updated-desc user-review-requested:@me is:open' })
+end, { nargs = 0, desc = 'List all PRs that can be reviewed' })
+
 ---@type LazyPluginSpec[]
 return {
   {
