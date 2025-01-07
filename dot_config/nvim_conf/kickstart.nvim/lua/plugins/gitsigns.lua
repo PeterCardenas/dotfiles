@@ -277,7 +277,12 @@ vim.api.nvim_create_autocmd({ 'BufEnter' }, {
       require('octo.reviews.thread-panel').show_review_threads({ jump_to_buffer = true })
     end, { buffer = bufnr, desc = 'Review thread' })
     vim.keymap.set({ 'n', 'v' }, '<leader>rca', function()
-      require('octo.reviews').add_review_comment(false)
+      local current_review = require('octo.reviews').get_current_review()
+      if current_review and require('octo.utils').in_diff_window() then
+        current_review:add_comment(false)
+      else
+        require('octo.commands').add_comment()
+      end
     end, { buffer = bufnr, desc = 'Add comment to review thread' })
     vim.keymap.set({ 'n', 'v' }, '<leader>rs', function()
       require('octo.reviews').add_review_comment(true)
