@@ -528,7 +528,7 @@ return {
   {
     'ggandor/leap.nvim',
     dependencies = { 'tpope/vim-repeat' },
-    event = { 'BufReadPre', 'BufNewFile' },
+    event = { 'BufReadPre', 'BufNewFile', 'BufEnter' },
     config = function()
       vim.keymap.set({ 'n', 'v', 'x', 'o' }, 's', '<Plug>(leap-forward)')
       vim.keymap.set({ 'n', 'v', 'x', 'o' }, 'S', '<Plug>(leap-backward)')
