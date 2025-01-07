@@ -310,6 +310,9 @@ return {
       'nvim-lua/plenary.nvim',
       'ibhagwan/fzf-lua',
       'echasnovski/mini.icons',
+      -- Not actual dependencies, but plugins that I want to be lazy loaded in addition to octo.nvim
+      'Bekaboo/dropbar.nvim',
+      'nvim-treesitter/nvim-treesitter-context',
     },
     config = function()
       require('octo').setup({
