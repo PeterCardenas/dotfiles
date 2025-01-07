@@ -849,7 +849,7 @@ return {
           Snacks.rename.on_rename_file(event.data.from, event.data.to)
         end,
       })
-      if require('utils.config') then
+      if require('utils.config').USE_SNACKS_PROFILER then
         vim.api.nvim_create_user_command('ToggleProfile', function()
           if Snacks.profiler.running() then
             Snacks.profiler.stop()
