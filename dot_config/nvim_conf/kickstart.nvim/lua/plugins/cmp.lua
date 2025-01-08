@@ -158,6 +158,11 @@ return {
           { name = 'fonts', option = { space_filter = '-' } },
         },
       })
+      cmp.setup.filetype('query', {
+        sources = {
+          { name = 'omni' },
+        },
+      })
 
       ---@param fallback function
       local function select_next_item(fallback)
