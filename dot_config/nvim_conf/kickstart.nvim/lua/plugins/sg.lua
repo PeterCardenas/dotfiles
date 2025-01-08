@@ -62,6 +62,9 @@ return {
       end
       vim.env.ANTHROPIC_API_KEY = lines[1]
       require('avante').setup({
+        hints = {
+          enabled = false,
+        },
         behaviour = {
           auto_suggestions = not require('utils.config').USE_SUPERMAVEN,
         },
