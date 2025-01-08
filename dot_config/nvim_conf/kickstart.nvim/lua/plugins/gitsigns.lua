@@ -321,6 +321,9 @@ vim.api.nvim_create_autocmd({ 'BufEnter' }, {
     vim.keymap.set({ 'n', 'v' }, '<leader>rcd', function()
       require('octo.commands').delete_comment()
     end, { buffer = bufnr, desc = 'Delete review comment' })
+    vim.keymap.set({ 'n', 'v' }, '<leader>rrt', function()
+      require('octo.commands').resolve_thread()
+    end, { buffer = bufnr, desc = 'Resolve thread' })
     -- Re-add leap keymaps
     vim.keymap.set({ 'n', 'v', 'x', 'o' }, 's', '<Plug>(leap-forward)', { buffer = bufnr })
     vim.keymap.set({ 'n', 'v', 'x', 'o' }, 'S', '<Plug>(leap-backward)', { buffer = bufnr })
