@@ -316,7 +316,7 @@ vim.api.nvim_create_autocmd({ 'BufEnter' }, {
       require('octo.reviews').add_review_comment(true)
     end, { buffer = bufnr, desc = 'Add suggestion to review thread' })
     vim.keymap.set({ 'n', 'v' }, '<leader>rf', function()
-      require('octo.reviews').react_to_review_comment('THUMBS_DOWN')
+      require('octo.commands').reaction_action('confused')
     end, { buffer = bufnr, desc = 'React with confused to review thread' })
     vim.keymap.set({ 'n', 'v' }, '<leader>rcd', function()
       require('octo.commands').delete_comment()
