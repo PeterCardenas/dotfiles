@@ -244,6 +244,34 @@ end, { nargs = 0, desc = 'Edit the PR for the current branch' })
 
 local nmap = require('utils.keymap').nmap
 
+vim.api.nvim_create_autocmd({ 'CursorMoved' }, {
+  group = vim.api.nvim_create_augroup('gitsigns-prefetch-blame', { clear = true }),
+  callback = function(opts)
+    ---@type integer
+    local bufnr = opts.buf
+    local cache_entry = require('gitsigns.cache').cache[bufnr]
+    if not cache_entry then
+      return
+    end
+    local lnum = vim.api.nvim_win_get_cursor(0)[1]
+    local config = require('gitsigns.config').config
+    local gitsigns_async = require('gitsigns.async')
+    -- gitsigns async and plenary async are not compatible with each other
+    -- So use gitsigns async just for getting blame info.
+    ---@type fun(cb?: fun(blame_info: Gitsigns.BlameInfo?): nil): nil
+    local run = gitsigns_async.create(
+      0,
+      ---@async
+      ---@return Gitsigns.BlameInfo?
+      function()
+        local blame_info = cache_entry:get_blame(lnum, config.current_line_blame_opts)
+        return blame_info
+      end
+    )
+    run()
+  end,
+})
+
 nmap('Show blame for current line', 'gh', function()
   local config = require('gitsigns.config').config
   require('gitsigns.actions').blame_line(config.current_line_blame_opts)
@@ -319,6 +347,7 @@ return {
       'nvim-treesitter/nvim-treesitter-context',
     },
     config = function()
+      -- TODO: Octo PR buffer doesn't have correct highlighting when first loaded. Need to call some other Octo command to trigger it, e.g. Octo review start.
       require('octo').setup({
         ssh_aliases = {
           ['personal-github.com'] = 'github.com',
