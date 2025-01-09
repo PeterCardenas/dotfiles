@@ -468,6 +468,9 @@ function M.setup_formatting_diagnostic(bufnr)
   if git_root_dir == nil or not require('utils.file').file_in_directory(filename, git_root_dir) then
     return
   end
+  if filename:match('^octo://') then
+    return
+  end
   require('utils.async').void(
     ---@async
     function()
