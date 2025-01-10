@@ -6,6 +6,9 @@ vim.o.foldlevelstart = 99
 vim.o.foldenable = true
 vim.o.fillchars = 'eob: ,fold: ,foldopen:,foldsep:│,foldclose:'
 
+-- Don't show concealed text while in normal mode or when entering a command.
+vim.o.concealcursor = 'nc'
+
 function vim.brint(...)
   if vim.in_fast_event() then
     print(...)
