@@ -306,6 +306,8 @@ vim.api.nvim_create_autocmd({ 'BufEnter' }, {
     end, { buffer = bufnr, desc = 'Review thread' })
     vim.keymap.set({ 'n', 'v' }, '<leader>rca', function()
       local current_review = require('octo.reviews').get_current_review()
+      -- HACK: Go into insert mode since starting in visual mode causes the cursor to be stuck in visual mode
+      vim.cmd('startinsert')
       if current_review and require('octo.utils').in_diff_window() then
         current_review:add_comment(false)
       else
