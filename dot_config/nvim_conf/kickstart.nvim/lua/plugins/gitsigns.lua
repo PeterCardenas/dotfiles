@@ -333,6 +333,11 @@ vim.api.nvim_create_autocmd({ 'BufEnter' }, {
   end,
 })
 
+-- HACK: This user command is added since the keymap `<C-a>` does not work.
+vim.api.nvim_create_user_command('ApprovePR', function()
+  require('octo.mappings').approve_review()
+end, { nargs = 0, desc = 'Approve a PR' })
+
 vim.api.nvim_create_user_command('ReviewablePRs', function()
   require('octo.pickers.telescope.provider').search({ prompt = 'is:pr sort:updated-desc user-review-requested:@me is:open' })
 end, { nargs = 0, desc = 'List all PRs that can be reviewed' })
