@@ -48,5 +48,7 @@ return {
     vim.api.nvim_set_hl(0, 'WinBarNC', { link = 'WinBar' })
     -- Make window separator darker
     vim.api.nvim_set_hl(0, 'WinSeparator', { foreground = '#454d71', bold = true, cterm = { bold = true } })
+    -- Strikethrough is unreadable, TODO: Color is kinda ugly.
+    vim.api.nvim_set_hl(0, 'OctoStrikethrough', { strikethrough = true, foreground = '#37579e' })
   end,
 }
