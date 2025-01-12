@@ -286,7 +286,7 @@ return {
           bazelrc = { glyph = '', hl = 'MiniIconsCyan' },
           rust = { glyph = '', hl = 'MiniIconsOrange' },
           typescript = { glyph = '', hl = 'MiniIconsBlue' },
-          javascript = { glyph = '', hl = 'MiniIconsBlue' },
+          javascript = { glyph = '', hl = 'MiniIconsOrange' },
           ['markdown.mdx'] = { glyph = '󰍔', hl = 'MiniIconsGrey' },
           fish = { glyph = '󰈺', hl = 'MiniIconsOrange' },
           bash = { glyph = '', hl = 'MiniIconsGrey' },
