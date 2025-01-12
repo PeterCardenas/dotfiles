@@ -12,7 +12,10 @@ function M.setup(capabilities)
       cmd = { 'emmylua_ls' },
       filetypes = { 'lua' },
       default_config = {
-        root_dir = require('lspconfig.util').root_pattern('.git'),
+        root_dir = require('lspconfig.util').root_pattern('lua'),
+      },
+      cmd_env = {
+        RUST_BACKTRACE = 'full',
       },
     },
   }
