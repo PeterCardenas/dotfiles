@@ -29,6 +29,7 @@ function M.setup(capabilities)
     require('lspconfig.configs')[server_name] = {
       default_config = {
         cmd = server_config.cmd,
+        cmd_env = server_config.cmd_env,
         filetypes = server_config.filetypes,
         -- Cannot have functions in settings since they are not serializable.
         settings = {},
