@@ -1,24 +1,20 @@
 local M = {}
 
----Get the default branch name of the origin remote.
+---Get the default branch name based on whether main or master remote is configured.
 ---@async
 ---@return boolean, string
 function M.get_default_branch()
   local shell = require('utils.shell')
-  -- Try a local git command first for max speed.
-  local success, output =
-    shell.async_cmd('fish', { '-c', 'git symbolic-ref refs/remotes/origin/HEAD | sed "s@^refs/remotes/origin/@@"; test $pipestatus[1] -eq 0' })
+  -- Check if main remote is configured.
+  local success, _ = shell.async_cmd('git', { 'config', '--get', 'branch.main.remote' })
   if success then
-    return true, output[1]
+    return true, 'main'
   end
-  -- Try github cli as a fallback.
-  -- TODO: This requires that a default repo is selected, would be nice to allow selection ad hoc when not set.
-  success, output = shell.async_cmd('gh', { 'repo', 'view', '--json', 'defaultBranchRef', '--jq', '.defaultBranchRef.name' })
+  success, _ = shell.async_cmd('git', { 'config', '--get', 'branch.master.remote' })
   if not success then
-    return false, table.concat(output, '\n')
+    return false, 'failed to get default branch'
   end
-  local default_branch = output[1]
-  return true, default_branch
+  return true, 'master'
 end
 
 return M
