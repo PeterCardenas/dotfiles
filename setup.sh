@@ -144,6 +144,8 @@ function setup_mac() {
 		luarocks
 		# MacOS/iOS development in neovim
 		xcode-build-server
+		# MacOS bash version is wildly out of date
+		bash
 	)
 	sudo port install "${ports[@]}"
 }
