@@ -30,7 +30,8 @@ local function make_buffer_entry()
     local has_error = diagnostics[vim.diagnostic.severity.ERROR] ~= nil and diagnostics[vim.diagnostic.severity.ERROR] > 0
     local Path = require('plenary.path')
     local full_path = Path:new(entry.filename):expand()
-    local is_removed = vim.bo[entry.bufnr].buftype ~= 'acwrite' and vim.fn.filereadable(full_path) == 0
+    local buftype = vim.bo[entry.bufnr].buftype
+    local is_removed = buftype ~= 'acwrite' and buftype ~= 'nofile' and vim.fn.filereadable(full_path) == 0
 
     return displayer({
       { entry.indicator, 'DiagnosticWarn' },
