@@ -20,7 +20,7 @@ local function setup_lazygit_buffer()
         local bufnrs = vim
           .iter(vim.api.nvim_list_bufs())
           :filter(function(filtered_bufnr)
-            return not vim.api.nvim_buf_get_name(filtered_bufnr):match('term://.*lazygit') and vim.fn.buflisted(filtered_bufnr) == 1
+            return bufnr ~= filtered_bufnr and vim.fn.buflisted(filtered_bufnr) == 1
           end)
           :totable()
         table.sort(bufnrs, function(bufnr_a, bufnr_b)
