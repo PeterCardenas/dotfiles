@@ -1,4 +1,5 @@
---TODO: Make this lazy load
+local plenary_path = vim.fn.stdpath('data') .. '/lazy/plenary.nvim'
+vim.opt.rtp:append(plenary_path)
 local async = require('plenary.async')
 
 M = {}

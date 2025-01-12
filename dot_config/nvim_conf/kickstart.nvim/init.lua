@@ -37,5 +37,5 @@ end
 
 require('mappings')
 require('options')
-require('lazy_setup')
 require('local')
+require('lazy_setup')
