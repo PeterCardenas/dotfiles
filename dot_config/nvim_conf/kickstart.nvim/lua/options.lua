@@ -4,7 +4,7 @@ vim.o.foldcolumn = '1'
 vim.o.foldlevel = 99
 vim.o.foldlevelstart = 99
 vim.o.foldenable = true
-vim.o.fillchars = 'eob: ,fold: ,foldopen:,foldsep:│,foldclose:'
+vim.o.fillchars = 'eob: ,fold: ,foldopen:+,foldsep:│,foldclose:-'
 
 -- Don't show concealed text while in normal mode or when entering a command.
 vim.o.concealcursor = 'nc'
