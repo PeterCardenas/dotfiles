@@ -129,6 +129,7 @@ function M.find_buffers()
         results = buffers,
         entry_maker = make_buffer_entry(),
       }),
+      -- TODO: Use octo previewer for octo buffers
       previewer = require('telescope.config').values.grep_previewer(opts),
       sorter = require('telescope.config').values.generic_sorter(opts),
       attach_mappings = function(prompt_bufnr_, map)
