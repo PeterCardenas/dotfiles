@@ -248,6 +248,10 @@ return {
                 fileMatch = { '.luarc.json' },
                 url = 'https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json',
               },
+              {
+                fileMatch = { '.emmyrc.json' },
+                url = 'https://github.com/CppCXY/emmylua-analyzer-rust/raw/refs/heads/main/resources/schema.json',
+              },
             },
           },
         },
