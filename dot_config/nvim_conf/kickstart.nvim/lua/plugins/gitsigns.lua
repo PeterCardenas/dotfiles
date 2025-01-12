@@ -367,6 +367,12 @@ return {
     },
     config = function()
       -- TODO: Octo PR buffer doesn't have correct highlighting when first loaded. Need to call some other Octo command to trigger it, e.g. Octo review start.
+      -- TODO: Saving PR description doesn't trigger workflow. Should use gh pr edit command to do so.
+      -- TODO: Show in virtual text whether a comment is resolved.
+      -- TODO: Add option for keeping diff shown when viewing a comment thread.
+      -- TODO: Make virtual text for comments brighter when hovering on the lines associated with the comment.
+      -- TODO: Add user events to use for auto commands to trigger for fidget.nvim notifications.
+      -- TODO: Next thread keymap gets removed sometimes (when switching between tabs maybe?)
       require('octo').setup({
         ssh_aliases = {
           ['personal-github.com'] = 'github.com',
