@@ -207,6 +207,7 @@ return {
         filetypes = { 'json', 'jsonc' },
         settings = {
           json = {
+            validate = { enable = true },
             schemas = {
               {
                 fileMatch = { 'package.json' },
