@@ -6,7 +6,9 @@ gui:
   animateExplosion: true
   authorColors:
     "Peter Cardenas": "yellow"
+    "PeterCardenas": "yellow"
     "PeterPCardenas": "yellow"
+    "peter-cardenas-ai": "yellow"
     "*": "white"
   nerdFontsVersion: '3'
   branchColors:
