@@ -13,8 +13,9 @@ vim.api.nvim_create_autocmd('BufEnter', {
         })
       else
         -- Close the newly opened buffer so that mini.files can be opened in a valid buffer.
+        local dir = vim.fn.expand('%:p:h')
         require('bufdelete').bufdelete(buf)
-        require('mini.files').open(vim.fn.expand('%:p:h'))
+        require('mini.files').open(dir)
       end
     end
   end,
