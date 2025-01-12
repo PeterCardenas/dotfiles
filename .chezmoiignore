@@ -8,6 +8,6 @@ setup.sh
 .local/bin/xdg-open
 {{- end }}
 # Ignore config files specific to macos
-{{- if ne .chezmoi.os "macos" }}
+{{- if ne .chezmoi.os "darwin" }}
 .config/ghostty/config_macbook
 {{- end }}
