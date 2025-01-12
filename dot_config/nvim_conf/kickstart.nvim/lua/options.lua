@@ -37,8 +37,8 @@ vim.treesitter.query.omnifunc = function(...)
   return require('utils.table').remove_duplicates(ret.words)
 end
 
--- Makes fish shell execution startup faster.
-vim.env.FAST_PROMPT = '1'
+-- Fish startup can be slow, which results in things like lazygit and fzf-lua being slow
+vim.o.shell = 'bash'
 
 vim.o.showtabline = require('utils.config').USE_TABLINE and 2 or 0
 
