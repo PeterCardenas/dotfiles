@@ -346,11 +346,16 @@ vim.api.nvim_create_user_command('MyPRs', function()
   require('octo.pickers.telescope.provider').search({ prompt = 'is:pr sort:updated-desc author:@me is:open' })
 end, { nargs = 0, desc = 'List all PRs that I have created' })
 
+vim.api.nvim_create_user_command('GHNotifs', function()
+  require('octo.pickers.telescope.provider').notifications()
+end, { nargs = 0, desc = 'GitHub notifications' })
+
 ---@type LazyPluginSpec[]
 return {
   {
     -- Adds GitHub integration
-    'pwntester/octo.nvim',
+    'PeterCardenas/octo.nvim',
+    branch = 'notification-patch',
     cmd = { 'Octo' },
     dependencies = {
       'nvim-lua/plenary.nvim',
@@ -395,6 +400,9 @@ return {
             add_comment = { lhs = '<leader>rc', desc = 'add comment' },
             add_suggestion = { lhs = '<leader>rs', desc = 'add suggestion' },
             react_confused = { lhs = '<leader>rf', desc = 'react with confused' },
+          },
+          notifications = {
+            read = { lhs = '<leader>rn', desc = 'read notification' },
           },
         },
       })
