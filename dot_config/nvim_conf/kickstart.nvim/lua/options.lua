@@ -195,8 +195,13 @@ vim.diagnostic.config({
 
 -- Go into insert mode when opening a terminal
 vim.api.nvim_create_autocmd('TermOpen', {
-  callback = function()
+  callback = function(opts)
+    ---@type integer
+    local bufnr = opts.buf
     vim.cmd('startinsert')
+    vim.api.nvim_buf_set_option(bufnr, 'number', false)
+    vim.api.nvim_buf_set_option(bufnr, 'foldcolumn', '0')
+    vim.api.nvim_buf_set_option(bufnr, 'statuscolumn', '')
   end,
 })
 -- Close the terminal buffer when job finishes.

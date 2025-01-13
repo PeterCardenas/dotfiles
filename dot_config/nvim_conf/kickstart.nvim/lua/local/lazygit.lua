@@ -16,7 +16,6 @@ local function setup_lazygit_buffer()
           vim.cmd('resize 100 100')
         end, 50)
       end
-      vim.cmd('startinsert')
       vim.keymap.set({ 't' }, 'q', function()
         local bufnrs = vim
           .iter(vim.api.nvim_list_bufs())
@@ -35,9 +34,6 @@ local function setup_lazygit_buffer()
         end
         vim.api.nvim_set_current_buf(bufnrs[1])
       end, { buffer = bufnr })
-      vim.api.nvim_buf_set_option(bufnr, 'number', false)
-      vim.api.nvim_buf_set_option(bufnr, 'foldcolumn', '0')
-      vim.api.nvim_buf_set_option(bufnr, 'statuscolumn', '')
       vim.api.nvim_buf_set_option(bufnr, 'buflisted', false)
       vim.api.nvim_create_autocmd('VimResized', {
         buffer = bufnr,
