@@ -193,6 +193,20 @@ vim.diagnostic.config({
   },
 })
 
+-- Go into insert mode when opening a terminal
+vim.api.nvim_create_autocmd('TermOpen', {
+  callback = function()
+    vim.cmd('startinsert')
+  end,
+})
+-- Close the terminal buffer when job finishes.
+vim.api.nvim_create_autocmd('TermClose', {
+  callback = function(args)
+    local bufnr = args.buf
+    require('bufdelete').bufdelete(bufnr)
+  end,
+})
+
 -- Expand ghostty filetype for filename prefixed with "config"
 vim.api.nvim_create_autocmd({ 'BufRead', 'BufNewFile' }, {
   pattern = '*/ghostty/config*',
