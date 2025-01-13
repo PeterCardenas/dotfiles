@@ -8,6 +8,7 @@ local function setup_lazygit_buffer()
     pattern = 'term://*lazygit',
     once = true,
     callback = function(args)
+      ---@type integer
       local bufnr = args.buf
       local function correct_size()
         vim.cmd('resize 0 0')
