@@ -5,6 +5,7 @@ local function on_attach(client, bufnr)
     -- Defer to eslint for formatting.
     client.server_capabilities.documentFormattingProvider = false
     client.server_capabilities.documentRangeFormattingProvider = false
+    client.server_capabilities.semanticTokensProvider = nil
   end
   require('plugins.lsp.on_attach').on_attach(client, bufnr)
   vim.keymap.set({ 'n' }, 'gD', function()
@@ -24,8 +25,9 @@ return {
       on_attach = on_attach,
       settings = {
         tsserver_max_memory = 8192,
-        separate_diagnostic_server = false,
+        separate_diagnostic_server = true,
         complete_function_calls = false,
+        publish_diagnostic_on = 'insert_leave',
         tsserver_format_options = {
           indentSize = 2,
           convertTabsToSpaces = true,
