@@ -247,6 +247,14 @@ local function fix_typescript_errors(bufnr, dry_run, on_complete)
     end
     return
   end
+  -- Don't run formatting in dry run mode.
+  -- TODO: possibly re-enable when debounced.
+  if dry_run then
+    if on_complete ~= nil then
+      on_complete(false)
+    end
+    return
+  end
   apply_typescript_codefixes(bufnr, dry_run, function(would_edit_from_codefix, did_cancel)
     -- Exit early when cancelled.
     -- TODO: Make formatting more robust so that it doesn't timeout.
