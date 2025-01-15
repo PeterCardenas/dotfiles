@@ -8,10 +8,10 @@ function gpm
     set -l default_branch
     set -l default_remote
     if test -n "$main_remote"
-        set remote main
+        set default_branch main
         set default_remote "$main_remote"
     else
-        set remote master
+        set default_branch master
         set default_remote "$master_remote"
     end
     set -l cmd "git fetch $default_remote $default_branch:$default_branch && git rebase $default_branch"
