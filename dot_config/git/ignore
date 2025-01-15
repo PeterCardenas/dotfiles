@@ -13,3 +13,6 @@ buildServer.json
 
 # Index for ccls
 compile_commands.json
+
+# Ignore formatting
+.formatignore
