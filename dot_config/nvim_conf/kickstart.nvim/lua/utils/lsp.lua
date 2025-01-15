@@ -8,6 +8,7 @@ M.FT_WITH_LSP = {
   'css',
   'scss',
   'cpp',
+  'c',
   'python',
   'go',
   'json',
