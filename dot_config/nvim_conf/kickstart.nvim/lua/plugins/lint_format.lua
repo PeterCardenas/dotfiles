@@ -16,10 +16,24 @@ local function update_lint_notification()
   end
 end
 
+local filename_to_last_edited = {}
+
 vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter', 'BufNewFile' }, {
   desc = 'Lint on write',
   group = vim.api.nvim_create_augroup('LintOnWrite', { clear = true }),
-  callback = function()
+  callback = function(opts)
+    ---@type integer
+    local bufnr = opts.buf
+    local bufname = vim.api.nvim_buf_get_name(bufnr)
+    -- Don't lint if the file wasn't edited.
+    local last_edited = vim.fn.getftime(bufname)
+    if filename_to_last_edited[bufname] then
+      local tracked_last_edit = filename_to_last_edited[bufname]
+      if tracked_last_edit == last_edited then
+        return
+      end
+    end
+    filename_to_last_edited[bufname] = last_edited
     require('lint').try_lint()
 
     -- Start polling timer if not already running
