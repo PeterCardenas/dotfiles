@@ -10,3 +10,6 @@ buildServer.json
 
 # Cache for ccls language server
 **/.ccls-cache/
+
+# Index for ccls
+compile_commands.json
