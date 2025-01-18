@@ -16,3 +16,6 @@ compile_commands.json
 
 # Ignore formatting
 .formatignore
+
+# Ignore buildkite cached config (pipelines, current organization)
+.bk.yaml
