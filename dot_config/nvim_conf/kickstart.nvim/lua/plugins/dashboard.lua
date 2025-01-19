@@ -43,6 +43,17 @@ local function create_button(shortcut, text, action_function)
   }
 end
 
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'alpha',
+  callback = function(opts)
+    ---@type integer
+    local bufnr = opts.buf
+    vim.api.nvim_buf_set_option(bufnr, 'number', false)
+    vim.api.nvim_buf_set_option(bufnr, 'foldcolumn', '0')
+    vim.api.nvim_buf_set_option(bufnr, 'statuscolumn', '')
+  end,
+})
+
 ---@type LazyPluginSpec
 return {
   'goolord/alpha-nvim',
