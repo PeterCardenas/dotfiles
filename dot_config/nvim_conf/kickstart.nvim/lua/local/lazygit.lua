@@ -19,7 +19,7 @@ local function setup_lazygit_buffer()
       vim.keymap.set({ 't' }, 'q', function()
         local last_line_content = vim.api.nvim_buf_get_lines(bufnr, -2, -1, false)[1]
         -- Don't navigate away when typing in new branch name or searching.
-        if last_line_content:match('^Search:') or last_line_content:match('^Confirm:') then
+        if last_line_content:match('^Search:') or last_line_content:match('^Confirm:') or last_line_content:match('^Filter:') then
           vim.api.nvim_feedkeys('q', 'n', true)
           return
         end
