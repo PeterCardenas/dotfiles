@@ -5,6 +5,7 @@ return {
   priority = 1000,
   config = function()
     vim.cmd('colorscheme tokyonight-storm')
+    require('utils.colorscheme').set_focused_colors()
     -- TODO: Change/remove this to something more unique when modules have semantic highlighting.
     vim.api.nvim_set_hl(0, '@module.python', { link = '@variable' })
     -- Make comments foreground brighter.
