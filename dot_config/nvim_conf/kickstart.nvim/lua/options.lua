@@ -210,7 +210,13 @@ vim.api.nvim_create_autocmd('TermOpen', {
 -- Close the terminal buffer when job finishes.
 vim.api.nvim_create_autocmd('TermClose', {
   callback = function(args)
+    ---@type integer
     local bufnr = args.buf
+    local filetype = vim.bo[bufnr].filetype
+    -- Closing lazy terminal buffers is handled by lazy.nvim
+    if filetype == 'lazy' then
+      return
+    end
     require('bufdelete').bufdelete(bufnr)
   end,
 })
