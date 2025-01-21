@@ -58,6 +58,11 @@ local function setup_lazygit_buffer()
             0,
             50,
             vim.schedule_wrap(function()
+              local current_bufnr = vim.api.nvim_get_current_buf()
+              if current_bufnr ~= bufnr then
+                timer:stop()
+                return
+              end
               local last_line_content = vim.api.nvim_buf_get_lines(bufnr, -2, -1, false)[1]
               if last_line_content:match('Donate') then
                 -- Focus the files panel, go to the top, and refresh it.
