@@ -53,6 +53,8 @@ M.DISABLED_PYLINT_RULES = {
   'logging-fstring-interpolation',
   'wrong-import-order',
   'consider-using-f-string',
+  -- Often redundant
+  'fixme',
   -- Line length checking is most often just annoying.
   'line-too-long',
   -- Below have been delegated to mypy.
