@@ -38,9 +38,6 @@ font-feature = "ss03"
 
 # Underline is a bit high (especially for replace mode in fish shell).
 adjust-underline-position = 2
-# Tmux doesn't respond well to calculating grapheme widths correctly.
-# TODO: Migrate away from tmux
-grapheme-width-method = legacy
 
 auto-update = download
 
