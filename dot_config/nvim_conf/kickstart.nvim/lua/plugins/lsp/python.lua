@@ -61,6 +61,7 @@ M.DISABLED_PYLINT_RULES = {
   'too-many-function-args',
   'undefined-variable',
   'no-member',
+  'c-extension-no-member',
   -- Below have been delegated to ruff.
   'trailing-whitespace',
   'missing-function-docstring',
@@ -184,6 +185,9 @@ function M.python_lsp_config()
       enabled = false,
     },
     -- Feature rich, but slowest lsp.
+    basedpyright = {
+      enabled = false,
+    },
     pyright = {
       enabled = enable_pyright,
       -- Disabled for performance reasons.
