@@ -22,3 +22,6 @@ compile_commands.json
 
 # protols language server config
 protols.toml
+
+# Ignores avanterules
+*.avanterules
