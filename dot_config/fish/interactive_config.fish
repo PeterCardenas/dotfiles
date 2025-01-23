@@ -123,7 +123,6 @@ abbr -a gca "git commit -S --amend --no-edit"
 abbr -a ga "git add"
 abbr -a gst "git status --short"
 abbr -a gco "git checkout"
-abbr -a gcn "git checkout -b pcardenas/"
 abbr -a gbd "git branch -d"
 abbr -a gbl "git branch -l"
 abbr -a gsp "git stash push"
@@ -133,6 +132,13 @@ abbr -a gsd "git stash drop"
 abbr -a gsa "git stash apply"
 abbr -a gcp "git cherry-pick -S"
 abbr -a nuke 'git rm --cached -r .; and GIT_LFS_SKIP_SMUDGE=1 git reset --hard'
+abbr -a gcn --set-cursor --function __cmp_gcn
+abbr -a gpu --function __cmp_gpu
+abbr -a gaa --function __cmp_gaa
+abbr -a gpl --function __cmp_gpl
+abbr -a gcnm --set-cursor --function __cmp_gcnm
+abbr -a gpm --function __cmp_gpm
+abbr -a gr --function __cmp_gr
 abbr -a glog 'git log --graph --pretty=\'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset\''
 abbr -a lg lazygit
 
