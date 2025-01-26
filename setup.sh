@@ -146,6 +146,8 @@ function setup_mac() {
 		xcode-build-server
 		# MacOS bash version is wildly out of date
 		bash
+		# Build tmux and other c/cpp programs
+		automake
 	)
 	sudo port install "${ports[@]}"
 }
