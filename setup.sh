@@ -118,9 +118,9 @@ function setup_mac() {
 	# Install MacPorts
 	curl -O https://github.com/macports/macports-base/releases/download/v2.9.3/MacPorts-2.9.3.tar.bz2
 	tar xvjf MacPorts-2.9.3.tar.bz2
-	cd MacPorts-2.9.3
+	pushd MacPorts-2.9.3
 	./configure && make && sudo make install
-	cd ..
+	popd
 	rm -rf MacPorts-2.9.3*
 	sudo port -v selfupdate
 
@@ -150,6 +150,18 @@ function setup_mac() {
 		automake
 	)
 	sudo port install "${ports[@]}"
+
+	# Install ccls
+	pushd $HOME/thirdparty
+	wget https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-arm64-apple-macos11.tar.xz
+	tar xzvf clang+llvm-18.1.8-arm64-apple-macos11.tar.xz
+	git clone https://github.com/MaskRay/ccls.git
+	pushd ccls
+	cmake -S. -BRelease -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/.local/ -DCMAKE_PREFIX_PATH=$HOME/thirdparty/clang+llvm-18.1.8-arm64-apple-macos11/
+	cmake --build Release
+	cp Release/ccls $HOME/.local/bin/
+	popd
+	popd
 }
 
 function setup_unix() {
