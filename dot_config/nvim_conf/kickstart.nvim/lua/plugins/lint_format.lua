@@ -214,17 +214,17 @@ local function get_buildifier_filetype(bufnr)
 end
 
 ---@type table<number, boolean>
-local bufs_setup = {}
+_G.format_bufs_setup = {}
 -- Simple way to ignore formatting for certain repos
 if vim.fn.filereadable(require('utils.file').get_cwd() .. '/.formatignore') == 0 then
-  vim.api.nvim_create_autocmd({ 'BufEnter' }, {
+  vim.api.nvim_create_autocmd({ 'BufEnter', 'BufRead', 'BufNewFile' }, {
     desc = 'Setup formatting',
     callback = function(args)
       local bufnr = args.buf
-      if bufs_setup[bufnr] then
+      if format_bufs_setup[bufnr] then
         return
       end
-      bufs_setup[bufnr] = true
+      format_bufs_setup[bufnr] = true
       require('plugins.lsp.format').setup_formatting_diagnostic(bufnr)
       vim.keymap.set({ 'n', 'v' }, '<leader>lf', function()
         require('plugins.lsp.format').format(bufnr)
