@@ -19,6 +19,32 @@ local function is_buffer_locked(bufnr)
   return format_lock_map[bufnr] == true
 end
 
+---@type table<string, boolean>?
+local ignored_formatters = nil
+---@return table<string, boolean>
+local function get_ignored_formatters()
+  if ignored_formatters ~= nil then
+    return ignored_formatters
+  end
+  local ignored_formatters_file = require('utils.file').get_cwd() .. '/.formatignore'
+  if vim.fn.filereadable(ignored_formatters_file) == 1 then
+    local ignored_formatters_list = vim.tbl_filter(function(line)
+      return line ~= ''
+    end, vim.fn.readfile(ignored_formatters_file))
+    ignored_formatters = {}
+    if #ignored_formatters_list == 0 then
+      ignored_formatters['all'] = true
+    else
+      for _, ignored_formatter in ipairs(ignored_formatters_list) do
+        ignored_formatters[ignored_formatter] = true
+      end
+    end
+  else
+    ignored_formatters = {}
+  end
+  return ignored_formatters
+end
+
 ---@alias FormatCallback fun(would_edit: boolean, did_cancel?: boolean): nil
 
 ---@param client vim.lsp.Client
@@ -292,47 +318,61 @@ local function lsp_format(bufnr, dry_run, on_complete)
     return
   end
   for _, client in ipairs(formatting_clients) do
-    ---@param err any
-    ---@param results lsp.TextEdit[]
-    client.request(LspMethod.textDocument_formatting, formatting_params, function(err, results, _, _)
-      if err then
-        -- TODO: Properly ignore trouble buffers.
-        if client.name ~= 'gopls' and (client.name ~= 'ruff_lsp' or err.message:find('/Trouble') == nil) then
-          vim.notify('Error checking formatting: ' .. vim.inspect(err), vim.log.levels.ERROR)
-        end
-      end
-      if not dry_run and results ~= nil then
-        local offset_encoding = get_client_offset_encoding(client)
-        vim.lsp.util.apply_text_edits(results, bufnr, offset_encoding)
-      end
-      for _, result in ipairs(results or {}) do
-        local current_lines = vim.api.nvim_buf_get_lines(bufnr, result.range.start.line, result.range['end'].line, false)
-        local formatted_lines = vim.split(string.gsub(result.newText, '\r\n?', '\n'), '\n', { plain = true })
-        local formatted_lines_count = #formatted_lines
-        if formatted_lines_count > 0 and formatted_lines[formatted_lines_count] == '' then
-          formatted_lines_count = formatted_lines_count - 1
-        end
-        if #current_lines ~= formatted_lines_count then
-          table.insert(clients_needing_formatting, client.name)
-        else
-          for i, line in ipairs(current_lines) do
-            if line ~= formatted_lines[i] then
-              table.insert(clients_needing_formatting, client.name)
-              break
-            end
-          end
-        end
-        if vim.tbl_contains(clients_needing_formatting, client.name) then
-          break
-        end
-      end
+    if get_ignored_formatters()[client.name] then
       clients_to_check = clients_to_check - 1
       if clients_to_check == 0 then
         if on_complete ~= nil then
           on_complete(clients_needing_formatting)
         end
       end
-    end, bufnr)
+    else
+      ---@param err any
+      ---@param results lsp.TextEdit[]
+      client.request(LspMethod.textDocument_formatting, formatting_params, function(err, results, _, _)
+        if err then
+          -- TODO: Properly ignore trouble buffers.
+          if client.name ~= 'gopls' and (client.name ~= 'ruff_lsp' or err.message:find('/Trouble') == nil) then
+            vim.notify('Error checking formatting: ' .. vim.inspect(err), vim.log.levels.ERROR)
+          end
+        end
+        if not dry_run and results ~= nil then
+          local offset_encoding = get_client_offset_encoding(client)
+          vim.lsp.util.apply_text_edits(results, bufnr, offset_encoding)
+        end
+        for _, result in ipairs(results or {}) do
+          local current_lines = vim.api.nvim_buf_get_lines(bufnr, result.range.start.line, result.range['end'].line, false)
+          local formatted_lines = vim.split(string.gsub(result.newText, '\r\n?', '\n'), '\n', { plain = true })
+          local formatted_lines_count = #formatted_lines
+          if
+            formatted_lines_count > 0
+            and formatted_lines[formatted_lines_count] == ''
+            and result.range['end'].line == result.range.start.line
+            and result.range['end'].character == result.range.start.character
+          then
+            formatted_lines_count = formatted_lines_count - 1
+          end
+          if #current_lines ~= formatted_lines_count then
+            table.insert(clients_needing_formatting, client.name)
+          else
+            for i, line in ipairs(current_lines) do
+              if line ~= formatted_lines[i] then
+                table.insert(clients_needing_formatting, client.name)
+                break
+              end
+            end
+          end
+          if vim.tbl_contains(clients_needing_formatting, client.name) then
+            break
+          end
+        end
+        clients_to_check = clients_to_check - 1
+        if clients_to_check == 0 then
+          if on_complete ~= nil then
+            on_complete(clients_needing_formatting)
+          end
+        end
+      end, bufnr)
+    end
   end
 end
 
@@ -359,6 +399,11 @@ local function format_with_check(bufnr, dry_run, on_complete)
     if autofixer_index <= #autofixers then
       local autofixer_pair = autofixers[autofixer_index]
       local autofixer_name, autofix_fn = autofixer_pair[1], autofixer_pair[2]
+      if get_ignored_formatters()[autofixer_name] then
+        autofixer_index = autofixer_index + 1
+        format_next()
+        return
+      end
       autofix_fn(bufnr, dry_run, function(would_edit_from_autofixer)
         if would_edit_from_autofixer then
           table.insert(sources_with_edits, autofixer_name)
@@ -379,6 +424,11 @@ local function format_with_check(bufnr, dry_run, on_complete)
       return
     end
     local formatter_name = formatters[formatter_index].name
+    if get_ignored_formatters()[formatter_name] then
+      formatter_index = formatter_index + 1
+      format_next()
+      return
+    end
     require('conform').format({
       formatters = { formatter_name },
       async = true,
