@@ -51,6 +51,9 @@ function __git_status_prompt
 end
 function __git_status_prompt_loading_indicator -a last_prompt
     set -l current_dir (pwd)
+    if test "$last_prompt" = "[J"
+        set last_prompt "…"
+    end
     if test "$current_dir" = "$prev_dir"
         echo -n $last_prompt
         return
