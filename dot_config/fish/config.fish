@@ -63,7 +63,7 @@ function __git_status_prompt_loading_indicator -a last_prompt
     while test "$current_dir" != "$HOME" -a "$current_dir" != "$HOME/.git"
         if test -d $current_dir/.git
             if test "$current_dir" != "$prev_git_dir"
-                echo "… "
+                echo -n "… "
                 return
             end
             set prev_dir $current_dir
