@@ -52,6 +52,8 @@ function setup_ubuntu() {
 		lib-imagemagickwand-dev
 		# For lazy.nvim
 		luarocks
+		# For generating compile_commands.json for ccls
+		bear
 	)
 	sudo nala remove -y xsel
 	sudo nala install -y "${dpkg_packages[@]}"
@@ -148,6 +150,8 @@ function setup_mac() {
 		bash
 		# Build tmux and other c/cpp programs
 		automake
+		# Generate compile_commands.json for ccls
+		bear
 	)
 	sudo port install "${ports[@]}"
 
