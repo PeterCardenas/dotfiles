@@ -33,7 +33,6 @@ end
 
 function __prompt -a prompt_name
     set -l prompt_file $HOME/.config/starship_$prompt_name.toml
-    echo $prompt_file >/tmp/prompt_file
     switch "$fish_key_bindings"
         case fish_hybrid_key_bindings fish_vi_key_bindings
             set STARSHIP_KEYMAP "$fish_bind_mode"
@@ -46,8 +45,25 @@ function __prompt -a prompt_name
     set STARSHIP_JOBS (count (jobs -p))
     env STARSHIP_CONFIG=$prompt_file starship prompt --status=$STARSHIP_CMD_STATUS --pipestatus="$STARSHIP_CMD_PIPESTATUS" --keymap=$STARSHIP_KEYMAP --cmd-duration=$STARSHIP_DURATION --jobs=$STARSHIP_JOBS
 end
+set -gx prev_dir
 function __git_status_prompt
     __prompt git_status
+end
+function __git_status_prompt_loading_indicator -a last_prompt
+    set -l current_dir (pwd)
+    if test "$current_dir" = "$prev_dir"
+        echo -n $last_prompt
+        return
+    end
+    # check if the current directory is a git repository by traversing parent directories until $HOME or .git is found
+    while test "$current_dir" != "$HOME" -a "$current_dir" != "$HOME/.git"
+        if test -d $current_dir/.git
+            set prev_dir $current_dir
+            echo -n $last_prompt
+            return
+        end
+        set current_dir (dirname $current_dir)
+    end
 end
 set -g async_prompt_inherit_variables all
 set -g async_prompt_functions __git_status_prompt
