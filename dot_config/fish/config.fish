@@ -45,7 +45,7 @@ function __prompt -a prompt_name
     set STARSHIP_JOBS (count (jobs -p))
     env STARSHIP_CONFIG=$prompt_file starship prompt --status=$STARSHIP_CMD_STATUS --pipestatus="$STARSHIP_CMD_PIPESTATUS" --keymap=$STARSHIP_KEYMAP --cmd-duration=$STARSHIP_DURATION --jobs=$STARSHIP_JOBS
 end
-set -gx prev_dir
+set -g prev_dir
 function __git_status_prompt
     __prompt git_status
 end
