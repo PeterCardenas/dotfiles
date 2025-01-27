@@ -361,7 +361,12 @@ return {
         cmd = 'golint',
         stdin = false,
         ignore_exitcode = true,
-        parser = require('lint.parser').from_pattern('([^:]+):([0-9]+):([0-9]+): (.+)', { 'filename', 'lnum', 'col', 'message' }),
+        parser = require('lint.parser').from_pattern(
+          '([^:]+):([0-9]+):([0-9]+): (.+)',
+          { 'filename', 'lnum', 'col', 'message' },
+          {},
+          { severity = vim.diagnostic.severity.WARN }
+        ),
       }
       local buf_lint_args = { 'lint', '--error-format', 'json' }
       local file_utils = require('utils.file')
