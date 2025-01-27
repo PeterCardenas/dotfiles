@@ -3,6 +3,8 @@
 config-file = ?config_macbook
 config-file = ?config_linux
 
+gtk-titlebar = false
+
 # TODO: Add a mechanism for randomizing the shader.
 custom-shader = ./shaders/cubes.glsl
 custom-shader-animation = always
