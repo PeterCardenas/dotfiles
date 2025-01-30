@@ -130,7 +130,6 @@ return {
           }),
         },
         sources = {
-          { name = 'git' },
           {
             name = 'nvim_lsp',
             ---@param entry cmp.Entry
@@ -142,9 +141,10 @@ return {
           },
           { name = 'omni' },
           { name = 'luasnip' },
-          { name = 'emoji' },
           { name = 'fish' },
           { name = 'async_path' },
+          { name = 'emoji' },
+          { name = 'git' },
           {
             name = 'lazydev',
             group_index = 0, -- set group index to 0 to skip loading LuaLS completions
