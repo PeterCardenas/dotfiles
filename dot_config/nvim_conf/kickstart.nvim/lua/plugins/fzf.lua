@@ -10,6 +10,12 @@ return {
     },
     cmd = { 'FzfLua' },
     config = function()
+      local fzf_history_dir = vim.fn.stdpath('data') .. '/fzf-history'
+      local cwd = vim.fn.getcwd()
+      ---@param type string
+      local function get_history_file(type)
+        return fzf_history_dir .. '/' .. type .. '/' .. cwd:gsub('/', '_')
+      end
       -- Clear fuzzy toggle for grep
       require('fzf-lua.defaults').defaults.grep.actions = {}
       require('fzf-lua').setup({
@@ -34,6 +40,9 @@ return {
           git_icons = false,
           -- TODO: Make this hide ignored files by default once this can be toggled.
           cmd = require('plugins.telescope.setup').rg_files_cmd(true),
+          fzf_opts = {
+            ['--history'] = get_history_file('files'),
+          },
         },
         grep = {
           git_icons = false,
@@ -41,6 +50,9 @@ return {
           cmd = require('plugins.telescope.setup').rg_words_cmd(true),
           multiprocess = true,
           multiline = 1,
+          fzf_opts = {
+            ['--history'] = get_history_file('grep'),
+          },
         },
         oldfiles = {
           include_current_session = true,
