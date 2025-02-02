@@ -195,6 +195,7 @@ vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter' }, {
 ---@param bufnr number
 local function get_buildifier_filetype(bufnr)
   -- Logic taken from https://github.com/bazelbuild/buildtools/blob/master/build/lex.go#L125
+  bufnr = bufnr or 0
   local fname = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ':t')
   fname = string.lower(fname)
 
@@ -233,6 +234,83 @@ vim.api.nvim_create_autocmd({ 'BufEnter', 'BufRead', 'BufNewFile' }, {
   end,
 })
 
+local function get_buildifier_warnings_arg()
+  -- Buildifier warnings in 7.3.1
+  local buildifier_warnings = {
+    'attr-applicable_licenses',
+    'attr-cfg',
+    'attr-license',
+    'attr-licenses',
+    'attr-non-empty',
+    'attr-output-default',
+    'attr-single-file',
+    'build-args-kwargs',
+    'bzl-visibility',
+    'confusing-name',
+    'constant-glob',
+    'ctx-actions',
+    'ctx-args',
+    'deprecated-function',
+    'depset-items',
+    'depset-iteration',
+    'depset-union',
+    'dict-concatenation',
+    'dict-method-named-arg',
+    'duplicated-name',
+    'filetype',
+    'function-docstring',
+    'function-docstring-args',
+    'function-docstring-header',
+    'function-docstring-return',
+    'git-repository',
+    'http-archive',
+    'integer-division',
+    'keyword-positional-params',
+    'list-append',
+    'load',
+    'module-docstring',
+    'name-conventions',
+    'native-android',
+    'native-build',
+    'native-cc',
+    'native-java',
+    'native-package',
+    'native-proto',
+    'native-py',
+    'no-effect',
+    'output-group',
+    'overly-nested-depset',
+    'package-name',
+    'package-on-top',
+    'positional-args',
+    'print',
+    'provider-params',
+    'redefined-variable',
+    'repository-name',
+    'return-value',
+    'rule-impl-return',
+    'skylark-comment',
+    'skylark-docstring',
+    'string-iteration',
+    'uninitialized',
+    'unnamed-macro',
+    'unreachable',
+    'unsorted-dict-items',
+    'unused-variable',
+  }
+  local ignored_buildifier_warnings = {
+    ['native-cc'] = true,
+    ['native-proto'] = true,
+    ['native-py'] = true,
+  }
+  ---@type string[]
+  local filtered_buildifier_warnings = vim.tbl_filter(function(warning)
+    return ignored_buildifier_warnings[warning] == nil
+  end, buildifier_warnings)
+  local buildifier_warnings_arg = '--warnings=' .. table.concat(filtered_buildifier_warnings, ',')
+  return buildifier_warnings_arg
+end
+
 ---@type LazyPluginSpec[]
 return {
   -- Formatting.
@@ -241,78 +319,8 @@ return {
     lazy = true,
     config = function()
       local file_utils = require('utils.file')
-      -- Buildifier warnings in 7.3.1
-      local buildifier_warnings = {
-        'attr-applicable_licenses',
-        'attr-cfg',
-        'attr-license',
-        'attr-licenses',
-        'attr-non-empty',
-        'attr-output-default',
-        'attr-single-file',
-        'build-args-kwargs',
-        'bzl-visibility',
-        'confusing-name',
-        'constant-glob',
-        'ctx-actions',
-        'ctx-args',
-        'deprecated-function',
-        'depset-items',
-        'depset-iteration',
-        'depset-union',
-        'dict-concatenation',
-        'dict-method-named-arg',
-        'duplicated-name',
-        'filetype',
-        'function-docstring',
-        'function-docstring-args',
-        'function-docstring-header',
-        'function-docstring-return',
-        'git-repository',
-        'http-archive',
-        'integer-division',
-        'keyword-positional-params',
-        'list-append',
-        'load',
-        'module-docstring',
-        'name-conventions',
-        'native-android',
-        'native-build',
-        'native-cc',
-        'native-java',
-        'native-package',
-        'native-proto',
-        'native-py',
-        'no-effect',
-        'output-group',
-        'overly-nested-depset',
-        'package-name',
-        'package-on-top',
-        'positional-args',
-        'print',
-        'provider-params',
-        'redefined-variable',
-        'repository-name',
-        'return-value',
-        'rule-impl-return',
-        'skylark-comment',
-        'skylark-docstring',
-        'string-iteration',
-        'uninitialized',
-        'unnamed-macro',
-        'unreachable',
-        'unsorted-dict-items',
-        'unused-variable',
-      }
-      local ignored_buildifier_warnings = {
-        ['native-cc'] = true,
-      }
-      ---@type string[]
-      local filtered_buildifier_warnings = vim.tbl_filter(function(warning)
-        return ignored_buildifier_warnings[warning] == nil
-      end, buildifier_warnings)
-      local buildifier_warnings_arg = '--warnings=' .. table.concat(filtered_buildifier_warnings, ',')
 
+      local buildifier_warnings_arg = get_buildifier_warnings_arg()
       require('conform').setup({
         formatters_by_ft = {
           lua = { 'stylua' },
@@ -444,6 +452,17 @@ return {
         function()
           return vim.api.nvim_buf_get_name(0)
         end,
+      }
+      require('lint').linters.buildifier.args = {
+        '-lint',
+        'warn',
+        '-mode',
+        'check',
+        get_buildifier_warnings_arg(),
+        '-format',
+        'json',
+        '-type',
+        get_buildifier_filetype,
       }
       require('lint').linters_by_ft = {
         bzl = { 'buildifier' },
