@@ -51,6 +51,7 @@ function __git_status_prompt
     __prompt git_status
 end
 function __git_status_prompt_loading_indicator -a last_prompt
+    # TODO: fix bug where this is sometimes "."
     set -l current_dir (pwd)
     if test "$last_prompt" = "[J"
         set last_prompt "… "
@@ -59,20 +60,23 @@ function __git_status_prompt_loading_indicator -a last_prompt
         echo -n $last_prompt
         return
     end
+    set -l current_git_dir current_dir
     # check if the current directory is a git repository by traversing parent directories until $HOME or .git is found
-    while test "$current_dir" != "$HOME" -a "$current_dir" != "$HOME/.git"
-        if test -d $current_dir/.git
-            if test "$current_dir" != "$prev_git_dir"
+    while test "$current_git_dir" != "$HOME" -a "$current_git_dir" != "$HOME/.git" -a "$current_git_dir" != "."
+        if test -d $current_git_dir/.git
+            if test "$current_git_dir" != "$prev_git_dir"
                 echo -n "… "
-                return
+            else
+                echo -n $last_prompt
             end
             set prev_dir $current_dir
-            set prev_git_dir $current_dir
-            echo -n $last_prompt
+            set prev_git_dir $current_git_dir
             return
         end
-        set current_dir (dirname $current_dir)
+        set current_git_dir (dirname $current_git_dir)
     end
+    set prev_dir $current_dir
+    set prev_git_dir
 end
 set -g async_prompt_inherit_variables all
 set -g async_prompt_functions __git_status_prompt
