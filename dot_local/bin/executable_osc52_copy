@@ -12,7 +12,21 @@ if test "$pty" = "not a tty"
     exit 1
 end
 
-set -l contents $argv
+set -l piped_content
+if not isatty stdin
+    while read --line --local line
+        if test -z "$piped_content"
+            set piped_content $line
+        else
+            set piped_content "$piped_content\n$line"
+        end
+    end
+end
+
+set -l contents "$argv"
+if test -n "$piped_content"
+    set contents "$piped_content$contents"
+end
 set -l osc_prefix
 if set -q TMUX
     if set -q SSH_CONNECTION
@@ -33,5 +47,5 @@ if set -q TMUX
 else
     set osc_suffix '\x1b\\'
 end
-set -l serialized_contents (echo -n $contents | base64 | tr -d '\r\n')
+set -l serialized_contents (printf $contents | base64 | tr -d '\r\n')
 echo -ne "$osc_prefix]52;c;$serialized_contents$osc_suffix" >$pty
