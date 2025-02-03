@@ -2,6 +2,8 @@
 
 -- local LspMethod = vim.lsp.protocol.Methods
 
+vim.lsp.set_log_level('info')
+
 --- @class custom.LspConfig : lspconfig.Config
 --- @field cmd? string[]|fun(dispatchers: vim.lsp.rpc.Dispatchers): vim.lsp.rpc.PublicClient
 
