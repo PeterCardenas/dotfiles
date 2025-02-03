@@ -57,6 +57,7 @@ function M.setup(capabilities)
     capabilities = capabilities,
     cmd_env = {
       RUST_BACKTRACE = 'full',
+      BAZELRC_LSP_RUN_BAZEL_PATH = 'bazelisk',
     },
   }
   require('lspconfig').bazelrc_lsp.setup(bazelrc_lsp_config)
