@@ -220,17 +220,17 @@ vim.api.nvim_create_autocmd({ 'BufEnter', 'BufRead', 'BufNewFile' }, {
   desc = 'Setup formatting',
   callback = function(args)
     local bufnr = args.buf
-    if format_bufs_setup[tostring(bufnr)] then
-      return
-    end
-    format_bufs_setup[tostring(bufnr)] = true
-    require('plugins.lsp.format').setup_formatting_diagnostic(bufnr)
     vim.keymap.set({ 'n', 'v' }, '<leader>lf', function()
       require('plugins.lsp.format').format(bufnr)
     end, {
       desc = 'Format buffer',
       buffer = bufnr,
     })
+    if format_bufs_setup[tostring(bufnr)] then
+      return
+    end
+    format_bufs_setup[tostring(bufnr)] = true
+    require('plugins.lsp.format').setup_formatting_diagnostic(bufnr)
   end,
 })
 
