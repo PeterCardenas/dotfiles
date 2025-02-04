@@ -83,25 +83,11 @@ end
 local M = {}
 
 function M.find_buffers()
-  local bufnrs = vim.tbl_filter(function(bufnr)
-    if 1 ~= vim.fn.buflisted(bufnr) then
-      return false
-    end
-    if bufnr == vim.api.nvim_get_current_buf() then
-      return false
-    end
-
-    return true
-  end, vim.api.nvim_list_bufs())
-
+  local bufnrs = require('utils.buf').get_navigable_buffers(false)
   if not next(bufnrs) then
     vim.notify('No other buffers found', vim.log.levels.ERROR)
     return
   end
-
-  table.sort(bufnrs, function(a, b)
-    return vim.fn.getbufinfo(a)[1].lastused > vim.fn.getbufinfo(b)[1].lastused
-  end)
 
   ---@type BufferEntry[]
   local buffers = {}
