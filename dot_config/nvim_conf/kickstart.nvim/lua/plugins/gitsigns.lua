@@ -276,6 +276,13 @@ nmap('Show blame for current line', 'gh', function()
   local config = require('gitsigns.config').config
   require('gitsigns.actions').blame_line(config.current_line_blame_opts)
 end)
+nmap('Show blame for current line with -C', 'gH', function()
+  local current_line_blame_opts = vim.deepcopy(require('gitsigns.config').config.current_line_blame_opts)
+  local extra_opts = current_line_blame_opts.extra_opts or {}
+  table.insert(extra_opts, '-C')
+  current_line_blame_opts.extra_opts = extra_opts
+  require('gitsigns.actions').blame_line(current_line_blame_opts)
+end)
 vim.keymap.set({ 'n', 'v' }, '<leader>gp', function()
   require('gitsigns.actions').preview_hunk()
 end, { desc = 'Preview git hunk' })
