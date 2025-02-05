@@ -90,11 +90,23 @@ current_sessionoptions = vim
 vim.opt.sessionoptions = current_sessionoptions
 vim.api.nvim_set_hl(0, '@markup.link.label.markdown', { fg = '#2ac3de', underdotted = true, force = true })
 
+local filetyp_options_group = vim.api.nvim_create_augroup('FiletypeOptions', { clear = true })
+
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'conf',
+  group = filetyp_options_group,
+  callback = function()
+    -- Remove prefixed '/' from includeexpr
+    vim.bo.includeexpr = 'substitute(v:fname,"^\\s*/","","")'
+  end,
+})
+
 -- Faster loading of nvim-ts-context-commentstring plugin
 vim.g.skip_ts_context_commentstring_module = true
 
 vim.api.nvim_create_autocmd('FileType', {
   pattern = 'bazelrc',
+  group = filetyp_options_group,
   callback = function()
     vim.bo.commentstring = '# %s'
   end,
