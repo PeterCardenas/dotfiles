@@ -380,10 +380,16 @@ return {
       -- TODO: Make virtual text for comments brighter when hovering on the lines associated with the comment.
       -- TODO: Add user events to use for auto commands to trigger for fidget.nvim notifications.
       -- TODO: Next thread keymap gets removed sometimes (when switching between tabs maybe?)
+      if not vim.env.GH_TOKEN then
+        vim.notify('User not set up for gh cli', vim.log.levels.ERROR)
+      end
       require('octo').setup({
         ssh_aliases = {
           ['personal-github.com'] = 'github.com',
           ['work-github.com'] = 'github.com',
+        },
+        gh_env = {
+          GH_TOKEN = vim.env.GH_TOKEN,
         },
         github_hostname = 'github.com',
         remotes = { 'origin', 'upstream' },
