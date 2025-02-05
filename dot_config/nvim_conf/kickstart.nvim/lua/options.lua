@@ -93,6 +93,13 @@ vim.api.nvim_set_hl(0, '@markup.link.label.markdown', { fg = '#2ac3de', underdot
 -- Faster loading of nvim-ts-context-commentstring plugin
 vim.g.skip_ts_context_commentstring_module = true
 
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'bazelrc',
+  callback = function()
+    vim.bo.commentstring = '# %s'
+  end,
+})
+
 vim.filetype.add({
   extension = {
     mdx = 'markdown.mdx',
