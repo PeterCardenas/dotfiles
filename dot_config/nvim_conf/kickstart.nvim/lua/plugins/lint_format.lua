@@ -302,6 +302,7 @@ local function get_buildifier_warnings_arg()
     ['native-cc'] = true,
     ['native-proto'] = true,
     ['native-py'] = true,
+    ['native-java'] = true,
   }
   ---@type string[]
   local filtered_buildifier_warnings = vim.tbl_filter(function(warning)
