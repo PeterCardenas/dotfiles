@@ -218,6 +218,8 @@ function M.python_lsp_config()
               diagnostic.code == 'reportMissingImports'
               or diagnostic.code == 'reportAttributeAccessIssue'
               or diagnostic.code == 'reportMissingModuleSource'
+              -- False positive by not inferring type from default arguments
+              or diagnostic.code == 'reportArgumentType'
             then
               should_filter = false
             end
