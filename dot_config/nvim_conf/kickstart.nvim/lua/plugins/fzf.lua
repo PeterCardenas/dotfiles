@@ -46,6 +46,7 @@ return {
           cmd = require('plugins.telescope.setup').rg_files_cmd(true),
           fzf_opts = {
             ['--history'] = get_history_file('files'),
+            ['--scheme'] = 'path',
           },
         },
         grep = {
@@ -56,6 +57,7 @@ return {
           multiline = 1,
           fzf_opts = {
             ['--history'] = get_history_file('grep'),
+            ['--scheme'] = 'path',
           },
         },
         oldfiles = {
