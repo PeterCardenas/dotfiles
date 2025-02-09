@@ -246,7 +246,7 @@ return {
               },
               {
                 fileMatch = { 'swc.json', 'swc.*.json', '.swcrc', '.*.swcrc' },
-                url = 'https://json.schemastore.org/swcrc.json',
+                url = 'https://swc.rs/schema.json',
               },
               {
                 fileMatch = { '.luarc.json' },
