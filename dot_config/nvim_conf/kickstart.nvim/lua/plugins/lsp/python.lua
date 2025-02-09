@@ -63,6 +63,7 @@ M.DISABLED_PYLINT_RULES = {
   'no-member',
   'c-extension-no-member',
   -- Below have been delegated to ruff.
+  'unused-variable',
   'trailing-whitespace',
   'missing-function-docstring',
   'missing-class-docstring',
