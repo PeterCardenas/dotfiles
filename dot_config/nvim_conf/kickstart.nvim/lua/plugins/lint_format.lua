@@ -419,6 +419,9 @@ return {
           end
           local undefined_variable_name = message:match('^Name "(.+)" is not defined $')
           if undefined_variable_name ~= nil then
+            local buf_line = vim.api.nvim_buf_get_lines(bufnr, diagnostic.lnum, diagnostic.lnum + 1, false)[1]
+            local start_col = buf_line:find(undefined_variable_name, diagnostic.col + 1)
+            diagnostic.col = start_col and start_col - 1 or diagnostic.col
             diagnostic.end_lnum = diagnostic.lnum
             diagnostic.end_col = diagnostic.col + #undefined_variable_name
           end
