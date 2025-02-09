@@ -402,7 +402,7 @@ return {
           local should_filter = true
           local message = diagnostic.message
           -- Some mypy diagnostics range the entire function, so limit it to the first line.
-          -- TODO: Limit this to the function signature.
+          -- TODO: Limit this to the correct part of function signature.
           local function_messages = {
             'Function is missing a type annotation for one or more arguments',
             'Function is missing a return type annotation',
@@ -416,6 +416,11 @@ return {
           if #matching_messages > 0 then
             diagnostic.end_lnum = diagnostic.lnum
             diagnostic.end_col = 1000
+          end
+          local undefined_variable_name = message:match('^Name "(.+)" is not defined $')
+          if undefined_variable_name ~= nil then
+            diagnostic.end_lnum = diagnostic.lnum
+            diagnostic.end_col = diagnostic.col + #undefined_variable_name
           end
           if should_filter then
             table.insert(filtered_diagnostics, diagnostic)
