@@ -202,25 +202,52 @@ local function auto_import_pyright(bufnr, dry_run, on_complete)
         return
       end
       local completion_list = require('utils.lsp').completion_result_to_items(result)
-      ---@type lsp.CompletionItem
-      local auto_import_completion
+      ---@type lsp.CompletionItem[]
+      local auto_import_completions = {}
       for _, completion in ipairs(completion_list) do
-        if completion.label == diag_info.import_name and completion.detail == 'Auto-import' then
-          auto_import_completion = completion
-          break
+        if
+          completion.label == diag_info.import_name
+          and completion.detail == 'Auto-import'
+          and completion.additionalTextEdits
+          and #completion.additionalTextEdits > 0
+        then
+          table.insert(auto_import_completions, completion)
         end
       end
-      if not auto_import_completion then
+      if #auto_import_completions == 0 then
         auto_import_next()
         return
       end
-      if not auto_import_completion.additionalTextEdits or #auto_import_completion.additionalTextEdits == 0 then
+      ---@param completion lsp.CompletionItem?
+      local function auto_import(completion)
+        if not completion then
+          auto_import_next()
+          return
+        end
+        would_edit = true
+        vim.lsp.util.apply_text_edits(completion.additionalTextEdits, diag_info.bufnr, offset_encoding)
         auto_import_next()
-        return
       end
-      would_edit = true
-      vim.lsp.util.apply_text_edits(auto_import_completion.additionalTextEdits, diag_info.bufnr, offset_encoding)
-      auto_import_next()
+      if #auto_import_completions == 1 then
+        auto_import(auto_import_completions[1])
+      end
+      vim.ui.select(auto_import_completions, {
+        prompt = 'Select auto-import completion',
+        ---@param completion lsp.CompletionItem
+        format_item = function(completion)
+          ---@type string?
+          local module_name
+          if completion.labelDetails and completion.labelDetails.description then
+            module_name = completion.labelDetails.description
+          end
+          if module_name then
+            return 'from ' .. module_name .. ' import ' .. completion.label
+          end
+          return 'import ' .. completion.label
+        end,
+      }, function(completion)
+        auto_import(completion)
+      end)
     end, diag_info.bufnr)
   end
   auto_import_next()
