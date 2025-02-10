@@ -453,6 +453,22 @@ return {
         VIRTUAL_ENV = venv_path,
         PYTHONPATH = cwd .. ':' .. cwd .. '/' .. require('plugins.lsp.python').GEN_FILES_PATH,
       }
+      local original_pylint_parser = require('lint').linters.pylint.parser
+      require('lint').linters.pylint.parser = function(output, bufnr, linter_cwd)
+        local diagnostics = original_pylint_parser(output, bufnr, linter_cwd)
+        ---@type vim.Diagnostic[]
+        local filtered_diagnostics = {}
+        for _, diagnostic in ipairs(diagnostics) do
+          local should_filter = true
+          if diagnostic.code == 'E0611' and diagnostic.message:find('_pb2') then
+            should_filter = false
+          end
+          if should_filter then
+            table.insert(filtered_diagnostics, diagnostic)
+          end
+        end
+        return filtered_diagnostics
+      end
       require('lint').linters.pylint.args = {
         '-f',
         'json',
