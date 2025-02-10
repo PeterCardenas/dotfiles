@@ -245,8 +245,7 @@ function M.python_lsp_config()
             extraPaths = {
               M.GEN_FILES_PATH,
             },
-            -- TODO(@PeterPCardenas): Re-enable this when pyright is more performant.
-            -- diagnosticMode = 'workspace',
+            diagnosticMode = 'workspace',
             typeCheckingMode = 'off',
           },
         },
