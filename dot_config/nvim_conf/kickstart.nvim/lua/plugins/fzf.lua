@@ -56,6 +56,14 @@ return {
         },
         oldfiles = {
           include_current_session = true,
+          fzf_opts = {
+            ['--history'] = get_history_file('oldfiles'),
+          },
+        },
+        helptags = {
+          fzf_opts = {
+            ['--history'] = fzf_history_dir .. '/helptags',
+          },
         },
       })
     end,
