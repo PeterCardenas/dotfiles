@@ -69,6 +69,11 @@ return {
             ['--history'] = fzf_history_dir .. '/helptags',
           },
         },
+        highlights = {
+          fzf_opts = {
+            ['--history'] = fzf_history_dir .. '/highlights',
+          },
+        },
       })
     end,
   },
