@@ -472,8 +472,8 @@ local function format_with_check(bufnr, dry_run, on_complete)
   ---@type { [1]: string, [2]: fun(bufnr: integer, dry_run: boolean, on_complete: FormatCallback): nil }[]
   local autofixers = {
     { 'gopls', format_go_imports },
-    { 'ruff_lsp', fix_ruff_errors },
     { 'pyright', auto_import_pyright },
+    { 'ruff_lsp', fix_ruff_errors },
     { 'typescript-tools', fix_typescript_errors },
   }
 
