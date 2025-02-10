@@ -37,6 +37,7 @@ return {
     vim.api.nvim_set_hl(0, 'DiagnosticSignInfo', { foreground = diagnostic_info_hl.fg, background = side_col_highlight.background })
     local diagnostic_hint_hl = vim.api.nvim_get_hl(0, { name = 'DiagnosticHint' })
     vim.api.nvim_set_hl(0, 'DiagnosticSignHint', { foreground = diagnostic_hint_hl.fg, background = side_col_highlight.background })
+    vim.api.nvim_set_hl(0, 'DapUILineNumber', { foreground = '#00f1f5', background = side_col_highlight.background })
     -- Make git signs foreground brighter and make background same as status col.
     vim.api.nvim_set_hl(0, 'GitSignsAdd', { foreground = '#258F4E', background = side_col_highlight.background })
     vim.api.nvim_set_hl(0, 'GitSignsChange', { foreground = '#DBC614', background = side_col_highlight.background })
