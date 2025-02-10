@@ -625,10 +625,6 @@ local M = {}
 -- TODO: Add diagnostics where formatting would be applied (similar to eslint-plugin-prettier) and move the following diagnostic to fidget
 ---@param bufnr integer
 function M.setup_formatting_diagnostic(bufnr)
-  local existing_autocmds = vim.api.nvim_get_autocmds({ group = format_diagnostic_autocmd_group, buffer = bufnr })
-  if #existing_autocmds > 0 then
-    return
-  end
   -- Format check is slow for large typescript files, so disable them for now.
   local filetype = vim.api.nvim_get_option_value('filetype', { buf = bufnr })
   local is_typescript = vim.tbl_contains(require('utils.typescript').SUPPORTED_FT, filetype)
