@@ -14,7 +14,11 @@ return {
       local cwd = vim.fn.getcwd()
       ---@param type string
       local function get_history_file(type)
-        return fzf_history_dir .. '/' .. type .. '/' .. cwd:gsub('/', '_')
+        local parent_dir = fzf_history_dir .. '/' .. type
+        if vim.fn.isdirectory(parent_dir) == 0 then
+          vim.fn.mkdir(parent_dir, 'p')
+        end
+        return parent_dir .. '/' .. cwd:gsub('/', '_')
       end
       -- Clear fuzzy toggle for grep
       require('fzf-lua.defaults').defaults.grep.actions = {}
