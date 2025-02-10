@@ -35,6 +35,10 @@ return {
     end,
   },
   {
+    'rcarriga/cmp-dap',
+    ft = { 'dapui_watches', 'dapui_hover', 'dap-repl' },
+  },
+  {
     'saadparwaiz1/cmp_luasnip',
     ft = require('utils.lsp').FT_WITH_LSP,
   },
@@ -161,6 +165,14 @@ return {
       cmp.setup.filetype('query', {
         sources = {
           { name = 'omni' },
+        },
+      })
+      cmp.setup.filetype({ 'dap-repl', 'dapui_watches', 'dapui_hover' }, {
+        enabled = function()
+          return vim.bo.filetype ~= 'prompt' or require('cmp_dap').is_dap_buffer()
+        end,
+        sources = {
+          { name = 'dap' },
         },
       })
 
