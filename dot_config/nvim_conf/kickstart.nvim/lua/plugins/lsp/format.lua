@@ -53,9 +53,9 @@ local function get_client_offset_encoding(client)
 end
 
 ---Check if a code action has edits.
----@param bufnr number
+---@param _bufnr number
 ---@param code_action lsp.CodeAction|nil
-local function has_edits(bufnr, code_action)
+local function has_edits(_bufnr, code_action)
   if code_action == nil then
     return false
   end
@@ -67,7 +67,7 @@ local function has_edits(bufnr, code_action)
       return true
     end
   end
-  for uri, change in pairs(code_action.edit.changes or {}) do
+  for _uri, change in pairs(code_action.edit.changes or {}) do
     if not vim.tbl_isempty(change) then
       return true
     end
@@ -138,6 +138,92 @@ local function fix_ruff_errors(bufnr, dry_run, on_complete)
   fix_from_code_action(bufnr, 'ruff_lsp', 'source.organizeImports', dry_run, function()
     fix_from_code_action(bufnr, 'ruff_lsp', 'source.fixAll', dry_run, on_complete)
   end)
+end
+
+---@param bufnr integer
+---@param dry_run boolean
+---@param on_complete? FormatCallback
+local function auto_import_pyright(bufnr, dry_run, on_complete)
+  ---@param would_edit boolean
+  local function complete(would_edit)
+    if on_complete ~= nil then
+      on_complete(would_edit)
+    end
+  end
+  if dry_run then
+    complete(false)
+    return
+  end
+  local pyright_client = vim.lsp.get_clients({ bufnr = bufnr, name = 'pyright' })[1]
+  if pyright_client == nil then
+    complete(false)
+    return
+  end
+  local pyright_diags = vim.diagnostic.get(bufnr, { namespace = vim.lsp.diagnostic.get_namespace(pyright_client.id), severity = vim.diagnostic.severity.ERROR })
+  ---@class DiagInfo
+  ---@field completion_params lsp.TextDocumentPositionParams
+  ---@field import_name string
+  ---@field bufnr integer
+
+  ---@type DiagInfo[]
+  local diag_infos = {}
+  ---@type table<string, boolean>
+  local seen_import_names = {}
+  for _, diag in ipairs(pyright_diags) do
+    if diag.code == 'reportUndefinedVariable' then
+      ---@type lsp.TextDocumentPositionParams
+      local completion_params = {
+        textDocument = vim.lsp.util.make_text_document_params(diag.bufnr),
+        position = { line = diag.lnum, character = diag.end_col },
+      }
+      local unresolved_import = vim.api.nvim_buf_get_text(diag.bufnr, diag.lnum, diag.col, diag.end_lnum, diag.end_col, {})[1]
+      if unresolved_import and not seen_import_names[unresolved_import] then
+        seen_import_names[unresolved_import] = true
+        ---@type DiagInfo
+        local diag_info = { completion_params = completion_params, import_name = unresolved_import, bufnr = diag.bufnr }
+        table.insert(diag_infos, diag_info)
+      end
+    end
+  end
+  local current_index = 1
+  local offset_encoding = get_client_offset_encoding(pyright_client)
+  local would_edit = false
+  local function auto_import_next()
+    if current_index > #diag_infos then
+      complete(would_edit)
+      return
+    end
+    local diag_info = diag_infos[current_index]
+    ---@param result vim.lsp.CompletionResult
+    pyright_client.request(LspMethod.textDocument_completion, diag_info.completion_params, function(err, result, _context, _config)
+      current_index = current_index + 1
+      if err then
+        auto_import_next()
+        return
+      end
+      local completion_list = require('utils.lsp').completion_result_to_items(result)
+      ---@type lsp.CompletionItem
+      local auto_import_completion
+      for _, completion in ipairs(completion_list) do
+        if completion.label == diag_info.import_name and completion.detail == 'Auto-import' then
+          auto_import_completion = completion
+          break
+        end
+      end
+      if not auto_import_completion then
+        auto_import_next()
+        return
+      end
+      if not auto_import_completion.additionalTextEdits or #auto_import_completion.additionalTextEdits == 0 then
+        auto_import_next()
+        return
+      end
+      would_edit = true
+      vim.lsp.util.apply_text_edits(auto_import_completion.additionalTextEdits, diag_info.bufnr, offset_encoding)
+      auto_import_next()
+    end, diag_info.bufnr)
+  end
+  auto_import_next()
 end
 
 ---@class BatchCodeActionParams
@@ -387,6 +473,7 @@ local function format_with_check(bufnr, dry_run, on_complete)
   local autofixers = {
     { 'gopls', format_go_imports },
     { 'ruff_lsp', fix_ruff_errors },
+    { 'pyright', auto_import_pyright },
     { 'typescript-tools', fix_typescript_errors },
   }
 
@@ -508,6 +595,7 @@ end
 
 local M = {}
 
+-- TODO: Add diagnostics where formatting would be applied (similar to eslint-plugin-prettier) and move the following diagnostic to fidget
 ---@param bufnr integer
 function M.setup_formatting_diagnostic(bufnr)
   local existing_autocmds = vim.api.nvim_get_autocmds({ group = format_diagnostic_autocmd_group, buffer = bufnr })
@@ -563,6 +651,8 @@ function M.setup_formatting_diagnostic(bufnr)
     end
   )
 end
+
+-- TODO: Add user command to force enable formatting.
 
 ---@param bufnr integer
 function M.format(bufnr)
