@@ -11,6 +11,7 @@
   "cmp-async-path": { "branch": "main", "commit": "d6d1ffa2075039632a2d71e8fa139818e15ac757" },
   "cmp-buffer": { "branch": "main", "commit": "3022dbc9166796b644a841a02de8dd1cc1d311fa" },
   "cmp-cmdline": { "branch": "main", "commit": "d250c63aa13ead745e3a40f61fdd3470efde3923" },
+  "cmp-dap": { "branch": "master", "commit": "ea92773e84c0ad3288c3bc5e452ac91559669087" },
   "cmp-emoji": { "branch": "main", "commit": "e8398e2adf512a03bb4e1728ca017ffeac670a9f" },
   "cmp-fish": { "branch": "main", "commit": "3a23492e2aead05522a9887ec685d70e8c987323" },
   "cmp-git": { "branch": "working-state", "commit": "0e39b5b6d1ce673dc13167fa8444982104e5a2d4" },
