@@ -224,7 +224,7 @@ local signs = {
   { name = 'DiagnosticSignInfo', text = '' },
   { name = 'DiagnosticSignHint', text = '󰛩' },
   { name = 'DapStopped', text = '', texthl = 'DiagnosticWarn' },
-  { name = 'DapBreakpoint', text = '', texthl = 'DiagnosticInfo' },
+  { name = 'DapBreakpoint', text = '', texthl = 'DapUILineNumber' },
   { name = 'DapBreakpointRejected', text = '', texthl = 'DiagnosticError' },
   { name = 'DapBreakpointCondition', text = '', texthl = 'DiagnosticInfo' },
   { name = 'DapLogPoint', text = '.>', texthl = 'DiagnosticInfo' },
