@@ -1,5 +1,9 @@
 function setup_fork -d "Sets up a fork with ssh alias and sets default repo"
     gh repo fork --clone --remote
+    if test $status -ne 0
+        print_error "Failed to fork"
+        return 1
+    end
     set -l origin_url (git config --get remote.origin.url)
     set -l fork_url (git config --get remote.upstream.url)
     if test -z "$fork_url" -o -z "$origin_url"
