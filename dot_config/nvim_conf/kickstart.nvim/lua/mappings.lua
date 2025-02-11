@@ -50,7 +50,12 @@ require('local.lazygit').set_keymap()
 
 if not require('utils.config').USE_TABLINE then
   nmap('[C]lose current buffer', 'c', function()
+    local navigable_bufnrs = require('utils.buf').get_navigable_buffers(true)
     require('bufdelete').bufdelete()
+    if #navigable_bufnrs == 1 then
+      local alpha = require('alpha')
+      alpha.start(false, alpha.default_config)
+    end
   end)
 end
 
