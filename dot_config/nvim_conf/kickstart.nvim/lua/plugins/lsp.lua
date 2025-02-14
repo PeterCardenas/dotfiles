@@ -285,7 +285,7 @@ return {
       vimls = {},
       glsl_analyzer = {},
       starpls = {
-        cmd = { 'starpls', 'server', '--experimental_infer_ctx_attributes', '--experimental_use_code_flow_analysis', '--experimental_enable_label_completions' },
+        cmd = { 'starpls', 'server', '--experimental_infer_ctx_attributes', '--experimental_use_code_flow_analysis' },
         cmd_env = {
           RUST_BACKTRACE = 'full',
         },
