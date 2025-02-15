@@ -44,8 +44,7 @@ return {
   {
     'yetone/avante.nvim',
     build = 'make',
-    event = { 'BufReadPre', 'BufNewFile' },
-    cmd = { 'AvanteAsk' },
+    event = { 'VeryLazy' },
     dependencies = {
       'nvim-treesitter/nvim-treesitter',
       'stevearc/dressing.nvim',
