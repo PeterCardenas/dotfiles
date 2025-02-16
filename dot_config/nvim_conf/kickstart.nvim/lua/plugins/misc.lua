@@ -847,6 +847,8 @@ return {
         quickfile = { enabled = true },
         words = { enabled = true },
         rename = { enabled = true },
+        -- TODO: Enable when image is equal or better than image.nvim
+        image = { enabled = false },
         -- TODO: Fully enable when trouble picker works
         profiler = { enabled = require('utils.config').USE_SNACKS_PROFILER },
         -- TODO: Re-enable when dashboard is equal or better than alpha.nvim
