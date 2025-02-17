@@ -20,6 +20,7 @@ local function set_gh_user()
     end)
   end
   local gh_token = output[1]
+  _G.GH_TOKEN = gh_token
   vim.schedule(function()
     vim.env.GH_TOKEN = gh_token
   end)

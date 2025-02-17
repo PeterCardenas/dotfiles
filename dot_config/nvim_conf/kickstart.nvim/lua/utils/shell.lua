@@ -32,6 +32,7 @@ local function get_async_cmd()
             vim.list_extend(output, lines)
           end
         end
+        ---@diagnostic disable-next-line: missing-fields
         local job = Job:new({
           command = cmd,
           args = args,
@@ -44,6 +45,9 @@ local function get_async_cmd()
           on_exit = function(_, code)
             done(code == 0, output)
           end,
+          env = vim.tbl_extend('force', vim.fn.environ(), {
+            GH_TOKEN = GH_TOKEN,
+          }),
         })
         job:start()
       end,
