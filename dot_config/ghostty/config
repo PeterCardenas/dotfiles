@@ -5,8 +5,8 @@ config-file = ?config_linux
 
 gtk-titlebar = false
 
-# TODO: Add a mechanism for randomizing the shader.
 custom-shader = ./shaders/matrix-hallway.glsl
+custom-shader = ./shaders/cubes.glsl
 custom-shader-animation = always
 
 font-family = "MonaspiceKr Nerd Font"
