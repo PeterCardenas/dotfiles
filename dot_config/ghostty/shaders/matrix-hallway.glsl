@@ -1,3 +1,4 @@
+// Source: https://github.com/hackr-sh/ghostty-shaders/blob/main/matrix-hallway.glsl
 // #iChannel0 "file:///Users/asherwin/.config/ghostty/myshaders/screen2.png"
 
 // based on the following Shader Toy entry
