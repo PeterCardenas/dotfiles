@@ -221,6 +221,8 @@ function M.python_lsp_config()
               or diagnostic.code == 'reportMissingModuleSource'
               -- False positive by not inferring type from default arguments
               or diagnostic.code == 'reportArgumentType'
+              -- Mypy handles this correctly
+              or diagnostic.code == 'reportInvalidTypeForm'
             then
               should_filter = false
             end
