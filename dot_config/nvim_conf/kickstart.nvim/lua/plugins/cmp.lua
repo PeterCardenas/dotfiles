@@ -76,13 +76,14 @@ return {
     event = { 'InsertEnter', 'CmdlineEnter' },
     config = function()
       local cmp = require('cmp')
+      local ssh_aliases = {
+        ['personal-github.com'] = 'github.com',
+        ['work-github.com'] = 'github.com',
+      }
       require('cmp_git').setup({
         -- Enable completion for all filetypes to get them in comments.
         filetypes = { '*' },
-        ssh_aliases = {
-          ['personal-github.com'] = 'github.com',
-          ['work-github.com'] = 'github.com',
-        },
+        ssh_aliases = ssh_aliases,
         github = {
           issues = {
             filter = 'assigned',
@@ -109,6 +110,12 @@ return {
           },
         },
       })
+      local git_info = require('cmp_git.utils').get_git_info(require('cmp_git.config').remotes, {
+        enableRemoteUrlRewrites = require('cmp_git.config').enableRemoteUrlRewrites,
+        ssh_aliases = ssh_aliases,
+      })
+      -- Preload mentions
+      require('cmp_git').source.sources.github:get_mentions(function() end, git_info, '@')
 
       cmp.setup({
         snippet = {
