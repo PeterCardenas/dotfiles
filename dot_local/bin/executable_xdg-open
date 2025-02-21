@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 
 # xdg-open doesn't exist when not using X11.
-firefox "$@"
+# This is specific for the GNOME desktop environment.
+gio open "$@"
