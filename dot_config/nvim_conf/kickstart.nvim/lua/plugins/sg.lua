@@ -42,7 +42,8 @@ return {
     end,
   },
   {
-    'yetone/avante.nvim',
+    'PeterCardenas/avante.nvim',
+    branch = 'custom-shell',
     build = 'make',
     event = { 'VeryLazy' },
     dependencies = {
@@ -53,19 +54,45 @@ return {
       'echasnovski/mini.icons',
     },
     config = function()
-      local filepath = vim.fn.expand('~/.local/share/anthropic/api_key')
-      local lines = vim.fn.readfile(filepath)
+      local api_key_filepath = vim.fn.expand('~/.local/share/anthropic/api_key')
+      local lines = vim.fn.readfile(api_key_filepath)
       if #lines == 0 or lines[1] == '' then
-        vim.notify('Unable to load avante.nvim, Anthropic API key not found at ' .. filepath, vim.log.levels.ERROR)
+        vim.notify('Unable to load avante.nvim, Anthropic API key not found at ' .. api_key_filepath, vim.log.levels.ERROR)
         return
       end
       vim.env.ANTHROPIC_API_KEY = lines[1]
+      -- TODO: Properly respect gitignore for repo map
+      -- TODO: run_command should use the user's shell
+      -- TODO: auto apply/ask to apply when running tools
       require('avante').setup({
         hints = {
           enabled = false,
         },
         behaviour = {
           auto_suggestions = not require('utils.config').USE_SUPERMAVEN,
+          enable_cursor_planning_mode = true,
+        },
+        file_selector = {
+          provider_opts = {
+            get_filepaths = function(params) ---@param params avante.file_selector.opts.IGetFilepathsParams
+              local cwd = params.cwd ---@type string
+
+              local selected_filepaths = params.selected_filepaths ---@type string[]
+
+              local cmd = require('plugins.telescope.setup').rg_files_cmd(false) .. ' ' .. vim.fn.fnameescape(cwd)
+
+              local output = vim.fn.system(cmd)
+
+              local filepaths = vim.split(output, '\n', { trimempty = true })
+
+              return vim
+                .iter(filepaths)
+                :filter(function(filepath)
+                  return not vim.tbl_contains(selected_filepaths, filepath)
+                end)
+                :totable()
+            end,
+          },
         },
       })
     end,
