@@ -6,6 +6,8 @@ vim.o.foldlevelstart = 99
 vim.o.foldenable = true
 vim.o.fillchars = 'eob: ,fold: ,foldopen:+,foldsep:│,foldclose:-'
 
+vim.g.omni_sql_default_compl_type = 'syntax'
+
 -- Default tab width of 2 spaces
 vim.o.tabstop = 2
 
