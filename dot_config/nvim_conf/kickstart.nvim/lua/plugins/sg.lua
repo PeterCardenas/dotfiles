@@ -70,7 +70,9 @@ return {
         },
         behaviour = {
           auto_suggestions = not require('utils.config').USE_SUPERMAVEN,
-          enable_cursor_planning_mode = true,
+          -- TODO: Use this when it's fast and less buggy
+          enable_cursor_planning_mode = false,
+          auto_apply_diff_after_generation = true,
         },
         file_selector = {
           provider = 'fzf',
@@ -84,6 +86,7 @@ return {
               local output = vim.fn.system(cmd)
 
               -- Add directories to the list of filepaths
+              -- TODO: Add this upstream to avante.nvim
               local filepaths = vim.split(output, '\n', { trimempty = true })
               local directory_map = {} ---@type table<string, boolean>
               for _, filepath in ipairs(filepaths) do
