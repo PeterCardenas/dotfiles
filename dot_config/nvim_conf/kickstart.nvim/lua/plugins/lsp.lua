@@ -300,8 +300,8 @@ return {
 
     -- Setup language servers found locally.
     require('plugins.lsp.local').setup(capabilities)
-    -- Setup specific autocmds.
-    require('plugins.lsp.python').setup()
+    -- Setup specific autocmds and ruff_lsp.
+    require('plugins.lsp.python').setup(capabilities)
 
     -- Ensure the servers above are installed
     local mason_lspconfig = require('mason-lspconfig')
@@ -319,12 +319,7 @@ return {
         end
         ---@diagnostic disable-next-line: inject-field
         server_config.capabilities = require('utils.table').merge_tables(capabilities, server_config.capabilities or {})
-        if server_name == 'ruff_lsp' then
-          require('lspconfig.configs')[server_name] = require('lspconfig.configs.' .. server_name)
-          require('lspconfig.configs')[server_name].setup(server_config)
-        else
-          require('lspconfig')[server_name].setup(server_config)
-        end
+        require('lspconfig')[server_name].setup(server_config)
       end,
     })
   end,
