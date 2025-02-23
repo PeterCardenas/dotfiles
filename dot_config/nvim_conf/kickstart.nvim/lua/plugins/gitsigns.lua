@@ -99,7 +99,7 @@ vim.api.nvim_create_user_command('GHPR', function()
   local gitsigns_async = require('gitsigns.async')
   -- gitsigns async and plenary async are not compatible with each other
   -- So use gitsigns async just for getting blame info.
-  ---@type fun(cb: fun(blame_info: Gitsigns.BlameInfo?): nil): nil
+  ---@type fun(cb: fun(err, blame_info: [Gitsigns.BlameInfo]?): nil): nil
   local run = gitsigns_async.create(
     0,
     ---@async
@@ -109,24 +109,27 @@ vim.api.nvim_create_user_command('GHPR', function()
       return blame_info
     end
   )
-  run(function(blame_info)
+  run(function(err, result)
+    if err then
+      vim.notify('Getting blame info failed:\n' .. tostring(err), vim.log.levels.ERROR)
+      return
+    end
+    local blame_info = result and result[1] or nil
+    if not blame_info then
+      vim.notify('Blame has not been loaded yet.', vim.log.levels.ERROR)
+      return
+    end
+    local commit_sha = blame_info.commit.sha
     async.void(
       ---@async
       function()
-        if not blame_info then
-          vim.schedule(function()
-            vim.notify('Blame has not been loaded yet.', vim.log.levels.ERROR)
-          end)
-          return
-        end
         local not_committed_sha = require('gitsigns.git.blame').get_blame_nc('', lnum).commit.sha
-        if blame_info.commit.sha == not_committed_sha then
+        if commit_sha == not_committed_sha then
           vim.schedule(function()
             vim.notify('Current line not committed yet.', vim.log.levels.ERROR)
           end)
           return
         end
-        local commit_sha = blame_info.commit.sha
         local pr_url = get_pr_url(commit_sha)
         if not pr_url then
           local commit_url = get_commit_url(commit_sha)
@@ -244,6 +247,7 @@ end, { nargs = 0, desc = 'Edit the PR for the current branch' })
 
 local nmap = require('utils.keymap').nmap
 
+-- TODO: Does not work with buffers with large files
 vim.api.nvim_create_autocmd({ 'CursorMoved' }, {
   group = vim.api.nvim_create_augroup('gitsigns-prefetch-blame', { clear = true }),
   callback = function(opts)
@@ -380,6 +384,9 @@ return {
       -- TODO: Make virtual text for comments brighter when hovering on the lines associated with the comment.
       -- TODO: Add user events to use for auto commands to trigger for fidget.nvim notifications.
       -- TODO: Next thread keymap gets removed sometimes (when switching between tabs maybe?)
+      -- TODO: Add add to project event in issue
+      -- TODO: Fetch whether a file has been viewed when resuming/starting a review.
+      -- TODO: Load resolved comments previous reviews in current review.
       if not vim.env.GH_TOKEN then
         vim.notify('User not set up for gh cli', vim.log.levels.ERROR)
       end
