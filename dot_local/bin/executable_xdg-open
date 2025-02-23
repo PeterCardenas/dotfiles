@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+if [[ -n "$SSH_CONNECTION" ]]; then
+    ssh macbook open "$@"
+    exit
+fi
+
 # xdg-open doesn't exist when not using X11.
 # This is specific for the GNOME desktop environment.
 gio open "$@"
