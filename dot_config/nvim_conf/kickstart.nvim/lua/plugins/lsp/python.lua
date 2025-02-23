@@ -4,6 +4,55 @@ local LspMethod = vim.lsp.protocol.Methods
 local enable_pyright = not require('utils.config').USE_JEDI
 M.GEN_FILES_PATH = 'bazel-out/k8-fastbuild/bin'
 
+---@return table<string, custom.LspConfig>
+local function get_ruff_lsp_config()
+  local additional_rules = {
+    'D', -- pydocstyle: https://docs.astral.sh/ruff/rules/#pydocstyle-d
+    'W', -- pycodestyle warnings: https://docs.astral.sh/ruff/rules/#warning-w
+    'PLR0912', -- too-many-branches
+    'T201', -- print
+    'SLF001', -- private-member-access
+    'PLW1514', -- unspecified-encoding
+    'C416', -- unnecessary-comprehension
+    'SIM401', -- if-else-block-instead-of-dict-get
+    'PLE0302', --unexpected-special-method-signature
+    'TRY002', -- raise-vanilla-class
+    'B023', -- function-uses-loop-variable
+    'PLE1206', -- logging-too-few-args
+    'PLE1205', -- logging-too-many-args
+  }
+  local ignored_rules = {
+    'W191', -- tab-indentation https://docs.astral.sh/ruff/rules/tab-indentation/
+    'E203', -- whitespace before ':' https://docs.astral.sh/ruff/rules/whitespace-before-colon/, this comes up with false positives
+  }
+  local used_in_repo = {
+    'W605', -- invalid escape sequence https://docs.astral.sh/ruff/rules/invalid-escape-sequence/
+    'W293', -- trailing whitespace https://docs.astral.sh/ruff/rules/trailing-whitespace/
+    'E251', -- unexpected spaces around keyword / parameter equals https://docs.astral.sh/ruff/rules/unexpected-spaces-around-keyword-parameter-equals/
+  }
+  local ruff_args = {
+    -- Enable preview mode for some additional rules.
+    '--preview',
+    '--extend-select=' .. table.concat(additional_rules, ','),
+    '--ignore=' .. table.concat(ignored_rules, ','),
+    -- Do not fix selected rules to minimize diff.
+    '--unfixable=' .. table.concat(additional_rules, ','),
+    -- Re-enable rules that are used in codebase.
+    '--extend-fixable=' .. table.concat(used_in_repo, ','),
+  }
+  -- TODO(PeterPCardenas): Fork https://github.com/astral-sh/ruff-lsp
+  -- Add support to adding rules without changing how the codebase selects and fixes rules.
+  return {
+    ruff_lsp = {
+      init_options = {
+        settings = {
+          args = ruff_args,
+        },
+      },
+    },
+  }
+end
+
 --  Configures a language server after it attaches to a buffer.
 ---@param client vim.lsp.Client
 ---@param _ integer buffer number
@@ -27,7 +76,13 @@ local function on_attach(client, _)
   end
 end
 
-function M.setup()
+---@param capabilities lsp.ClientCapabilities
+function M.setup(capabilities)
+  -- Need to manually setup ruff_lsp since it was removed from mason-lspconfig and deprecated from nvim-lspconfig.
+  require('lspconfig.configs')['ruff_lsp'] = require('lspconfig.configs.ruff_lsp')
+  local ruff_lsp_config = get_ruff_lsp_config()
+  ruff_lsp_config = require('utils.table').merge_tables(capabilities, ruff_lsp_config.capabilities or {})
+  require('lspconfig.configs')['ruff_lsp'].setup(ruff_lsp_config)
   vim.api.nvim_create_autocmd('LspAttach', {
     group = vim.api.nvim_create_augroup('PythonConfig', { clear = true }),
     callback = function(args)
@@ -129,55 +184,6 @@ local function pylsp_config()
 end
 
 ---@return table<string, custom.LspConfig>
-local function ruff_lsp_config()
-  local additional_rules = {
-    'D', -- pydocstyle: https://docs.astral.sh/ruff/rules/#pydocstyle-d
-    'W', -- pycodestyle warnings: https://docs.astral.sh/ruff/rules/#warning-w
-    'PLR0912', -- too-many-branches
-    'T201', -- print
-    'SLF001', -- private-member-access
-    'PLW1514', -- unspecified-encoding
-    'C416', -- unnecessary-comprehension
-    'SIM401', -- if-else-block-instead-of-dict-get
-    'PLE0302', --unexpected-special-method-signature
-    'TRY002', -- raise-vanilla-class
-    'B023', -- function-uses-loop-variable
-    'PLE1206', -- logging-too-few-args
-    'PLE1205', -- logging-too-many-args
-  }
-  local ignored_rules = {
-    'W191', -- tab-indentation https://docs.astral.sh/ruff/rules/tab-indentation/
-    'E203', -- whitespace before ':' https://docs.astral.sh/ruff/rules/whitespace-before-colon/, this comes up with false positives
-  }
-  local used_in_repo = {
-    'W605', -- invalid escape sequence https://docs.astral.sh/ruff/rules/invalid-escape-sequence/
-    'W293', -- trailing whitespace https://docs.astral.sh/ruff/rules/trailing-whitespace/
-    'E251', -- unexpected spaces around keyword / parameter equals https://docs.astral.sh/ruff/rules/unexpected-spaces-around-keyword-parameter-equals/
-  }
-  local ruff_args = {
-    -- Enable preview mode for some additional rules.
-    '--preview',
-    '--extend-select=' .. table.concat(additional_rules, ','),
-    '--ignore=' .. table.concat(ignored_rules, ','),
-    -- Do not fix selected rules to minimize diff.
-    '--unfixable=' .. table.concat(additional_rules, ','),
-    -- Re-enable rules that are used in codebase.
-    '--extend-fixable=' .. table.concat(used_in_repo, ','),
-  }
-  -- TODO(PeterPCardenas): Fork https://github.com/astral-sh/ruff-lsp
-  -- Add support to adding rules without changing how the codebase selects and fixes rules.
-  return {
-    ruff_lsp = {
-      init_options = {
-        settings = {
-          args = ruff_args,
-        },
-      },
-    },
-  }
-end
-
----@return table<string, custom.LspConfig>
 function M.python_lsp_config()
   ---@type table<string, custom.LspConfig>
   local server_configs = {
@@ -254,8 +260,6 @@ function M.python_lsp_config()
       },
     },
   }
-  local ruff_configs = ruff_lsp_config()
-  server_configs = vim.tbl_extend('force', server_configs, ruff_configs)
   -- Fastest lsp, but linting/formatting will be moved to ruff.
   local pylsp_configs = pylsp_config()
   server_configs = vim.tbl_extend('force', server_configs, pylsp_configs)
