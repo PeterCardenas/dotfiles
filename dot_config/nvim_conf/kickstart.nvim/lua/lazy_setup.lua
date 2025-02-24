@@ -24,6 +24,7 @@ end
 ---@diagnostic disable-next-line: undefined-field
 vim.opt.rtp:prepend(lazypath)
 
+-- TODO: Remove "Sync" tab for keybind for leap.nvim
 -- Add plugins for lazy.nvim.
 require('lazy').setup({
   -- Detect tabstop and shiftwidth automatically

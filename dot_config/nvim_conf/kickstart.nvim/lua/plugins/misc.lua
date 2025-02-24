@@ -22,6 +22,29 @@ vim.api.nvim_create_autocmd('BufReadPre', {
   end,
 })
 
+-- TODO: sync ordering of buffers to session
+-- local sync_buffers_group = vim.api.nvim_create_augroup('Sync Buffers to Session', { clear = true })
+-- vim.api.nvim_create_autocmd('SessionLoadPost', {
+--   group = sync_buffers_group,
+--   callback = function()
+--     if not vim.g.session_buffers then
+--       return
+--     end
+--     local bufs_with_names = vim.json.decode(vim.g.session_buffers)
+--     for _, buf_with_name in ipairs(bufs_with_names) do
+--       local bufnr = buf_with_name.bufnr
+--       local name = buf_with_name.name
+--       vim.cmd.badd({ args = { '+' .. bufnr, name } })
+--     end
+--     if #bufs_with_names > 0 then
+--       vim.cmd.edit({ args = { bufs_with_names[#bufs_with_names].name } })
+--       if #bufs_with_names > 1 then
+--         vim.cmd.balt({ args = { bufs_with_names[#bufs_with_names - 1].name } })
+--       end
+--     end
+--   end,
+-- })
+--
 vim.api.nvim_create_user_command('SiliconCopy', function()
   require('silicon').clip()
 end, { nargs = 0, range = true })
@@ -531,6 +554,7 @@ return {
     event = { 'BufReadPre', 'BufNewFile', 'BufEnter' },
     config = function()
       vim.keymap.set({ 'n', 'v', 'x', 'o' }, 's', '<Plug>(leap-forward)')
+      -- TODO: Jumping backwards does not work in visual mode.
       vim.keymap.set({ 'n', 'v', 'x', 'o' }, 'S', '<Plug>(leap-backward)')
       vim.keymap.set({ 'n', 'v', 'x', 'o' }, 'gs', '<Plug>(leap-from-window)')
       require('leap.opts').default.substitute_chars = { ['{'] = 'b', ['}'] = 'b', ['('] = 'p', [')'] = 'p', ['['] = 'b', [']'] = 'b' }

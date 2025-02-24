@@ -22,7 +22,11 @@ return {
       end
       -- Clear fuzzy toggle for grep
       require('fzf-lua.defaults').defaults.grep.actions = {}
+      -- TODO: Make regex match case insensitive
+      -- TODO: frecency support, reference: https://www.reddit.com/r/neovim/comments/1hmoa2z/comment/m3vkvba/
       require('fzf-lua').setup({
+        -- TODO: Fix no write since last change
+        -- 'hide',
         keymap = {
           builtin = {
             ['<C-D>'] = 'preview-page-down',

@@ -100,8 +100,8 @@ local function fix_from_code_action(bufnr, ls_name, action_type, dry_run, on_com
     ---@param err any
     ---@param ls_results lsp.CodeAction[]
     client.request(LspMethod.textDocument_codeAction, params, function(err, ls_results, _, _)
-      -- TODO: Properly ignore trouble buffers.
-      if err and (client.name ~= 'ruff_lsp' or err.message:find('/Trouble') == nil) then
+      -- TODO: ruff is pretty noisy about errors
+      if err and client.name == 'ruff_lsp' then
         vim.notify('Error running ' .. ls_name .. ' code action: ' .. vim.inspect(err), vim.log.levels.ERROR)
       end
       local did_edit = false
@@ -431,7 +431,8 @@ local function lsp_format(bufnr, dry_run, on_complete)
     return
   end
   for _, client in ipairs(formatting_clients) do
-    if get_ignored_formatters()[client.name] then
+    -- TODO: Only disable formatter when a client has timed out once before on this buffer.
+    if get_ignored_formatters()[client.name] or (dry_run and client.name == 'eslint') then
       clients_to_check = clients_to_check - 1
       if clients_to_check == 0 then
         if on_complete ~= nil then
