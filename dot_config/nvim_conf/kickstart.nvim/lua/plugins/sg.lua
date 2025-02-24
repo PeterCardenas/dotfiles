@@ -43,7 +43,7 @@ return {
   },
   {
     'PeterCardenas/avante.nvim',
-    branch = 'custom-shell',
+    branch = 'allow-async-tools',
     build = 'make',
     event = { 'VeryLazy' },
     dependencies = {
@@ -62,8 +62,7 @@ return {
       end
       vim.env.ANTHROPIC_API_KEY = lines[1]
       -- TODO: Properly respect gitignore for repo map
-      -- TODO: run_command should use the user's shell
-      -- TODO: auto apply/ask to apply when running tools
+      -- TODO: building repo map should be async
       require('avante').setup({
         hints = {
           enabled = false,
@@ -72,7 +71,11 @@ return {
           auto_suggestions = not require('utils.config').USE_SUPERMAVEN,
           -- TODO: Use this when it's fast and less buggy
           enable_cursor_planning_mode = false,
-          auto_apply_diff_after_generation = true,
+          -- TODO: auto apply/ask to apply when running tools
+          auto_apply_diff_after_generation = false,
+        },
+        run_command = {
+          shell_cmd = 'fish -c',
         },
         file_selector = {
           provider = 'fzf',
