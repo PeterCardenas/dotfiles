@@ -13,6 +13,7 @@ local function on_attach(client, bufnr)
   end, { buffer = bufnr })
 end
 
+-- TODO: Add LspDetach support
 ---@type LazyPluginSpec
 return {
   'pmizio/typescript-tools.nvim',
