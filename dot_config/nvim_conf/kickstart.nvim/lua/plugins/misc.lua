@@ -568,6 +568,7 @@ return {
     config = function()
       local builtin = require('statuscol.builtin')
 
+      -- TODO: only show two cell widths for diagnostics
       require('statuscol').setup({
         foldfunc = 'builtin',
         ft_ignore = { 'dashboard', 'NvimTree', 'help' },
