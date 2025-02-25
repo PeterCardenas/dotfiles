@@ -39,6 +39,7 @@ return {
     'jbyuki/one-small-step-for-vimkind',
   },
   lazy = true,
+  cmd = { 'DapContinue' },
   keys = {
     {
       '<F4>',
