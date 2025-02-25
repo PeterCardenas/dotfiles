@@ -43,7 +43,7 @@ return {
   },
   {
     'PeterCardenas/avante.nvim',
-    branch = 'allow-async-tools',
+    branch = 'working-state',
     build = 'make',
     event = { 'VeryLazy' },
     dependencies = {
