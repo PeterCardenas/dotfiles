@@ -676,6 +676,7 @@ return {
     cmd = { 'SudaRead', 'SudaWrite' },
   },
 
+  -- Search/replace across multiple files
   {
     'nvim-pack/nvim-spectre',
     cmd = { 'Spectre' },
@@ -693,6 +694,19 @@ return {
           ui = 'String',
           search = 'DiffAdd',
           replace = 'DiffDelete',
+        },
+      })
+    end,
+  },
+
+  -- Search/replace across multiple files (better than spectre?)
+  {
+    'MagicDuck/grug-far.nvim',
+    cmd = { 'GrugFar' },
+    config = function()
+      require('grug-far').setup({
+        openTargetWindow = {
+          preferredLocation = 'right',
         },
       })
     end,
