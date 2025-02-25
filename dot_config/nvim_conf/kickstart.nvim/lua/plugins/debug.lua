@@ -23,6 +23,12 @@ return {
     -- Creates a beautiful debugger UI
     'rcarriga/nvim-dap-ui',
     'nvim-neotest/nvim-nio',
+    {
+      'theHamsta/nvim-dap-virtual-text',
+      dependencies = {
+        'nvim-treesitter/nvim-treesitter',
+      },
+    },
 
     -- Installs the debug adapters for you
     'williamboman/mason.nvim',
