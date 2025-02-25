@@ -69,6 +69,19 @@ local function paste_unsupported()
   vim.notify('OSC 52 clipboard paste unsupported, use ctrl-v', vim.log.levels.ERROR)
 end
 
+---@type function|table
+local paste_command = paste_unsupported
+
+if vim.env.TMUX ~= nil and vim.env.SSH_CONNECTION ~= nil then
+  paste_command = paste_unsupported
+elseif vim.fn.has('linux') == 1 then
+  paste_command = { 'wl-paste' }
+elseif vim.fn.has('mac') == 1 then
+  paste_command = { 'pbpaste' }
+else
+  paste_command = paste_unsupported
+end
+
 vim.g.clipboard = {
   name = 'Tmux-Aware OSC 52',
   copy = {
@@ -76,8 +89,8 @@ vim.g.clipboard = {
     ['*'] = create_tmux_aware_copy_fn('*'),
   },
   paste = {
-    ['+'] = paste_unsupported,
-    ['*'] = paste_unsupported,
+    ['+'] = paste_command,
+    ['*'] = paste_command,
   },
 }
 
@@ -306,14 +319,3 @@ vim.on_key(function(char)
     end
   end
 end, vim.api.nvim_create_namespace('auto_hlsearch'))
-
--- [[ Highlight on yank ]]
--- See `:help vim.highlight.on_yank()`
-local highlight_group = vim.api.nvim_create_augroup('YankHighlight', { clear = true })
-vim.api.nvim_create_autocmd('TextYankPost', {
-  callback = function()
-    vim.highlight.on_yank()
-  end,
-  group = highlight_group,
-  pattern = '*',
-})
