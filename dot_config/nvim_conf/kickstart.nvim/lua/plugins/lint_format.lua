@@ -488,6 +488,8 @@ return {
         go = { 'golint' },
         proto = { 'buf_lint' },
         python = { 'dmypy', 'pylint' },
+        json = { 'jq' },
+        fish = { 'fish' },
       }
     end,
   },

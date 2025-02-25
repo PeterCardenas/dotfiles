@@ -366,7 +366,7 @@ return {
   {
     -- Adds GitHub integration
     'PeterCardenas/octo.nvim',
-    branch = 'notification-patch',
+    branch = 'fix-read-notification-keymap',
     cmd = { 'Octo' },
     dependencies = {
       'nvim-lua/plenary.nvim',
