@@ -1,5 +1,6 @@
 README.md
 .git-blame-ignore-revs
+gnome-settings.conf
 setup.sh
 # Ignore config files specific to linux
 {{- if ne .chezmoi.os "linux" }}
