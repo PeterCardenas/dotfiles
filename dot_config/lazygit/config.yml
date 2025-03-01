@@ -1,4 +1,5 @@
 gui:
+  # TODO: there is no fuzzy filtering for files
   filterMode: 'fuzzy'
   skipRewordInEditorWarning: true
   splitDiff: "always"
@@ -41,6 +42,7 @@ gui:
     defaultFgColor:
       - "#c0caf5"
 keybinding:
+  # TODO: Push/pull branches that are not checked out
   files:
     commitChanges: 'C'
     commitChangesWithEditor: 'c'
