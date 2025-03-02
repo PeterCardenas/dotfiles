@@ -99,6 +99,10 @@ return {
       vim.env.ANTHROPIC_API_KEY = lines[1]
       -- TODO: Properly respect gitignore for repo map
       -- TODO: building repo map should be async
+      -- TODO: diffs should join with relevant diffs next to them
+      -- TODO: allow cancelling, but keep chat history
+      -- TODO: becomes slower the longer the output is.
+      -- TODO: sidepanel duplicates
       require('avante').setup({
         hints = {
           enabled = false,
@@ -107,7 +111,7 @@ return {
           auto_suggestions = not require('utils.config').USE_SUPERMAVEN,
           -- TODO: Use this when it's fast and less buggy
           enable_cursor_planning_mode = false,
-          -- TODO: auto apply/ask to apply when running tools
+          -- TODO: auto apply/ask to apply when running tools, maybe add a continue keymap and pause when applying diffs
           auto_apply_diff_after_generation = false,
         },
         disabled_tools = { 'python', 'bash' },
