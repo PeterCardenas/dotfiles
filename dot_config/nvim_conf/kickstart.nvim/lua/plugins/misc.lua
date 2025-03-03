@@ -731,6 +731,7 @@ return {
   },
 
   -- Faster LuaLS completions
+  -- TODO: Enable emmylua_ls
   {
     'folke/lazydev.nvim',
     ft = 'lua', -- only load on lua files
