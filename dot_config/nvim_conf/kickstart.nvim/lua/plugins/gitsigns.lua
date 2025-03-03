@@ -149,11 +149,7 @@ vim.api.nvim_create_user_command('GHPR', function()
 end, { nargs = 0, desc = 'Open/Copy GitHub PR link for current line' })
 
 local function relative_path_to_git_root()
-  local current_file_paths = vim.fn.expand('%:p')
-  local current_file = current_file_paths[1]
-  if type(current_file_paths) == 'string' then
-    current_file = current_file_paths
-  end
+  local current_file = vim.fn.expand('%:p')
   local git_root = require('utils.file').get_git_root()
 
   if git_root and vim.fn.isdirectory(git_root) == 1 then
@@ -313,7 +309,7 @@ vim.api.nvim_create_autocmd({ 'BufEnter' }, {
     ---@type integer
     local bufnr = opts.buf
     vim.keymap.set('n', '<leader>rt', function()
-      require('octo.reviews.thread-panel').show_review_threads({ jump_to_buffer = true })
+      require('octo.reviews.thread-panel').show_review_threads(true)
     end, { buffer = bufnr, desc = 'Review thread' })
     vim.keymap.set({ 'n', 'v' }, '<leader>rca', function()
       local current_review = require('octo.reviews').get_current_review()

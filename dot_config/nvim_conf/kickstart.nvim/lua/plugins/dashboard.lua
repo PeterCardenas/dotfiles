@@ -108,9 +108,10 @@ return {
     dashboard.section.footer.opts.hl = 'AlphaFooter'
     dashboard.section.footer.opts.spacing = 1
     dashboard.section.footer.type = 'group'
-    local version_string = 'v' .. vim.version().major .. '.' .. vim.version().minor .. '.' .. vim.version().patch
-    if vim.version().prerelease then
-      version_string = version_string .. '-' .. vim.version().prerelease .. '+' .. vim.version().build
+    local vim_version = vim.version() ---@type vim.Version
+    local version_string = 'v' .. vim_version.major .. '.' .. vim_version.minor .. '.' .. vim_version.patch
+    if vim_version.prerelease then
+      version_string = version_string .. '-' .. vim_version.prerelease .. '+' .. vim_version.build
     end
     dashboard.section.footer.val = {
       {
