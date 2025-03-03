@@ -183,9 +183,11 @@ return {
             diagnostics = {
               severity = {
                 ['await-in-sync'] = 'Error',
+                ['no-unknown'] = 'Warning',
               },
               neededFileStatus = {
                 ['await-in-sync'] = 'Opened',
+                ['no-unknown'] = 'Any',
               },
               globals = {
                 'require',

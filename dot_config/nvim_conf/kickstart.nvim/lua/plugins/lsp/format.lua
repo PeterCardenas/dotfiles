@@ -28,7 +28,7 @@ local function get_ignored_formatters()
   end
   local ignored_formatters_file = require('utils.file').get_cwd() .. '/.formatignore'
   if vim.fn.filereadable(ignored_formatters_file) == 1 then
-    local ignored_formatters_list = vim.tbl_filter(function(line)
+    local ignored_formatters_list = vim.tbl_filter(function(line) ---@param line string
       return line ~= ''
     end, vim.fn.readfile(ignored_formatters_file))
     ignored_formatters = {}

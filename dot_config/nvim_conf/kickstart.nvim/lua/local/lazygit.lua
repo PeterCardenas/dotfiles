@@ -23,6 +23,7 @@ local function setup_lazygit_buffer()
           vim.api.nvim_feedkeys('q', 'n', true)
           return
         end
+        ---@type integer[]
         local bufnrs = vim
           .iter(vim.api.nvim_list_bufs())
           :filter(function(filtered_bufnr)
@@ -79,7 +80,7 @@ end
 
 function M.open_lazygit()
   local bufnrs = vim.api.nvim_list_bufs()
-  local lazygit_bufnr = vim.tbl_filter(function(bufnr)
+  local lazygit_bufnr = vim.tbl_filter(function(bufnr) ---@param bufnr integer
     local bufname = vim.api.nvim_buf_get_name(bufnr)
     return bufname:match('term://.*lazygit')
   end, bufnrs)[1]
@@ -103,6 +104,7 @@ function M.set_keymap()
   vim.api.nvim_create_autocmd('BufAdd', {
     pattern = '*COMMIT_EDITMSG',
     callback = function(args)
+      ---@type integer
       local commit_bufnr = args.buf
       vim.cmd('startinsert')
       ---@return integer?
