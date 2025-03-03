@@ -1,4 +1,5 @@
 ---@type dropbar_configs_t
+---@diagnostic disable-next-line: missing-fields
 local DROPBAR_CONFIG = {
   icons = {
     kinds = {

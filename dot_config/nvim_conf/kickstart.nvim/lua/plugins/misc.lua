@@ -418,13 +418,12 @@ return {
               ---@diagnostic disable-next-line: undefined-field
               require('noice').api.status.mode.get,
               cond = function()
-                ---@diagnostic disable-next-line: undefined-field
+                ---@type boolean
                 local has_status = require('noice').api.status.mode.has()
                 if not has_status then
                   return false
                 end
                 ---@type string
-                ---@diagnostic disable-next-line: undefined-field
                 local status = require('noice').api.status.mode.get()
                 return vim.startswith(status, 'recording')
               end,

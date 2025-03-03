@@ -16,6 +16,7 @@ local function update_lint_notification()
   end
 end
 
+---@type table<string, integer>
 local filename_to_last_edited = {}
 
 vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter', 'BufNewFile' }, {
@@ -299,7 +300,7 @@ local function get_buildifier_warnings_arg()
     ['native-java'] = true,
   }
   ---@type string[]
-  local filtered_buildifier_warnings = vim.tbl_filter(function(warning)
+  local filtered_buildifier_warnings = vim.tbl_filter(function(warning) ---@param warning string
     return ignored_buildifier_warnings[warning] == nil
   end, buildifier_warnings)
   local buildifier_warnings_arg = '--warnings=' .. table.concat(filtered_buildifier_warnings, ',')
@@ -404,7 +405,7 @@ return {
             'Use "-> None" if function does not return a value',
             'Missing return statement',
           }
-          local matching_messages = vim.tbl_filter(function(function_message)
+          local matching_messages = vim.tbl_filter(function(function_message) ---@param function_message string
             return string.find(message, function_message) ~= nil or function_message == message
           end, function_messages)
           if #matching_messages > 0 then

@@ -96,6 +96,7 @@ return {
 
       --- End stolen utils from avante.nvim/llm_tools.lua
 
+      ---@type string
       vim.env.ANTHROPIC_API_KEY = lines[1]
       -- TODO: Properly respect gitignore for repo map
       -- TODO: building repo map should be async

@@ -1,6 +1,6 @@
 local M = {}
 
----Merges two tables of the same type
+---Merges two tables of the same type one level deep
 ---@generic TTable : table
 ---@param table_to_override TTable
 ---@param new_table TTable
@@ -15,8 +15,9 @@ end
 ---@param list TList
 ---@return TList
 function M.remove_duplicates(list)
-  local seen = {}
+  local seen = {} ---@type table<any, boolean>
   local new_list = {}
+  ---@diagnostic disable-next-line: no-unknown
   for _, v in ipairs(list) do
     if not seen[v] then
       table.insert(new_list, v)
