@@ -706,7 +706,13 @@ return {
         openTargetWindow = {
           preferredLocation = 'right',
         },
+        keymaps = {
+          -- Allows for <leader>q for closing grug-far
+          qflist = false,
+        },
       })
+      -- @diff.delta is not noticeable enough, but fixing it is not important.
+      vim.api.nvim_set_hl(0, 'GrugFarResultsMatch', { link = 'CurSearch', force = true })
     end,
   },
 
