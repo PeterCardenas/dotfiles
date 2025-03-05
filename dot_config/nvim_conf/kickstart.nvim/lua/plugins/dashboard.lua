@@ -65,7 +65,6 @@ return {
     local header = DOOM_HEADER
 
     dashboard.section.header.val = header
-    -- TODO: Create shared functions to combat desync
     dashboard.section.buttons.val = {
       create_button('f', '  Find file', function()
         require('plugins.telescope.setup').find_files(false)

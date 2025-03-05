@@ -79,6 +79,7 @@ end
 ---@param capabilities lsp.ClientCapabilities
 function M.setup(capabilities)
   -- Need to manually setup ruff_lsp since it was removed from mason-lspconfig and deprecated from nvim-lspconfig.
+  ---@type lspconfig.Config
   require('lspconfig.configs')['ruff_lsp'] = require('lspconfig.configs.ruff_lsp')
   local ruff_lsp_config = get_ruff_lsp_config()
   ruff_lsp_config = require('utils.table').merge_tables(capabilities, ruff_lsp_config.capabilities or {})
@@ -209,7 +210,7 @@ function M.python_lsp_config()
       },
       -- Use for debugging pyright.
       -- cmd = { os.getenv('HOME') .. '/thirdparty/pyright/packages/pyright/langserver.index.js', '--stdio' },
-      -- TODO: Add code action handle for adding an import. This involves sending a completion request and resolving the matching completion that results in auto-import.
+      -- TODO: Add code action handle for adding an import. Currently this is done automatically via the format keybind.
       handlers = {
         ---@param _ lsp.ResponseError
         ---@param result lsp.PublishDiagnosticsParams
