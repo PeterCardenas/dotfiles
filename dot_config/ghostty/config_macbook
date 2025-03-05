@@ -1,3 +1,6 @@
 font-size = 11.2
 adjust-cell-height = 31%
+# window position is only supported on macOS
+window-position-x = 0
+window-position-y = 0
 
