@@ -226,8 +226,6 @@ return {
         require('nvim-tmux-navigation')['NvimTmuxNavigate' .. directions[index]]()
       end, { silent = true, noremap = true })
     end
-    -- TODO: Enabled these keybindings when lazygit uses the existing editor session instead of opening a new one.
-    -- local tmux_directions = { 'h', 'j', 'k', 'l' }
     local terminal_tmux_directions = { 'h', 'l' }
     for _, direction in ipairs(terminal_tmux_directions) do
       vim.keymap.set('t', '<C-' .. direction .. '>', function()
