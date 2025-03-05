@@ -271,6 +271,7 @@ vim.api.nvim_create_autocmd({ 'CursorMoved' }, {
   end,
 })
 
+-- TODO: show github pr preview, similar to https://github.com/dlvhdr/gh-blame.nvim/blob/main/lua/gh-blame/gh.lua, but with better loading state.
 nmap('Show blame for current line', 'gh', function()
   local config = require('gitsigns.config').config
   require('gitsigns.actions').blame_line(config.current_line_blame_opts)
