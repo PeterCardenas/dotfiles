@@ -248,11 +248,6 @@ vim.api.nvim_create_autocmd({ 'CursorMoved' }, {
   callback = function(opts)
     ---@type integer
     local bufnr = opts.buf
-    local buf_lines = vim.api.nvim_buf_line_count(bufnr)
-    -- TODO: This logic does not work with large files
-    if buf_lines > 10000 then
-      return
-    end
     local cache_entry = require('gitsigns.cache').cache[bufnr]
     if not cache_entry then
       return
@@ -441,6 +436,7 @@ return {
     config = function()
       -- See `:help gitsigns.txt`
       require('gitsigns').setup({
+        max_file_length = 50000,
         signs = {
           add = { text = '+' },
           change = { text = '~' },
