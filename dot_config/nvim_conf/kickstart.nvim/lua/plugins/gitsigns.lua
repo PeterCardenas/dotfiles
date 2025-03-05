@@ -243,12 +243,16 @@ end, { nargs = 0, desc = 'Edit the PR for the current branch' })
 
 local nmap = require('utils.keymap').nmap
 
--- TODO: Does not work with buffers with large files
 vim.api.nvim_create_autocmd({ 'CursorMoved' }, {
   group = vim.api.nvim_create_augroup('gitsigns-prefetch-blame', { clear = true }),
   callback = function(opts)
     ---@type integer
     local bufnr = opts.buf
+    local buf_lines = vim.api.nvim_buf_line_count(bufnr)
+    -- TODO: This logic does not work with large files
+    if buf_lines > 10000 then
+      return
+    end
     local cache_entry = require('gitsigns.cache').cache[bufnr]
     if not cache_entry then
       return
