@@ -744,7 +744,7 @@ return {
           { path = 'snacks.nvim', words = { 'Snacks' } },
         },
         enabled = function(root_dir)
-          return not vim.uv.fs_stat(root_dir .. '/.luarc.json')
+          return not vim.uv.fs_stat(root_dir .. '/.luarc.json') or root_dir:find('%.local/share/nvim/lazy/')
         end,
       })
     end,
