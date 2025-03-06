@@ -42,9 +42,13 @@ return {
     config = function()
       ---@diagnostic disable-next-line: missing-fields
       require('image').setup({
+        tmux_show_only_in_active_window = true,
         integrations = {
           markdown = {
             filetypes = { 'markdown', 'vimwiki', 'markdown.mdx' },
+            -- TODO: Use popup whenever this gets merged: https://github.com/3rd/image.nvim/pull/208
+            -- Or use snacks.nvim whenever I get to it 🤷
+            only_render_image_at_cursor = true,
           },
         },
         hijack_file_patterns = image_patterns,
