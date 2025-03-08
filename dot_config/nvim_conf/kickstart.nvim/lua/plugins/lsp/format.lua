@@ -1,4 +1,6 @@
 local LspMethod = vim.lsp.protocol.Methods
+local Shell = require('utils.shell')
+local Async = require('utils.async')
 
 ---Lock for buffers to hold while formatting.
 ---@type table<integer, boolean>
@@ -228,25 +230,56 @@ local function auto_import_pyright(bufnr, dry_run, on_complete)
         vim.lsp.util.apply_text_edits(completion.additionalTextEdits, diag_info.bufnr, offset_encoding)
         auto_import_next()
       end
-      if #auto_import_completions == 1 then
-        auto_import(auto_import_completions[1])
+      local function pick_auto_import_completion(completions) ---@param completions lsp.CompletionItem[]
+        if #completions == 1 then
+          auto_import(completions[1])
+          return
+        end
+        vim.ui.select(completions, {
+          prompt = 'Select auto-import completion',
+          ---@param completion lsp.CompletionItem
+          format_item = function(completion)
+            ---@type string?
+            local module_name
+            if completion.labelDetails and completion.labelDetails.description then
+              module_name = completion.labelDetails.description
+            end
+            if module_name then
+              return 'from ' .. module_name .. ' import ' .. completion.label
+            end
+            return 'import ' .. completion.label
+          end,
+        }, function(completion)
+          auto_import(completion)
+        end)
       end
-      vim.ui.select(auto_import_completions, {
-        prompt = 'Select auto-import completion',
-        ---@param completion lsp.CompletionItem
-        format_item = function(completion)
-          ---@type string?
-          local module_name
-          if completion.labelDetails and completion.labelDetails.description then
-            module_name = completion.labelDetails.description
+      -- TODO: Can rather check to filter out non local imports when the completions include stdlib/external module imports by checking if the import maps to a file in project.
+      Async.void(function() ---@async
+        local success, output = Shell.async_cmd(
+          'python',
+          { '-c', "import sys; import importlib.util; print('" .. diag_info.import_name .. "' in getattr(sys, 'stdlib_module_names', []))" }
+        )
+        if not success or output[1] ~= 'True' then
+          vim.schedule(function()
+            pick_auto_import_completion(auto_import_completions)
+          end)
+          return
+        end
+        vim.schedule(function()
+          ---@type lsp.CompletionItem[]
+          local matching_completions = vim
+            .iter(auto_import_completions)
+            :filter(function(completion) ---@param completion lsp.CompletionItem
+              return completion.label == diag_info.import_name and not completion.labelDetails
+            end)
+            :totable()
+          if #matching_completions > 0 then
+            pick_auto_import_completion(matching_completions)
+            return
           end
-          if module_name then
-            return 'from ' .. module_name .. ' import ' .. completion.label
-          end
-          return 'import ' .. completion.label
-        end,
-      }, function(completion)
-        auto_import(completion)
+          vim.notify('Could not find stdlib auto-import completion for ' .. diag_info.import_name, vim.log.levels.ERROR)
+          pick_auto_import_completion(auto_import_completions)
+        end)
       end)
     end, diag_info.bufnr)
   end
@@ -282,6 +315,8 @@ local function apply_typescript_codefixes(bufnr, dry_run, on_complete)
     2304,
     -- 'await' expressions are only allowed within async functions and at the top levels of modules.
     1308,
+    -- '{0}' cannot be used as a value because it was imported using 'import type'.
+    1361,
     -- Unreachable code detected.
     7027,
     -- '{0}' refers to a UMD global, but the current file is a module. Consider adding an import instead.
@@ -303,15 +338,15 @@ local function apply_typescript_codefixes(bufnr, dry_run, on_complete)
   }
 
   local did_finish = false
-  vim.defer_fn(function()
-    if not did_finish then
-      vim.notify('Timed out waiting for typescript-tools to respond', vim.log.levels.ERROR)
-      if on_complete ~= nil then
-        on_complete(false, true)
-      end
-    end
-    did_finish = true
-  end, 1000)
+  -- vim.defer_fn(function()
+  --   if not did_finish then
+  --     vim.notify('Timed out waiting for typescript-tools to respond', vim.log.levels.ERROR)
+  --     if on_complete ~= nil then
+  --       on_complete(false, true)
+  --     end
+  --   end
+  --   did_finish = true
+  -- end, 1000)
 
   local lsp_constants = require('typescript-tools.protocol.constants')
   ---@param err lsp.ResponseError|nil
