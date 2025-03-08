@@ -78,7 +78,7 @@ function setup_ubuntu() {
 	dpkg_third_party+=(
 		fish
 	)
-	sudo apt-add-repository ppa:fish-shell/release-3
+	sudo apt-add-repository ppa:fish-shell/release-4
 
 	# Git
 	dpkg_third_party+=(
