@@ -103,7 +103,7 @@ local function fix_from_code_action(bufnr, ls_name, action_type, dry_run, on_com
     ---@param ls_results lsp.CodeAction[]
     client.request(LspMethod.textDocument_codeAction, params, function(err, ls_results, _, _)
       -- TODO: ruff is pretty noisy about errors
-      if err and client.name == 'ruff_lsp' then
+      if err and client.name ~= 'ruff_lsp' then
         vim.notify('Error running ' .. ls_name .. ' code action: ' .. vim.inspect(err), vim.log.levels.ERROR)
       end
       local did_edit = false
@@ -479,8 +479,7 @@ local function lsp_format(bufnr, dry_run, on_complete)
       ---@param results lsp.TextEdit[]
       client.request(LspMethod.textDocument_formatting, formatting_params, function(err, results, _, _)
         if err then
-          -- TODO: Properly ignore trouble buffers.
-          if client.name ~= 'gopls' and (client.name ~= 'ruff_lsp' or err.message:find('/Trouble') == nil) then
+          if client.name ~= 'gopls' and client.name ~= 'ruff_lsp' then
             vim.notify('Error checking formatting: ' .. vim.inspect(err), vim.log.levels.ERROR)
           end
         end
