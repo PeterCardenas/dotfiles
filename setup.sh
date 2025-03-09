@@ -10,9 +10,13 @@ fi
 function install_ghostty() {
 	zvm use v0.13.0
 	pushd $HOME/projects
-	fish -c "clone personal ghostty-org/ghostty.git"
-	pushd ghostty
-	fish -c "setup_fork"
+	if [ ! -d "$HOME/projects/ghostty" ]; then
+		fish -c "clone personal ghostty-org/ghostty.git"
+		pushd ghostty
+		fish -c "setup_fork"
+	else
+		pushd ghostty
+	fi
 	git checkout working-state
 	if [ "$(uname)" == "Linux" ]; then
 		zig build -p "$HOME/.local" -Doptimize=ReleaseFast
@@ -21,7 +25,8 @@ function install_ghostty() {
 		pushd macos
 		xcodebuild
 		popd
-		cp -r macos/build/Release/Ghostty.app /Applications
+		rm -rf /Applications/Ghostty.app
+		cp -r macos/build/ReleaseLocal/Ghostty.app /Applications
 	fi
 	popd
 	popd
