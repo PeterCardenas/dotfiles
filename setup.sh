@@ -261,8 +261,7 @@ function setup_unix() {
 	fi
 
 	# Install tmux
-	# TODO: check if current version is correct as well
-	if ! command -v tmux >/dev/null 2>&1; then
+	if ! command -v tmux >/dev/null 2>&1 || [[ "$(tmux -V 2>/dev/null | cut -d' ' -f2)" != "3.5a" ]]; then
 		pushd $HOME/thirdparty
 		wget https://github.com/tmux/tmux/releases/download/3.5a/tmux-3.5a.tar.gz
 		tar xvzf tmux-3.5a.tar.gz
