@@ -245,6 +245,7 @@ function setup_unix() {
 	fi
 	# Install Node via pnpm
 	pnpm env use --global lts
+	npm install -g typescript
 
 	# Install zig version manager
 	if ! command -v zvm >/dev/null 2>&1; then
