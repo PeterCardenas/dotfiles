@@ -211,8 +211,16 @@ function setup_mac() {
 		echo $?
 	)"
 	if [ "$XCODE_INSTALLED" == "2" ]; then
+		echo "Installing Xcode command line tools..."
 		xcode-select --install
-		read -p "Press enter once finished"
+		echo "Waiting for Xcode command line tools installation to complete..."
+		while [ "$(
+			xcode-select -p 1>/dev/null
+			echo $?
+		)" == "2" ]; do
+			sleep 10
+		done
+		echo "Xcode command line tools installation completed."
 	fi
 	install_homebrew
 	install_mac_apps
