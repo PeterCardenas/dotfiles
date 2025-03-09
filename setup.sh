@@ -130,9 +130,17 @@ function setup_macos_defaults() {
 		defaults write com.apple.dock persistent-apps -array
 	fi
 	killall Dock
+	# Tap to click
+	defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
+	defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
+	defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
+	defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
+	defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
+	echo "Disabling Spotlight indexing"
+	sudo mdutil -a -i off
 	# TODO: menubar: battery percent show, show seconds in clock, hide spotlight, siri
 	# TODO: key repeat
-	# TODO: tap to click
+	# TODO: map caps lock to escape
 }
 
 function install_macports() {
