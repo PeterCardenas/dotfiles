@@ -272,9 +272,10 @@ EOF
 	)
 	# TODO: figure out how to actually skip interactive questions
 	sudo -B port install -N "${ports[@]}"
+}
 
+function install_ccls_for_mac() {
 	# Install ccls
-	# TODO: Move later since it's less important and takes a while
 	pushd $HOME/thirdparty
 	wget https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-arm64-apple-macos11.tar.xz
 	tar xzvf clang+llvm-18.1.8-arm64-apple-macos11.tar.xz
@@ -445,6 +446,7 @@ EOF
 	fish -c "fish_update_completions"
 	# TODO install nvim plugins, mason deps, treesitter deps
 	# TODO: setup gpg
+	install_ccls_for_mac
 	# TODO: setup gnome
 	# TODO: Setup fish-lsp
 	# TODO: reboot
