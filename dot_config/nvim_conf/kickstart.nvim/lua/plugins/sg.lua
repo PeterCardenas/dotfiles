@@ -46,6 +46,10 @@ return {
     branch = 'working-state',
     build = 'make',
     event = { 'VeryLazy' },
+    cond = function()
+      local api_key_filepath = vim.fn.expand('~/.local/share/anthropic/api_key')
+      return vim.fn.filereadable(api_key_filepath) == 1
+    end,
     dependencies = {
       'nvim-treesitter/nvim-treesitter',
       'stevearc/dressing.nvim',
