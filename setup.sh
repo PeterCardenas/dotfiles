@@ -302,9 +302,11 @@ function install_ccls_for_mac() {
 }
 
 function setup_unix() {
-	mkdir -p $HOME/.local/share
+	mkdir -p $HOME/.local/share/man/man1
 	GROUP="$(id -gn)"
 	sudo chown $USER:$GROUP $HOME/.local/share
+	sudo chown $USER:$GROUP $HOME/.local/share/man
+	sudo chown $USER:$GROUP $HOME/.local/share/man/man1
 	source $HOME/.zshrc
 	if ! command -v pnpm >/dev/null 2>&1; then
 		# Install pnpm
