@@ -143,6 +143,42 @@ function setup_macos_defaults() {
 	# TODO: map caps lock to escape
 }
 
+function install_homebrew() {
+	if command -v brew >/dev/null 2>&1; then
+		echo "Homebrew already installed."
+		return 0
+	fi
+	if [ -n "$(stat -q /opt/homebrew/bin)" ]; then
+		echo "Adding Homebrew to PATH"
+		export PATH="/opt/homebrew/bin:$PATH"
+		return 0
+	fi
+	echo "Installing Homebrew..."
+	NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+}
+
+function install_mac_apps() {
+	# TODO: Add configurations for these apps, e.g. zen browser about:config settings, importing raycast json, opening orbstack to finish setup, enabling hidden bar
+	MAC_APPS=()
+	if [ ! -d "/Applications/Zen.app" ]; then
+		MAC_APPS+=(zen-browser)
+	fi
+	if [ ! -d "/Applications/Raycast.app" ]; then
+		MAC_APPS+=(raycast)
+	fi
+	if [ ! -d "/Applications/Orbstack.app" ]; then
+		MAC_APPS+=(orbstack)
+	fi
+	if [ ! -d "/Applications/Hidden Bar.app" ]; then
+		MAC_APPS+=(hiddenbar)
+	fi
+	# only install if MAC_APPS is not empty
+	if [ "${#MAC_APPS[@]}" -eq 0 ]; then
+		return 0
+	fi
+	brew install --cask "${MAC_APPS[@]}"
+}
+
 function install_macports() {
 	if command -v port >/dev/null 2>&1; then
 		echo "MacPorts already installed."
@@ -178,6 +214,8 @@ function setup_mac() {
 		xcode-select --install
 		read -p "Press enter once finished"
 	fi
+	install_homebrew
+	install_mac_apps
 	install_macports
 
 	echo "Ensuring MacPorts version and port tree"
@@ -404,7 +442,6 @@ EOF
 	# TODO: reboot
 }
 
-# TODO: install zen browser and setup configuration, maybe (always allow x to open) things?
 mkdir -p $HOME/thirdparty
 mkdir -p $HOME/projects
 if [ "$(uname)" == "Linux" ]; then
