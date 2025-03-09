@@ -345,6 +345,10 @@ Host personal-github.com
  	HostName github.com
 	User git
 	IdentityFile ~/.ssh/id_ed25519_personal
+Host work-github.com
+ 	HostName github.com
+	User git
+	IdentityFile ~/.ssh/id_ed25519_work
 EOF
 	fi
 	if [ ! -f "$HOME/.ssh/id_ed25519_personal" ]; then
@@ -365,7 +369,6 @@ EOF
 	fish -c "fisher update"
 	export BOB_CONFIG=$HOME/.config/bob/config.json
 	fish -c "vswitch kickstart.nvim"
-	# TODO: consider symlinking instead of copying
 	if [ "$(uname)" == "Linux" ]; then
 		mkdir -p $HOME/.fonts
 		cp $HOME/fonts/* $HOME/.fonts/
@@ -389,6 +392,7 @@ EOF
 	# TODO install nvim plugins, mason deps, treesitter deps
 	# TODO: setup gpg
 	# TODO: setup gnome
+	# TODO: Setup fish-lsp
 	# TODO: reboot
 }
 
