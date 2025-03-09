@@ -282,9 +282,17 @@ EOF
 function install_ccls_for_mac() {
 	# Install ccls
 	pushd $HOME/thirdparty
-	wget https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-arm64-apple-macos11.tar.xz
-	tar xzvf clang+llvm-18.1.8-arm64-apple-macos11.tar.xz
+	if [ ! -f clang+llvm-18.1.8-arm64-apple-macos11.tar.xz ]; then
+		wget https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-arm64-apple-macos11.tar.xz
+	fi
+	if [ ! -d clang+llvm-18.1.8-arm64-apple-macos11 ]; then
+		tar xzvf clang+llvm-18.1.8-arm64-apple-macos11.tar.xz
+	fi
+	rm -rf ccls
 	git clone https://github.com/MaskRay/ccls.git
+	# Install vendored RapidJSON
+	git submodule init
+	git submodule update
 	pushd ccls
 	cmake -S. -BRelease -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/.local/ -DCMAKE_PREFIX_PATH=$HOME/thirdparty/clang+llvm-18.1.8-arm64-apple-macos11/
 	cmake --build Release
