@@ -8,19 +8,23 @@ if [ "$EUID" -eq 0 ]; then
 fi
 
 function install_ghostty() {
+	zvm use v0.13.0
+	pushd $HOME/projects
+	fish -c "clone personal ghostty-org/ghostty.git"
+	pushd ghostty
+	fish -c "setup_fork"
+	git checkout working-state
 	if [ "$(uname)" == "Linux" ]; then
-		git clone personal-github.com:ghostty-org/ghostty.git ~/thirdparty/ghostty
-		pushd ~/thirdparty/ghostty || exit 1
-		zvm use v0.13.0
 		zig build -p "$HOME/.local" -Doptimize=ReleaseFast
-		popd || exit 1
 	elif [ "$(uname)" == "Darwin" ]; then
-		# TODO install ghostty with personal fork
-		gh release --repo ghostty-org/ghostty download tip --pattern ghostty-macos-universal.zip --clobber
-		sudo rm -rf /Applications/Ghostty.app
-		unzip ghostty-macos-universal.zip -d /Applications
-		rm ghostty-macos-universal.zip
+		zig build -Doptimize=ReleaseFast
+		pushd macos
+		xcodebuild
+		popd
+		cp -r macos/build/Release/Ghostty.app /Applications
 	fi
+	popd
+	popd
 }
 
 function setup_ubuntu() {
@@ -390,6 +394,7 @@ EOF
 
 # TODO: install zen browser and setup configuration, maybe (always allow x to open) things?
 mkdir -p $HOME/thirdparty
+mkdir -p $HOME/projects
 if [ "$(uname)" == "Linux" ]; then
 	setup_ubuntu
 elif [ "$(uname)" == "Darwin" ]; then
