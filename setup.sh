@@ -329,8 +329,8 @@ function setup_unix() {
 	fi
 
 	# Setup tmux plugin manager (tpm)
-	rm -rf ~/.tmux/plugins/tpm
-	git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+	rm -rf $HOME/.tmux/plugins/tpm
+	git clone https://github.com/tmux-plugins/tpm $HOME/.tmux/plugins/tpm
 
 	# Change login shell to fish
 	FISH_LOCATION="$(which fish)"
@@ -345,9 +345,9 @@ function setup_unix() {
 	popd
 
 	# Install fzf
-	rm -rf ~/.fzf
-	git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
-	~/.fzf/install --xdg --no-bash --no-zsh --no-key-bindings --no-update-rc --no-completion
+	rm -rf $HOME/.fzf
+	git clone --depth 1 https://github.com/junegunn/fzf.git $HOME/.fzf
+	$HOME/.fzf/install --xdg --no-bash --no-zsh --no-key-bindings --no-update-rc --no-completion
 
 	# Setup rust
 	# TODO: we should always use rustup, currently fish is pulling in rust in macports, need to resolve
@@ -433,11 +433,11 @@ EOF
 	fi
 	fc-cache -f -v
 	$HOME/.tmux/plugins/tpm/bin/install_plugins
-	chezmoi completion fish >~/.config/fish/completions/chezmoi.fish
+	chezmoi completion fish >$HOME/.config/fish/completions/chezmoi.fish
 	install_ghostty
 
 	# Add aichat completions
-	curl -L https://github.com/sigoden/aichat/raw/refs/heads/main/scripts/completions/aichat.fish -o ~/.config/fish/completions/aichat.fish
+	curl -L https://github.com/sigoden/aichat/raw/refs/heads/main/scripts/completions/aichat.fish -o $HOME/.config/fish/completions/aichat.fish
 
 	rg --generate=complete-fish >"$HOME/.config/fish/completions/rg.fish"
 	bob complete fish >"$HOME/.config/fish/completions/bob.fish"
