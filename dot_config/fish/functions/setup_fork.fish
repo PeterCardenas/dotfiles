@@ -17,6 +17,10 @@ function setup_fork -d "Sets up a fork with ssh alias and sets default repo"
     end
     set -l ssh_alias $fork_matches[1]
     set -l fork_repo $fork_matches[2]
+    set repo_matches (string match -gr '(.*)\.git' $fork_repo)
+    if test (count $repo_matches) -eq 1
+        set fork_repo $repo_matches[1]
+    end
     set -l origin_matches (string match -gr 'git@github.com:(.*)' $origin_url)
     if test (count $origin_matches) -ne 1
         print_error "Failed to parse origin url: $origin_url"
