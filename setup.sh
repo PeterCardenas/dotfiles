@@ -271,7 +271,7 @@ EOF
 		bear
 	)
 	# TODO: figure out how to actually skip interactive questions
-	sudo -B port install -N "${ports[@]}"
+	sudo -B port -N install "${ports[@]}"
 }
 
 function install_ccls_for_mac() {
