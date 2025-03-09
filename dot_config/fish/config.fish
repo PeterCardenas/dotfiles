@@ -21,7 +21,8 @@ if test $os = Darwin
         "/Applications/kitty.app/Contents/MacOS" \
         /opt/local/bin \
         /opt/local/sbin \
-        /usr/local/bin
+        /usr/local/bin \
+        /opt/homebrew/bin
     if set -q DYLD_FALLBACK_LIBRARY_PATH
         set -gx DYLD_FALLBACK_LIBRARY_PATH /opt/local/lib:$DYLD_FALLBACK_LIBRARY_PATH
     else
