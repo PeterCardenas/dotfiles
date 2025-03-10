@@ -431,8 +431,7 @@ EOF
 		gh ssh-key add "$HOME/.ssh/id_ed25519_personal.pub" --title "Automated ssh key upload"
 	fi
 	chezmoi init --apply personal-github.com:PeterCardenas/dotfiles.git
-	# TODO: currently modifies global git ignore, prefer not to do that if necessary
-	chezmoi git lfs install
+	chezmoi git lfs install --local
 	chezmoi git lfs pull
 	chezmoi apply
 
