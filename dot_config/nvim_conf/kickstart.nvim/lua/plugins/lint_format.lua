@@ -70,6 +70,12 @@ local function enqueue_next_bazel_go_lint()
   local filename, exec = next(bazel_go_lint_queue)
   if filename then
     bazel_go_lint_queue[filename] = nil
+    if not exec then
+      vim.schedule(function()
+        vim.notify('Failed to lint file with bazel-go-build', vim.log.levels.ERROR)
+      end)
+      return
+    end
     exec()
   end
 end
@@ -218,6 +224,7 @@ end
 vim.api.nvim_create_autocmd({ 'BufEnter', 'BufRead', 'BufNewFile' }, {
   desc = 'Setup formatting',
   callback = function(args)
+    ---@type number
     local bufnr = args.buf
     vim.keymap.set({ 'n', 'v' }, '<leader>lf', function()
       require('plugins.lsp.format').format(bufnr)
@@ -412,6 +419,7 @@ return {
             diagnostic.end_lnum = diagnostic.lnum
             diagnostic.end_col = 1000
           end
+          -- Extend "x" is not defined diagnostic to the entire word instead of just the first character
           local undefined_variable_name = message:match('^Name "(.+)" is not defined $')
           if undefined_variable_name ~= nil then
             local buf_line = vim.api.nvim_buf_get_lines(bufnr, diagnostic.lnum, diagnostic.lnum + 1, false)[1]
@@ -419,6 +427,14 @@ return {
             diagnostic.col = start_col and start_col - 1 or diagnostic.col
             diagnostic.end_lnum = diagnostic.lnum
             diagnostic.end_col = diagnostic.col + #undefined_variable_name
+          end
+          local undefined_module_attribute = message:match('^Module ".*" has no attribute "(.+)" $')
+          if undefined_module_attribute ~= nil then
+            local buf_line = vim.api.nvim_buf_get_lines(bufnr, diagnostic.lnum, diagnostic.lnum + 1, false)[1]
+            local start_col = buf_line:find(undefined_module_attribute, diagnostic.col + 1)
+            diagnostic.col = start_col and start_col - 1 or diagnostic.col
+            diagnostic.end_lnum = diagnostic.lnum
+            diagnostic.end_col = diagnostic.col + #undefined_module_attribute
           end
           if should_filter then
             table.insert(filtered_diagnostics, diagnostic)
