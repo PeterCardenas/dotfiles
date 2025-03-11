@@ -182,6 +182,13 @@ function install_mac_apps() {
 		return 0
 	fi
 	brew install --cask "${MAC_APPS[@]}"
+	if [ ! -d "/Applications/Doll.app" ]; then
+		gh release download --repo xiaogdgenuine/Doll -p 'Doll.*.dmg'
+		hdiutil attach Doll.*.dmg
+		cp -r /Volumes/Doll/Doll.app /Applications
+		hdiutil detach /Volumes/Doll
+		rm Doll.*.dmg
+	fi
 }
 
 function install_macports() {
