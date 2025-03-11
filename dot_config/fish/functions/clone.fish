@@ -8,7 +8,7 @@ function clone -d "Clones a repo with ssh alias" -a alias_name -a repo_name
         return 1
     end
     set -l repo $repo_matches[1]
-    git clone "$ssh_alias:$repo_name"
+    git clone "$ssh_alias:$repo_name" $argv[3..-1]
     if test $status -ne 0
         print_error "Failed to clone $repo_name"
         return 1
