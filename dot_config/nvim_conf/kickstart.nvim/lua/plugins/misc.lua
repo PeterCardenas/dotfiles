@@ -430,6 +430,7 @@ return {
               end,
               color = { fg = '#ff9e64' },
             },
+            -- TODO: Move this to the tmux statusbar
             {
               function()
                 return 'SSH'
