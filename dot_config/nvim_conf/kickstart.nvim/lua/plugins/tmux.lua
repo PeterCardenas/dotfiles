@@ -166,9 +166,6 @@ local function update_ssh_connection_from_tmux()
   local success, output = shell.async_cmd('fish', { '-c', "tmux showenv | string match -rg '^SSH_CONNECTION=(.*?)$'" })
   if not success then
     vim.schedule(function()
-      if vim.env.SSH_CONNECTION then
-        vim.notify('Detected no longer on SSH', vim.log.levels.INFO)
-      end
       vim.env.SSH_CONNECTION = nil
     end)
     return
@@ -182,14 +179,8 @@ local function update_ssh_connection_from_tmux()
   local tmux_ssh_connection = output[1]
   vim.schedule(function()
     if tmux_ssh_connection == '' then
-      if vim.env.SSH_CONNECTION ~= nil then
-        vim.notify('Detected no longer on SSH', vim.log.levels.INFO)
-      end
       vim.env.SSH_CONNECTION = nil
       return
-    end
-    if vim.env.SSH_CONNECTION == nil then
-      vim.notify('Detected connected to SSH', vim.log.levels.INFO)
     end
     vim.env.SSH_CONNECTION = tmux_ssh_connection
   end)

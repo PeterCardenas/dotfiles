@@ -429,6 +429,15 @@ return {
               end,
               color = { fg = '#ff9e64' },
             },
+            {
+              function()
+                return 'SSH'
+              end,
+              icon = { '󰌘', color = { fg = '#ff9e64' } },
+              cond = function()
+                return vim.env.SSH_CONNECTION ~= nil
+              end,
+            },
             'encoding',
             'fileformat',
             'filetype',
