@@ -383,6 +383,7 @@ return {
       -- TODO: Add add to project event in issue
       -- TODO: Fetch whether a file has been viewed when resuming/starting a review.
       -- TODO: Load resolved comments previous reviews in current review.
+      -- TODO: Search across files in a PR.
       if not vim.env.GH_TOKEN then
         vim.notify('User not set up for gh cli', vim.log.levels.ERROR)
       end
