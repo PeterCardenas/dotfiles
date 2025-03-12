@@ -10,7 +10,7 @@ end
 
 local function common_rg_args()
   -- TODO Share with rg_words_cmd
-  return '--hidden -g "!.git"'
+  return '--hidden -g "!.git" -g "!.mypy_cache" -g "!.ccls_cache"'
 end
 
 ---@param show_ignore boolean
