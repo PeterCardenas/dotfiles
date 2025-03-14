@@ -286,6 +286,9 @@ return {
       zls = {},
       vimls = {},
       glsl_analyzer = {},
+      buf_ls = {
+        enabled = false,
+      },
       starpls = {
         cmd = { 'starpls', 'server', '--experimental_infer_ctx_attributes', '--experimental_use_code_flow_analysis' },
         cmd_env = {
