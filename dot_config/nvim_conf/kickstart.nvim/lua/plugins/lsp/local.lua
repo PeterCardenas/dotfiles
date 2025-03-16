@@ -50,9 +50,23 @@ function M.setup(capabilities)
     setup_server(server_name)
   end
 
+  local home = os.getenv('HOME')
   ---@type custom.LspConfig
   local fish_lsp_config = {
     capabilities = capabilities,
+    init_options = {
+      fish_lsp_all_indexed_paths = {
+        home .. '/.local/share/chezmoi/dot_config/fish',
+        '/usr/share/fish',
+      },
+      fish_lsp_modifiable_paths = {
+        home .. '/.local/share/chezmoi/dot_config/fish',
+      },
+      fish_lsp_diagnostic_disable_error_codes = {
+        4004,
+      },
+      fish_lsp_logfile = '/tmp/fish-lsp.log',
+    },
   }
   require('lspconfig').fish_lsp.setup(fish_lsp_config)
 
