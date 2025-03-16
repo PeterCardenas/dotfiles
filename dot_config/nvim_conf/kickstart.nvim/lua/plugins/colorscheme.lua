@@ -12,6 +12,9 @@ return {
       },
     })
     vim.cmd('colorscheme tokyonight-storm')
+    -- TODO: Remove when this is resolved: https://github.com/folke/tokyonight.nvim/pull/674#issuecomment-2724828016
+    vim.api.nvim_set_hl(0, '@module.python', { link = 'Directory', force = true })
+    vim.api.nvim_set_hl(0, '@module', { link = 'Special', force = true })
     require('utils.colorscheme').set_focused_colors()
     -- Make comments foreground brighter.
     vim.api.nvim_set_hl(0, 'Comment', { foreground = '#7c7c7c', italic = true, cterm = { italic = true } })
