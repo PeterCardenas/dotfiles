@@ -1,24 +1,6 @@
 # Switch neovim versions
 function vswitch -d "Switch neovim configurations and sync versions" -a config_name
     # Pre-emptively errors before any destructive action.
-    function print_error -a error_msg
-        set_color red
-        echo -n "[ERROR]"
-        set_color normal
-        echo ": $error_msg"
-    end
-    function print_warn -a warn_msg
-        set_color yellow
-        echo -n "[WARN]"
-        set_color normal
-        echo ": $warn_msg"
-    end
-    function print_info -a info_msg
-        set_color green
-        echo -n "[INFO]"
-        set_color normal
-        echo ": $info_msg"
-    end
     set config_dir "$HOME/.config/nvim_conf/$config_name"
     if not test -d $config_dir
         print_error "Config directory does not exist for path $config_dir"
