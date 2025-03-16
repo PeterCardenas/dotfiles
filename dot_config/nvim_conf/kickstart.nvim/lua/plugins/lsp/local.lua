@@ -26,6 +26,10 @@ function M.setup(capabilities)
     if server_config.enabled == false then
       return
     end
+    ---@class DefaultLSPConfig
+    ---@field default_config lspconfig.Config
+
+    ---@type DefaultLSPConfig
     require('lspconfig.configs')[server_name] = {
       default_config = {
         cmd = server_config.cmd,
