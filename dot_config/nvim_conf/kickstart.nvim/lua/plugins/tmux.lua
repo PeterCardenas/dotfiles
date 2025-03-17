@@ -1,10 +1,14 @@
 -- [[ Neovim TMUX Integration ]]
 
-local async = require('utils.async')
+local Async = require('utils.async')
+local Colors = require('utils.colorscheme')
+local Shell = require('utils.shell')
 
----@class TmuxCmd
+---@class TmuxCmdInfo
 ---@field pane_id string
 ---@field socket string
+
+---@class TmuxCmd : TmuxCmdInfo
 local TmuxCmd = {}
 TmuxCmd.__index = TmuxCmd
 
@@ -13,13 +17,13 @@ TmuxCmd.__index = TmuxCmd
 ---@return TmuxCmd
 function TmuxCmd:new(pane_id, tmux_var)
   local socket = vim.split(tmux_var, ',')[1]
-  ---@type TmuxCmd
+  ---@type TmuxCmdInfo
   local instance = {
     pane_id = pane_id,
     socket = socket,
   }
   setmetatable(instance, self)
-  return instance
+  return instance ---@type TmuxCmd
 end
 
 function TmuxCmd:with_socket(subcommand)
@@ -34,8 +38,7 @@ end
 ---@param subcommand string
 ---@return boolean
 function TmuxCmd:set_option(subcommand)
-  local shell = require('utils.shell')
-  local success, output = shell.async_cmd('bash', { '-c', self:with_set_option(subcommand) })
+  local success, output = Shell.async_cmd('bash', { '-c', self:with_set_option(subcommand) })
   if not success then
     vim.schedule(function()
       vim.notify('Failed to set tmux option: ' .. vim.inspect(output), vim.log.levels.ERROR)
@@ -47,8 +50,7 @@ end
 ---@param subcommand string
 ---@return boolean
 function TmuxCmd:set_option_sync(subcommand)
-  local shell = require('utils.shell')
-  local success, output = shell.sync_cmd('bash -c "' .. self:with_set_option(subcommand) .. '"')
+  local success, output = Shell.sync_cmd('bash -c "' .. self:with_set_option(subcommand) .. '"')
   if not success then
     vim.notify('Failed to set tmux option: ' .. vim.inspect(output), vim.log.levels.ERROR)
   end
@@ -57,8 +59,7 @@ end
 
 ---@async
 function TmuxCmd:set_is_vim()
-  local shell = require('utils.shell')
-  local success, output = shell.async_cmd('bash', {
+  local success, output = Shell.async_cmd('bash', {
     '-c',
     self:with_set_option('@disable_vertical_pane_navigation yes') .. ' && ' .. self:with_set_option('@disable_horizontal_pane_navigation yes'),
   })
@@ -71,8 +72,7 @@ end
 
 ---@async
 function TmuxCmd:unset_is_vim()
-  local shell = require('utils.shell')
-  local success, output = shell.async_cmd('bash', {
+  local success, output = Shell.async_cmd('bash', {
     '-c',
     self:with_set_option('-u @disable_vertical_pane_navigation') .. ' && ' .. self:with_set_option('-u @disable_horizontal_pane_navigation'),
   })
@@ -84,8 +84,7 @@ function TmuxCmd:unset_is_vim()
 end
 
 function TmuxCmd:unset_is_vim_sync()
-  local shell = require('utils.shell')
-  shell.sync_cmd(
+  Shell.sync_cmd(
     'bash -c "'
       .. self:with_set_option('-u @disable_vertical_pane_navigation')
       .. ' && '
@@ -99,7 +98,7 @@ local nvim_is_open = true
 local function set_is_vim()
   nvim_is_open = true
   local tmux_cmd = TmuxCmd:new(vim.env.TMUX_PANE, vim.env.TMUX)
-  async.void(
+  Async.void(
     ---@async
     function()
       tmux_cmd:set_is_vim()
@@ -147,7 +146,7 @@ local function setup_tmux_autocommands()
     desc = 'Dim the colors to appear unfocused',
     group = tmux_navigator_group,
     callback = function()
-      require('utils.colorscheme').set_unfocused_colors()
+      Colors.set_unfocused_colors()
     end,
   })
 
@@ -155,15 +154,14 @@ local function setup_tmux_autocommands()
     desc = 'Brighten the colors to appear focused',
     group = tmux_navigator_group,
     callback = function()
-      require('utils.colorscheme').set_focused_colors()
+      Colors.set_focused_colors()
     end,
   })
 end
 
 ---@async
 local function update_ssh_connection_from_tmux()
-  local shell = require('utils.shell')
-  local success, output = shell.async_cmd('fish', { '-c', "tmux showenv | string match -rg '^SSH_CONNECTION=(.*?)$'" })
+  local success, output = Shell.async_cmd('fish', { '-c', "tmux showenv | string match -rg '^SSH_CONNECTION=(.*?)$'" })
   if not success then
     vim.schedule(function()
       vim.env.SSH_CONNECTION = nil
@@ -188,14 +186,14 @@ end
 
 local function poll_update_tmux_env()
   local tmux_cmd = TmuxCmd:new(vim.env.TMUX_PANE, vim.env.TMUX)
-  async.run(
+  Async.run(
     ---@async
     function()
       update_ssh_connection_from_tmux()
       if nvim_is_open then
         tmux_cmd:set_is_vim()
       end
-      require('utils.shell').sleep(1000)
+      Shell.sleep(1000)
     end,
     poll_update_tmux_env
   )
@@ -211,7 +209,7 @@ return {
   event = 'VeryLazy',
   config = function()
     setup_tmux_autocommands()
-    async.void(poll_update_tmux_env)
+    Async.void(poll_update_tmux_env)
     require('nvim-tmux-navigation').setup({
       keybindings = {
         left = '<C-h>',

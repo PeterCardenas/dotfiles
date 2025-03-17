@@ -1,3 +1,5 @@
+local Config = require('utils.config')
+local Table = require('utils.table')
 local M = {}
 
 ---Setup language servers found locally.
@@ -8,7 +10,7 @@ function M.setup(capabilities)
   ---@type table<string, lspconfig.Config>
   local custom_servers = {
     emmylua_ls = {
-      enabled = vim.fn.executable('emmylua_ls') == 1 and require('utils.config').USE_RUST_LUA_LS,
+      enabled = vim.fn.executable('emmylua_ls') == 1 and Config.USE_RUST_LUA_LS,
       cmd = { 'emmylua_ls' },
       filetypes = { 'lua' },
       default_config = {
@@ -80,13 +82,13 @@ function M.setup(capabilities)
   }
   require('lspconfig').bazelrc_lsp.setup(bazelrc_lsp_config)
 
-  local ccls_capabilities = require('utils.table').merge_tables(capabilities, {
+  local ccls_capabilities = Table.merge_tables(capabilities, {
     offsetEncoding = { 'utf-16' },
     general = {
       positionEncodings = { 'utf-16' },
     },
   })
-  if not require('utils.config').USE_CLANGD then
+  if not Config.USE_CLANGD then
     ---@type custom.LspConfig
     local ccls_config = {
       capabilities = ccls_capabilities,

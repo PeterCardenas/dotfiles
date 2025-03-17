@@ -1,3 +1,6 @@
+local Config = require('utils.config')
+local Finder = require('plugins.telescope.setup')
+
 ---@type LazyPluginSpec[]
 return {
   {
@@ -113,7 +116,7 @@ return {
           enabled = false,
         },
         behaviour = {
-          auto_suggestions = not require('utils.config').USE_SUPERMAVEN,
+          auto_suggestions = not Config.USE_SUPERMAVEN,
           -- TODO: Use this when it's fast and less buggy
           enable_cursor_planning_mode = false,
           -- TODO: auto apply/ask to apply when running tools, maybe add a continue keymap and pause when applying diffs
@@ -201,7 +204,7 @@ return {
               local cwd = params.cwd
               -- TODO: Use params.selected_filepaths to filter out files that are already selected
 
-              local cmd = require('plugins.telescope.setup').rg_files_cmd(false) .. ' ' .. vim.fn.fnameescape(cwd)
+              local cmd = Finder.rg_files_cmd(false) .. ' ' .. vim.fn.fnameescape(cwd)
 
               local output = vim.fn.system(cmd)
 

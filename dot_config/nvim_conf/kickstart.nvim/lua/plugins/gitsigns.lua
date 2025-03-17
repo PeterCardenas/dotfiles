@@ -1,4 +1,7 @@
-local async = require('utils.async')
+local Async = require('utils.async')
+local File = require('utils.file')
+local Shell = require('utils.shell')
+local Git = require('utils.git')
 
 ---@async
 ---@param prev_cmd_output string[]
@@ -6,7 +9,7 @@ local async = require('utils.async')
 local function maybe_switch_account(prev_cmd_output)
   -- TODO: Handle the case where there are more than 2 accounts
   if #prev_cmd_output == 1 and prev_cmd_output[1]:match('GraphQL: Could not resolve to a Repository') then
-    local success, output = require('utils.shell').async_cmd('gh', {
+    local success, output = Shell.async_cmd('gh', {
       'auth',
       'switch',
     })
@@ -27,8 +30,7 @@ end
 ---@param retry? boolean
 ---@return boolean, string
 local function get_repo_url(retry)
-  local shell = require('utils.shell')
-  local success, output = shell.async_cmd('gh', { 'repo', 'view', '--json=url', '-q=.url' })
+  local success, output = Shell.async_cmd('gh', { 'repo', 'view', '--json=url', '-q=.url' })
   if not success and not retry then
     local switched = maybe_switch_account(output)
     if switched then
@@ -47,7 +49,7 @@ end
 ---@param is_retry? boolean
 ---@return string | nil
 local function get_pr_url(commit_sha, is_retry)
-  local shell = require('utils.shell')
+  local shell = Shell
   local success, output = shell.async_cmd('gh', {
     'pr',
     'list',
@@ -120,7 +122,7 @@ vim.api.nvim_create_user_command('GHPR', function()
       return
     end
     local commit_sha = blame_info.commit.sha
-    async.void(
+    Async.void(
       ---@async
       function()
         local not_committed_sha = require('gitsigns.git.blame').get_blame_nc('', lnum).commit.sha
@@ -150,7 +152,7 @@ end, { nargs = 0, desc = 'Open/Copy GitHub PR link for current line' })
 
 local function relative_path_to_git_root()
   local current_file = vim.fn.expand('%:p')
-  local git_root = require('utils.file').get_git_root()
+  local git_root = File.get_git_root()
 
   if git_root and vim.fn.isdirectory(git_root) == 1 then
     if vim.fn.stridx(current_file, git_root) == 0 then
@@ -164,12 +166,12 @@ end
 ---@async
 ---@return boolean, string
 local function common_ancestor_commit_with_master()
-  local default_branch_success, default_branch_output = require('utils.git').get_default_branch()
+  local default_branch_success, default_branch_output = Git.get_default_branch()
   if not default_branch_success then
     return false, 'failed to get default branch:\n' .. default_branch_output
   end
   local default_branch = default_branch_output
-  local shell = require('utils.shell')
+  local shell = Shell
   local success, output = shell.async_cmd('git', { 'merge-base', 'HEAD', 'origin/' .. default_branch })
   if not success then
     return false, table.concat(output, '\n')
@@ -186,7 +188,7 @@ vim.api.nvim_create_user_command('GHFile', function()
     return
   end
   local current_line_nr = vim.fn.line('.')
-  async.void(
+  Async.void(
     ---@async
     function()
       local success, output = get_repo_url()
@@ -223,10 +225,10 @@ vim.api.nvim_create_user_command('CreatePR', function()
 end, { nargs = 0, desc = 'Create a PR for the current branch' })
 
 vim.api.nvim_create_user_command('EditPR', function()
-  async.void(
+  Async.void(
     ---@async
     function()
-      local success, output = require('utils.shell').async_cmd('gh', { 'pr', 'view', '--json=number', '--jq=.number' })
+      local success, output = Shell.async_cmd('gh', { 'pr', 'view', '--json=number', '--jq=.number' })
       if not success then
         vim.schedule(function()
           vim.notify('Could not find PR for current branch\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)

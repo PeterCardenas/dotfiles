@@ -1,3 +1,5 @@
+local File = require('utils.file')
+local Config = require('utils.config')
 local LspMethod = vim.lsp.protocol.Methods
 
 local M = {}
@@ -81,8 +83,8 @@ function M.on_attach(client, bufnr)
   vim.api.nvim_set_option_value('omnifunc', 'v:lua.octo_omnifunc', { buf = bufnr })
 
   local filename = vim.api.nvim_buf_get_name(bufnr)
-  local git_root = require('utils.file').get_git_root()
-  local is_in_git_root = git_root ~= nil and require('utils.file').file_in_directory(filename, git_root)
+  local git_root = File.get_git_root()
+  local is_in_git_root = git_root ~= nil and File.file_in_directory(filename, git_root)
 
   if client.name == 'starpls' then
     vim.api.nvim_buf_create_user_command(bufnr, 'StarlarkSyntaxTree', function()
@@ -139,7 +141,7 @@ function M.on_attach(client, bufnr)
   end, '[G]oto [I]mplementation')
   nmap('<leader>D', vim.lsp.buf.type_definition, 'Type [D]efinition')
   nmap('<leader>ls', function()
-    if require('utils.config').USE_TELESCOPE then
+    if Config.USE_TELESCOPE then
       require('telescope.builtin').lsp_document_symbols()
     else
       require('fzf-lua.providers.lsp').document_symbols({

@@ -1,4 +1,8 @@
-local async = require('utils.async')
+local Async = require('utils.async')
+local File = require('utils.file')
+local Format = require('plugins.lsp.format')
+local Shell = require('utils.shell')
+local Python = require('plugins.lsp.python')
 
 local LINT_POLL_INTERVAL_MS = 500
 local lint_poll_timer = nil
@@ -83,7 +87,7 @@ end
 ---@async
 ---@param abs_filepath string
 local function bazel_go_lint(abs_filepath)
-  local workspace_root = require('utils.file').get_ancestor_dir('WORKSPACE')
+  local workspace_root = File.get_ancestor_dir('WORKSPACE')
   if not workspace_root then
     enqueue_next_bazel_go_lint()
     return
@@ -94,7 +98,7 @@ local function bazel_go_lint(abs_filepath)
   local current_filename = vim.fn.fnamemodify(abs_filepath, ':t')
   local relative_parent_dir = string.sub(relative_filepath, 1, string.len(relative_filepath) - string.len(current_filename) - 1)
   local query_targets = string.format('kind(go_*, rdeps(//%s/..., %s, 1))', relative_parent_dir, relative_filepath)
-  success, output = shell.async_cmd('fish', { '-c', string.format('bazel %s query --color=no "%s"', output_base_flag, query_targets) })
+  success, output = Shell.async_cmd('fish', { '-c', string.format('bazel %s query --color=no "%s"', output_base_flag, query_targets) })
   if not success then
     vim.schedule(function()
       vim.notify('Failed to bazel query for go', vim.log.levels.ERROR)
@@ -112,7 +116,7 @@ local function bazel_go_lint(abs_filepath)
     end
   end
 
-  success, output = shell.async_cmd(
+  success, output = Shell.async_cmd(
     'fish',
     { '-c', string.format('bazel %s build --unified_protos=false --config=dev --color=no %s', output_base_flag, table.concat(matched_targets, ' ')) }
   )
@@ -163,7 +167,7 @@ local function bazel_go_lint(abs_filepath)
     for filename, diagnostics in pairs(file_diagnostics) do
       local bufnr = filename_to_bufnr(filename)
       vim.diagnostic.set(nogo_diagnostic_ns, bufnr, diagnostics, { underline = true })
-      async.void(
+      Async.void(
         ---@async
         function()
           enqueue_next_bazel_go_lint()
@@ -184,7 +188,7 @@ vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter' }, {
       return
     end
     if #bazel_go_lint_queue == 0 then
-      async.void(
+      Async.void(
         ---@async
         function()
           bazel_go_lint(abs_filepath)
@@ -227,12 +231,12 @@ vim.api.nvim_create_autocmd({ 'BufEnter', 'BufRead', 'BufNewFile' }, {
     ---@type number
     local bufnr = args.buf
     vim.keymap.set({ 'n', 'v' }, '<leader>lf', function()
-      require('plugins.lsp.format').format(bufnr)
+      Format.format(bufnr)
     end, {
       desc = 'Format buffer',
       buffer = bufnr,
     })
-    require('plugins.lsp.format').setup_formatting_diagnostic(bufnr)
+    Format.setup_formatting_diagnostic(bufnr)
   end,
 })
 
@@ -321,7 +325,6 @@ return {
     'stevearc/conform.nvim',
     lazy = true,
     config = function()
-      local file_utils = require('utils.file')
 
       local buildifier_warnings_arg = get_buildifier_warnings_arg()
       require('conform').setup({
@@ -380,16 +383,15 @@ return {
         ),
       }
       local buf_lint_args = { 'lint', '--error-format', 'json' }
-      local file_utils = require('utils.file')
-      local cwd = file_utils.get_cwd()
+      local cwd = File.get_cwd()
       local buf_config_path = cwd .. '/buf.yaml'
       table.insert(buf_lint_args, '--config')
       table.insert(buf_lint_args, buf_config_path)
       table.insert(buf_lint_args, '--path')
       require('lint').linters.buf_lint.args = buf_lint_args
       require('lint').linters.buf_lint.cwd = cwd
-      local venv_path = require('plugins.lsp.python').VENV_PATH
-      local mypypath = table.concat({ cwd, cwd .. '/' .. require('plugins.lsp.python').GEN_FILES_PATH }, ':')
+      local venv_path = Python.VENV_PATH
+      local mypypath = table.concat({ cwd, cwd .. '/' .. Python.GEN_FILES_PATH }, ':')
       require('lint').linters.dmypy.env = {
         VIRTUAL_ENV = venv_path,
         COLUMNS = 1000,
@@ -462,7 +464,7 @@ return {
       require('lint').linters.pylint.cmd = venv_path .. '/bin/pylint'
       require('lint').linters.pylint.env = {
         VIRTUAL_ENV = venv_path,
-        PYTHONPATH = cwd .. ':' .. cwd .. '/' .. require('plugins.lsp.python').GEN_FILES_PATH,
+        PYTHONPATH = cwd .. ':' .. cwd .. '/' .. Python.GEN_FILES_PATH,
       }
       local original_pylint_parser = require('lint').linters.pylint.parser
       require('lint').linters.pylint.parser = function(output, bufnr, linter_cwd)
@@ -484,7 +486,7 @@ return {
         '-f',
         'json',
         '--from-stdin',
-        '--disable=' .. table.concat(require('plugins.lsp.python').DISABLED_PYLINT_RULES, ','),
+        '--disable=' .. table.concat(Python.DISABLED_PYLINT_RULES, ','),
         function()
           return vim.api.nvim_buf_get_name(0)
         end,

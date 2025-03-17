@@ -1,7 +1,11 @@
+local Config = require('utils.config')
+local FilePicker = require('plugins.telescope.files_picker')
+local BufferPicker = require('plugins.telescope.buffer_picker')
+
 local M = {}
 
 function M.find_recent_files()
-  if require('utils.config').USE_TELESCOPE then
+  if Config.USE_TELESCOPE then
     require('telescope.builtin').oldfiles({ entry_maker = require('plugins.telescope.files_picker').make_files_entry() })
   else
     require('fzf-lua.providers.oldfiles').oldfiles()
@@ -20,8 +24,8 @@ end
 
 ---@param show_ignore boolean
 function M.find_files(show_ignore)
-  if require('utils.config').USE_TELESCOPE then
-    require('plugins.telescope.files_picker').find_files({ show_ignore = show_ignore })
+  if Config.USE_TELESCOPE then
+    FilePicker.find_files({ show_ignore = show_ignore })
   else
     require('fzf-lua.providers.files').files({
       cmd = M.rg_files_cmd(show_ignore),
@@ -37,7 +41,7 @@ end
 
 ---@param show_ignore boolean
 function M.find_words(show_ignore)
-  if require('utils.config').USE_TELESCOPE then
+  if Config.USE_TELESCOPE then
     require('telescope').extensions.live_grep_args.live_grep_args({
       additional_args = function(args)
         local additional_args = vim.list_extend({ '--hidden' }, args)
@@ -62,7 +66,7 @@ function M.create_keymaps()
   end)
 
   nmap('[/] Fuzzily search in current buffer', '/', function()
-    if require('utils.config').USE_TELESCOPE then
+    if Config.USE_TELESCOPE then
       require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes').get_dropdown({
         winblend = 10,
         previewer = true,
@@ -82,7 +86,7 @@ function M.create_keymaps()
   nmap('[F]ind b[u]ffers', 'fu', function()
     -- TODO: Convert custom telescope buffer picker to fzf-lua
     -- require('fzf-lua.providers.buffers').buffers({ ignore_current_file = true })
-    require('plugins.telescope.buffer_picker').find_buffers()
+    BufferPicker.find_buffers()
   end)
 
   nmap('[F]ind [F]iles', 'ff', function()
@@ -102,7 +106,7 @@ function M.create_keymaps()
   end)
 
   nmap('[F]ind [H]elp', 'fh', function()
-    if require('utils.config').USE_TELESCOPE then
+    if Config.USE_TELESCOPE then
       require('telescope.builtin').help_tags()
     else
       require('fzf-lua.providers.helptags').helptags()
@@ -110,7 +114,7 @@ function M.create_keymaps()
   end)
 
   nmap('[L]ist [D]iagnostics', 'lD', function()
-    if require('utils.config').USE_TELESCOPE then
+    if Config.USE_TELESCOPE then
       require('telescope.builtin').diagnostics({ bufnr = nil, no_unlisted = false })
     else
       require('fzf-lua.providers.diagnostic').all()
@@ -118,7 +122,7 @@ function M.create_keymaps()
   end)
 
   nmap('[F]ind [R]resume', 'fr', function()
-    if require('utils.config').USE_TELESCOPE then
+    if Config.USE_TELESCOPE then
       require('telescope.builtin').resume()
     else
       require('fzf-lua.core').fzf_resume()
