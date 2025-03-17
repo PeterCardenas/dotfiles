@@ -1,7 +1,10 @@
+local Config = require('utils.config')
+local File = require('utils.file')
+local Table = require('utils.table')
 local M = {}
 local LspMethod = vim.lsp.protocol.Methods
 
-local enable_pyright = not require('utils.config').USE_JEDI
+local enable_pyright = not Config.USE_JEDI
 M.GEN_FILES_PATH = 'bazel-out/k8-fastbuild/bin'
 
 ---@return table<string, custom.LspConfig>
@@ -83,7 +86,7 @@ function M.setup(capabilities)
   ---@type lspconfig.Config
   require('lspconfig.configs')['ruff_lsp'] = require('lspconfig.configs.ruff_lsp')
   local ruff_lsp_config = get_ruff_lsp_config()
-  ruff_lsp_config = require('utils.table').merge_tables(capabilities, ruff_lsp_config.capabilities or {})
+  ruff_lsp_config = Table.merge_tables(capabilities, ruff_lsp_config.capabilities or {})
   require('lspconfig.configs')['ruff_lsp'].setup(ruff_lsp_config)
   vim.api.nvim_create_autocmd('LspAttach', {
     group = vim.api.nvim_create_augroup('PythonConfig', { clear = true }),

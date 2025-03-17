@@ -1,5 +1,7 @@
 local Async = require('utils.async')
 local Buf = require('utils.buf')
+local Config = require('utils.config')
+local Git = require('utils.git')
 
 local large_file_group = vim.api.nvim_create_augroup('Disable Large File Plugins', { clear = true })
 vim.api.nvim_create_autocmd('BufReadPre', {
@@ -45,7 +47,7 @@ vim.api.nvim_create_user_command('DiffviewPR', function()
   Async.void(
     ---@async
     function()
-      local success, default_branch = require('utils.git').get_default_branch()
+      local success, default_branch = Git.get_default_branch()
       vim.schedule(function()
         if not success then
           vim.notify('Could not get default branch:\n' .. default_branch, vim.log.levels.ERROR)
@@ -184,7 +186,7 @@ return {
     'supermaven-inc/supermaven-nvim',
     event = 'InsertEnter',
     cond = function()
-      return require('utils.config').USE_SUPERMAVEN
+      return Config.USE_SUPERMAVEN
     end,
     config = function()
       require('supermaven-nvim').setup({
@@ -591,7 +593,7 @@ return {
   {
     'stevearc/profile.nvim',
     cond = function()
-      return os.getenv('NVIM_PROFILE') ~= nil and not require('utils.config').USE_SNACKS_PROFILER
+      return os.getenv('NVIM_PROFILE') ~= nil and not Config.USE_SNACKS_PROFILER
     end,
     priority = 100000,
     lazy = false,
@@ -727,7 +729,7 @@ return {
   {
     'p00f/clangd_extensions.nvim',
     cond = function()
-      return require('utils.config').USE_CLANGD
+      return Config.USE_CLANGD
     end,
     config = function()
       require('clangd_extensions').setup({
@@ -876,7 +878,7 @@ return {
           Snacks.rename.on_rename_file(event.data.from, event.data.to)
         end,
       })
-      if require('utils.config').USE_SNACKS_PROFILER then
+      if Config.USE_SNACKS_PROFILER then
         vim.api.nvim_create_user_command('ToggleProfile', function()
           if Snacks.profiler.running() then
             Snacks.profiler.stop()
@@ -897,7 +899,7 @@ return {
         -- TODO: Enable when image is equal or better than image.nvim
         image = { enabled = false },
         -- TODO: Fully enable when trouble picker works
-        profiler = { enabled = require('utils.config').USE_SNACKS_PROFILER },
+        profiler = { enabled = Config.USE_SNACKS_PROFILER },
         -- TODO: Re-enable when dashboard is equal or better than alpha.nvim
         -- dashboard = { enabled = true },
       })

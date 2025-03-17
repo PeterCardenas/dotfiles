@@ -1,7 +1,9 @@
+local Shell = require('utils.shell')
+local Async = require('utils.async')
+
 ---@async
 local function get_gh_user()
-  local shell = require('utils.shell')
-  local ok, output = shell.async_cmd('git', { 'config', '--get', 'remote.origin.url' })
+  local ok, output = Shell.async_cmd('git', { 'config', '--get', 'remote.origin.url' })
   if not ok then
     return 'PeterCardenas'
   end
@@ -12,8 +14,7 @@ end
 ---@async
 local function set_gh_user()
   local gh_user = get_gh_user()
-  local shell = require('utils.shell')
-  local ok, output = shell.async_cmd('gh', { 'auth', 'token', '--user', gh_user })
+  local ok, output = Shell.async_cmd('gh', { 'auth', 'token', '--user', gh_user })
   if not ok then
     vim.schedule(function()
       vim.notify(table.concat(output, '\n'), vim.log.levels.ERROR)
@@ -33,7 +34,6 @@ vim.api.nvim_create_autocmd('User', {
   desc = 'Set up user for gh cli',
   group = vim.api.nvim_create_augroup('set_gh_user', { clear = true }),
   callback = function()
-    local async = require('utils.async')
-    async.void(set_gh_user)
+    Async.void(set_gh_user)
   end,
 })

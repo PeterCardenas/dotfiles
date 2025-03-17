@@ -1,8 +1,12 @@
+local File = require('utils.file')
+local EntryDisplay = require('plugins.telescope.entry_display')
+local Buf = require('utils.buf')
+
 local function make_buffer_entry()
   local icon_width = require('plenary.strings').strdisplaywidth((require('telescope.utils').get_devicons('fname')))
   local opts = {}
 
-  local displayer = require('plugins.telescope.entry_display').make_entry_display({
+  local displayer = EntryDisplay.make_entry_display({
     separator = ' ',
     items = {
       { width = 1 },
@@ -11,7 +15,7 @@ local function make_buffer_entry()
     },
   })
 
-  local cwd = require('telescope.utils').path_expand(require('utils.file').get_cwd())
+  local cwd = require('telescope.utils').path_expand(File.get_cwd())
 
   ---@class BufferPickerEntry
   ---@field bufnr number
@@ -83,7 +87,7 @@ end
 local M = {}
 
 function M.find_buffers()
-  local bufnrs = require('utils.buf').get_navigable_buffers(false)
+  local bufnrs = Buf.get_navigable_buffers(false)
   if not next(bufnrs) then
     vim.notify('No other buffers found', vim.log.levels.ERROR)
     return
@@ -120,7 +124,7 @@ function M.find_buffers()
       previewer = require('telescope.config').values.grep_previewer(opts),
       sorter = require('telescope.config').values.generic_sorter(opts),
       attach_mappings = function(prompt_bufnr_, map)
-        require('plugins.telescope.entry_display').create_autocommands(prompt_bufnr_)
+        EntryDisplay.create_autocommands(prompt_bufnr_)
         map({ 'n', 'i' }, '<c-x>', function(prompt_bufnr)
           require('telescope.actions').delete_buffer(prompt_bufnr)
         end)

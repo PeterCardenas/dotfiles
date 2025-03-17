@@ -1,6 +1,9 @@
 local LspMethod = vim.lsp.protocol.Methods
 local Shell = require('utils.shell')
 local Async = require('utils.async')
+local File = require('utils.file')
+local TypeScript = require('utils.typescript')
+local Lsp = require('utils.lsp')
 
 ---Lock for buffers to hold while formatting.
 ---@type table<integer, boolean>
@@ -28,7 +31,7 @@ local function get_ignored_formatters()
   if ignored_formatters ~= nil then
     return ignored_formatters
   end
-  local ignored_formatters_file = require('utils.file').get_cwd() .. '/.formatignore'
+  local ignored_formatters_file = File.get_cwd() .. '/.formatignore'
   if vim.fn.filereadable(ignored_formatters_file) == 1 then
     local ignored_formatters_list = vim.tbl_filter(function(line) ---@param line string
       return line ~= ''
@@ -203,7 +206,7 @@ local function auto_import_pyright(bufnr, dry_run, on_complete)
         auto_import_next()
         return
       end
-      local completion_list = require('utils.lsp').completion_result_to_items(result)
+      local completion_list = Lsp.completion_result_to_items(result)
       ---@type lsp.CompletionItem[]
       local auto_import_completions = {}
       for _, completion in ipairs(completion_list) do
@@ -415,7 +418,7 @@ end
 ---@param on_complete? FormatCallback
 local function fix_typescript_errors(bufnr, dry_run, on_complete)
   local filetype = vim.api.nvim_get_option_value('filetype', { buf = bufnr })
-  if not vim.tbl_contains(require('utils.typescript').SUPPORTED_FT, filetype) then
+  if not vim.tbl_contains(TypeScript.SUPPORTED_FT, filetype) then
     if on_complete ~= nil then
       on_complete(false)
     end
@@ -662,23 +665,23 @@ local M = {}
 function M.setup_formatting_diagnostic(bufnr)
   -- Format check is slow for large typescript files, so disable them for now.
   local filetype = vim.api.nvim_get_option_value('filetype', { buf = bufnr })
-  local is_typescript = vim.tbl_contains(require('utils.typescript').SUPPORTED_FT, filetype)
+  local is_typescript = vim.tbl_contains(TypeScript.SUPPORTED_FT, filetype)
   if vim.api.nvim_buf_line_count(bufnr) > 600 and is_typescript then
     return
   end
-  local git_root_dir = require('utils.file').get_git_root()
+  local git_root_dir = File.get_git_root()
   local filename = vim.api.nvim_buf_get_name(bufnr)
   --- Disable format checking when there's no git root or the file is not in the git root.
-  if git_root_dir == nil or not require('utils.file').file_in_directory(filename, git_root_dir) then
+  if git_root_dir == nil or not File.file_in_directory(filename, git_root_dir) then
     return
   end
   if filename:match('^octo://') then
     return
   end
-  require('utils.async').void(
+  Async.void(
     ---@async
     function()
-      local success, _ = require('utils.shell').async_cmd('git', { 'check-ignore', '--quiet', filename })
+      local success, _ = Shell.async_cmd('git', { 'check-ignore', '--quiet', filename })
       if success then
         return
       end
@@ -715,8 +718,8 @@ end
 ---@param bufnr integer
 function M.format(bufnr)
   local filename = vim.api.nvim_buf_get_name(bufnr)
-  local git_root_dir = require('utils.file').get_git_root()
-  if git_root_dir == nil or not require('utils.file').file_in_directory(filename, git_root_dir) then
+  local git_root_dir = File.get_git_root()
+  if git_root_dir == nil or not File.file_in_directory(filename, git_root_dir) then
     vim.notify('Cannot format files outside of the git root', vim.log.levels.ERROR)
     return
   end

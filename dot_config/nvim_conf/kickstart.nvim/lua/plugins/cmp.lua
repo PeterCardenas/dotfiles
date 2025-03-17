@@ -1,9 +1,11 @@
+local Lsp = require('utils.lsp')
+
 ---@type LazyPluginSpec[]
 return {
   {
     -- Adds LSP completion capabilities
     'hrsh7th/cmp-nvim-lsp',
-    ft = require('utils.lsp').FT_WITH_LSP,
+    ft = Lsp.FT_WITH_LSP,
   },
   {
     -- Adds a number of user-friendly snippets
@@ -40,7 +42,7 @@ return {
   },
   {
     'saadparwaiz1/cmp_luasnip',
-    ft = require('utils.lsp').FT_WITH_LSP,
+    ft = Lsp.FT_WITH_LSP,
   },
   {
     -- Command completion

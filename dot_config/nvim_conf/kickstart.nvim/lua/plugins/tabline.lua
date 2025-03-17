@@ -1,4 +1,5 @@
 local nmap = require('utils.keymap').nmap
+local Config = require('utils.config')
 
 -- Autocmds to make the internal buffer list state in sync with the actual buffers.
 local function is_valid_buffer(bufnr)
@@ -203,7 +204,7 @@ local function register_autocmds()
   })
 end
 
-if require('utils.config').USE_HEIRLINE and require('utils.config').USE_TABLINE then
+if Config.USE_HEIRLINE and Config.USE_TABLINE then
   -- TODO: wtf is this?
   vim.cmd([[au FileType * if index(['wipe', 'delete'], &bufhidden) >= 0 | set nobuflisted | endif]])
 
@@ -216,7 +217,7 @@ return {
   -- Tabline (Also has a winbar and statusline that are not currently used)
   'rebelot/heirline.nvim',
   cond = function()
-    return require('utils.config').USE_HEIRLINE and require('utils.config').USE_TABLINE
+    return Config.USE_HEIRLINE and Config.USE_TABLINE
   end,
   config = function()
     -- [[ Configure heirline ]]
