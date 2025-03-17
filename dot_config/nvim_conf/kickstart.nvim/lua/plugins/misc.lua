@@ -848,6 +848,7 @@ return {
     keys = {
       {
         '<leader>p',
+        mode = { 'n', 'x' },
         function()
           require('telescope').extensions.yank_history.yank_history({})
         end,
