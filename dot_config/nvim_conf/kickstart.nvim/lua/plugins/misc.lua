@@ -1,13 +1,5 @@
-local async = require('utils.async')
-
----@param bufnr integer
----@param file_size_threshold integer
----@return boolean
-local function is_buf_large(bufnr, file_size_threshold)
-  local file_name = vim.api.nvim_buf_get_name(bufnr)
-  local file_size = vim.fn.getfsize(file_name)
-  return file_size > file_size_threshold
-end
+local Async = require('utils.async')
+local Buf = require('utils.buf')
 
 local large_file_group = vim.api.nvim_create_augroup('Disable Large File Plugins', { clear = true })
 vim.api.nvim_create_autocmd('BufReadPre', {
@@ -15,7 +7,7 @@ vim.api.nvim_create_autocmd('BufReadPre', {
   group = large_file_group,
   callback = function(args)
     --Disables at 512KB
-    local should_disable = is_buf_large(args.buf, 1024 * 512)
+    local should_disable = Buf.is_buf_large(args.buf, 1024 * 512)
     require('ibl').setup_buffer(args.buf, {
       enabled = not should_disable,
     })
@@ -50,7 +42,7 @@ vim.api.nvim_create_user_command('SiliconCopy', function()
 end, { nargs = 0, range = true })
 
 vim.api.nvim_create_user_command('DiffviewPR', function()
-  async.void(
+  Async.void(
     ---@async
     function()
       local success, default_branch = require('utils.git').get_default_branch()
@@ -493,37 +485,6 @@ return {
 
   -- Camel-case and snake-case motion
   { 'bkad/CamelCaseMotion', event = { 'BufReadPre', 'BufNewFile' } },
-
-  -- Sticky scroll
-  {
-    'nvim-treesitter/nvim-treesitter-context',
-    event = { 'BufReadPre', 'BufNewFile' },
-    dependencies = 'nvim-treesitter',
-    config = function()
-      vim.api.nvim_set_hl(0, 'TreesitterContext', { link = 'Normal' })
-      vim.api.nvim_set_hl(0, 'TreesitterContextSeparator', { foreground = '#3b4261', background = '#24283b' })
-      require('treesitter-context').setup({
-        mode = 'topline',
-        line_numbers = true,
-        max_lines = 10,
-        separator = '─',
-        multiwindow = true,
-        zindex = 41,
-        on_attach = function(bufnr)
-          local filetype = vim.api.nvim_get_option_value('filetype', { buf = bufnr })
-          -- Default disable at 512KB
-          local file_size_threshold = 1024 * 512
-          -- YAML files can be handled at 1.75MB
-          if filetype == 'yaml' then
-            file_size_threshold = 1024 * 768 + 1024 * 1024
-          end
-          local is_enabled = not is_buf_large(bufnr, file_size_threshold)
-
-          return is_enabled
-        end,
-      })
-    end,
-  },
 
   -- Ripgrep with file name filtering
   {
