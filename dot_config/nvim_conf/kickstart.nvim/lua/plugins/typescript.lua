@@ -1,3 +1,6 @@
+local TypeScript = require('utils.typescript')
+local OnAttach = require('plugins.lsp.on_attach')
+
 ---@param client vim.lsp.Client
 ---@param bufnr integer
 local function on_attach(client, bufnr)
@@ -7,7 +10,7 @@ local function on_attach(client, bufnr)
     client.server_capabilities.documentRangeFormattingProvider = false
     client.server_capabilities.semanticTokensProvider = nil
   end
-  require('plugins.lsp.on_attach').on_attach(client, bufnr)
+  OnAttach.on_attach(client, bufnr)
   vim.keymap.set({ 'n' }, 'gD', function()
     require('typescript-tools.api').go_to_source_definition(false)
   end, { buffer = bufnr })
@@ -18,7 +21,7 @@ end
 return {
   'pmizio/typescript-tools.nvim',
   dependencies = { 'nvim-lua/plenary.nvim', 'neovim/nvim-lspconfig' },
-  ft = require('utils.typescript').SUPPORTED_FT,
+  ft = TypeScript.SUPPORTED_FT,
   config = function()
     -- Following issues remain:
     --  - Cannot view document symbols while project is loading.

@@ -1,3 +1,4 @@
+local Config = require('utils.config')
 ---Delete a buffer given an id.
 ---@param bufnum number
 local function close_buffer(bufnum)
@@ -45,7 +46,7 @@ local function add_keymaps()
   end)
 end
 
-if not require('utils.config').USE_HEIRLINE and require('utils.config').USE_TABLINE then
+if not Config.USE_HEIRLINE and Config.USE_TABLINE then
   add_keymaps()
 end
 
@@ -53,7 +54,7 @@ end
 return {
   'akinsho/bufferline.nvim',
   cond = function()
-    return not require('utils.config').USE_HEIRLINE and require('utils.config').USE_TABLINE
+    return not Config.USE_HEIRLINE and Config.USE_TABLINE
   end,
   config = function()
     require('bufferline').setup({

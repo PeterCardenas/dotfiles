@@ -1,3 +1,10 @@
+local File = require('utils.file')
+local OnAttach = require('plugins.lsp.on_attach')
+local Config = require('utils.config')
+local Lsp = require('utils.lsp')
+local Python = require('plugins.lsp.python')
+local LocalLsp = require('plugins.lsp.local')
+local Table = require('utils.table')
 -- [[ Configure LSP ]]
 
 -- local LspMethod = vim.lsp.protocol.Methods
@@ -28,7 +35,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
     if client == nil then
       return
     end
-    require('plugins.lsp.on_attach').on_attach(client, args.buf)
+    OnAttach.on_attach(client, args.buf)
   end,
 })
 
@@ -108,7 +115,7 @@ return {
       end,
     },
   },
-  ft = require('utils.lsp').FT_WITH_LSP,
+  ft = Lsp.FT_WITH_LSP,
   config = function()
     ---@type fun(path: string): string?
     local get_clangd_root = require('lspconfig.util').root_pattern('compile_commands.json')
@@ -124,7 +131,7 @@ return {
     ---@type table<string, custom.LspConfig>
     local servers = {
       clangd = {
-        enabled = clangd_enabled and require('utils.config').USE_CLANGD,
+        enabled = clangd_enabled and Config.USE_CLANGD,
         offset_encoding = 'utf-16',
         filetypes = { 'c', 'cpp', 'objc', 'objcpp', 'cuda' },
         capabilities = {
@@ -172,7 +179,7 @@ return {
         },
       },
       lua_ls = {
-        enabled = not require('utils.config').USE_RUST_LUA_LS,
+        enabled = not Config.USE_RUST_LUA_LS,
         settings = {
           Lua = {
             workspace = {
@@ -277,7 +284,7 @@ return {
       vale_ls = {
         filetypes = { 'markdown', 'text', 'dosini', 'yaml', 'markdown.mdx' },
         root_dir = function(filename)
-          local root_path = require('utils.file').get_ancestor_dir('.vale.ini', filename)
+          local root_path = File.get_ancestor_dir('.vale.ini', filename)
           ---@diagnostic disable-next-line: redundant-return-value
           return root_path
         end,
@@ -296,17 +303,17 @@ return {
         },
       },
     }
-    local python_lsp_config = require('plugins.lsp.python').python_lsp_config()
-    servers = require('utils.table').merge_tables(servers, python_lsp_config)
+    local python_lsp_config = Python.python_lsp_config()
+    servers = Table.merge_tables(servers, python_lsp_config)
 
     -- nvim-cmp supports additional completion capabilities, so broadcast that to servers
     local capabilities = vim.lsp.protocol.make_client_capabilities()
     capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities) ---@type lsp.ClientCapabilities
 
     -- Setup language servers found locally.
-    require('plugins.lsp.local').setup(capabilities)
+    LocalLsp.setup(capabilities)
     -- Setup specific autocmds and ruff_lsp.
-    require('plugins.lsp.python').setup(capabilities)
+    Python.setup(capabilities)
 
     -- Ensure the servers above are installed
     local mason_lspconfig = require('mason-lspconfig')
@@ -323,7 +330,7 @@ return {
           return
         end
         ---@diagnostic disable-next-line: inject-field
-        server_config.capabilities = require('utils.table').merge_tables(capabilities, server_config.capabilities or {})
+        server_config.capabilities = Table.merge_tables(capabilities, server_config.capabilities or {})
         require('lspconfig')[server_name].setup(server_config)
       end,
     })

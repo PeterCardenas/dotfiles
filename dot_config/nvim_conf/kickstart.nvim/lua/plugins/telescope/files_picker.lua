@@ -1,3 +1,5 @@
+local File = require('utils.file')
+local EntryDisplay = require('plugins.telescope.entry_display')
 local M = {}
 
 ---@return fun(filename: string): table
@@ -5,7 +7,7 @@ function M.make_files_entry()
   local icon_width = require('plenary.strings').strdisplaywidth((require('telescope.utils').get_devicons('fname')))
   local opts = {}
 
-  local displayer = require('plugins.telescope.entry_display').make_entry_display({
+  local displayer = EntryDisplay.make_entry_display({
     separator = ' ',
     items = {
       { width = icon_width },
@@ -13,13 +15,14 @@ function M.make_files_entry()
     },
   })
   local bufnrs = vim.api.nvim_list_bufs()
+  ---@type table<string, integer>
   local fname_to_bufnr = {}
   for _, bufnr in ipairs(bufnrs) do
     local fname = vim.api.nvim_buf_get_name(bufnr)
     fname_to_bufnr[fname] = bufnr
   end
 
-  local cwd = require('utils.file').get_cwd()
+  local cwd = File.get_cwd()
 
   ---@class FilePickerEntry
   ---@field filename string
@@ -81,7 +84,7 @@ function M.find_files(find_opts)
       previewer = conf.file_previewer(opts),
       sorter = conf.file_sorter(opts),
       attach_mappings = function(prompt_bufnr)
-        require('plugins.telescope.entry_display').create_autocommands(prompt_bufnr)
+        EntryDisplay.create_autocommands(prompt_bufnr)
 
         return true
       end,

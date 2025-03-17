@@ -1,3 +1,4 @@
+local String = require('utils.string')
 M = {}
 
 ---Run a shell command synchronously and return the output.
@@ -5,7 +6,7 @@ M = {}
 ---@return boolean, string[]
 function M.sync_cmd(cmd)
   local result = vim.fn.system(cmd)
-  local output = require('utils.string').split_lines(result)
+  local output = String.split_lines(result)
   return vim.v.shell_error == 0, output
 end
 
@@ -28,7 +29,7 @@ local function get_async_cmd()
         ---@param data string
         local function handle_output(data)
           if data then
-            local lines = require('utils.string').split_lines(data)
+            local lines = String.split_lines(data)
             vim.list_extend(output, lines)
           end
         end

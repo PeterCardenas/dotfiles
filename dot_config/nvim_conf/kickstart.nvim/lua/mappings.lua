@@ -1,4 +1,7 @@
 local nmap = require('utils.keymap').nmap
+local Config = require('utils.config')
+local Buf = require('utils.buf')
+local Lazygit = require('local.lazygit')
 
 -- Set <space> as the leader key
 -- See `:help mapleader`
@@ -46,11 +49,11 @@ vim.keymap.set('n', 'j', 'g<Down>', { silent = true })
 vim.keymap.set({ 'v', 'n' }, 'gj', '<C-i>', { desc = 'Go to next location' })
 vim.keymap.set({ 'v', 'n' }, 'gk', '<C-o>', { desc = 'Go to previous location' })
 
-require('local.lazygit').set_keymap()
+Lazygit.set_keymap()
 
-if not require('utils.config').USE_TABLINE then
+if not Config.USE_TABLINE then
   nmap('[C]lose current buffer', 'c', function()
-    local navigable_bufnrs = require('utils.buf').get_navigable_buffers(true)
+    local navigable_bufnrs = Buf.get_navigable_buffers(true)
     require('bufdelete').bufdelete()
     if #navigable_bufnrs == 1 then
       local alpha = require('alpha')

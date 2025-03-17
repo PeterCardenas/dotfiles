@@ -1,4 +1,5 @@
-local async = require('utils.async')
+local Async = require('utils.async')
+local Shell = require('utils.shell')
 
 local chezmoi_augroup = vim.api.nvim_create_augroup('Chezmoi', { clear = true })
 
@@ -7,7 +8,6 @@ local chezmoi_augroup = vim.api.nvim_create_augroup('Chezmoi', { clear = true })
 ---@param filepath string
 ---@return boolean, string[]
 local function apply_filepath(filepath)
-  local shell = require('utils.shell')
   local chezmoi_root = os.getenv('HOME') .. '/.local/share/chezmoi/'
   if not filepath:find('^' .. chezmoi_root) then
     return false, {}
@@ -18,11 +18,11 @@ local function apply_filepath(filepath)
     return false, {}
   end
   -- Do not apply ignored files.
-  local success, output = shell.async_cmd('chezmoi', { 'ignored' })
+  local success, output = Shell.async_cmd('chezmoi', { 'ignored' })
   if success and vim.tbl_contains(output, relative_filepath) then
     return false, {}
   end
-  success, output = shell.async_cmd('chezmoi', { 'target-path', filepath })
+  success, output = Shell.async_cmd('chezmoi', { 'target-path', filepath })
   if not success then
     return true, output
   end
@@ -30,14 +30,14 @@ local function apply_filepath(filepath)
   if vim.fn.filereadable(target_filepath) == 0 then
     local parent_dir = vim.fn.fnamemodify(target_filepath, ':h')
     if vim.fn.isdirectory(parent_dir) == 0 then
-      success, output = shell.async_cmd('mkdir', { '-p', parent_dir })
+      success, output = Shell.async_cmd('mkdir', { '-p', parent_dir })
       if not success then
         return true, output
       end
     end
   end
 
-  success, output = shell.async_cmd('chezmoi', { 'apply', '--source-path', filepath })
+  success, output = Shell.async_cmd('chezmoi', { 'apply', '--source-path', filepath })
   if not success then
     return true, output
   end
@@ -46,9 +46,10 @@ end
 
 vim.api.nvim_create_autocmd('BufWritePost', {
   callback = function(args)
+    ---@type integer
     local bufnr = args.buf
     local filepath = vim.api.nvim_buf_get_name(bufnr)
-    async.void(
+    Async.void(
       ---@async
       function()
         local errored, logs = apply_filepath(filepath)
@@ -67,8 +68,7 @@ vim.api.nvim_create_autocmd('BufWritePost', {
 ---@async
 local function track_lazy_lock()
   local symlinked_lazy_lock_file_path = os.getenv('HOME') .. '/.config/nvim/lazy-lock.json'
-  local shell = require('utils.shell')
-  local success, output = shell.async_cmd('realpath', { symlinked_lazy_lock_file_path })
+  local success, output = Shell.async_cmd('realpath', { symlinked_lazy_lock_file_path })
   if not success then
     vim.schedule(function()
       vim.notify('realpath failed: ' .. symlinked_lazy_lock_file_path, vim.log.levels.ERROR)
@@ -84,7 +84,7 @@ local function track_lazy_lock()
   end
 
   local lazy_lock_file_path = lazy_lock_file_path_unformatted:gsub('\n', '')
-  success, output = shell.async_cmd('chezmoi', { 'add', lazy_lock_file_path })
+  success, output = Shell.async_cmd('chezmoi', { 'add', lazy_lock_file_path })
   if not success then
     vim.schedule(function()
       vim.notify('chezmoi add failed: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
@@ -95,7 +95,7 @@ end
 
 vim.api.nvim_create_autocmd('User', {
   callback = function()
-    async.void(track_lazy_lock)
+    Async.void(track_lazy_lock)
   end,
   group = chezmoi_augroup,
   pattern = { 'LazyInstall', 'LazyUpdate', 'LazyClean', 'LazyDone', 'LazyReload' },

@@ -1,3 +1,7 @@
+local Table = require('utils.table')
+local Config = require('utils.config')
+local OSC = require('utils.osc')
+
 -- [[ Setting options ]]
 -- Folding setup for nvim-ufo
 vim.o.foldcolumn = '1'
@@ -39,19 +43,19 @@ vim.treesitter.query.omnifunc = function(...)
   if type(ret) ~= 'table' or type(ret.words) ~= 'table' then
     return ret
   end
-  return require('utils.table').remove_duplicates(ret.words)
+  return Table.remove_duplicates(ret.words)
 end
 
 -- Fish startup can be slow, which results in things like lazygit and fzf-lua being slow
 vim.o.shell = 'bash'
 
-vim.o.showtabline = require('utils.config').USE_TABLINE and 2 or 0
+vim.o.showtabline = Config.USE_TABLINE and 2 or 0
 
 --- Use tmux-aware OSC 52 for clipboard
 --- @param clipboard string The clipboard to read from or write to
 --- @param content string The Base64 encoded contents to write to the clipboard, or '?' to read
 local function osc52(clipboard, content)
-  return require('utils.osc').osc(string.format(']52;%s;%s', clipboard, content))
+  return OSC.osc(string.format(']52;%s;%s', clipboard, content))
 end
 
 ---@param reg '+'|'*'
