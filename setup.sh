@@ -126,6 +126,16 @@ function setup_ubuntu() {
 	wget https://go.dev/dl/go1.22.4.linux-amd64.tar.gz
 	tar -C /usr/local -xzf go1.22.4.linux-amd64.tar.gz
 	rm go1.22.4.linux-amd64.tar.gz
+
+	# Install commitmsgfmt
+	pushd $HOME/thirdparty
+	gh release download --repo commonquail/commitmsgfmt -p 'commitmsgfmt-*-unknown-linux-musl.tar.gz'
+	tar -xvzf commitmsgfmt-*-unknown-linux-musl.tar.gz
+	rm commitmsgfmt-*-unknown-linux-musl.tar.gz
+	cp commitmsgfmt-*-unknown-linux-musl/commitmsgfmt $HOME/.local/bin/
+	cp commitmsgfmt-*-unknown-linux-musl/commitmsgfmt.1 $HOME/.local/share/man/man1/
+	rm -rf commitmsgfmt-*-unknown-linux-musl
+	popd
 }
 
 function setup_macos_defaults() {
@@ -286,6 +296,16 @@ EOF
 	)
 	# TODO: figure out how to actually skip interactive questions
 	sudo -B port -N install "${ports[@]}"
+
+	# Install commitmsgfmt
+	pushd $HOME/thirdparty
+	gh release download --repo commonquail/commitmsgfmt -p 'commitmsgfmt-*-unknown-linux-musl.tar.gz'
+	tar -xvzf commitmsgfmt-*-apple-darwin.tar.gz
+	rm commitmsgfmt-*-apple-darwin.tar.gz
+	cp commitmsgfmt-*-apple-darwin/commitmsgfmt $HOME/.local/bin/
+	cp commitmsgfmt-*-apple-darwin/commitmsgfmt.1 $HOME/.local/share/man/man1/
+	rm -rf commitmsgfmt-*-apple-darwin
+	popd
 }
 
 function install_ccls_for_mac() {
