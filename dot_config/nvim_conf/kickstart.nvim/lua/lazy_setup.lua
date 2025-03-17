@@ -26,9 +26,8 @@ vim.opt.rtp:prepend(lazypath)
 
 -- Remove sync due to conflict with leap.nvim, and it + others since using these commands is usually a mistake.
 local default_commands = require('lazy.view.config').commands
+-- TODO: Only disable the install/update tabs, but keep the commands.
 default_commands.sync = nil
-default_commands.install = nil
-default_commands.update = nil
 
 -- Add plugins for lazy.nvim.
 require('lazy').setup({
