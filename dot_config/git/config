@@ -13,6 +13,7 @@
 	navigate = true # use n and N to move between diff sections
 	minus-style = syntax auto
 	minus-emph-style = syntax auto
+	tabs = 2
 [diff]
 	tool = vimdiff
 [diff "vimdiff"]
