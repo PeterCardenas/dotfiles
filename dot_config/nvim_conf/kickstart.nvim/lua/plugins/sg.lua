@@ -45,8 +45,7 @@ return {
     end,
   },
   {
-    'PeterCardenas/avante.nvim',
-    branch = 'working-state',
+    'yetone/avante.nvim',
     build = 'make',
     event = { 'VeryLazy' },
     cond = function()
