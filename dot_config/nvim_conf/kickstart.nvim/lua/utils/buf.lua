@@ -21,4 +21,13 @@ function M.get_navigable_buffers(include_current)
   return bufnrs
 end
 
+---@param bufnr integer
+---@param file_size_threshold integer
+---@return boolean
+function M.is_buf_large(bufnr, file_size_threshold)
+  local file_name = vim.api.nvim_buf_get_name(bufnr)
+  local file_size = vim.fn.getfsize(file_name)
+  return file_size > file_size_threshold
+end
+
 return M
