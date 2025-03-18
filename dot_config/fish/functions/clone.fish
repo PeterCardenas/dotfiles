@@ -29,5 +29,11 @@ function clone -d "Clones a repo with ssh alias" -a alias_name -a repo_name
         git config --local user.signingkey "$signing_key"
     else
         print_error "Known git dir for alias $alias_name not found: $git_dir"
+        return 1
+    end
+    set -l existing_fork (gh repo list --fork --json parent --jq ".[] | .parent.owner.login + \"/\" + .parent.name | select(. == \"$alias_name/$repo\")")
+    if test -eq (count $existing_fork) 1
+        print_info "Setting up existing fork"
+        setup_fork
     end
 end
