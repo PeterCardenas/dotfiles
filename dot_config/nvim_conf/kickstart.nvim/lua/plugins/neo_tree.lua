@@ -63,6 +63,9 @@ return {
     lazy = true,
     config = function()
       require('nvim-tree').setup({
+        view = {
+          side = 'right',
+        },
         update_focused_file = {
           enable = true,
         },
