@@ -1,4 +1,4 @@
-function setup_fork -d "Sets up a fork with ssh alias and sets default repo"
+function setup_fork -d "Sets up a fork with ssh alias and sets default repo" -a fork_name
     set -l fork_url (git config --get remote.origin.url)
     if test -z "$fork_url"
         print_error "Failed to get fork url for remote origin: $fork_url"
@@ -16,6 +16,10 @@ function setup_fork -d "Sets up a fork with ssh alias and sets default repo"
         set fork_repo $repo_matches[1]
     end
     gh repo set-default $fork_repo
+    set -l fork_name_args
+    if test -n "$fork_name"
+        set fork_name_args --fork-name "$fork_name"
+    end
     gh repo fork --clone --remote
     if test $status -ne 0
         print_error "Failed to fork"
