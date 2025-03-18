@@ -142,9 +142,6 @@ abbr -a gr --function __cmp_gr
 abbr -a glog 'git log --graph --pretty=\'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset\''
 abbr -a lg lazygit
 
-# Make sure a session is created before running aichat
-abbr -a aichat "aichat --session=default --save-session"
-
 # Starship
 abbr -a p "starship prompt"
 set -gx STARSHIP_LOG error
