@@ -2,19 +2,6 @@ if status is-interactive
     source $HOME/.config/fish/interactive_config.fish
 end
 
-# Update PATH for both interactive and non-interactive shells
-set -gx PNPM_HOME "$HOME/.local/share/pnpm"
-set -gx ZVM_INSTALL "$HOME/.zvm/self"
-fish_add_path -P -m "$HOME/.local/share/bob/nvim-bin" \
-    "$HOME/.local/bin" \
-    "$HOME/go/bin" \
-    /usr/local/go/bin \
-    "$HOME/.cargo/bin" \
-    "$HOME/.fish-lsp/bin" \
-    "$PNPM_HOME" \
-    "$HOME/.zvm/bin" \
-    "$ZVM_INSTALL/"
-
 set -l os (uname -s)
 if test $os = Darwin
     fish_add_path -P -m "/Applications/WezTerm.app/Contents/MacOS" \
@@ -32,8 +19,21 @@ if test $os = Darwin
     # Added by OrbStack: command-line tools and integration
     source ~/.orbstack/shell/init2.fish 2>/dev/null || :
 else
-    fish_add_path -P "$HOME/.local/kitty.app/bin"
+    fish_add_path -P -m "$HOME/.local/kitty.app/bin"
 end
+
+# Update PATH for both interactive and non-interactive shells
+set -gx PNPM_HOME "$HOME/.local/share/pnpm"
+set -gx ZVM_INSTALL "$HOME/.zvm/self"
+fish_add_path -P -m "$HOME/.local/share/bob/nvim-bin" \
+    "$HOME/.local/bin" \
+    "$HOME/go/bin" \
+    /usr/local/go/bin \
+    "$HOME/.cargo/bin" \
+    "$HOME/.fish-lsp/bin" \
+    "$PNPM_HOME" \
+    "$HOME/.zvm/bin" \
+    "$ZVM_INSTALL/"
 
 function __prompt -a prompt_name
     set -l prompt_file $HOME/.config/starship_$prompt_name.toml
