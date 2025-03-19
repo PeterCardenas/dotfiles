@@ -98,7 +98,7 @@ symbol = " "
 format = "[$symbol($version)]($style) "
 
 [python]
-symbol = "🐍"
+symbol = "🐍 "
 format = "[${symbol}${pyenv_prefix}(${version} )(\\($virtualenv\\) )]($style) "
 
 [rust]
@@ -111,7 +111,7 @@ format = "[$symbol($version)]($style) "
 format = "[$symbol$version]($style) "
 
 [golang]
-symbol = "🐹"
+symbol = "🐹 "
 format = "[$symbol$version]($style) "
 
 [c]
