@@ -46,6 +46,7 @@
 	skippedCherryPicks = false
 	detachedHead = false
 	mergeConflict = false
+	forceDeleteBranch = false
 [user]
 	name = Peter Cardenas
 [http]
