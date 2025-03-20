@@ -32,7 +32,7 @@ gui:
     cherryPickedCommitFgColor:
       - "#7aa2f7"
     cherryPickedCommitBgColor:
-      - "#bb9af7"
+      - "#3901a0"
     markedBaseCommitFgColor:
       - "#7aa2f7"
     markedBaseCommitBgColor:
