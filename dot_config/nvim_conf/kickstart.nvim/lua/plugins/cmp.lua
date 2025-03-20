@@ -112,13 +112,14 @@ return {
           },
         },
       })
-      local git_info = require('cmp_git.utils').get_git_info(require('cmp_git.config').remotes, {
+      require('cmp_git.utils').get_git_info(require('cmp_git.config').remotes, {
         enableRemoteUrlRewrites = require('cmp_git.config').enableRemoteUrlRewrites,
         ssh_aliases = ssh_aliases,
+        on_complete = function(git_info)
+          -- Preload mentions
+          require('cmp_git').source.sources.github:get_mentions(function() end, git_info, '@')
+        end,
       })
-      -- Preload mentions
-      require('cmp_git').source.sources.github:get_mentions(function() end, git_info, '@')
-
       cmp.setup({
         snippet = {
           expand = function(args)
