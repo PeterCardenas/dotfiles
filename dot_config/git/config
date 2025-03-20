@@ -49,5 +49,3 @@
 	forceDeleteBranch = false
 [user]
 	name = Peter Cardenas
-[http]
-	postBuffer = 16384
