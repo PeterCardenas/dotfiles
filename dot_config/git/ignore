@@ -25,3 +25,6 @@ protols.toml
 
 # Ignores avanterules
 *.avanterules
+
+# MacOS
+**/.DS_Store
