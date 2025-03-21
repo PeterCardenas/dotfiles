@@ -275,6 +275,7 @@ EOF
 		git-lfs
 		gnupg2
 		go
+		ffmpeg
 		vim +python311
 		wget
 		# Needed for building Neovim, among other things
