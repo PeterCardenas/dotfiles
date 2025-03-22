@@ -826,14 +826,18 @@ return {
     config = function()
       require('yanky').setup({
         -- TODO: would prefer sqlite but get some dynamic linking errors
-        ring = { storage = 'shada' },
-        -- TODO: Cannot read from clipboard in tmux
-        ignore_registers = { '_', '+', '*' },
+        ring = {
+          storage = 'shada',
+          -- TODO: Cannot read from clipboard in tmux
+          ignore_registers = { '_', '+', '*' },
+        },
         system_clipboard = {
           sync_with_ring = false,
         },
         highlight = {
           timer = 150,
+          on_yank = false,
+          on_put = true,
         },
       })
     end,
