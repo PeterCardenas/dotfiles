@@ -7,6 +7,7 @@ return {
     dependencies = {
       'echasnovski/mini.icons',
       'nvim-treesitter/nvim-treesitter',
+      'nvim-treesitter/nvim-treesitter-context',
     },
     cmd = { 'FzfLua' },
     config = function()
