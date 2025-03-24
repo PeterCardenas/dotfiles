@@ -35,7 +35,7 @@ return {
     -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     event = { 'BufReadPre', 'BufNewFile' },
-    cmd = { 'TSInstall' },
+    cmd = { 'TSInstall', 'TSInstallSync' },
     dependencies = {
       'nvim-treesitter/nvim-treesitter-textobjects',
     },
