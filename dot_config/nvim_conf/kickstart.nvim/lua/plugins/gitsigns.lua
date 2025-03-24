@@ -245,7 +245,7 @@ end, { nargs = 0, desc = 'Edit the PR for the current branch' })
 
 local nmap = require('utils.keymap').nmap
 
-vim.api.nvim_create_autocmd({ 'CursorMoved' }, {
+vim.api.nvim_create_autocmd({ 'BufEnter' }, {
   group = vim.api.nvim_create_augroup('gitsigns-prefetch-blame', { clear = true }),
   callback = function(opts)
     ---@type integer
