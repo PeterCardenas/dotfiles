@@ -46,6 +46,9 @@ require('lazy').setup({
     notify = false,
   },
   install = { colorscheme = { 'tokyonight' } },
+  git = {
+    url_format = 'personal-github.com:%s.git',
+  },
   performance = {
     cache = {
       enabled = true,
