@@ -506,7 +506,7 @@ EOF
 	# Install plugins via Lazy.nvim
 	nvim --headless "+Lazy! restore" +qa
 	# Install TreeSitter parsers
-	nvim --headless "+TSInstall! all" +qa
+	nvim --headless "+TSInstallSync! all" +qa
 	# TODO Install Mason dependencies
 	install_ccls_for_mac
 	# TODO: setup gpg (need bitwarden or copy over)
