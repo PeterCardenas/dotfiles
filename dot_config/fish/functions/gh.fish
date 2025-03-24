@@ -1,8 +1,8 @@
 function gh
     if not git rev-parse --is-inside-work-tree >/dev/null 2>&1
-        set -l default_user (command gh api user --jq '.login' 2>/dev/null)
+        set -l active_user (command gh api user --jq '.login' 2>/dev/null)
         if test $status -eq 0
-            print_warn "Not in a git repository, using default user: $default_user"
+            print_warn "Not in a git repository, using active user: $active_user"
         else
             print_warn "Not in a git repository"
         end
