@@ -16,6 +16,15 @@ if test $os = Darwin
         set -gx DYLD_FALLBACK_LIBRARY_PATH /opt/local/lib
     end
 
+    if set -q TERMINFO_DIRS
+        set -gx TERMINFO_DIRS /opt/local/share/terminfo:$TERMINFO_DIRS
+    else
+        set -gx TERMINFO_DIRS /opt/local/share/terminfo
+    end
+    if set -q TERMINFO
+        set -gx TERMINFO_DIRS $TERMINFO:$TERMINFO_DIRS
+    end
+
     # Added by OrbStack: command-line tools and integration
     source ~/.orbstack/shell/init2.fish 2>/dev/null || :
 else
