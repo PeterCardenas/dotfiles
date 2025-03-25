@@ -4,6 +4,8 @@ local LspMethod = vim.lsp.protocol.Methods
 
 local M = {}
 
+local semantic_tokens_group = vim.api.nvim_create_augroup('vim_lsp_semantic_tokens_rewriter', { clear = true })
+
 ---Configures a language server after it attaches to a buffer.
 ---@param client vim.lsp.Client
 ---@param bufnr integer
@@ -187,6 +189,31 @@ function M.on_attach(client, bufnr)
 
   -- Lesser used LSP functionality
   nmap('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
+
+  -- Do not overwrite todo/fixme highlights with semantic tokens.
+  vim.api.nvim_create_autocmd('LspTokenUpdate', {
+    buffer = bufnr,
+    group = semantic_tokens_group,
+    callback = function(args)
+      ---@type STTokenRange
+      local token = args.data.token
+      ---@type integer
+      local client_id = args.data.client_id
+      local namespace_id = vim.api.nvim_get_namespaces()['vim_lsp_semantic_tokens:' .. tostring(client_id)]
+      local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, namespace_id, { token.line, token.start_col }, { token.line, token.end_col }, {
+        details = true,
+        hl_name = true,
+      })
+      for _, extmark in ipairs(extmarks) do
+        ---@type vim.api.keyset.extmark_details?
+        local extmark_details = extmark[4]
+        local extmark_id = extmark[1]
+        if extmark_details ~= nil and extmark_details.hl_group:match('^@lsp%.type%.comment%..*') then
+          vim.api.nvim_buf_del_extmark(bufnr, namespace_id, extmark_id)
+        end
+      end
+    end,
+  })
 end
 
 return M
