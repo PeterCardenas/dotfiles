@@ -43,6 +43,7 @@ return {
     config = function()
       -- [[ Configure Treesitter ]]
       -- See `:help nvim-treesitter`
+      -- TODO: Use ~/.local/share/nvim/site for treesitter parsers using `parser_install_dir`
       require('nvim-treesitter.configs').setup({
         -- Add languages to be installed here that you want installed for treesitter
         ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript', 'vimdoc', 'vim', 'markdown', 'fish', 'latex' },
