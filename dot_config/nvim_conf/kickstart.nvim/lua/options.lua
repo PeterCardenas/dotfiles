@@ -145,6 +145,7 @@ vim.filetype.add({
   extension = {
     mdx = 'markdown.mdx',
     swcrc = 'json',
+    mdc = 'markdown',
     swiftinterface = 'swift',
     -- Source: https://github.com/gpanders/dotfiles/blob/master/.config/nvim/filetype.lua
     h = function(path)
