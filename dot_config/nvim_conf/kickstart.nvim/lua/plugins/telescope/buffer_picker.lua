@@ -104,7 +104,7 @@ function M.find_buffers()
       info = vim.fn.getbufinfo(bufnr)[1],
     }
 
-    table.insert(buffers, element)
+    buffers[#buffers + 1] = element
   end
 
   local opts = {}

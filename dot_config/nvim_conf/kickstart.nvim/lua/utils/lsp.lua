@@ -31,7 +31,7 @@ M.FT_WITH_LSP = {
 }
 
 if vim.fn.has('mac') == 1 then
-  table.insert(M.FT_WITH_LSP, 'swift')
+  M.FT_WITH_LSP[#M.FT_WITH_LSP + 1] = 'swift'
 end
 
 --- Applies the given defaults to the completion item, modifying it in place.
