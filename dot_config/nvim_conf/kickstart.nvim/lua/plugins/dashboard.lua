@@ -120,7 +120,7 @@ return {
       },
     }
     dashboard.opts.layout[1].val = 2
-    dashboard.opts.margin = nil
+    dashboard.opts.margin = nil ---@type string?
     require('alpha').setup(require('alpha.themes.dashboard').config)
 
     -- Add autocmds.
@@ -165,7 +165,7 @@ return {
         table.insert(footer, {
           type = 'text',
           opts = { position = 'center', hl = 'AlphaFooter' },
-          val = '⚡ Neovim loaded ' .. stats.count .. ' plugins in ' .. ms .. 'ms',
+          val = '⚡ Neovim loaded ' .. stats.loaded .. '/' .. stats.count .. ' plugins in ' .. ms .. 'ms',
         })
         dashboard.section.footer.val = footer
         pcall(vim.cmd.AlphaRedraw)
