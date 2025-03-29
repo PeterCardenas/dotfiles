@@ -69,7 +69,7 @@ end, { desc = 'Go to previous diagnostic message' })
 vim.keymap.set('n', ']d', function()
   vim.diagnostic.goto_next()
 end, { desc = 'Go to next diagnostic message' })
-nmap('Show hovered diagnostic', 'ds', function()
+nmap('Show hovered diagnostic', 'lh', function()
   vim.diagnostic.open_float()
 end)
 
