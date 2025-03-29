@@ -86,9 +86,6 @@ end
 ---@param dry_run boolean
 ---@param on_complete? FormatCallback
 local function fix_from_code_action(bufnr, ls_name, action_type, dry_run, on_complete)
-  ---@type lsp.CodeActionParams
-  local params = vim.lsp.util.make_range_params()
-  params.context = { only = { action_type }, diagnostics = {} }
   local clients = vim.lsp.get_clients({
     bufnr = bufnr,
     name = ls_name,
@@ -102,9 +99,12 @@ local function fix_from_code_action(bufnr, ls_name, action_type, dry_run, on_com
   end
   local completion_count = 0
   for _, client in ipairs(clients) do
+    ---@type lsp.CodeActionParams
+    local params = vim.lsp.util.make_range_params(0, client.offset_encoding)
+    params.context = { only = { action_type }, diagnostics = {} }
     ---@param err any
     ---@param ls_results lsp.CodeAction[]
-    client.request(LspMethod.textDocument_codeAction, params, function(err, ls_results, _, _)
+    client:request(LspMethod.textDocument_codeAction, params, function(err, ls_results, _, _)
       -- TODO: ruff is pretty noisy about errors
       if err and client.name ~= 'ruff_lsp' then
         vim.notify('Error running ' .. ls_name .. ' code action: ' .. vim.inspect(err), vim.log.levels.ERROR)
@@ -200,7 +200,7 @@ local function auto_import_pyright(bufnr, dry_run, on_complete)
     end
     local diag_info = diag_infos[current_index]
     ---@param result vim.lsp.CompletionResult
-    pyright_client.request(LspMethod.textDocument_completion, diag_info.completion_params, function(err, result, _context, _config)
+    pyright_client:request(LspMethod.textDocument_completion, diag_info.completion_params, function(err, result, _context, _config)
       current_index = current_index + 1
       if err then
         auto_import_next()
@@ -354,7 +354,7 @@ local function apply_typescript_codefixes(bufnr, dry_run, on_complete)
   local lsp_constants = require('typescript-tools.protocol.constants')
   ---@param err lsp.ResponseError|nil
   ---@param res lsp.CodeAction
-  typescript_client.request(lsp_constants.CustomMethods.BatchCodeActions, params, function(err, res)
+  typescript_client:request(lsp_constants.CustomMethods.BatchCodeActions, params, function(err, res)
     if did_finish then
       return
     end
@@ -396,7 +396,7 @@ local function remove_typescript_unused_imports(bufnr, dry_run, on_complete)
     return
   end
 
-  typescript_client.request(lsp_constants.CustomMethods.OrganizeImports, params, function(err, res)
+  typescript_client:request(lsp_constants.CustomMethods.OrganizeImports, params, function(err, res)
     if err ~= nil then
       vim.notify('Error running typescript-tools remove unused imports: ' .. err.message, vim.log.levels.ERROR)
     else
@@ -480,7 +480,7 @@ local function lsp_format(bufnr, dry_run, on_complete)
     else
       ---@param err any
       ---@param results lsp.TextEdit[]
-      client.request(LspMethod.textDocument_formatting, formatting_params, function(err, results, _, _)
+      client:request(LspMethod.textDocument_formatting, formatting_params, function(err, results, _, _)
         if err then
           if client.name ~= 'gopls' and client.name ~= 'ruff_lsp' then
             vim.notify('Error checking formatting: ' .. vim.inspect(err), vim.log.levels.ERROR)

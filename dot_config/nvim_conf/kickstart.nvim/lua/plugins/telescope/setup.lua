@@ -28,6 +28,7 @@ function M.find_files(show_ignore)
     FilePicker.find_files({ show_ignore = show_ignore })
   else
     require('fzf-lua.providers.files').files({
+      ---@type string
       cmd = M.rg_files_cmd(show_ignore),
     })
   end
@@ -53,6 +54,7 @@ function M.find_words(show_ignore)
     })
   else
     require('fzf-lua.providers.grep').live_grep_glob({
+      ---@type string
       cmd = M.rg_words_cmd(show_ignore),
     })
   end

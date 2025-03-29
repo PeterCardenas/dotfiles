@@ -248,7 +248,7 @@ function M.python_lsp_config()
             end
           end
           result.diagnostics = filtered_diagnostics
-          return vim.lsp.diagnostic.on_publish_diagnostics(_, result, ctx, config)
+          return vim.lsp.diagnostic.on_publish_diagnostics(_, result, ctx)
         end,
       },
       settings = {

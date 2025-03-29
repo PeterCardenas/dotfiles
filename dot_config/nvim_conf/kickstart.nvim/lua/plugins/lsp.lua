@@ -41,6 +41,30 @@ vim.api.nvim_create_autocmd('LspAttach', {
 
 ---@return custom.LspConfig
 local function gopls_config()
+  local gopls_settings = {
+    codelenses = {
+      generate = false,
+      gc_details = false,
+      test = false,
+      tidy = false,
+      upgrade_dependency = false,
+      vendor = false,
+      regenerate_cgo = false,
+    },
+    completeFunctionCalls = true,
+    completeUnimported = true,
+    staticcheck = true,
+    semanticTokens = true,
+    hints = {
+      assignVariableTypes = true,
+      compositeLiteralFields = true,
+      compositeLiteralTypes = true,
+      constantValues = true,
+      functionTypeParameters = true,
+      parameterNames = true,
+      rangeVariableTypes = true,
+    },
+  }
   --- @type custom.LspConfig
   local config = {
     -- Disabled for performance reasons.
@@ -54,30 +78,7 @@ local function gopls_config()
       },
     },
     settings = {
-      gopls = {
-        codelenses = {
-          generate = false,
-          gc_details = false,
-          test = false,
-          tidy = false,
-          upgrade_dependency = false,
-          vendor = false,
-          regenerate_cgo = false,
-        },
-        completeFunctionCalls = true,
-        completeUnimported = true,
-        staticcheck = true,
-        semanticTokens = true,
-        hints = {
-          assignVariableTypes = true,
-          compositeLiteralFields = true,
-          compositeLiteralTypes = true,
-          constantValues = true,
-          functionTypeParameters = true,
-          parameterNames = true,
-          rangeVariableTypes = true,
-        },
-      },
+      gopls = gopls_settings,
     },
   }
 
