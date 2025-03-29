@@ -99,6 +99,9 @@ return {
       require('mini.files').setup({
         windows = {
           preview = true,
+          -- width_focus = 25,
+          -- TODO: Only want to apply to file previews
+          -- width_preview = 75,
         },
         mappings = {
           go_in = 'L',

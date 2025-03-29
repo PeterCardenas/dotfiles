@@ -19,21 +19,19 @@ vim.o.tabstop = 2
 vim.o.concealcursor = 'nc'
 
 function vim.brint(...)
-  if vim.in_fast_event() then
-    print(...)
-    return
-  end
+  local output = {} --- @type string[]
   for i = 1, select('#', ...) do
     local o = select(i, ...)
     if type(o) == 'string' then
-      vim.api.nvim_out_write(o)
+      output[#output + 1] = o
+    elseif o == nil then
+      output[#output + 1] = 'nil'
     else
-      vim.api.nvim_out_write(vim.inspect(o, { newline = '\n', indent = '  ' }))
+      output[#output + 1](vim.inspect(o, { newline = '\n', indent = '  ' }))
     end
-    -- Use a space to separate the arguments.
-    vim.api.nvim_out_write(' ')
   end
-  vim.api.nvim_out_write('\n')
+  -- Use a space to separate the arguments.
+  print(table.concat(output, ' '))
 end
 
 ---Workaround https://github.com/hrsh7th/cmp-omni/pull/10
@@ -263,7 +261,9 @@ for _, sign in ipairs(signs) do
   if not sign.texthl then
     sign.texthl = sign.name
   end
-  vim.fn.sign_define(sign.name, sign)
+  if sign.name:match('^Dap') then
+    vim.fn.sign_define(sign.name, sign)
+  end
 end
 vim.diagnostic.config({
   virtual_text = true,
@@ -331,7 +331,7 @@ end, vim.api.nvim_create_namespace('auto_hlsearch'))
 local highlight_group = vim.api.nvim_create_augroup('YankHighlight', { clear = true })
 vim.api.nvim_create_autocmd('TextYankPost', {
   callback = function()
-    vim.highlight.on_yank()
+    vim.hl.on_yank({ timeout = 150 })
   end,
   group = highlight_group,
   pattern = '*',

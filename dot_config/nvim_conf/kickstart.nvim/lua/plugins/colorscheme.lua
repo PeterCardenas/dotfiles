@@ -18,7 +18,7 @@ return {
     vim.api.nvim_set_hl(0, '@module', { link = 'Special', force = true })
     Colors.set_focused_colors()
     -- Make comments foreground brighter.
-    vim.api.nvim_set_hl(0, 'Comment', { foreground = '#7c7c7c', italic = true, cterm = { italic = true } })
+    vim.api.nvim_set_hl(0, 'Comment', { foreground = '#7c7c7c', italic = true })
     -- More contrast for selected tab.
     vim.api.nvim_set_hl(0, 'TabLineSel', { foreground = '#e0e0e0', background = '#26355E' })
     -- Make tab title foreground brighter.
@@ -37,7 +37,7 @@ return {
     vim.api.nvim_set_hl(0, 'SignColumn', side_col_highlight)
     vim.api.nvim_set_hl(0, 'FoldColumn', side_col_highlight)
     vim.api.nvim_set_hl(0, 'LineNr', side_col_highlight)
-    vim.api.nvim_set_hl(0, 'CursorLineNr', { foreground = '#ff9e64', bold = true, cterm = { bold = true }, background = side_col_highlight.background })
+    vim.api.nvim_set_hl(0, 'CursorLineNr', { foreground = '#ff9e64', bold = true, background = side_col_highlight.background })
     local diagnostic_error_hl = vim.api.nvim_get_hl(0, { name = 'DiagnosticError' })
     vim.api.nvim_set_hl(0, 'DiagnosticSignError', { foreground = diagnostic_error_hl.fg, background = side_col_highlight.background })
     local diagnostic_warn_hl = vim.api.nvim_get_hl(0, { name = 'DiagnosticWarn' })
@@ -58,7 +58,7 @@ return {
     vim.api.nvim_set_hl(0, 'WinBar', { foreground = winbar_hl.fg, background = side_col_highlight.background })
     vim.api.nvim_set_hl(0, 'WinBarNC', { link = 'WinBar' })
     -- Make window separator darker
-    vim.api.nvim_set_hl(0, 'WinSeparator', { foreground = '#454d71', bold = true, cterm = { bold = true } })
+    vim.api.nvim_set_hl(0, 'WinSeparator', { foreground = '#454d71', bold = true })
     -- Strikethrough is unreadable, TODO: Color is kinda ugly.
     vim.api.nvim_set_hl(0, 'OctoStrikethrough', { strikethrough = true, foreground = '#37579e' })
   end,

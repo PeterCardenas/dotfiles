@@ -98,7 +98,7 @@ function M.on_attach(client, bufnr)
         },
       }
 
-      client.request(method, params, function(err, result, _)
+      client:request(method, params, function(err, result, _)
         if err then
           vim.print('Error: ' .. err.message)
           return
@@ -179,7 +179,7 @@ function M.on_attach(client, bufnr)
     end
   end, { buffer = bufnr })
 
-  if client.supports_method(LspMethod.textDocument_documentLink) then
+  if client:supports_method(LspMethod.textDocument_documentLink) then
     -- Trigger setup
     require('lsplinks')
     nmap('gx', function()
@@ -199,7 +199,7 @@ function M.on_attach(client, bufnr)
       local token = args.data.token
       ---@type integer
       local client_id = args.data.client_id
-      local namespace_id = vim.api.nvim_get_namespaces()['vim_lsp_semantic_tokens:' .. tostring(client_id)]
+      local namespace_id = vim.api.nvim_get_namespaces()['nvim.lsp.semantic_tokens:' .. tostring(client_id)]
       local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, namespace_id, { token.line, token.start_col }, { token.line, token.end_col }, {
         details = true,
         hl_name = true,
