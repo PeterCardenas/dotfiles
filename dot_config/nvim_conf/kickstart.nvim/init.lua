@@ -1,9 +1,5 @@
 local Config = require('utils.config')
 
--- HACK to make :Inspect work
--- Reference: https://github.com/neovim/neovim/issues/31675
--- Should be fixed after 0.10.3
-vim.hl = vim.highlight
 local profile_env = os.getenv('NVIM_PROFILE')
 if profile_env ~= nil then
   local profile_startup = profile_env:lower():match('^start$') ~= nil

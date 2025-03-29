@@ -21,7 +21,7 @@ function M.make_entry_display(configuration)
     if v.width then
       acc_width = acc_width + v.width
       local justify = v.right_justify
-      local width
+      local width ---@type integer
       table.insert(generator, function(item, picker)
         if width == nil then
           local results_win = picker.results_border.content_win_id

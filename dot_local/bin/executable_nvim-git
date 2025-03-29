@@ -10,7 +10,7 @@ set -l started false
 set -l finished false
 while not $finished
     sleep 0.1
-    set -l bufnames (nvim --headless --server "$NVIM" --remote-expr "execute('=vim.iter(vim.api.nvim_list_bufs()):filter(function(bufnr) return vim.fn.buflisted(bufnr) == 1 end):map(vim.api.nvim_buf_get_name):join(\"\n\")')")
+    set -l bufnames (nvim --headless --server "$NVIM" --remote-expr "execute('=vim.iter(vim.api.nvim_list_bufs()):filter(function(bufnr) return vim.fn.buflisted(bufnr) == 1 end):map(vim.api.nvim_buf_get_name):join(\"\n\")')" | jq -r .)
 
     if string match -q "$filename" $bufnames
         set started true

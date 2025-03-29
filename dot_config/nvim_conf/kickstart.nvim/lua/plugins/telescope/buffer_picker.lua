@@ -29,10 +29,12 @@ local function make_buffer_entry()
     -- icon + : + lnum
     opts.__prefix = icon_width + 1 + #tostring(entry.lnum)
     local display_bufname = require('telescope.utils').transform_path(opts, entry.filename)
+    ---@type string, string
     local icon, hl_group = require('telescope.utils').get_devicons(entry.filename)
     local diagnostics = vim.diagnostic.count(entry.bufnr, { severity = vim.diagnostic.severity.ERROR })
     local has_error = diagnostics[vim.diagnostic.severity.ERROR] ~= nil and diagnostics[vim.diagnostic.severity.ERROR] > 0
     local Path = require('plenary.path')
+    ---@type string
     local full_path = Path:new(entry.filename):expand()
     local buftype = vim.bo[entry.bufnr].buftype
     local is_removed = buftype ~= 'acwrite' and buftype ~= 'nofile' and vim.fn.filereadable(full_path) == 0

@@ -32,6 +32,7 @@ function M.make_files_entry()
   local make_display = function(entry, picker)
     opts.__prefix = icon_width
     local display_bufname = require('telescope.utils').transform_path(opts, entry.filename)
+    ---@type string, string
     local icon, hl_group = require('telescope.utils').get_devicons(entry.filename)
     local has_error = false
     local has_warning = false

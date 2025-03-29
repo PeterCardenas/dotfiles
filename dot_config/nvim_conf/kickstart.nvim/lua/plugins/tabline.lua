@@ -17,6 +17,7 @@ local function add_keymaps()
   end, { desc = 'Close all buffers' })
   ---@param navigation_offset integer
   local function nav_buf(navigation_offset)
+    ---@type integer[]
     local bufs = vim.api.nvim_tabpage_get_var(0, 'bufs')
     local current_bufnr = vim.api.nvim_get_current_buf()
     for i, bufnr in ipairs(bufs) do
@@ -70,6 +71,7 @@ local function add_keymaps()
     if move_offset == 0 then
       return
     end -- if n = 0 then no shifts are needed
+    ---@type integer[]
     local bufs = vim.api.nvim_tabpage_get_var(0, 'bufs')
     for i, bufnr in ipairs(bufs) do -- loop to find current buffer
       if bufnr == vim.api.nvim_get_current_buf() then -- found index of current buffer
@@ -117,7 +119,7 @@ local function register_autocmds()
     group = bufferline_group,
     callback = function(args)
       local success, bufs = pcall(function()
-        return vim.api.nvim_tabpage_get_var(0, 'bufs')
+        return vim.api.nvim_tabpage_get_var(0, 'bufs') ---@type integer[]
       end)
       if not success then
         bufs = {}
@@ -152,7 +154,7 @@ local function register_autocmds()
     callback = function(args)
       for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
         local success, bufs = pcall(function()
-          return vim.api.nvim_tabpage_get_var(0, 'bufs')
+          return vim.api.nvim_tabpage_get_var(0, 'bufs') ---@type integer[]
         end)
         if not success then
           bufs = {}
