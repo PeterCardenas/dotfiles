@@ -281,7 +281,7 @@ end)
 nmap('Show blame for current line with -C', 'gH', function()
   local current_line_blame_opts = vim.deepcopy(require('gitsigns.config').config.current_line_blame_opts)
   local extra_opts = current_line_blame_opts.extra_opts or {}
-  table.insert(extra_opts, '-C')
+  extra_opts[#extra_opts + 1] = '-C'
   current_line_blame_opts.extra_opts = extra_opts
   require('gitsigns.actions').blame_line(current_line_blame_opts)
 end)

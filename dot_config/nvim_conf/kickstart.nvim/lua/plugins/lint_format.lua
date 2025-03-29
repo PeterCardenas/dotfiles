@@ -112,7 +112,7 @@ local function bazel_go_lint(abs_filepath)
     -- TODO: Make regex more robust.
     local target = string.match(line, '//[a-zA-Z_:/]+$')
     if target then
-      table.insert(matched_targets, target)
+      matched_targets[#matched_targets + 1] = target
     end
   end
 
@@ -147,7 +147,7 @@ local function bazel_go_lint(abs_filepath)
     if not file_diagnostics[filename] then
       file_diagnostics[filename] = {}
     end
-    table.insert(file_diagnostics[filename], diagnostic)
+    file_diagnostics[filename][#file_diagnostics[filename] + 1] = diagnostic
   end
   for _, line in ipairs(output) do
     parse_line(line)
@@ -383,9 +383,9 @@ return {
       local buf_lint_args = { 'lint', '--error-format', 'json' }
       local cwd = File.get_cwd()
       local buf_config_path = cwd .. '/buf.yaml'
-      table.insert(buf_lint_args, '--config')
-      table.insert(buf_lint_args, buf_config_path)
-      table.insert(buf_lint_args, '--path')
+      buf_lint_args[#buf_lint_args + 1] = '--config'
+      buf_lint_args[#buf_lint_args + 1] = buf_config_path
+      buf_lint_args[#buf_lint_args + 1] = '--path'
       require('lint').linters.buf_lint.args = buf_lint_args
       require('lint').linters.buf_lint.cwd = cwd
       local venv_path = Python.VENV_PATH
@@ -437,7 +437,7 @@ return {
             diagnostic.end_col = diagnostic.col + #undefined_module_attribute
           end
           if should_filter then
-            table.insert(filtered_diagnostics, diagnostic)
+            filtered_diagnostics[#filtered_diagnostics + 1] = diagnostic
           end
         end
         return filtered_diagnostics
@@ -475,7 +475,7 @@ return {
             should_filter = false
           end
           if should_filter then
-            table.insert(filtered_diagnostics, diagnostic)
+            filtered_diagnostics[#filtered_diagnostics + 1] = diagnostic
           end
         end
         return filtered_diagnostics

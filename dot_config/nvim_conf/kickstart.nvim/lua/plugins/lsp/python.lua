@@ -244,7 +244,7 @@ function M.python_lsp_config()
               end
             end
             if should_filter then
-              table.insert(filtered_diagnostics, diagnostic)
+              filtered_diagnostics[#filtered_diagnostics + 1] = diagnostic
             end
           end
           result.diagnostics = filtered_diagnostics
