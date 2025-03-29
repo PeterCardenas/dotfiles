@@ -186,7 +186,7 @@ local function auto_import_pyright(bufnr, dry_run, on_complete)
         seen_import_names[unresolved_import] = true
         ---@type DiagInfo
         local diag_info = { completion_params = completion_params, import_name = unresolved_import, bufnr = diag.bufnr }
-        table.insert(diag_infos, diag_info)
+        diag_infos[#diag_infos + 1] = diag_info
       end
     end
   end
@@ -216,7 +216,7 @@ local function auto_import_pyright(bufnr, dry_run, on_complete)
           and completion.additionalTextEdits
           and #completion.additionalTextEdits > 0
         then
-          table.insert(auto_import_completions, completion)
+          auto_import_completions[#auto_import_completions + 1] = completion
         end
       end
       if #auto_import_completions == 0 then
@@ -503,11 +503,11 @@ local function lsp_format(bufnr, dry_run, on_complete)
             formatted_lines_count = formatted_lines_count - 1
           end
           if #current_lines ~= formatted_lines_count then
-            table.insert(clients_needing_formatting, client.name)
+            clients_needing_formatting[#clients_needing_formatting + 1] = client.name
           else
             for i, line in ipairs(current_lines) do
               if line ~= formatted_lines[i] then
-                table.insert(clients_needing_formatting, client.name)
+                clients_needing_formatting[#clients_needing_formatting + 1] = client.name
                 break
               end
             end
@@ -558,7 +558,7 @@ local function format_with_check(bufnr, dry_run, on_complete)
       end
       autofix_fn(bufnr, dry_run, function(would_edit_from_autofixer)
         if would_edit_from_autofixer then
-          table.insert(sources_with_edits, autofixer_name)
+          sources_with_edits[#sources_with_edits + 1] = autofixer_name
         end
         autofixer_index = autofixer_index + 1
         format_next()
@@ -567,7 +567,7 @@ local function format_with_check(bufnr, dry_run, on_complete)
     elseif formatter_index > #formatters then
       lsp_format(bufnr, dry_run, function(clients_that_would_format)
         for _, client in ipairs(clients_that_would_format) do
-          table.insert(sources_with_edits, client)
+          sources_with_edits[#sources_with_edits + 1] = client
         end
         if on_complete ~= nil then
           on_complete(sources_with_edits)
@@ -589,7 +589,7 @@ local function format_with_check(bufnr, dry_run, on_complete)
       lsp_format = 'never',
     }, function(_, would_edit_from_formatter)
       if would_edit_from_formatter then
-        table.insert(sources_with_edits, formatter_name)
+        sources_with_edits[#sources_with_edits + 1] = formatter_name
       end
       formatter_index = formatter_index + 1
       format_next()

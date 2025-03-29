@@ -47,7 +47,7 @@ function M.find_words(show_ignore)
       additional_args = function(args)
         local additional_args = vim.list_extend({ '--hidden' }, args)
         if show_ignore then
-          table.insert(additional_args, '--no-ignore')
+          additional_args[#additional_args + 1] = '--no-ignore'
         end
         return additional_args
       end,

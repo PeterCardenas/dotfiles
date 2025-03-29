@@ -98,7 +98,7 @@ vim.g.clipboard = {
 
 ---@type string[]
 local current_sessionoptions = vim.opt.sessionoptions:get()
-table.insert(current_sessionoptions, 'globals')
+current_sessionoptions[#current_sessionoptions + 1] = 'globals'
 current_sessionoptions = vim
   .iter(current_sessionoptions)
   :filter(function(opt)

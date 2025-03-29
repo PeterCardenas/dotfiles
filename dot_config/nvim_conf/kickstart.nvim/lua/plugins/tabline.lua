@@ -134,7 +134,7 @@ local function register_autocmds()
             end
           end
         else
-          table.insert(bufs, args.buf)
+          bufs[#bufs + 1] = args.buf
         end
       end
       bufs = vim.tbl_filter(is_valid_buffer, bufs)

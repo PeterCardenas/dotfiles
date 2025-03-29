@@ -109,7 +109,7 @@ function M.make_entry_display(configuration)
           end
         end
 
-        table.insert(results, str)
+        results[#results + 1] = str
       end
     end
 

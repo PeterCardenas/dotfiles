@@ -20,7 +20,7 @@ function M.remove_duplicates(list)
   ---@diagnostic disable-next-line: no-unknown
   for _, v in ipairs(list) do
     if not seen[v] then
-      table.insert(new_list, v)
+      new_list[#new_list + 1] = v
       seen[v] = true
     end
   end
