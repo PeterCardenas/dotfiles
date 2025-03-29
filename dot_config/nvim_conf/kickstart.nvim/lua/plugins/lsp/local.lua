@@ -68,7 +68,6 @@ function M.setup(capabilities)
         4004,
       },
       fish_lsp_logfile = '/tmp/fish-lsp.log',
-      fish_lsp_config_file_path = home .. '/.local/share/chezmoi/dot_config/fish',
     },
   }
   require('lspconfig').fish_lsp.setup(fish_lsp_config)
