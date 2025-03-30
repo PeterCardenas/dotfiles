@@ -303,7 +303,8 @@ vim.api.nvim_create_autocmd('TermClose', {
     local bufnr = args.buf
     local filetype = vim.bo[bufnr].filetype
     -- Closing lazy terminal buffers is handled by lazy.nvim
-    if filetype == 'lazy' then
+    -- Causes issues with fzf-lua
+    if filetype == 'lazy' or filetype == 'fzf' then
       return
     end
     require('bufdelete').bufdelete(bufnr)
