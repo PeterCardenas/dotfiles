@@ -1,6 +1,7 @@
 function clone -d "Clones a repo with ssh alias" -a alias_name -a repo_name
     set -l ssh_alias personal-github.com
     set -l git_dir ".local/share/chezmoi"
+    set -l user PeterCardenas
     set -l git_dir "$HOME/$git_dir/.git"
     set -l repo_matches (string match -gr '.*/(.*)' $repo_name)
     if test (count $repo_matches) -ne 1
@@ -31,8 +32,8 @@ function clone -d "Clones a repo with ssh alias" -a alias_name -a repo_name
         print_error "Known git dir for alias $alias_name not found: $git_dir"
         return 1
     end
-    set -l existing_fork (gh repo list --fork --json parent --jq ".[] | .parent.owner.login + \"/\" + .parent.name | select(. == \"$alias_name/$repo\")")
-    if test -eq (count $existing_fork) 1
+    set -l existing_fork (gh repo list --fork --json parent --jq ".[] | .parent.owner.login + \"/\" + .parent.name | select(. == \"$user/$repo\")")
+    if test (count $existing_fork) -eq 1
         print_info "Setting up existing fork"
         setup_fork
     end
