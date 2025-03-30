@@ -1,4 +1,6 @@
 local Lsp = require('utils.lsp')
+local Treesitter = require('utils.treesitter')
+local Config = require('utils.config')
 
 ---@type LazyPluginSpec[]
 return {
@@ -6,6 +8,9 @@ return {
     -- Adds LSP completion capabilities
     'hrsh7th/cmp-nvim-lsp',
     ft = Lsp.FT_WITH_LSP,
+    cond = function()
+      return not Config.USE_BLINK_CMP
+    end,
   },
   {
     -- Adds a number of user-friendly snippets
@@ -42,16 +47,25 @@ return {
   },
   {
     'saadparwaiz1/cmp_luasnip',
+    cond = function()
+      return not Config.USE_BLINK_CMP
+    end,
     ft = Lsp.FT_WITH_LSP,
   },
   {
     -- Command completion
     'hrsh7th/cmp-cmdline',
+    cond = function()
+      return not Config.USE_BLINK_CMP
+    end,
     event = { 'CmdlineEnter' },
   },
   {
     -- Get words from the current buffer
     'hrsh7th/cmp-buffer',
+    cond = function()
+      return not Config.USE_BLINK_CMP
+    end,
     event = { 'CmdlineEnter' },
   },
   {
@@ -60,24 +74,11 @@ return {
     ft = { 'fish' },
   },
   {
-    -- Autocompletion
-    'hrsh7th/nvim-cmp',
-    dependencies = {
-      -- Git/GitHub completion
-      { 'PeterCardenas/cmp-git', branch = 'working-state' },
-
-      -- Emoji completion
-      'hrsh7th/cmp-emoji',
-
-      -- omnifunc completion
-      'hrsh7th/cmp-omni',
-
-      -- File path completion
-      'https://codeberg.org/FelipeLema/cmp-async-path',
-    },
-    event = { 'InsertEnter', 'CmdlineEnter' },
+    -- Git/GitHub completion
+    'PeterCardenas/cmp-git',
+    branch = 'working-state',
+    event = { 'InsertEnter' },
     config = function()
-      local cmp = require('cmp')
       local ssh_aliases = {
         ['personal-github.com'] = 'github.com',
         ['work-github.com'] = 'github.com',
@@ -120,6 +121,27 @@ return {
           require('cmp_git').source.sources.github:get_mentions(function() end, git_info, '@')
         end,
       })
+    end,
+  },
+  {
+    -- Autocompletion
+    'hrsh7th/nvim-cmp',
+    dependencies = {
+      -- Emoji completion
+      'hrsh7th/cmp-emoji',
+
+      -- omnifunc completion
+      'hrsh7th/cmp-omni',
+
+      -- File path completion
+      'https://codeberg.org/FelipeLema/cmp-async-path',
+    },
+    event = { 'InsertEnter', 'CmdlineEnter' },
+    cond = function()
+      return not Config.USE_BLINK_CMP
+    end,
+    config = function()
+      local cmp = require('cmp')
       cmp.setup({
         snippet = {
           expand = function(args)
@@ -217,6 +239,8 @@ return {
           ['<C-k>'] = {
             c = select_prev_item,
           },
+          ['<C-n>'] = nil,
+          ['<C-p>'] = nil,
         },
         sources = {
           { name = 'buffer' },
@@ -234,6 +258,154 @@ return {
             },
           },
         }),
+      })
+    end,
+  },
+  {
+    'moyiz/blink-emoji.nvim',
+    lazy = true,
+  },
+  {
+    'saghen/blink.compat',
+    lazy = true,
+    config = function()
+      require('blink.compat').setup({
+        impersonate_nvim_cmp = true,
+      })
+    end,
+  },
+  {
+    'saghen/blink.cmp',
+    event = { 'InsertEnter', 'CmdlineEnter' },
+    lazy = true,
+    -- TODO: Allow building from main with build = 'cargo build --release'
+    -- Currently it's trying to build for arm when neovim is currently built with x86_64
+    version = '*',
+    cond = function()
+      return Config.USE_BLINK_CMP
+    end,
+    config = function()
+      local function maybe_get_dap()
+        local is_enabled = vim.bo.filetype ~= 'prompt' or require('cmp_dap').is_dap_buffer()
+        if is_enabled then
+          return { 'dap' }
+        end
+        return {}
+      end
+      require('blink.cmp').setup({
+        keymap = {
+          preset = 'none',
+          ['<C-space>'] = { 'show', 'show_documentation', 'hide_documentation' },
+          ['<C-j>'] = { 'select_next', 'fallback' },
+          ['<C-k>'] = { 'select_prev', 'fallback' },
+          ['<C-u>'] = { 'scroll_documentation_up', 'fallback' },
+          ['<C-d>'] = { 'scroll_documentation_down', 'fallback' },
+          ['<C-s>'] = { 'show_signature', 'hide_signature', 'fallback' },
+          ['<CR>'] = { 'accept', 'fallback' },
+        },
+        fuzzy = {
+          implementation = 'prefer_rust',
+          prebuilt_binaries = {
+            download = true,
+          },
+        },
+        snippets = {
+          preset = 'luasnip',
+        },
+        sources = {
+          default = function()
+            local sources = { 'omni', 'lazydev', 'lsp', 'path', 'snippets' }
+            local ft = vim.bo.filetype
+            if ft == 'markdown' or Treesitter.inside_comment_block() then
+              sources[#sources + 1] = 'emoji'
+              sources[#sources + 1] = 'git'
+            end
+            if ft == 'fish' then
+              sources[#sources + 1] = 'fish'
+            end
+            return sources
+          end,
+          per_filetype = {
+            octo = { 'emoji', 'git', 'path' },
+            gitcommit = { 'git', 'emoji', 'path' },
+            ghostty = { 'omni', 'path', 'fonts', 'emoji' },
+            query = { 'omni' },
+            ['dap-repl'] = maybe_get_dap,
+            ['dapui_watches'] = maybe_get_dap,
+            ['dapui_hover'] = maybe_get_dap,
+            AvanteInput = { 'avante_commands', 'avante_mentions', 'avante_files' },
+          },
+          providers = {
+            avante_commands = {
+              name = 'avante_commands',
+              module = 'blink.compat.source',
+            },
+            avante_files = {
+              name = 'avante_files',
+              module = 'blink.compat.source',
+            },
+            avante_mentions = {
+              name = 'avante_mentions',
+              module = 'blink.compat.source',
+            },
+            fonts = {
+              name = 'Font',
+              module = 'blink.compat.source',
+            },
+            lazydev = {
+              name = 'LazyDev',
+              module = 'lazydev.integrations.blink',
+              score_offset = 100,
+            },
+            fish = {
+              name = 'fish',
+              module = 'blink.compat.source',
+            },
+            emoji = {
+              module = 'blink-emoji',
+              name = 'Emoji',
+            },
+            dap = {
+              module = 'blink.compat.source',
+              name = 'dap',
+            },
+            git = {
+              name = 'git',
+              module = 'blink.compat.source',
+            },
+            omni = {
+              enabled = function()
+                return vim.bo.omnifunc ~= 'v:lua.vim.lsp.omnifunc' and vim.bo.omnifunc ~= 'v:lua.octo_omnifunc'
+              end,
+            },
+          },
+        },
+        completion = {
+          documentation = {
+            auto_show = true,
+          },
+        },
+        cmdline = {
+          keymap = {
+            preset = 'none',
+            ['<C-j>'] = { 'select_next', 'fallback' },
+            ['<C-k>'] = { 'select_prev', 'fallback' },
+            ['<C-u>'] = { 'scroll_documentation_up', 'fallback' },
+            ['<C-d>'] = { 'scroll_documentation_down', 'fallback' },
+            ['<CR>'] = { 'accept_and_enter', 'fallback' },
+            ['<C-Y>'] = { 'accept', 'fallback' },
+          },
+          completion = {
+            list = {
+              selection = {
+                preselect = true,
+              },
+            },
+            menu = {
+              auto_show = true,
+            },
+          },
+        },
       })
     end,
   },

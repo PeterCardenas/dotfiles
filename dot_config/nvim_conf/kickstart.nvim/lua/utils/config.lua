@@ -19,4 +19,6 @@ M.USE_RUST_LUA_LS = os.getenv('USE_RUST_LUA_LS') ~= nil
 
 M.USE_SNACKS_PROFILER = os.getenv('USE_SNACKS_PROFILER') ~= nil
 
+M.USE_BLINK_CMP = os.getenv('USE_LEGACY_CMP') == nil
+
 return M
