@@ -308,8 +308,13 @@ return {
     servers = Table.merge_tables(servers, python_lsp_config)
 
     -- nvim-cmp supports additional completion capabilities, so broadcast that to servers
-    local capabilities = vim.lsp.protocol.make_client_capabilities()
-    capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities) ---@type lsp.ClientCapabilities
+    local capabilities ---@type lsp.ClientCapabilities
+    if Config.USE_BLINK_CMP then
+      capabilities = require('blink.cmp').get_lsp_capabilities()
+    else
+      capabilities = vim.lsp.protocol.make_client_capabilities()
+      capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities) ---@type lsp.ClientCapabilities
+    end
 
     -- Setup language servers found locally.
     LocalLsp.setup(capabilities)
