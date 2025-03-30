@@ -398,7 +398,7 @@ return {
           completion = {
             list = {
               selection = {
-                preselect = true,
+                preselect = false,
               },
             },
             menu = {
