@@ -291,7 +291,14 @@ return {
         end,
         single_file_support = false,
       },
-      zls = {},
+      zls = {
+        settings = {
+          zls = {
+            enable_build_on_save = true,
+            build_on_save_args = { '-Doptimize=ReleaseFast', '-j4' },
+          },
+        },
+      },
       vimls = {},
       glsl_analyzer = {},
       buf_ls = {
