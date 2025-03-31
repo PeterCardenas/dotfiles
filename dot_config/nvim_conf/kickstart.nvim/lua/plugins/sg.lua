@@ -60,15 +60,23 @@ return {
       'echasnovski/mini.icons',
     },
     config = function()
-      local api_key_filepath = vim.fn.expand('~/.local/share/anthropic/api_key')
-      local lines = vim.fn.readfile(api_key_filepath)
-      if #lines == 0 or lines[1] == '' then
-        vim.notify('Unable to load avante.nvim, Anthropic API key not found at ' .. api_key_filepath, vim.log.levels.ERROR)
+      local anthropic_key_filepath = vim.fn.expand('~/.local/share/anthropic/api_key')
+      local anthropic_key_lines = vim.fn.readfile(anthropic_key_filepath) ---@type string[]
+      if #anthropic_key_lines == 0 or anthropic_key_lines[1] == '' then
+        vim.notify('Unable to load avante.nvim, Anthropic API key not found at ' .. anthropic_key_filepath, vim.log.levels.ERROR)
         return
       end
-
       ---@type string
-      vim.env.ANTHROPIC_API_KEY = lines[1]
+      vim.env.ANTHROPIC_API_KEY = anthropic_key_lines[1]
+      local brave_search_key_filepath = vim.fn.expand('~/.local/share/brave_search/api_key')
+      ---@type boolean, string[]
+      local brave_search_key_ok, brave_search_key_lines = pcall(vim.fn.readfile, brave_search_key_filepath)
+      if not brave_search_key_ok or #brave_search_key_lines == 0 or brave_search_key_lines[1] == '' then
+        vim.notify('Brave Search API key not found at ' .. brave_search_key_filepath, vim.log.levels.ERROR)
+      else
+        vim.env.BRAVE_API_KEY = brave_search_key_lines[1]
+      end
+
       local AvanteToolsHelpers = require('avante.llm_tools.helpers')
       -- TODO: Properly respect gitignore for repo map
       -- TODO: building repo map should be async
@@ -89,6 +97,9 @@ return {
           enable_claude_text_editor_tool_mode = true,
         },
         disabled_tools = { 'python', 'bash' },
+        web_search_engine = {
+          provider = 'brave',
+        },
         custom_tools = {
           {
             name = 'run_command',
