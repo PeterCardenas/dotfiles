@@ -124,12 +124,14 @@ return {
     end,
   },
   {
+    -- Emoji completion
+    'hrsh7th/cmp-emoji',
+    event = { 'InsertEnter' },
+  },
+  {
     -- Autocompletion
     'hrsh7th/nvim-cmp',
     dependencies = {
-      -- Emoji completion
-      'hrsh7th/cmp-emoji',
-
       -- omnifunc completion
       'hrsh7th/cmp-omni',
 
@@ -349,7 +351,7 @@ return {
               module = 'blink.compat.source',
             },
             fonts = {
-              name = 'Font',
+              name = 'fonts',
               module = 'blink.compat.source',
             },
             lazydev = {
@@ -362,8 +364,9 @@ return {
               module = 'blink.compat.source',
             },
             emoji = {
-              module = 'blink-emoji',
-              name = 'Emoji',
+              -- TODO: Use blink-emoji.nvim, once it loads completions faster
+              module = 'blink.compat.source',
+              name = 'emoji',
             },
             dap = {
               module = 'blink.compat.source',
