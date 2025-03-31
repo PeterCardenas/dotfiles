@@ -27,6 +27,7 @@ end
 
 ---@param show_ignore boolean
 function M.rg_files_cmd(show_ignore)
+  -- TODO: de-duplicate rg and fre results
   local rg_cmd = 'rg --files --color=never ' .. common_rg_args() .. (show_ignore and ' --no-ignore' or '')
   local cmd = 'fre --sorted --store_name ' .. M.get_fre_store_name('files') .. '; ' .. rg_cmd
   return cmd
