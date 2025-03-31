@@ -221,6 +221,17 @@ return {
           filetypes = { 'TelescopePrompt' },
         },
       })
+      require('which-key').add({
+        { '<leader>f', group = 'Find' },
+        { '<leader>d', group = 'Debug' },
+        { '<leader>g', group = 'Git' },
+        { '<leader>l', group = 'LSP' },
+        { '<leader>t', group = 'Trouble' },
+        { '<leader>S', group = 'Session' },
+        { '<leader>o', group = 'File Explorer' },
+        { '<leader>m', group = 'Harpoon' },
+        { '<leader>u', group = 'Settings' },
+      })
     end,
   },
 
