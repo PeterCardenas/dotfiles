@@ -94,7 +94,7 @@ return {
           enable_cursor_planning_mode = false,
           -- TODO: auto apply/ask to apply when running tools, maybe add a continue keymap and pause when applying diffs
           auto_apply_diff_after_generation = false,
-          enable_claude_text_editor_tool_mode = true,
+          enable_claude_text_editor_tool_mode = false,
         },
         disabled_tools = { 'python', 'bash' },
         web_search_engine = {
