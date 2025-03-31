@@ -31,7 +31,7 @@ function vim.brint(...)
     elseif o == nil then
       output[#output + 1] = 'nil'
     else
-      output[#output + 1](vim.inspect(o, { newline = '\n', indent = '  ' }))
+      table.insert(output, vim.inspect(o, { newline = '\n', indent = '  ' }))
     end
   end
   -- Use a space to separate the arguments.
