@@ -269,6 +269,39 @@ for _, sign in ipairs(signs) do
     vim.fn.sign_define(sign.name, sign)
   end
 end
+
+-- TODO: When the following issue is resolved, remove this hack: https://github.com/neovim/neovim/issues/19649
+-- Adds relatedInformation to the diagnostic message
+---@param diag vim.Diagnostic
+local function format_diagnostic(diag)
+  local message = diag.message
+  ---@class lsp.DiagnosticInfo
+  ---@field client_name? string
+  ---@field relatedInformation? lsp.RelatedInformation[]
+  local diag_lsp_info = diag and diag.user_data and diag.user_data.lsp or {}
+  local client = vim.lsp.get_clients({ name = diag_lsp_info.client_name })[1]
+  if not client then
+    return diag.message
+  end
+
+  ---@class lsp.RelatedInformation
+  ---@field message string
+  ---@field location lsp.Location | lsp.LocationLink
+
+  ---@type {messages: string[], locations: (lsp.Location | lsp.LocationLink)[]}
+  local relatedInfo = { messages = {}, locations = {} }
+  local lsp_related_info = diag_lsp_info.relatedInformation or {}
+  for _, info in ipairs(lsp_related_info) do
+    relatedInfo.messages[#relatedInfo.messages + 1] = info.message
+    relatedInfo.locations[#relatedInfo.locations + 1] = info.location
+  end
+
+  for i, loc in ipairs(vim.lsp.util.locations_to_items(relatedInfo.locations, client.offset_encoding)) do
+    message = string.format('%s\n\t%s (%s:%d)', message, relatedInfo.messages[i], vim.fn.fnamemodify(loc.filename, ':.'), loc.lnum)
+  end
+
+  return message
+end
 vim.diagnostic.config({
   virtual_text = true,
   signs = { active = signs },
@@ -276,7 +309,9 @@ vim.diagnostic.config({
   underline = true,
   severity_sort = true,
   jump = {
-    float = true,
+    float = {
+      format = format_diagnostic,
+    },
   },
   float = {
     focused = false,
@@ -285,6 +320,7 @@ vim.diagnostic.config({
     source = true,
     header = '',
     prefix = '',
+    format = format_diagnostic,
   },
 })
 
