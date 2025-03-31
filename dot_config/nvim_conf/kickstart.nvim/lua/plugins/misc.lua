@@ -222,6 +222,7 @@ return {
         },
       })
       require('which-key').add({
+        { '<leader>a', group = 'Avante AI' },
         { '<leader>f', group = 'Find' },
         { '<leader>d', group = 'Debug' },
         { '<leader>g', group = 'Git' },
