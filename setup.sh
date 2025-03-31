@@ -412,6 +412,7 @@ function setup_unix() {
 		yazi-fm yazi-cli
 		aichat
 		emmylua_ls
+		fre
 	)
 	cargo binstall --no-confirm "${rust_packages[@]}"
 	# --features isn't supported by cargo binstall
