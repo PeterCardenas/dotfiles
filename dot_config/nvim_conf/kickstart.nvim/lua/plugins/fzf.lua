@@ -59,7 +59,12 @@ return {
             ['default'] = {
               fn = function(selected, opts) ---@param selected string[]
                 Async.void(function() ---@async
+                  -- Remove icon with a the same hack fzf-lua uses: look for special nbsp character and delete until that character
                   local selection = selected[1]
+                  ---@type integer
+                  local idx = selection:match('.*' .. require('fzf-lua.utils').nbsp .. '()')
+                  idx = idx == nil and 0 or idx
+                  selection = selection:sub(idx)
                   local success, output = Shell.async_cmd('fre', { '--add', selection, '--store_name', PickerHelpers.get_fre_store_name('files') })
                   if not success then
                     vim.schedule(function()
