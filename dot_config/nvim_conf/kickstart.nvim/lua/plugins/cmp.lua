@@ -277,12 +277,13 @@ return {
     end,
   },
   {
-    'saghen/blink.cmp',
+    -- TODO: unfork when I figure out why completion is slow with cmp-emoji
+    'PeterCardenas/blink.cmp',
+    branch = 'working-state',
     event = { 'InsertEnter', 'CmdlineEnter' },
     lazy = true,
     -- TODO: Allow building from main with build = 'cargo build --release'
     -- Currently it's trying to build for arm when neovim is currently built with x86_64
-    version = '*',
     cond = function()
       return Config.USE_BLINK_CMP
     end,
@@ -309,6 +310,8 @@ return {
           implementation = 'prefer_rust',
           prebuilt_binaries = {
             download = true,
+            force_version = 'v1.0.0',
+            ignore_version_mismatch = true,
           },
         },
         snippets = {
