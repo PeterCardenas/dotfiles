@@ -133,6 +133,13 @@ return {
       },
     })
 
+    vim.api.nvim_create_autocmd('FileType', {
+      pattern = 'dap-repl',
+      callback = function(args)
+        vim.bo[args.buf].buflisted = false
+      end,
+    })
+
     -- Toggle to see last session result. Without this, you can't see session output in case of unhandled exception.
     vim.keymap.set('n', '<F7>', dapui.toggle, { desc = 'Debug: See last session result.' })
 
