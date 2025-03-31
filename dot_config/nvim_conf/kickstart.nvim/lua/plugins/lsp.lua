@@ -7,7 +7,7 @@ local LocalLsp = require('plugins.lsp.local')
 local Table = require('utils.table')
 -- [[ Configure LSP ]]
 
--- local LspMethod = vim.lsp.protocol.Methods
+local LspMethod = vim.lsp.protocol.Methods
 
 vim.lsp.set_log_level('error')
 
@@ -292,6 +292,54 @@ return {
         single_file_support = false,
       },
       zls = {
+        handlers = {
+          ---@param error lsp.ResponseError
+          ---@param result lsp.PublishDiagnosticsParams
+          ---@param ctx lsp.HandlerContext
+          [LspMethod.textDocument_publishDiagnostics] = function(error, result, ctx)
+            -- TODO: Fix these duplicated diagnostics upstream in zls
+            -- Create a map from diagnostic location to diagnostic messages
+            local loc_to_msgs = {} ---@type table<string, string[]>
+
+            -- Process diagnostics to create location-to-message mapping and deduplicate
+            local deduplicated_diagnostics = {} ---@type lsp.Diagnostic[]
+            for _, diagnostic in ipairs(result.diagnostics) do
+              -- Create a unique key for the location
+              local loc_key = string.format(
+                '%s:%d:%d-%d:%d',
+                result.uri,
+                diagnostic.range.start.line,
+                diagnostic.range.start.character,
+                diagnostic.range['end'].line,
+                diagnostic.range['end'].character
+              )
+
+              -- Initialize the message array if it doesn't exist
+              if not loc_to_msgs[loc_key] then
+                loc_to_msgs[loc_key] = {}
+              end
+
+              -- Check if this message already exists for this location
+              local message_exists = false
+              for _, existing_msg in ipairs(loc_to_msgs[loc_key]) do
+                if existing_msg == diagnostic.message then
+                  message_exists = true
+                  break
+                end
+              end
+
+              -- Add the message if it's not a duplicate
+              if not message_exists then
+                loc_to_msgs[loc_key][#loc_to_msgs[loc_key] + 1] = diagnostic.message
+                deduplicated_diagnostics[#deduplicated_diagnostics + 1] = diagnostic
+              end
+            end
+
+            -- Replace the diagnostics with the deduplicated list
+            result.diagnostics = deduplicated_diagnostics
+            return vim.lsp.diagnostic.on_publish_diagnostics(error, result, ctx)
+          end,
+        },
         settings = {
           zls = {
             enable_build_on_save = true,
