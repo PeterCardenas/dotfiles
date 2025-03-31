@@ -49,6 +49,12 @@ return {
       desc = 'Debug: Start/Continue',
     },
     {
+      '<leader>dt',
+      function()
+        require('dap').terminate()
+      end,
+    },
+    {
       '<leader>di',
       function()
         require('dap').step_into()
