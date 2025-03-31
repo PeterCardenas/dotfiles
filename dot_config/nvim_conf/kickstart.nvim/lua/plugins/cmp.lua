@@ -364,9 +364,17 @@ return {
               module = 'blink.compat.source',
             },
             emoji = {
-              -- TODO: Use blink-emoji.nvim, once it loads completions faster
+              -- TODO: Use blink-emoji.nvim, once it loads completions faster, since it has more emojis.
               module = 'blink.compat.source',
               name = 'emoji',
+              -- Force icon to be text instead of field
+              transform_items = function(_ctx, items)
+                local kind = require('blink.cmp.types').CompletionItemKind.Text
+                for i = 1, #items do
+                  items[i].kind = kind
+                end
+                return items
+              end,
             },
             dap = {
               module = 'blink.compat.source',
