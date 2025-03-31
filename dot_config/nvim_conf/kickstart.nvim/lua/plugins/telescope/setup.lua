@@ -17,9 +17,19 @@ local function common_rg_args()
   return '--hidden -g "!.git" -g "!.mypy_cache" -g "!.ccls_cache"'
 end
 
+---@param type string
+---@return string
+function M.get_fre_store_name(type)
+  local cwd = vim.fn.getcwd()
+  local store_name = 'type:' .. type .. '::cwd:' .. cwd:gsub('/', '_') .. '.json'
+  return store_name
+end
+
 ---@param show_ignore boolean
 function M.rg_files_cmd(show_ignore)
-  return 'rg --files --color=never ' .. common_rg_args() .. (show_ignore and ' --no-ignore' or '')
+  local rg_cmd = 'rg --files --color=never ' .. common_rg_args() .. (show_ignore and ' --no-ignore' or '')
+  local cmd = 'fre --sorted --store_name ' .. M.get_fre_store_name('files') .. '; ' .. rg_cmd
+  return cmd
 end
 
 ---@param show_ignore boolean
