@@ -317,6 +317,15 @@ return {
         snippets = {
           preset = 'luasnip',
         },
+        appearance = {
+          kind_icons = {
+            Commit = '',
+            Mention = '',
+            PR = '',
+            MR = '',
+            Issue = '',
+          },
+        },
         sources = {
           default = function()
             local sources = { 'omni', 'lazydev', 'lsp', 'path', 'snippets' }
@@ -386,6 +395,17 @@ return {
             git = {
               name = 'git',
               module = 'blink.compat.source',
+              transform_items = function(_ctx, items)
+                for _, item in ipairs(items) do
+                  if vim.startswith(item.label, '#') then
+                    item.kind_name = 'Issue'
+                  end
+                  if vim.startswith(item.label, '@') then
+                    item.kind_name = 'Mention'
+                  end
+                end
+                return items
+              end,
             },
             omni = {
               enabled = function()
