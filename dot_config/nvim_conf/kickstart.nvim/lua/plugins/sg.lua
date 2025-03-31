@@ -96,10 +96,11 @@ return {
           auto_apply_diff_after_generation = false,
           enable_claude_text_editor_tool_mode = false,
         },
-        disabled_tools = { 'python', 'bash' },
         web_search_engine = {
           provider = 'brave',
         },
+        -- TODO: Cannot actually disable `add_file_to_context` tool right now
+        disabled_tools = { 'python', 'bash', 'dispatch_agent', 'git_commit', 'git_diff', 'view', 'add_file_to_context' },
         custom_tools = {
           {
             name = 'run_command',
