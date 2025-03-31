@@ -1,4 +1,7 @@
-require('plugins.telescope.setup').create_keymaps()
+local Async = require('utils.async')
+local Shell = require('utils.shell')
+local PickerHelpers = require('plugins.telescope.setup')
+PickerHelpers.create_keymaps()
 
 ---@type LazyPluginSpec[]
 return {
@@ -24,7 +27,6 @@ return {
       -- Clear fuzzy toggle for grep
       require('fzf-lua.defaults').defaults.grep.actions = {}
       -- TODO: Make regex match case insensitive
-      -- TODO: frecency support, reference: https://www.reddit.com/r/neovim/comments/1hmoa2z/comment/m3vkvba/
       require('fzf-lua').setup({
         'hide',
         keymap = {
@@ -47,16 +49,33 @@ return {
         files = {
           git_icons = false,
           -- TODO: Make this hide ignored files by default once this can be toggled.
-          cmd = require('plugins.telescope.setup').rg_files_cmd(true),
+          cmd = PickerHelpers.rg_files_cmd(true),
           fzf_opts = {
             ['--history'] = get_history_file('files'),
             ['--scheme'] = 'path',
+            ['--tiebreak'] = 'index',
+          },
+          actions = {
+            ['default'] = {
+              fn = function(selected, opts) ---@param selected string[]
+                Async.void(function() ---@async
+                  local selection = selected[1]
+                  local success, output = Shell.async_cmd('fre', { '--add', selection, '--store_name', PickerHelpers.get_fre_store_name('files') })
+                  if not success then
+                    vim.schedule(function()
+                      vim.notify(table.concat(output, '\n'), vim.log.levels.ERROR, { title = 'Adding to fre failed' })
+                    end)
+                  end
+                end)
+                require('fzf-lua.actions').file_edit_or_qf(selected, opts)
+              end,
+            },
           },
         },
         grep = {
           git_icons = false,
           -- TODO: Make this hide ignored files by default once this can be toggled.
-          cmd = require('plugins.telescope.setup').rg_words_cmd(true),
+          cmd = PickerHelpers.rg_words_cmd(true),
           multiprocess = true,
           multiline = 1,
           fzf_opts = {
