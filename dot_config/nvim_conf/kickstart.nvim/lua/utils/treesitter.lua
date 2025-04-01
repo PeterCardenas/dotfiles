@@ -61,6 +61,9 @@ function M.inside_string()
   end
   local row, col = unpack(vim.api.nvim_win_get_cursor(0))
   row = row - 1
+  if node_under_cursor:type():find('string') then
+    return true
+  end
   for id, node, _ in query:iter_captures(node_under_cursor, 0, row, row + 1) do
     local capture = query.captures[id]
     if capture:find('string') and is_in_node_range(node, row, col) then
