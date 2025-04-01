@@ -333,6 +333,8 @@ return {
             if ft == 'markdown' or Treesitter.inside_comment_block() then
               sources[#sources + 1] = 'emoji'
               sources[#sources + 1] = 'git'
+            elseif Treesitter.inside_string() then
+              sources[#sources + 1] = 'emoji'
             end
             if ft == 'fish' then
               sources[#sources + 1] = 'fish'
