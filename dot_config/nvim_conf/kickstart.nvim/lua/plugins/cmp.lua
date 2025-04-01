@@ -349,7 +349,8 @@ return {
             ['dap-repl'] = maybe_get_dap,
             ['dapui_watches'] = maybe_get_dap,
             ['dapui_hover'] = maybe_get_dap,
-            AvanteInput = { 'avante_commands', 'avante_mentions', 'avante_files' },
+            -- TODO: Adding the following makes loading the sidebar really slow
+            -- AvanteInput = { 'avante_commands', 'avante_mentions', 'avante_files' },
           },
           providers = {
             avante_commands = {
