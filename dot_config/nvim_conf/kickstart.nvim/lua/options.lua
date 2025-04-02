@@ -14,6 +14,10 @@ vim.o.foldlevelstart = 99
 vim.o.foldenable = true
 vim.o.fillchars = 'eob: ,fold: ,foldopen:+,foldsep:│,foldclose:-'
 
+-- Default cursor + bar for terminal (for fzf-lua in particular) and always blinking
+vim.o.guicursor =
+  'n-v-c-sm:block-blinkon500-blinkoff500,i-ci-ve:ver25-blinkon500-blinkoff500,r-cr-o:hor20-blinkon500-blinkoff500,t:ver25-blinkon500-blinkoff500-TermCursor'
+
 vim.g.omni_sql_default_compl_type = 'syntax'
 
 -- Default tab width of 2 spaces
