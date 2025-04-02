@@ -442,6 +442,37 @@ return {
           },
         },
         completion = {
+          menu = {
+            draw = {
+              components = {
+                kind_icon = {
+                  text = function(ctx)
+                    local icon = ctx.kind_icon
+                    if 'Path' == ctx.source_name then
+                      ---@type string?, string
+                      local dev_icon, _dev_hl = require('nvim-web-devicons').get_icon(ctx.label)
+                      if dev_icon then
+                        icon = dev_icon
+                      end
+                    end
+
+                    return icon .. ctx.icon_gap
+                  end,
+                  highlight = function(ctx)
+                    local hl = ctx.kind_hl
+                    if 'Path' == ctx.source_name then
+                      ---@type string?, string
+                      local dev_icon, dev_hl = require('nvim-web-devicons').get_icon(ctx.label)
+                      if dev_icon then
+                        hl = dev_hl
+                      end
+                    end
+                    return hl
+                  end,
+                },
+              },
+            },
+          },
           documentation = {
             auto_show = true,
           },
