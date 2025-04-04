@@ -538,6 +538,7 @@ return {
     dependencies = { 'tpope/vim-repeat' },
     event = { 'BufReadPre', 'BufNewFile', 'BufEnter' },
     config = function()
+      -- TODO: Remove ds, cs, and ys keymaps
       vim.keymap.set({ 'n', 'v', 'x', 'o' }, 's', '<Plug>(leap-forward)')
       -- TODO: Jumping backwards does not work in visual mode.
       vim.keymap.set({ 'n', 'v', 'x', 'o' }, 'S', '<Plug>(leap-backward)')
@@ -783,6 +784,7 @@ return {
     'kylechui/nvim-surround',
     event = 'VeryLazy',
     config = function()
+      -- TODO: Add delete surrounding if statement/function
       require('nvim-surround').setup({})
     end,
   },
