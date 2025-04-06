@@ -29,6 +29,13 @@ local default_commands = require('lazy.view.config').commands
 -- TODO: Only disable the install/update tabs, but keep the commands.
 default_commands.sync = nil
 
+-- HACK: Accomodate using ssh alias as git url format.
+local old_open = require('lazy.util').open
+require('lazy.util').open = function(url, opts) ---@param url string
+  url = url:gsub('personal%-github%.com:', 'https://github.com/')
+  return old_open(url, opts)
+end
+
 -- Add plugins for lazy.nvim.
 require('lazy').setup({
   -- Detect tabstop and shiftwidth automatically
