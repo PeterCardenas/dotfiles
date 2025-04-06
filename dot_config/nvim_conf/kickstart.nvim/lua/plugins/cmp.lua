@@ -277,11 +277,9 @@ return {
     end,
   },
   {
-    -- TODO: unfork when I figure out why completion is slow with cmp-emoji
-    'PeterCardenas/blink.cmp',
-    branch = 'working-state',
+    'saghen/blink.cmp',
+    version = '*',
     event = { 'InsertEnter', 'CmdlineEnter' },
-    lazy = true,
     -- TODO: Allow building from main with build = 'cargo build --release'
     -- Currently it's trying to build for arm when neovim is currently built with x86_64
     cond = function()
