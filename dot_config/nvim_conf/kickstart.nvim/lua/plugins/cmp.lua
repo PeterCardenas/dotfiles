@@ -422,6 +422,7 @@ return {
             git = {
               name = 'git',
               module = 'blink.compat.source',
+              async = true,
               transform_items = function(_ctx, items)
                 for _, item in ipairs(items) do
                   if vim.startswith(item.label, '#') then
