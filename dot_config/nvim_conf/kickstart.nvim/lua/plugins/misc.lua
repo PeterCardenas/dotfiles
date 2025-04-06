@@ -727,10 +727,12 @@ return {
         return client and vim.tbl_contains(supported_clients, client.name)
       end
       require('lazydev.lsp').supports = emmylua_ls_supported
+      local lazy_path = vim.fn.stdpath('data') .. '/lazy'
       ---@diagnostic disable-next-line: missing-fields
       require('lazydev').setup({
         library = {
           'lazy.nvim',
+          { path = lazy_path .. '/nvim-cmp', mods = { 'cmp' } },
           { path = 'luvit-meta/library', words = { 'vim%.uv', 'vim%.loop' } },
           { path = 'snacks.nvim', words = { 'Snacks' } },
         },
