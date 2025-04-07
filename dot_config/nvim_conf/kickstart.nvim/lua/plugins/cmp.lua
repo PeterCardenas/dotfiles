@@ -110,6 +110,9 @@ return {
             action = function(sources, trigger_char, callback, _params, git_info)
               return sources.github:get_mentions(callback, git_info, trigger_char)
             end,
+            resolve = function(sources, item, callback, git_info)
+              return sources.github:resolve_mention(item, callback, git_info)
+            end,
           },
         },
       })
