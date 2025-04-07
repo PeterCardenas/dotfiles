@@ -26,19 +26,31 @@ local function is_in_node_range(node, row, col)
   return false
 end
 
+---@return TSNode?, vim.treesitter.LanguageTree?, vim.treesitter.Query?
+local function get_ts_info()
+  local node_under_cursor = vim.treesitter.get_node()
+  local parser = vim.treesitter.get_parser(nil, nil, { error = false })
+  if not parser or not node_under_cursor then
+    return node_under_cursor, parser, nil
+  end
+  local query = vim.treesitter.query.get(parser:lang(), 'highlights')
+  return node_under_cursor, parser, query
+end
+
 ---@return boolean
 function M.inside_comment_block()
   if vim.api.nvim_get_mode().mode ~= 'i' then
     return false
   end
-  local node_under_cursor = vim.treesitter.get_node()
-  local parser = vim.treesitter.get_parser(nil, nil, { error = false })
-  local query = vim.treesitter.query.get(vim.bo.filetype, 'highlights')
-  if not parser or not node_under_cursor or not query then
+  local node_under_cursor, parser, query = get_ts_info()
+  if not node_under_cursor or not parser or not query then
     return false
   end
   local row, col = unpack(vim.api.nvim_win_get_cursor(0))
   row = row - 1
+  if node_under_cursor:type():find('comment') then
+    return true
+  end
   for id, node, _ in query:iter_captures(node_under_cursor, 0, row, row + 1) do
     local capture = query.captures[id]
     if capture:find('comment') and is_in_node_range(node, row, col) then
@@ -53,9 +65,7 @@ function M.inside_string()
   if vim.api.nvim_get_mode().mode ~= 'i' then
     return false
   end
-  local node_under_cursor = vim.treesitter.get_node()
-  local parser = vim.treesitter.get_parser(nil, nil, { error = false })
-  local query = vim.treesitter.query.get(vim.bo.filetype, 'highlights')
+  local node_under_cursor, parser, query = get_ts_info()
   if not parser or not node_under_cursor or not query then
     return false
   end
