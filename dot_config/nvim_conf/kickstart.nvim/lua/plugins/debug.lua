@@ -53,6 +53,7 @@ return {
       function()
         require('dap').terminate()
       end,
+      desc = 'Debug: Terminate',
     },
     {
       '<leader>di',
