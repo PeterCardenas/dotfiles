@@ -11,17 +11,19 @@ function M.merge_tables(table_to_override, new_table)
 end
 
 ---Removes duplicates from a list
----@generic TList : table
----@param list TList
----@return TList
-function M.remove_duplicates(list)
+---@generic TItem: any
+---@param list TItem[]
+---@param predicate? fun(item: TItem): any
+---@return TItem[]
+function M.remove_duplicates(list, predicate)
   local seen = {} ---@type table<any, boolean>
   local new_list = {}
   ---@diagnostic disable-next-line: no-unknown
   for _, v in ipairs(list) do
-    if not seen[v] then
-      new_list[#new_list + 1] = v
-      seen[v] = true
+    local index = predicate and predicate(v) or v
+    if not seen[index] then
+      new_list[#new_list + 1] = v ---@type any
+      seen[index] = true
     end
   end
   return new_list

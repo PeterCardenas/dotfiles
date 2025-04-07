@@ -1,5 +1,6 @@
 local Lsp = require('utils.lsp')
 local Treesitter = require('utils.treesitter')
+local Table = require('utils.table')
 local Config = require('utils.config')
 
 ---@type LazyPluginSpec[]
@@ -425,7 +426,11 @@ return {
                     item.kind_name = 'Mention'
                   end
                 end
-                return items
+                -- TODO: cmp-git somehow is adding duplicates.
+                local new_items = Table.remove_duplicates(items, function(item)
+                  return item.label
+                end)
+                return new_items
               end,
             },
             omni = {
