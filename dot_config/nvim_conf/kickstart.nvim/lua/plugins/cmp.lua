@@ -96,6 +96,7 @@ return {
           mentions = {
             limit = math.huge,
             prefetch = true,
+            fetch_teams = true,
           },
         },
         trigger_actions = {
