@@ -95,6 +95,7 @@ return {
           },
           mentions = {
             limit = math.huge,
+            prefetch = true,
           },
         },
         trigger_actions = {
