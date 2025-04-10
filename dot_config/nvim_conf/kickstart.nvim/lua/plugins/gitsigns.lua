@@ -363,8 +363,7 @@ end, { nargs = 0, desc = 'GitHub notifications' })
 return {
   {
     -- Adds GitHub integration
-    'PeterCardenas/octo.nvim',
-    branch = 'fix-read-notification-keymap',
+    'pwntester/octo.nvim',
     cmd = { 'Octo' },
     dependencies = {
       'nvim-lua/plenary.nvim',
@@ -426,8 +425,8 @@ return {
             add_suggestion = { lhs = '<leader>rs', desc = 'add suggestion' },
             react_confused = { lhs = '<leader>rf', desc = 'react with confused' },
           },
-          notifications = {
-            read = { lhs = '<leader>rn', desc = 'read notification' },
+          notification = {
+            read = { lhs = '<C-r>', desc = 'read notification' },
           },
         },
       })
