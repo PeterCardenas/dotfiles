@@ -672,7 +672,7 @@ function M.setup_formatting_diagnostic(bufnr)
   local git_root_dir = File.get_git_root()
   local filename = vim.api.nvim_buf_get_name(bufnr)
   --- Disable format checking when there's no git root or the file is not in the git root.
-  if git_root_dir == nil or not File.file_in_directory(filename, git_root_dir) then
+  if filetype ~= 'gitcommit' and (git_root_dir == nil or not File.file_in_directory(filename, git_root_dir)) then
     return
   end
   if filename:match('^octo://') then
@@ -719,7 +719,7 @@ end
 function M.format(bufnr)
   local filename = vim.api.nvim_buf_get_name(bufnr)
   local git_root_dir = File.get_git_root()
-  if git_root_dir == nil or not File.file_in_directory(filename, git_root_dir) then
+  if vim.bo[bufnr].filetype ~= 'gitcommit' and (git_root_dir == nil or not File.file_in_directory(filename, git_root_dir)) then
     vim.notify('Cannot format files outside of the git root', vim.log.levels.ERROR)
     return
   end
