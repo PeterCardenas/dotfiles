@@ -124,6 +124,10 @@ return {
   {
     -- Emoji completion
     'hrsh7th/cmp-emoji',
+  },
+  {
+    -- File path completion
+    'https://codeberg.org/FelipeLema/cmp-async-path',
     event = { 'InsertEnter' },
   },
   {
@@ -132,9 +136,6 @@ return {
     dependencies = {
       -- omnifunc completion
       'hrsh7th/cmp-omni',
-
-      -- File path completion
-      'https://codeberg.org/FelipeLema/cmp-async-path',
     },
     event = { 'InsertEnter', 'CmdlineEnter' },
     cond = function()
@@ -393,6 +394,11 @@ return {
               name = 'LazyDev',
               module = 'lazydev.integrations.blink',
               score_offset = 100,
+            },
+            async_path = {
+              name = 'async_path',
+              module = 'blink.compat.source',
+              async = true,
             },
             fish = {
               name = 'fish',
