@@ -1,4 +1,5 @@
 local Table = require('utils.table')
+local File = require('utils.file')
 local Config = require('utils.config')
 local OSC = require('utils.osc')
 
@@ -124,6 +125,22 @@ vim.api.nvim_create_autocmd('FileType', {
   callback = function()
     -- Remove prefixed '/' from includeexpr
     vim.bo.includeexpr = 'substitute(v:fname,"^\\s*/","","")'
+  end,
+})
+
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = { 'typescript', 'typescriptreact', 'scss' },
+  group = filetype_options_group,
+  callback = function()
+    local ancestor_dir = File.get_ancestor_dir('package.json', vim.fn.expand('%:p'))
+    if ancestor_dir == nil then
+      return
+    end
+    local base_dir = ancestor_dir
+    if vim.fn.isdirectory(ancestor_dir .. '/src') == 1 then
+      base_dir = ancestor_dir .. '/src'
+    end
+    vim.bo.path = vim.fn.getcwd() .. ',' .. base_dir
   end,
 })
 
