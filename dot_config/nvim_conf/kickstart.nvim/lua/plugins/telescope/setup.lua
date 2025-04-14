@@ -27,9 +27,28 @@ end
 
 ---@param show_ignore boolean
 function M.rg_files_cmd(show_ignore)
-  -- TODO: de-duplicate rg and fre results
   local rg_cmd = 'rg --files --color=never ' .. common_rg_args() .. (show_ignore and ' --no-ignore' or '')
-  local cmd = 'fre --sorted --store_name ' .. M.get_fre_store_name('files') .. '; ' .. rg_cmd
+  local fre_cmd = 'fre --sorted --store_name ' .. M.get_fre_store_name('files')
+  -- De-duplicate results while live streaming results
+  -- gstdbuf is only on macos, while stdbuf is on linux
+  local stdbuf_cmd = ''
+  local has_gstdbuf = vim.fn.executable('gstdbuf') == 1
+  local has_stdbuf = vim.fn.executable('stdbuf') == 1
+
+  if has_gstdbuf then
+    stdbuf_cmd = 'gstdbuf -o0'
+  elseif has_stdbuf then
+    stdbuf_cmd = 'stdbuf -o0'
+  else
+    vim.notify_once('Neither gstdbuf nor stdbuf found. Output will be wholly buffered.', vim.log.levels.WARN)
+    stdbuf_cmd = ''
+  end
+
+  if stdbuf_cmd ~= '' then
+    stdbuf_cmd = stdbuf_cmd .. ' '
+  end
+
+  local cmd = '{ ' .. fre_cmd .. '; ' .. rg_cmd .. '; }' .. ' | ' .. stdbuf_cmd .. "awk '!seen[$0]++'"
   return cmd
 end
 
