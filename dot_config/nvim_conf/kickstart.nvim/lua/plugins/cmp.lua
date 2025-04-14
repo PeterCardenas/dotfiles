@@ -492,6 +492,26 @@ return {
           },
         },
         cmdline = {
+          ---TODO: remove ignore when the following gets merged: https://github.com/Saghen/blink.cmp/pull/1622
+          ---@diagnostic disable-next-line: assign-type-mismatch
+          sources = function()
+            local type = vim.fn.getcmdtype()
+            if type == '/' or type == '?' then
+              return { 'buffer' }
+            end
+            if type == ':' then
+              local cmdline = vim.fn.getcmdline()
+              -- TODO: buffer completions here are a bit visually buggy, but are functional
+              if cmdline:match("[<'%%%$,0-9]*s/") then
+                return { 'buffer' }
+              end
+              return { 'cmdline' }
+            end
+            if type == '@' then
+              return { 'cmdline' }
+            end
+            return {}
+          end,
           keymap = {
             preset = 'none',
             ['<C-j>'] = { 'select_next', 'fallback' },
