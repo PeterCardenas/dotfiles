@@ -170,6 +170,11 @@ function M.on_attach(client, bufnr)
       vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
     end, { desc = 'LSP: Toggle inlay hints', buffer = bufnr })
   end
+  -- Remove default mappings conflicting with gr
+  pcall(vim.keymap.del, 'n', 'grn')
+  pcall(vim.keymap.del, 'n', 'gri')
+  pcall(vim.keymap.del, 'n', 'gra')
+  pcall(vim.keymap.del, 'n', 'grr')
 
   -- Needed to override the inlay hints toggle keymap.
   vim.keymap.set({ 'n', 'i', 's' }, '<Tab>', function()
