@@ -310,6 +310,19 @@ return {
             force_version = 'v1.0.0',
             ignore_version_mismatch = true,
           },
+          sorts = {
+            'score',
+            -- TODO: The goal is to prefer shorter matches. However, this doesn't work sometimes, like with "art" or "broom" when completing emojis
+            function(a, b)
+              local a_width = vim.fn.strdisplaywidth(a.label)
+              local b_width = vim.fn.strdisplaywidth(b.label)
+              if a_width == b_width then
+                return
+              end
+              return a_width < b_width
+            end,
+            'sort_text',
+          },
         },
         snippets = {
           preset = 'luasnip',
