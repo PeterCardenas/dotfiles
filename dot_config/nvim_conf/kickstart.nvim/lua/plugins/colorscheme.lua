@@ -51,6 +51,9 @@ return {
     vim.api.nvim_set_hl(0, 'GitSignsAdd', { foreground = '#258F4E', background = side_col_highlight.background })
     vim.api.nvim_set_hl(0, 'GitSignsChange', { foreground = '#DBC614', background = side_col_highlight.background })
     vim.api.nvim_set_hl(0, 'GitSignsDelete', { foreground = '#DB4539', background = side_col_highlight.background })
+    vim.api.nvim_set_hl(0, 'GitSignsStagedAdd', { link = 'GitSignsAdd' })
+    vim.api.nvim_set_hl(0, 'GitSignsStagedChange', { link = 'GitSignsChange' })
+    vim.api.nvim_set_hl(0, 'GitSignsStagedDelete', { link = 'GitSignsDelete' })
     vim.api.nvim_set_hl(0, 'TroubleIndent', { foreground = side_col_highlight.foreground })
     vim.api.nvim_set_hl(0, 'OctoStatusColumn', { foreground = '#2ac3de', background = side_col_highlight.background })
     -- Make winbar not dim on blur.
