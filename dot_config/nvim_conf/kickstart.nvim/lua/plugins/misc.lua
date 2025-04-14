@@ -537,11 +537,10 @@ return {
     dependencies = { 'tpope/vim-repeat' },
     event = { 'BufReadPre', 'BufNewFile', 'BufEnter' },
     config = function()
-      -- TODO: Remove ds, cs, and ys keymaps
-      vim.keymap.set({ 'n', 'v', 'x', 'o' }, 's', '<Plug>(leap-forward)')
+      vim.keymap.set({ 'n', 'v', 'x' }, 'gs', '<Plug>(leap-from-window)')
+      vim.keymap.set({ 'n', 'v', 'x' }, 's', '<Plug>(leap-forward)')
       -- TODO: Jumping backwards does not work in visual mode.
-      vim.keymap.set({ 'n', 'v', 'x', 'o' }, 'S', '<Plug>(leap-backward)')
-      vim.keymap.set({ 'n', 'v', 'x', 'o' }, 'gs', '<Plug>(leap-from-window)')
+      vim.keymap.set({ 'n', 'v', 'x' }, 'S', '<Plug>(leap-backward)')
       require('leap.opts').default.substitute_chars = { ['{'] = 'b', ['}'] = 'b', ['('] = 'p', [')'] = 'p', ['['] = 'b', [']'] = 'b' }
     end,
   },
