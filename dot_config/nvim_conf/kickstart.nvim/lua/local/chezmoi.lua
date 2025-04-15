@@ -52,7 +52,13 @@ vim.api.nvim_create_autocmd('BufWritePost', {
     Async.void(
       ---@async
       function()
+        require('fidget').notify('Applying changes with chezmoi...', vim.log.levels.INFO, {
+          group = 'chezmoi_apply',
+          key = 'chezmoi_apply',
+          annote = '',
+        })
         local errored, logs = apply_filepath(filepath)
+        require('fidget').notification.remove('chezmoi_apply', 'chezmoi_apply')
         if errored then
           vim.schedule(function()
             vim.notify('chezmoi apply failed: ' .. table.concat(logs, '\n'), vim.log.levels.ERROR)
