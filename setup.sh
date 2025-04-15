@@ -391,7 +391,7 @@ function setup_unix() {
 	# Install fzf
 	rm -rf "$HOME/.fzf"
 	git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/.fzf"
-	"$HOME/.fzf/install" --xdg --no-bash --no-zsh --no-key-bindings --no-update-rc --no-completion
+	"$HOME/.fzf/install" --xdg --no-fish --no-bash --no-zsh --no-key-bindings --no-update-rc --no-completion
 
 	# Setup rust
 	# TODO: we should always use rustup, currently fish is pulling in rust in macports, need to resolve
