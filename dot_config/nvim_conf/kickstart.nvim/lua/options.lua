@@ -153,6 +153,15 @@ vim.api.nvim_create_autocmd('FileType', {
   end,
 })
 
+vim.api.nvim_create_autocmd('BufWinEnter', {
+  group = filetype_options_group,
+  callback = function(args)
+    if vim.bo[args.buf].filetype == 'notify' then
+      vim.wo.conceallevel = 3
+    end
+  end,
+})
+
 -- Faster loading of nvim-ts-context-commentstring plugin
 vim.g.skip_ts_context_commentstring_module = true
 

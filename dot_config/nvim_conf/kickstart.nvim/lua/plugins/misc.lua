@@ -294,7 +294,29 @@ return {
           long_message_to_split = true, -- long messages will be sent to a split
           lsp_doc_border = true, -- add a border to hover docs and signature help
         },
+        health = {
+          -- Overwrote the notify function below which causes the health checker to fail
+          checker = false,
+        },
       })
+      vim.schedule(function()
+        if vim.notify ~= require('noice.source.notify').notify then
+          vim.notify('Noice not enabled yet', vim.log.levels.WARN)
+        else
+          ---@diagnostic disable-next-line: duplicate-set-field
+          vim.notify = function(msg, level, opts)
+            opts = opts or {}
+            local on_open = opts and opts.on_open
+            opts.on_open = function(win)
+              vim.wo[win].conceallevel = 3
+              if on_open then
+                on_open(win)
+              end
+            end
+            require('noice.source.notify').notify(msg, level, opts)
+          end
+        end
+      end)
     end,
   },
 
