@@ -9,7 +9,7 @@ fi
 
 function install_ghostty() {
 	zvm use v0.13.0
-	pushd $HOME/projects
+	pushd "$HOME/projects"
 	if [ ! -d "$HOME/projects/ghostty" ]; then
 		fish -c "clone personal ghostty-org/ghostty.git"
 		pushd ghostty
@@ -83,9 +83,10 @@ function setup_ubuntu() {
 	)
 	curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
 	chmod a+r /etc/apt/keyrings/docker.asc
-	echo \n "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \n	$(. /etc/os-release && echo "$VERSION_CODENAME") stable" |
-		sudo -B tee /etc/apt/sources.list.d/docker.list >/dev/null
-
+	echo \
+		"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" |
+		sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
 	# Fish shell
 	dpkg_third_party+=(
 		fish
@@ -128,12 +129,12 @@ function setup_ubuntu() {
 	rm go1.22.4.linux-amd64.tar.gz
 
 	# Install commitmsgfmt
-	pushd $HOME/thirdparty
+	pushd "$HOME/thirdparty"
 	gh release download --repo commonquail/commitmsgfmt -p 'commitmsgfmt-*-unknown-linux-musl.tar.gz'
 	tar -xvzf commitmsgfmt-*-unknown-linux-musl.tar.gz
 	rm commitmsgfmt-*-unknown-linux-musl.tar.gz
-	cp commitmsgfmt-*-unknown-linux-musl/commitmsgfmt $HOME/.local/bin/
-	cp commitmsgfmt-*-unknown-linux-musl/commitmsgfmt.1 $HOME/.local/share/man/man1/
+	cp commitmsgfmt-*-unknown-linux-musl/commitmsgfmt "$HOME/.local/bin/"
+	cp commitmsgfmt-*-unknown-linux-musl/commitmsgfmt.1 "$HOME/.local/share/man/man1/"
 	rm -rf commitmsgfmt-*-unknown-linux-musl
 	popd
 }
@@ -257,8 +258,8 @@ function setup_mac() {
 rsync://bos.us.rsync.macports.org/macports/release/tarballs/ports.tar [default]
 EOF
 
-	mkdir -p $HOME/.macports
-	touch $HOME/.macports/macports.conf
+	mkdir -p "$HOME/.macports"
+	touch "$HOME/.macports/macports.conf"
 	cat <<EOF >"$HOME/.macports/macports.conf"
 rsync_server="atl.us.rsync.macports.org"
 rsync_dir="MacPorts/release/tarballs/base.tar"
@@ -299,19 +300,19 @@ EOF
 	sudo -B port -N install "${ports[@]}"
 
 	# Install commitmsgfmt
-	pushd $HOME/thirdparty
+	pushd "$HOME/thirdparty"
 	gh release download --repo commonquail/commitmsgfmt -p 'commitmsgfmt-*-unknown-linux-musl.tar.gz'
 	tar -xvzf commitmsgfmt-*-apple-darwin.tar.gz
 	rm commitmsgfmt-*-apple-darwin.tar.gz
-	cp commitmsgfmt-*-apple-darwin/commitmsgfmt $HOME/.local/bin/
-	cp commitmsgfmt-*-apple-darwin/commitmsgfmt.1 $HOME/.local/share/man/man1/
+	cp commitmsgfmt-*-apple-darwin/commitmsgfmt "$HOME/.local/bin/"
+	cp commitmsgfmt-*-apple-darwin/commitmsgfmt.1 "$HOME/.local/share/man/man1/"
 	rm -rf commitmsgfmt-*-apple-darwin
 	popd
 }
 
 function install_ccls_for_mac() {
 	# Install ccls
-	pushd $HOME/thirdparty
+	pushd "$HOME/thirdparty"
 	if [ ! -f clang+llvm-18.1.8-arm64-apple-macos11.tar.xz ]; then
 		wget https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-arm64-apple-macos11.tar.xz
 	fi
@@ -324,19 +325,21 @@ function install_ccls_for_mac() {
 	git submodule init
 	git submodule update
 	pushd ccls
-	cmake -S. -BRelease -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/.local/ -DCMAKE_PREFIX_PATH=$HOME/thirdparty/clang+llvm-18.1.8-arm64-apple-macos11/
+	cmake -S. -BRelease -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$HOME/.local/" -DCMAKE_PREFIX_PATH="$HOME/thirdparty/clang+llvm-18.1.8-arm64-apple-macos11/"
 	cmake --build Release
-	cp Release/ccls $HOME/.local/bin/
+	cp Release/ccls "$HOME/.local/bin/"
 	popd
 	popd
 }
 
 function setup_unix() {
-	source $HOME/.zshrc
+	# shellcheck source=/dev/null
+	source "$HOME/.zshrc"
 	if ! command -v pnpm >/dev/null 2>&1; then
 		# Install pnpm
 		curl -fsSL https://get.pnpm.io/install.sh | sh -
-		source $HOME/.zshrc
+		# shellcheck source=/dev/null
+		source "$HOME/.zshrc"
 	fi
 	# Install Node via pnpm
 	pnpm env use --global lts
@@ -345,23 +348,24 @@ function setup_unix() {
 	# Install zig version manager
 	if ! command -v zvm >/dev/null 2>&1; then
 		curl https://raw.githubusercontent.com/tristanisham/zvm/master/install.sh | bash
-		source $HOME/.zshrc
+		# shellcheck source=/dev/null
+		source "$HOME/.zshrc"
 	fi
 
-	mkdir -p $HOME/.local/bin
+	mkdir -p "$HOME/.local/bin"
 	export PATH="$PATH:$HOME/.local/bin"
 	# Install Starship prompt
 	if ! command -v starship >/dev/null 2>&1; then
-		curl -sS https://starship.rs/install.sh | sh -s -- -y --bin-dir=$HOME/.local/bin
+		curl -sS https://starship.rs/install.sh | sh -s -- -y --bin-dir="$HOME/.local/bin"
 	fi
 
 	# Install tmux
 	if ! command -v tmux >/dev/null 2>&1 || [[ "$(tmux -V 2>/dev/null | cut -d' ' -f2)" != "3.5a" && "$(tmux -V 2>/dev/null | cut -d' ' -f2)" != "next-3.6" ]]; then
-		pushd $HOME/thirdparty
+		pushd "$HOME/thirdparty"
 		wget https://github.com/tmux/tmux/releases/download/3.5a/tmux-3.5a.tar.gz
 		tar xvzf tmux-3.5a.tar.gz
 		pushd tmux-3.5a
-		./configure --prefix=$HOME/.local --enable-utf8proc
+		./configure --prefix="$HOME/.local" --enable-utf8proc
 		make
 		make install
 		popd
@@ -369,8 +373,8 @@ function setup_unix() {
 	fi
 
 	# Setup tmux plugin manager (tpm)
-	rm -rf $HOME/.tmux/plugins/tpm
-	git clone https://github.com/tmux-plugins/tpm $HOME/.tmux/plugins/tpm
+	rm -rf "$HOME/.tmux/plugins/tpm"
+	git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
 
 	# Change login shell to fish
 	FISH_LOCATION="$(which fish)"
@@ -385,9 +389,9 @@ function setup_unix() {
 	popd
 
 	# Install fzf
-	rm -rf $HOME/.fzf
-	git clone --depth 1 https://github.com/junegunn/fzf.git $HOME/.fzf
-	$HOME/.fzf/install --xdg --no-bash --no-zsh --no-key-bindings --no-update-rc --no-completion
+	rm -rf "$HOME/.fzf"
+	git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/.fzf"
+	"$HOME/.fzf/install" --xdg --no-bash --no-zsh --no-key-bindings --no-update-rc --no-completion
 
 	# Setup rust
 	# TODO: we should always use rustup, currently fish is pulling in rust in macports, need to resolve
@@ -469,37 +473,37 @@ EOF
 	export BOB_CONFIG=$HOME/.config/bob/config.json
 	fish -c "vswitch kickstart.nvim"
 	if [ "$(uname)" == "Linux" ]; then
-		mkdir -p $HOME/.fonts
-		cp $HOME/fonts/* $HOME/.fonts/
+		mkdir -p "$HOME/.fonts"
+		cp "$HOME"/fonts/* "$HOME/.fonts/"
 	elif [ "$(uname)" == "Darwin" ]; then
-		mkdir -p $HOME/Library/Fonts
-		cp $HOME/fonts/* $HOME/Library/Fonts/
+		mkdir -p "$HOME/Library/Fonts"
+		cp "$HOME"/fonts/* "$HOME/Library/Fonts/"
 	fi
 	fc-cache -f -v
-	$HOME/.tmux/plugins/tpm/bin/install_plugins
-	chezmoi completion fish >$HOME/.config/fish/completions/chezmoi.fish
+	"$HOME/.tmux/plugins/tpm/bin/install_plugins"
+	chezmoi completion fish >"$HOME/.config/fish/completions/chezmoi.fish"
 	install_ghostty
 
 	# Add aichat completions
-	curl -L https://github.com/sigoden/aichat/raw/refs/heads/main/scripts/completions/aichat.fish -o $HOME/.config/fish/completions/aichat.fish
+	curl -L https://github.com/sigoden/aichat/raw/refs/heads/main/scripts/completions/aichat.fish -o "$HOME/.config/fish/completions/aichat.fish"
 
 	rg --generate=complete-fish >"$HOME/.config/fish/completions/rg.fish"
 	bob complete fish >"$HOME/.config/fish/completions/bob.fish"
-	bat --completion fish >$HOME/.config/fish/completions/bat.fish
-	delta --generate-completion fish >$HOME/.config/fish/completions/delta.fish
+	bat --completion fish >"$HOME/.config/fish/completions/bat.fish"
+	delta --generate-completion fish >"$HOME/.config/fish/completions/delta.fish"
 
 	fish -c "pnpm install -g yarn typescript"
 	fish -c "pnpm approve-builds -g"
-	pushd $HOME
+	pushd "$HOME"
 	fish -c "clone personal fish-lsp"
-	mv $HOME/fish-lsp $HOME/.fish-lsp
+	mv "$HOME/fish-lsp" "$HOME/.fish-lsp"
 	popd
-	pushd $HOME/.fish-lsp
+	pushd "$HOME/.fish-lsp"
 	fish -c "yarn install"
 	fish -c "yarn dev"
 	popd
 	fish -c "fish-lsp complete >$HOME/.config/fish/completions/fish-lsp.fish"
-	gh act --man-page >$HOME/.local/share/man/man1/act.1
+	gh act --man-page >"$HOME/.local/share/man/man1/act.1"
 
 	# Add some autogenerated completions
 	fish -c "fish_update_completions"
@@ -515,9 +519,9 @@ EOF
 	# TODO: reboot
 }
 
-mkdir -p $HOME/thirdparty
-mkdir -p $HOME/projects
-mkdir -p $HOME/.local/share/man/man1
+mkdir -p "$HOME/thirdparty"
+mkdir -p "$HOME/projects"
+mkdir -p "$HOME/.local/share/man/man1"
 if [ "$(uname)" == "Linux" ]; then
 	setup_ubuntu
 elif [ "$(uname)" == "Darwin" ]; then
