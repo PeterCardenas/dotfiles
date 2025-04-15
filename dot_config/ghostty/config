@@ -13,12 +13,6 @@ custom-shader = ./shaders/matrix-hallway.glsl
 custom-shader = ./shaders/cubes.glsl
 custom-shader-animation = always
 
-font-family = "Monaspace Krypton Var"
-font-family-bold-italic = "Monaspace Radon Var"
-font-style-bold-italic = "Bold"
-font-style-italic = "Medium"
-font-family-italic = "Monaspace Radon Var"
-
 selection-invert-fg-bg = true
 
 window-decoration = false
@@ -31,32 +25,6 @@ keybind = ctrl+v=paste_from_clipboard
 keybind = ctrl+q=quit
 keybind = global:alt+t=toggle_quick_terminal
 keybind = super+q=quit
-
-# Reference: https://fontdrop.info/#/?darkmode=true
-# https://github.com/githubnext/monaspace#character-variants
-font-feature = "calt"
-font-feature = "case"
-font-feature = "ccmp"
-font-feature = "cv01=0"
-font-feature = "cv10"
-font-feature = "cv31"
-font-feature = "cv62"
-font-feature = "fina"
-font-feature = "init"
-font-feature = "ital"
-font-feature = "liga"
-font-feature = "locl"
-font-feature = "medi"
-font-feature = "ss01"
-font-feature = "ss02"
-font-feature = "ss03"
-font-feature = "ss04"
-font-feature = "ss05"
-font-feature = "ss06"
-font-feature = "ss07"
-font-feature = "ss08"
-font-feature = "ss09"
-font-feature = "ss10"
 
 # Underline is a bit high (especially for replace mode in fish shell).
 adjust-underline-position = 2
