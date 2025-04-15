@@ -38,7 +38,7 @@ local function apply_filepath(filepath)
   end
 
   success, output = Shell.async_cmd('chezmoi', { 'apply', '--source-path', filepath })
-  if not success then
+  if not success or #output > 0 then
     return true, output
   end
   return false, {}
@@ -52,10 +52,11 @@ vim.api.nvim_create_autocmd('BufWritePost', {
     Async.void(
       ---@async
       function()
-        require('fidget').notify('Applying changes with chezmoi...', vim.log.levels.INFO, {
+        require('fidget').notify(' ', vim.log.levels.WARN, {
           group = 'chezmoi_apply',
           key = 'chezmoi_apply',
-          annote = '',
+          annote = 'Applying changes with chezmoi...',
+          ttl = math.huge,
         })
         local errored, logs = apply_filepath(filepath)
         require('fidget').notification.remove('chezmoi_apply', 'chezmoi_apply')
