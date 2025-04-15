@@ -1,3 +1,5 @@
+local Config = require('utils.config')
+
 local image_ft = {
   'png',
   'jpg',
@@ -34,7 +36,7 @@ return {
     event = events,
     cond = function()
       -- Nested tmux sessions are not supported.
-      return vim.env.SSH_CONNECTION == nil or vim.env.TMUX == nil
+      return (vim.env.SSH_CONNECTION == nil or vim.env.TMUX == nil) and not Config.USE_SNACKS_IMAGE
     end,
     config = function()
       ---@diagnostic disable-next-line: missing-fields
