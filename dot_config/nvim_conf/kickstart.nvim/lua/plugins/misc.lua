@@ -887,9 +887,11 @@ return {
   },
 
   {
-    -- TODO: Go back to upstream once the following is merged: https://github.com/folke/snacks.nvim/pull/1743
+    -- TODO: Go back to upstream once the following PRs are merged:
+    -- https://github.com/folke/snacks.nvim/pull/1743
+    -- https://github.com/folke/snacks.nvim/pull/1744
     'PeterCardenas/snacks.nvim',
-    branch = 'prefer-wget-if-exists',
+    branch = 'dev',
     priority = 1009,
     lazy = false,
     config = function()
