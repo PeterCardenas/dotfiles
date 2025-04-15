@@ -10,10 +10,12 @@ if test $os = Darwin
         /opt/local/sbin \
         /usr/local/bin \
         /opt/homebrew/bin
-    if set -q DYLD_FALLBACK_LIBRARY_PATH
-        set -gx DYLD_FALLBACK_LIBRARY_PATH /opt/local/lib:$DYLD_FALLBACK_LIBRARY_PATH
-    else
+
+    set -l path_parts (string split ":" $DYLD_FALLBACK_LIBRARY_PATH)
+    if test (count $path_parts) -eq 0
         set -gx DYLD_FALLBACK_LIBRARY_PATH /opt/local/lib
+    else if not contains /opt/local/lib $path_parts
+        set -gx DYLD_FALLBACK_LIBRARY_PATH /opt/local/lib:$DYLD_FALLBACK_LIBRARY_PATH
     end
 
     if set -q TERMINFO_DIRS
