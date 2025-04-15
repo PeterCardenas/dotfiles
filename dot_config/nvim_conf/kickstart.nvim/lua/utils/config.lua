@@ -21,4 +21,6 @@ M.USE_SNACKS_PROFILER = os.getenv('USE_SNACKS_PROFILER') ~= nil
 
 M.USE_BLINK_CMP = os.getenv('USE_LEGACY_CMP') == nil
 
+M.USE_SNACKS_IMAGE = os.getenv('USE_SNACKS_IMAGE') ~= nil
+
 return M
