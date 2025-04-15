@@ -157,6 +157,22 @@ function M.create_keymaps()
       require('telescope.builtin').resume()
     else
       require('fzf-lua.core').fzf_resume()
+      -- HACK: similar to lazygit except this one works. When resuming the height is too small
+      vim.defer_fn(
+        vim.schedule_wrap(function()
+          local fzfwin = require('fzf-lua.win').__SELF() ---@module "fzf-lua.win"
+          local winid = fzfwin.fzf_winid
+          local current_height = vim.api.nvim_win_get_height(winid)
+          vim.api.nvim_win_set_height(winid, current_height - 5)
+          vim.defer_fn(
+            vim.schedule_wrap(function()
+              vim.api.nvim_win_set_height(winid, current_height)
+            end),
+            20
+          )
+        end),
+        20
+      )
     end
   end)
 
