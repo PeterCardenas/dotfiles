@@ -924,7 +924,7 @@ return {
         words = { enabled = true },
         rename = { enabled = true },
         -- TODO: Enable when image is equal or better than image.nvim
-        image = { enabled = false },
+        image = { enabled = Config.USE_SNACKS_IMAGE },
         -- TODO: Fully enable when trouble picker works
         profiler = { enabled = Config.USE_SNACKS_PROFILER },
         -- TODO: Re-enable when dashboard is equal or better than alpha.nvim
