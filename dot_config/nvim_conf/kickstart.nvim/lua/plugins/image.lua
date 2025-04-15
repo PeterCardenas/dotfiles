@@ -31,9 +31,6 @@ return {
   -- Support viewing images.
   {
     '3rd/image.nvim',
-    dependencies = {
-      'leafo/magick',
-    },
     event = events,
     cond = function()
       -- Nested tmux sessions are not supported.
@@ -42,6 +39,7 @@ return {
     config = function()
       ---@diagnostic disable-next-line: missing-fields
       require('image').setup({
+        processor = 'magick_cli',
         tmux_show_only_in_active_window = true,
         integrations = {
           markdown = {
