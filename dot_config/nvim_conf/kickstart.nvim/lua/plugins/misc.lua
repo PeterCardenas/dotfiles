@@ -866,7 +866,9 @@ return {
   },
 
   {
-    'folke/snacks.nvim',
+    -- TODO: Go back to upstream once the following is merged: https://github.com/folke/snacks.nvim/pull/1743
+    'PeterCardenas/snacks.nvim',
+    branch = 'prefer-wget-if-exists',
     priority = 1009,
     lazy = false,
     config = function()
@@ -924,7 +926,6 @@ return {
         quickfile = { enabled = true },
         words = { enabled = true },
         rename = { enabled = true },
-        -- TODO: Enable when image is equal or better than image.nvim
         image = { enabled = Config.USE_SNACKS_IMAGE },
         -- TODO: Fully enable when trouble picker works
         profiler = { enabled = Config.USE_SNACKS_PROFILER },
