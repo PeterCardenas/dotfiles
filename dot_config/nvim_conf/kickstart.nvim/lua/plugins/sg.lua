@@ -176,43 +176,8 @@ return {
             },
           },
         },
-        file_selector = {
-          provider = 'fzf',
-          provider_opts = {
-            get_filepaths = function(params) ---@param params avante.file_selector.opts.IGetFilepathsParams
-              local cwd = params.cwd
-              -- TODO: Use params.selected_filepaths to filter out files that are already selected
-
-              local cmd = Finder.rg_files_cmd(false) .. ' ' .. vim.fn.fnameescape(cwd)
-
-              local output = vim.fn.system(cmd)
-
-              -- Add directories to the list of filepaths
-              -- TODO: Add this upstream to avante.nvim
-              local filepaths = vim.split(output, '\n', { trimempty = true })
-              local directory_map = {} ---@type table<string, boolean>
-              for _, filepath in ipairs(filepaths) do
-                local dir = vim.fn.fnamemodify(filepath, ':h')
-                local home_dir = vim.fn.expand('~')
-                while dir ~= '' and dir ~= '/' and dir ~= home_dir and dir ~= cwd do
-                  local dir_with_slash = dir .. '/'
-                  if not directory_map[dir_with_slash] then
-                    directory_map[dir_with_slash] = true
-                  end
-                  dir = vim.fn.fnamemodify(dir, ':h')
-                end
-              end
-              local directories = vim.tbl_keys(directory_map)
-              vim.list_extend(filepaths, directories)
-
-              return vim
-                .iter(filepaths)
-                :map(function(filepath)
-                  return vim.fn.fnamemodify(filepath, ':~:.')
-                end)
-                :totable()
-            end,
-          },
+        selector = {
+          provider = 'fzf_lua',
         },
       })
     end,
