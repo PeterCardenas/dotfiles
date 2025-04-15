@@ -24,8 +24,6 @@ return {
         end
         return parent_dir .. '/' .. cwd:gsub('/', '_')
       end
-      -- Clear fuzzy toggle for grep
-      require('fzf-lua.defaults').defaults.grep.actions = {}
       -- TODO: Make regex match case insensitive
       require('fzf-lua').setup({
         'hide',
@@ -79,8 +77,7 @@ return {
         },
         grep = {
           git_icons = false,
-          -- TODO: Make this hide ignored files by default once this can be toggled.
-          cmd = PickerHelpers.rg_words_cmd(true),
+          rg_opts = PickerHelpers.rg_words_opts(true),
           multiprocess = true,
           multiline = 1,
           fzf_opts = {
