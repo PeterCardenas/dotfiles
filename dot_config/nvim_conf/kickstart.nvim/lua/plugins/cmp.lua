@@ -296,6 +296,8 @@ return {
         keymap = {
           preset = 'none',
           ['<C-space>'] = { 'show', 'show_documentation', 'hide_documentation' },
+          ['<Down>'] = { 'select_next', 'fallback' },
+          ['<Up>'] = { 'select_prev', 'fallback' },
           ['<C-j>'] = { 'select_next', 'fallback' },
           ['<C-k>'] = { 'select_prev', 'fallback' },
           ['<C-u>'] = { 'scroll_documentation_up', 'fallback' },
@@ -527,6 +529,8 @@ return {
           end,
           keymap = {
             preset = 'none',
+            ['<Down>'] = { 'select_next', 'fallback' },
+            ['<Up>'] = { 'select_prev', 'fallback' },
             ['<C-j>'] = { 'select_next', 'fallback' },
             ['<C-k>'] = { 'select_prev', 'fallback' },
             ['<C-u>'] = { 'scroll_documentation_up', 'fallback' },
