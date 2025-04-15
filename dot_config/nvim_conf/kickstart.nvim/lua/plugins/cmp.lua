@@ -64,9 +64,6 @@ return {
   {
     -- Get words from the current buffer
     'hrsh7th/cmp-buffer',
-    cond = function()
-      return not Config.USE_BLINK_CMP
-    end,
     event = { 'CmdlineEnter' },
   },
   {
@@ -267,7 +264,9 @@ return {
     lazy = true,
   },
   {
-    'saghen/blink.compat',
+    -- TODO: use upstream once the following is merged/resolved: https://github.com/Saghen/blink.compat/pull/37
+    'PeterCardenas/blink.compat',
+    branch = 'fix-compat-for-cmp-buffer',
     lazy = true,
     config = function()
       require('blink.compat').setup({
@@ -418,6 +417,18 @@ return {
             fish = {
               name = 'fish',
               module = 'blink.compat.source',
+            },
+            -- blink.cmp buffer completions takes words from other buffers.
+            buffer = {
+              name = 'buffer',
+              module = 'blink.compat.source',
+              transform_items = function(_ctx, items)
+                local kind = require('blink.cmp.types').CompletionItemKind.Text
+                for i = 1, #items do
+                  items[i].kind = kind
+                end
+                return items
+              end,
             },
             emoji = {
               -- TODO: Use blink-emoji.nvim, once it loads completions faster, since it has more emojis.
