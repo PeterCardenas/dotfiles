@@ -109,6 +109,13 @@ function M.setup(capabilities)
     capabilities = capabilities,
   }
   require('lspconfig').protols.setup(protols_config)
+
+  ---@type custom.LspConfig
+  local gh_actions_ls_config = {
+    capabilities = capabilities,
+    filetypes = { 'yaml.github' },
+  }
+  require('lspconfig').gh_actions_ls.setup(gh_actions_ls_config)
 end
 
 return M

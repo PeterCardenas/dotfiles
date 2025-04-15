@@ -221,6 +221,8 @@ vim.filetype.add({
     ['%.vscode/%w*%.json'] = 'jsonc',
     ['.*/git/ignore'] = 'gitignore',
     ['.*/git/config'] = 'gitconfig',
+    -- To only start/run gh_actions_ls when editing a workflow file
+    ['.*/%.github[%w/]+workflows[%w/]+.*%.ya?ml'] = 'yaml.github',
   },
 })
 

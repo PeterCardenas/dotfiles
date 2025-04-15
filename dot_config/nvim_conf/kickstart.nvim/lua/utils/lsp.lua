@@ -28,6 +28,7 @@ M.FT_WITH_LSP = {
   'zig',
   'vim',
   'glsl',
+  'yaml.github',
 }
 
 if vim.fn.has('mac') == 1 then
