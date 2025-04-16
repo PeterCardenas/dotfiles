@@ -8,7 +8,7 @@
   "avante.nvim": { "branch": "main", "commit": "fdcfda743724062316ce7be554e8223b8e7075fe" },
   "blink-emoji.nvim": { "branch": "master", "commit": "a77aebc092ebece1eed108f301452ae774d6b67a" },
   "blink.cmp": { "branch": "main", "commit": "cb5e346d9e0efa7a3eee7fd4da0b690c48d2a98e" },
-  "blink.compat": { "branch": "fix-compat-for-cmp-buffer", "commit": "c928beaa8750d77a00113d2e4dacfacd33c01c80" },
+  "blink.compat": { "branch": "main", "commit": "f1836ed7a07f8d082ff6c3fbae1e476ba2adee84" },
   "bufdelete.nvim": { "branch": "master", "commit": "f6bcea78afb3060b198125256f897040538bcb81" },
   "clangd_extensions.nvim": { "branch": "main", "commit": "8f7b72100883e0e34400d9518d40a03f21e4d0a6" },
   "cmp-async-path": { "branch": "main", "commit": "0ed1492f59e730c366d261a5ad822fa37e44c325" },

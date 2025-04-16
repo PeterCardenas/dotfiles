@@ -264,14 +264,10 @@ return {
     lazy = true,
   },
   {
-    -- TODO: use upstream once the following is merged/resolved: https://github.com/Saghen/blink.compat/pull/37
-    'PeterCardenas/blink.compat',
-    branch = 'fix-compat-for-cmp-buffer',
+    'saghen/blink.compat',
     lazy = true,
     config = function()
-      require('blink.compat').setup({
-        impersonate_nvim_cmp = true,
-      })
+      require('blink.compat').setup({})
     end,
   },
   {
