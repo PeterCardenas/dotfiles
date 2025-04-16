@@ -330,6 +330,7 @@ return {
             Mention = '',
             PR = '',
             MR = '',
+            Font = '',
             Issue = '',
             Text = '󰉿',
             Method = '󰆧',
@@ -399,6 +400,12 @@ return {
             fonts = {
               name = 'fonts',
               module = 'blink.compat.source',
+              transform_items = function(_ctx, items)
+                for i = 1, #items do
+                  items[i].kind_name = 'Font'
+                end
+                return items
+              end,
             },
             lazydev = {
               name = 'LazyDev',
