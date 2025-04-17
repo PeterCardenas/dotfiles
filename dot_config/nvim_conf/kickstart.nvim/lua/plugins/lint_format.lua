@@ -524,6 +524,23 @@ return {
         '-type',
         get_buildifier_filetype,
       }
+      require('lint').linters.stylua = {
+        name = 'stylua',
+        cmd = 'stylua',
+        ignore_exitcode = true,
+        args = {
+          '--search-parent-directories',
+          '--respect-ignores',
+          '--check',
+        },
+        stream = 'both',
+        parser = require('lint.parser').from_pattern(
+          '- ([^(]+)%(([0-9]+):([0-9]+) to ([0-9]+):([0-9]+)%)',
+          { 'message', 'lnum', 'col', 'end_lnum', 'end_col' },
+          {},
+          { severity = vim.diagnostic.severity.ERROR, source = 'stylua' }
+        ),
+      }
       require('lint').linters_by_ft = {
         bzl = { 'buildifier' },
         go = { 'golint' },
@@ -531,6 +548,7 @@ return {
         python = { 'dmypy', 'pylint' },
         json = { 'jq' },
         fish = { 'fish' },
+        lua = { 'stylua' },
       }
     end,
   },
