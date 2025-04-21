@@ -33,7 +33,9 @@ return {
   },
   {
     -- Highlight, edit, and navigate code
-    'nvim-treesitter/nvim-treesitter',
+    -- TODO: Use upstream when the following is merged: https://github.com/nvim-treesitter/nvim-treesitter/pull/7821
+    'PeterCardenas/nvim-treesitter',
+    branch = 'add-granular-if-statement-folds',
     event = { 'BufReadPre', 'BufNewFile' },
     cmd = { 'TSInstall', 'TSInstallSync' },
     dependencies = {
