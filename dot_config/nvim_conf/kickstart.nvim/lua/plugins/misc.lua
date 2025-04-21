@@ -520,7 +520,27 @@ return {
   },
 
   -- Camel-case and snake-case motion
-  { 'bkad/CamelCaseMotion', event = { 'BufReadPre', 'BufNewFile' } },
+  {
+    'chrisgrieser/nvim-spider',
+    keys = {
+      { '<leader>w', "<cmd>lua require('spider').motion('w')<CR>", mode = { 'n', 'o', 'x' } },
+      { '<leader>e', "<cmd>lua require('spider').motion('e')<CR>", mode = { 'n', 'o', 'x' } },
+      { '<leader>b', "<cmd>lua require('spider').motion('b')<CR>", mode = { 'n', 'o', 'x' } },
+    },
+    config = function()
+      require('spider').setup()
+    end,
+  },
+  {
+    'chrisgrieser/nvim-various-textobjs',
+    keys = {
+      { 'a<leader>w', '<cmd>lua require("various-textobjs").subword("outer")<CR>', mode = { 'o', 'x' } },
+      { 'i<leader>w', '<cmd>lua require("various-textobjs").subword("inner")<CR>', mode = { 'o', 'x' } },
+    },
+    config = function()
+      require('various-textobjs').setup()
+    end,
+  },
 
   -- Ripgrep with file name filtering
   {

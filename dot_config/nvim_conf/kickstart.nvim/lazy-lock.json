@@ -1,5 +1,4 @@
 {
-  "CamelCaseMotion": { "branch": "master", "commit": "de439d7c06cffd0839a29045a103fe4b44b15cdc" },
   "Comment.nvim": { "branch": "master", "commit": "e30b7f2008e52442154b66f7c519bfd2f1e32acb" },
   "CopilotChat.nvim": { "branch": "canary", "commit": "451d365928a994cda3505a84905303f790e28df8" },
   "LuaSnip": { "branch": "master", "commit": "c9b9a22904c97d0eb69ccb9bab76037838326817" },
@@ -62,6 +61,7 @@
   "nvim-notify": { "branch": "master", "commit": "b5825cf9ee881dd8e43309c93374ed5b87b7a896" },
   "nvim-silicon": { "branch": "main", "commit": "7f66bda8f60c97a5bf4b37e5b8acb0e829ae3c32" },
   "nvim-spectre": { "branch": "master", "commit": "ddd7383e856a7c939cb4f5143278fe041bbb8cb9" },
+  "nvim-spider": { "branch": "main", "commit": "be2ad4067bff11cd4b00be89d7034d5fd85aa96d" },
   "nvim-surround": { "branch": "main", "commit": "caf6f633d4d77a29b6e265b560c5a035d171a913" },
   "nvim-tmux-navigation": { "branch": "main", "commit": "4898c98702954439233fdaf764c39636681e2861" },
   "nvim-tree.lua": { "branch": "master", "commit": "5bea2b37523a31288e0fcab42f3be5c1bd4516bb" },
@@ -70,6 +70,7 @@
   "nvim-treesitter-textobjects": { "branch": "master", "commit": "205e3369bc83d8cb83f7409c36120e24611f8c5c" },
   "nvim-ts-context-commentstring": { "branch": "main", "commit": "1b212c2eee76d787bbea6aa5e92a2b534e7b4f8f" },
   "nvim-ufo": { "branch": "main", "commit": "a026364df62e88037b26d37c9f14c17c006fd577" },
+  "nvim-various-textobjs": { "branch": "main", "commit": "dcf0cd99a1ae0bade0e812a381ac4399d65cc0c3" },
   "octo.nvim": { "branch": "master", "commit": "03059cf4d694e2b3065136f074b42ee98ff8e4b2" },
   "oil.nvim": { "branch": "master", "commit": "302bbaceeafc690e6419e0c8296e804d60cb9446" },
   "one-small-step-for-vimkind": { "branch": "main", "commit": "330049a237635b7cae8aef4972312e6da513cf91" },
