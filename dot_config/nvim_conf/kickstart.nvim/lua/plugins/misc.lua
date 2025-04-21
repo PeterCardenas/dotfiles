@@ -536,6 +536,30 @@ return {
     keys = {
       { 'a<leader>w', '<cmd>lua require("various-textobjs").subword("outer")<CR>', mode = { 'o', 'x' } },
       { 'i<leader>w', '<cmd>lua require("various-textobjs").subword("inner")<CR>', mode = { 'o', 'x' } },
+      {
+        'dsi',
+        function()
+          -- select outer indentation
+          require('various-textobjs.textobjs.linewise').indentation('outer', 'outer')
+
+          -- plugin only switches to visual mode when a textobj has been found
+          local vim_mode = vim.fn.mode() ---@type string
+          local indentationFound = vim_mode:find('V')
+          if not indentationFound then
+            return
+          end
+
+          -- dedent indentation
+          vim.cmd.normal({ '<', bang = true })
+
+          -- delete surrounding lines
+          local endBorderLn = vim.api.nvim_buf_get_mark(0, '>')[1]
+          local startBorderLn = vim.api.nvim_buf_get_mark(0, '<')[1]
+          vim.cmd(tostring(endBorderLn) .. ' delete') -- delete end first so line index is not shifted
+          vim.cmd(tostring(startBorderLn) .. ' delete')
+        end,
+        mode = { 'n' },
+      },
     },
     config = function()
       require('various-textobjs').setup()
@@ -826,7 +850,6 @@ return {
     'kylechui/nvim-surround',
     event = 'VeryLazy',
     config = function()
-      -- TODO: Add delete surrounding if statement/function
       require('nvim-surround').setup({})
     end,
   },
