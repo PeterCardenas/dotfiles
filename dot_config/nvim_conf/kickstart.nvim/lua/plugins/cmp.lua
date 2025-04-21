@@ -502,6 +502,7 @@ return {
                     return icon .. ctx.icon_gap
                   end,
                   highlight = function(ctx)
+                    ---@type string
                     local hl = ctx.kind_hl
                     if 'Path' == ctx.source_name then
                       ---@type string?, string
@@ -512,7 +513,7 @@ return {
                     elseif 'LSP' == ctx.source_name then
                       ---@type { abbr_hl_group: string, kind: string }?
                       local color_item = require('nvim-highlight-colors').format(ctx.item.documentation, { kind = ctx.kind })
-                      if color_item and color_item.abbr_hl_group ~= '' then
+                      if color_item and color_item.abbr_hl_group ~= nil and color_item.abbr_hl_group ~= '' then
                         hl = color_item.abbr_hl_group
                       end
                     end
