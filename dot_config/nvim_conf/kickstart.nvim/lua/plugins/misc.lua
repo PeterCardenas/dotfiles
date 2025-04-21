@@ -81,13 +81,13 @@ end)
 ---@type LazyPluginSpec[]
 return {
   -- Add a background color to colors defined in css.
-  -- {
-  --   'norcalli/nvim-colorizer.lua',
-  --   event = { "BufReadPre", "BufNewFile" },
-  --   config = function()
-  --     require('colorizer').setup()
-  --   end,
-  -- },
+  {
+    'brenoprata10/nvim-highlight-colors',
+    event = { 'BufReadPre', 'BufNewFile' },
+    config = function()
+      require('nvim-highlight-colors').setup({})
+    end,
+  },
 
   -- Enable editing the highlight colors and saving them to a file.
   -- {
