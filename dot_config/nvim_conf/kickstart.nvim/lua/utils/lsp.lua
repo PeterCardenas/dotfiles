@@ -29,6 +29,7 @@ M.FT_WITH_LSP = {
   'vim',
   'glsl',
   'yaml.github',
+  'query',
 }
 
 if vim.fn.has('mac') == 1 then
