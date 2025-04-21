@@ -491,6 +491,12 @@ return {
                       if dev_icon then
                         icon = dev_icon
                       end
+                    elseif 'LSP' == ctx.source_name then
+                      ---@type { abbr: string, kind: string }?
+                      local color_item = require('nvim-highlight-colors').format(ctx.item.documentation, { kind = ctx.kind })
+                      if color_item and color_item.abbr ~= '' then
+                        icon = color_item.abbr
+                      end
                     end
 
                     return icon .. ctx.icon_gap
@@ -502,6 +508,12 @@ return {
                       local dev_icon, dev_hl = require('nvim-web-devicons').get_icon(ctx.label)
                       if dev_icon then
                         hl = dev_hl
+                      end
+                    elseif 'LSP' == ctx.source_name then
+                      ---@type { abbr_hl_group: string, kind: string }?
+                      local color_item = require('nvim-highlight-colors').format(ctx.item.documentation, { kind = ctx.kind })
+                      if color_item and color_item.abbr_hl_group ~= '' then
+                        hl = color_item.abbr_hl_group
                       end
                     end
                     return hl
