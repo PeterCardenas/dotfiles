@@ -116,6 +116,12 @@ function M.setup(capabilities)
     filetypes = { 'yaml.github' },
   }
   require('lspconfig').gh_actions_ls.setup(gh_actions_ls_config)
+
+  ---@type custom.LspConfig
+  local ts_query_ls_config = {
+    capabilities = capabilities,
+  }
+  require('lspconfig').ts_query_ls.setup(ts_query_ls_config)
 end
 
 return M
