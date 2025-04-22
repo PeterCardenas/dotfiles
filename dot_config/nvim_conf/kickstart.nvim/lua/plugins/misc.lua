@@ -88,6 +88,8 @@ return {
       require('nvim-highlight-colors').setup({
         -- TODO: Change upstream to work for more complex ansi colors.
         enable_ansi = true,
+        -- TODO: Exclude higlighting in comments for github issue/pr numbers
+        exclude_filetypes = { 'lazy' },
       })
     end,
   },
