@@ -4,39 +4,9 @@ local Shell = require('utils.shell')
 local Git = require('utils.git')
 
 ---@async
----@param prev_cmd_output string[]
----@return boolean whether account was switched
-local function maybe_switch_account(prev_cmd_output)
-  -- TODO: Handle the case where there are more than 2 accounts
-  if #prev_cmd_output == 1 and prev_cmd_output[1]:match('GraphQL: Could not resolve to a Repository') then
-    local success, output = Shell.async_cmd('gh', {
-      'auth',
-      'switch',
-    })
-    vim.schedule(function()
-      if not success then
-        vim.notify('Could not switch account:\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
-      else
-        -- Success message should be in the output.
-        vim.notify(output[1], vim.log.levels.INFO)
-      end
-    end)
-    return success
-  end
-  return false
-end
-
----@async
----@param retry? boolean
 ---@return boolean, string
-local function get_repo_url(retry)
+local function get_repo_url()
   local success, output = Shell.async_cmd('gh', { 'repo', 'view', '--json=url', '-q=.url' })
-  if not success and not retry then
-    local switched = maybe_switch_account(output)
-    if switched then
-      return get_repo_url(true)
-    end
-  end
   if not success then
     return false, table.concat(output, '\n')
   end
@@ -46,9 +16,8 @@ end
 
 ---@async
 ---@param commit_sha string
----@param is_retry? boolean
 ---@return string | nil
-local function get_pr_url(commit_sha, is_retry)
+local function get_pr_url(commit_sha)
   local shell = Shell
   local success, output = shell.async_cmd('gh', {
     'pr',
@@ -62,14 +31,6 @@ local function get_pr_url(commit_sha, is_retry)
     '--jq',
     '.[]| select(.mergeCommit.oid == "' .. commit_sha .. '") | .url',
   })
-  -- Handle case when auth
-  if not is_retry and not success then
-    local switched = maybe_switch_account(output)
-    if not switched then
-      return nil
-    end
-    return get_pr_url(commit_sha, true)
-  end
   if not success or #output == 0 then
     return nil
   end
