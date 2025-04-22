@@ -988,6 +988,20 @@ return {
           end
         end, { nargs = 0 })
       end
+      ---@type snacks.image.Env
+      local tmux_env = vim.iter(require('snacks.image.terminal').envs()):find(function(env)
+        return env.name == 'tmux'
+      end)
+      if tmux_env.transform then
+        ---@type fun(data: string): string
+        local original_transform = tmux_env.transform
+        tmux_env.transform = function(data)
+          if vim.env.SSH_CONNECTION and vim.env.TMUX then
+            return original_transform(original_transform(data))
+          end
+          return original_transform(data)
+        end
+      end
       require('snacks').setup({
         -- TODO: Re-enable when indent is equal or better than indent-blankline
         -- indent = { enabled = true },
