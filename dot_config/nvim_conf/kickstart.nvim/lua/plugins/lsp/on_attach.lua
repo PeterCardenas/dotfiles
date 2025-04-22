@@ -163,7 +163,8 @@ function M.on_attach(client, bufnr)
   vim.keymap.set({ 'n', 'i' }, '<C-s>', function()
     vim.lsp.buf.signature_help()
   end, { desc = 'LSP: Signature Documentation', buffer = bufnr })
-  if client.server_capabilities.inlayHintProvider then
+  -- TODO: Re-enable when opening ansi_code_helpers.tsx works
+  if client.server_capabilities.inlayHintProvider and client.name ~= 'typescript-tools' then
     -- Enable inlay hints by default.
     vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
     vim.keymap.set({ 'n', 'i' }, '<C-i>', function()
