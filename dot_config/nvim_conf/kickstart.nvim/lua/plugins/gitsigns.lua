@@ -4,9 +4,10 @@ local Shell = require('utils.shell')
 local Git = require('utils.git')
 
 ---@async
+---@param cwd string
 ---@return boolean, string
-local function get_repo_url()
-  local success, output = Shell.async_cmd('gh', { 'repo', 'view', '--json=url', '-q=.url' })
+local function get_repo_url(cwd)
+  local success, output = Shell.async_cmd('gh', { 'repo', 'view', '--json=url', '-q=.url' }, cwd)
   if not success then
     return false, table.concat(output, '\n')
   end
@@ -16,8 +17,9 @@ end
 
 ---@async
 ---@param commit_sha string
+---@param cwd string
 ---@return string | nil
-local function get_pr_url(commit_sha)
+local function get_pr_url(commit_sha, cwd)
   local shell = Shell
   local success, output = shell.async_cmd('gh', {
     'pr',
@@ -30,7 +32,7 @@ local function get_pr_url(commit_sha)
     commit_sha,
     '--jq',
     '.[]| select(.mergeCommit.oid == "' .. commit_sha .. '") | .url',
-  })
+  }, cwd)
   if not success or #output == 0 then
     return nil
   end
@@ -39,9 +41,10 @@ end
 
 ---@async
 ---@param commit_sha string
+---@param cwd string
 ---@return string
-local function get_commit_url(commit_sha)
-  local success, output = get_repo_url()
+local function get_commit_url(commit_sha, cwd)
+  local success, output = get_repo_url(cwd)
   if not success then
     return ''
   end
@@ -52,6 +55,7 @@ end
 
 vim.api.nvim_create_user_command('GHPR', function()
   local bufnr = vim.api.nvim_get_current_buf()
+  local buf_dir = vim.fn.expand('%:p:h')
   local cache_entry = require('gitsigns.cache').cache[bufnr]
   if not cache_entry then
     vim.notify('No blame for current buffer', vim.log.levels.ERROR)
@@ -93,9 +97,9 @@ vim.api.nvim_create_user_command('GHPR', function()
           end)
           return
         end
-        local pr_url = get_pr_url(commit_sha)
+        local pr_url = get_pr_url(commit_sha, buf_dir)
         if not pr_url then
-          local commit_url = get_commit_url(commit_sha)
+          local commit_url = get_commit_url(commit_sha, buf_dir)
           vim.notify('No PR created yet.\nCopied commit link to clipboard:\n' .. commit_url, vim.log.levels.WARN)
           vim.schedule(function()
             vim.fn.setreg('+', commit_url)
@@ -113,7 +117,7 @@ end, { nargs = 0, desc = 'Open/Copy GitHub PR link for current line' })
 
 local function relative_path_to_git_root()
   local current_file = vim.fn.expand('%:p')
-  local git_root = File.get_git_root()
+  local git_root = File.get_git_root(current_file)
 
   if git_root and vim.fn.isdirectory(git_root) == 1 then
     if vim.fn.stridx(current_file, git_root) == 0 then
@@ -143,6 +147,7 @@ end
 
 vim.api.nvim_create_user_command('GHFile', function()
   local start_lnum, end_lnum = vim.fn.line("'<"), vim.fn.line("'>")
+  local buf_dir = vim.fn.expand('%:p:h')
   local filepath = relative_path_to_git_root()
   if not filepath then
     vim.notify('Could not find relative path to git root', vim.log.levels.ERROR)
@@ -152,7 +157,7 @@ vim.api.nvim_create_user_command('GHFile', function()
   Async.void(
     ---@async
     function()
-      local success, output = get_repo_url()
+      local success, output = get_repo_url(buf_dir)
       if not success then
         vim.notify('Could not get repo url:\n' .. output, vim.log.levels.ERROR)
         return
