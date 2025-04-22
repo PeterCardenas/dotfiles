@@ -1011,6 +1011,7 @@ return {
         quickfile = { enabled = true },
         words = { enabled = true },
         rename = { enabled = true },
+        -- TODO: Enable preview virtual lines/window only for svg files, instead of replacing buffer.
         image = { enabled = Config.USE_SNACKS_IMAGE },
         -- TODO: Fully enable when trouble picker works
         profiler = { enabled = Config.USE_SNACKS_PROFILER },
