@@ -29,12 +29,21 @@ function M.get_ancestor_dir(target_filename, start_path)
     end
   end
   local home_dir = os.getenv('HOME')
-  while current_dir ~= '' and current_dir ~= '/' and current_dir ~= home_dir do
+  -- Add protection against infinite loop
+  local max_iterations = 30
+  local iterations = 0
+  while current_dir ~= '' and current_dir ~= '/' and current_dir ~= home_dir and iterations < max_iterations do
     local current_filepath = current_dir .. '/' .. target_filename
     if vim.fn.isdirectory(current_dir) == 1 and (vim.fn.filereadable(current_filepath) == 1 or vim.fn.isdirectory(current_filepath) == 1) then
       return current_dir
     end
     current_dir = vim.fn.fnamemodify(current_dir, ':h')
+    iterations = iterations + 1
+  end
+  if iterations == max_iterations then
+    vim.schedule(function()
+      vim.notify('Could not find ancestor directory of ' .. target_filename .. ' in ' .. current_dir .. ', starting from ' .. start_path, vim.log.levels.WARN)
+    end)
   end
   return nil
 end
