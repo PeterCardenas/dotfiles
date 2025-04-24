@@ -181,11 +181,26 @@ local function maybe_install_python_dependencies()
       vim.schedule(function()
         vim.notify('Failed to start virtualenv:\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
       end)
+    end
+  end
+  if success then
+    success, output = Shell.async_cmd('bash', { '-c', 'source ' .. venv_path .. '/bin/activate && uv pip sync ' .. requirements_path })
+    if not success then
+      vim.schedule(function()
+        vim.notify('Failed to install python dependencies:\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
+      end)
       return
     end
   end
-  Shell.async_cmd(venv_path .. '/bin/pip', { 'install', '-r', requirements_path })
-  Shell.async_cmd(venv_path .. '/bin/pip', { 'install', 'python-lsp-server', 'mypy', 'pylint' })
+  if success then
+    success, output = Shell.async_cmd('bash', { '-c', 'source ' .. venv_path .. '/bin/activate && uv pip install python-lsp-server mypy pylint' })
+    if not success then
+      vim.schedule(function()
+        vim.notify('Failed to install python tooling:\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
+      end)
+      return
+    end
+  end
   vim.schedule(function()
     local config = pylsp_config()
     config.pylsp.cmd = { venv_path .. '/bin/pylsp' }
