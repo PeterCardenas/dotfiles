@@ -417,10 +417,8 @@ return {
       buf_lint_args[#buf_lint_args + 1] = '--path'
       require('lint').linters.buf_lint.args = buf_lint_args
       require('lint').linters.buf_lint.cwd = cwd
-      local venv_path = Python.VENV_PATH
       local mypypath = table.concat({ cwd, cwd .. '/' .. Python.GEN_FILES_PATH }, ':')
       require('lint').linters.dmypy.env = {
-        VIRTUAL_ENV = venv_path,
         COLUMNS = 1000,
         MYPYPATH = mypypath,
       }
@@ -487,10 +485,7 @@ return {
         mypy_config_path,
       }
       require('lint').linters.dmypy.args = dmypy_args
-      require('lint').linters.dmypy.cmd = venv_path .. '/bin/dmypy'
-      require('lint').linters.pylint.cmd = venv_path .. '/bin/pylint'
       require('lint').linters.pylint.env = {
-        VIRTUAL_ENV = venv_path,
         PYTHONPATH = cwd .. ':' .. cwd .. '/' .. Python.GEN_FILES_PATH,
       }
       local original_pylint_parser = require('lint').linters.pylint.parser
