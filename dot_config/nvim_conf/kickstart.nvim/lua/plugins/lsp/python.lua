@@ -1,11 +1,63 @@
 local Config = require('utils.config')
+local Shell = require('utils.shell')
 local File = require('utils.file')
 local Table = require('utils.table')
+local Async = require('utils.async')
 local M = {}
 local LspMethod = vim.lsp.protocol.Methods
 
 local enable_pyright = not Config.USE_JEDI
 M.GEN_FILES_PATH = 'bazel-out/k8-fastbuild/bin'
+
+---@return table<string, custom.LspConfig>
+local function pylsp_config()
+  -- The following are rules that we want from pylint, but are not supported elsewhere.
+  -- 'trailing-newlines'
+  ---@type table<string, custom.LspConfig>
+  local config = {
+    pylsp = {
+      settings = {
+        pylsp = {
+          plugins = {
+            jedi = {
+              enabled = true,
+              extra_paths = {
+                M.GEN_FILES_PATH,
+              },
+            },
+            pylint = {
+              enabled = false,
+            },
+            pylsp_mypy = {
+              enabled = false,
+            },
+            -- Disable other default formatters and linters in favor of ruff and pylint.
+            black = {
+              enabled = false,
+            },
+            mccabe = {
+              enabled = false,
+            },
+            pyflakes = {
+              enabled = false,
+            },
+            yapf = {
+              enabled = false,
+            },
+            autopep8 = {
+              enabled = false,
+            },
+            pycodestyle = {
+              enabled = false,
+            },
+          },
+        },
+      },
+    },
+  }
+
+  return config
+end
 
 ---@return table<string, custom.LspConfig>
 local function get_ruff_lsp_config()
@@ -80,8 +132,79 @@ local function on_attach(client, _)
   end
 end
 
+---@param filepath string
+---@return string|nil
+function M.find_lsp_root(filepath)
+  local targets = { 'pyproject.toml', 'setup.py', 'requirements.txt', '.git' }
+  local root = nil
+  for _, target in ipairs(targets) do
+    local candidate = File.get_ancestor_dir(target, filepath)
+    if candidate then
+      if not root or (#candidate > #root) then
+        root = candidate
+      end
+    end
+  end
+  return root
+end
+
+---@async
+---Installs python dependencies according to requirements.txt in the workspace.
+local function maybe_install_python_dependencies()
+  local cwd = File.get_cwd()
+  -- Find a Python file in the current directory
+  local success, output = Shell.async_cmd('rg', { '--files', '-g', '*.py' })
+  if not success or #output == 0 then
+    return
+  end
+  local found_file = cwd .. '/' .. output[1]
+
+  local lsp_root = M.find_lsp_root(found_file)
+  local venv_path = lsp_root .. '/venv'
+  local requirements_path ---@type string
+  if File.file_exists(lsp_root .. '/requirements.txt') then
+    requirements_path = lsp_root .. '/requirements.txt'
+  else
+    return
+  end
+  vim.schedule(function()
+    require('fidget').notify(' ', vim.log.levels.WARN, {
+      group = 'install_python_deps',
+      key = 'install_python_deps',
+      annote = 'Installing python dependencies...',
+      ttl = math.huge,
+    })
+  end)
+  if not File.file_exists(venv_path) then
+    success, output = Shell.async_cmd('python', { '-m', 'venv', venv_path }, nil)
+    if not success then
+      vim.schedule(function()
+        vim.notify('Failed to start virtualenv:\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
+      end)
+      return
+    end
+  end
+  Shell.async_cmd(venv_path .. '/bin/pip', { 'install', '-r', requirements_path })
+  Shell.async_cmd(venv_path .. '/bin/pip', { 'install', 'python-lsp-server', 'mypy', 'pylint' })
+  vim.schedule(function()
+    local config = pylsp_config()
+    config.pylsp.cmd = { venv_path .. '/bin/pylsp' }
+    require('lspconfig').pylsp.setup(config.pylsp)
+    require('fidget').notification.remove('install_python_deps', 'install_python_deps')
+    require('fidget').notify(' ', vim.log.levels.INFO, {
+      group = 'install_python_deps',
+      key = 'install_python_deps',
+      annote = '✅ Installed python dependencies',
+      ttl = 3,
+    })
+  end)
+end
+
 ---@param capabilities lsp.ClientCapabilities
 function M.setup(capabilities)
+  Async.void(function() ---@async
+    maybe_install_python_dependencies()
+  end)
   -- Need to manually setup ruff_lsp since it was removed from mason-lspconfig and deprecated from nvim-lspconfig.
   ---@type lspconfig.Config
   require('lspconfig.configs')['ruff_lsp'] = require('lspconfig.configs.ruff_lsp')
@@ -140,53 +263,6 @@ M.DISABLED_PYLINT_RULES = {
   'logging-too-few-args',
   'logging-too-many-args',
 }
-
----@return table<string, custom.LspConfig>
-local function pylsp_config()
-  -- The following are rules that we want from pylint, but are not supported elsewhere.
-  -- 'trailing-newlines'
-  return {
-    pylsp = {
-      settings = {
-        pylsp = {
-          plugins = {
-            jedi = {
-              enabled = true,
-              extra_paths = {
-                M.GEN_FILES_PATH,
-              },
-            },
-            pylint = {
-              enabled = false,
-            },
-            pylsp_mypy = {
-              enabled = false,
-            },
-            -- Disable other default formatters and linters in favor of ruff and pylint.
-            black = {
-              enabled = false,
-            },
-            mccabe = {
-              enabled = false,
-            },
-            pyflakes = {
-              enabled = false,
-            },
-            yapf = {
-              enabled = false,
-            },
-            autopep8 = {
-              enabled = false,
-            },
-            pycodestyle = {
-              enabled = false,
-            },
-          },
-        },
-      },
-    },
-  }
-end
 
 ---@return table<string, custom.LspConfig>
 function M.python_lsp_config()
