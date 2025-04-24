@@ -219,9 +219,10 @@ function M.python_lsp_config()
         ---@param _ lsp.ResponseError
         ---@param result lsp.PublishDiagnosticsParams
         ---@param ctx lsp.HandlerContext
-        ---@param config table
-        [LspMethod.textDocument_publishDiagnostics] = function(_, result, ctx, config)
+        ---@param _config table
+        [LspMethod.textDocument_publishDiagnostics] = function(_, result, ctx, _config)
           local diagnostics = result.diagnostics
+          ---@type lsp.Diagnostic[]
           local filtered_diagnostics = {}
           for _, diagnostic in ipairs(diagnostics) do
             local should_filter = true
