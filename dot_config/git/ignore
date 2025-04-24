@@ -26,5 +26,8 @@ protols.toml
 # Ignores avanterules
 *.avanterules
 
+# Ignore venv (automatically installed in nvim config)
+venv/
+
 # MacOS
 **/.DS_Store
