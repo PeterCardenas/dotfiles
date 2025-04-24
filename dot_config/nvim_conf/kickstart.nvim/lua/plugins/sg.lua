@@ -55,7 +55,9 @@ return {
     end,
   },
   {
-    'yetone/avante.nvim',
+    -- TODO: Go back to upstream when the following is merged: https://github.com/yetone/avante.nvim/pull/1922
+    'PeterCardenas/avante.nvim',
+    branch = 'fix-azure-tool-usage',
     build = 'make',
     event = { 'VeryLazy' },
     cond = function()
