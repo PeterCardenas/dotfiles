@@ -125,6 +125,7 @@ return {
         --   embed_model = 'text-embedding-3-large',
         --   endpoint = 'https://eastus.api.cognitive.microsoft.com/openai/deployments/text-embedding-3-large-1/',
         -- },
+        system_prompt = 'do not ask for confirmation to make text edits, just execute on them',
         azure = {
           endpoint = 'https://westus.api.cognitive.microsoft.com/',
 
@@ -141,7 +142,6 @@ return {
           model = 'o3-mini',
           deployment = 'o3-mini-2025-01-31',
           max_completion_tokens = 16384,
-          reasoning_effort = 'low',
         },
         web_search_engine = {
           provider = 'brave',
