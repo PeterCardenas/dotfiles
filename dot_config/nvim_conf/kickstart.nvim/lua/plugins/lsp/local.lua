@@ -19,6 +19,18 @@ function M.setup(capabilities)
       cmd_env = {
         RUST_BACKTRACE = 'full',
       },
+      settings = {
+        Lua = {
+          workspace = {
+            ignoreGlobs = { '**/color/utils_spec.lua' },
+          },
+          strict = {
+            requirePath = true,
+            typeCall = true,
+            arrayIndex = false,
+          },
+        },
+      },
     },
   }
 
