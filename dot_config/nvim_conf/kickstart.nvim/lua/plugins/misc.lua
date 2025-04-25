@@ -2,6 +2,7 @@ local Async = require('utils.async')
 local Buf = require('utils.buf')
 local Config = require('utils.config')
 local Git = require('utils.git')
+local File = require('utils.file')
 
 local large_file_group = vim.api.nvim_create_augroup('Disable Large File Plugins', { clear = true })
 vim.api.nvim_create_autocmd('BufReadPre', {
@@ -1001,7 +1002,18 @@ return {
         words = { enabled = true },
         rename = { enabled = true },
         -- TODO: Enable preview virtual lines/window only for svg files, instead of replacing buffer.
-        image = { enabled = Config.USE_SNACKS_IMAGE },
+        image = {
+          enabled = Config.USE_SNACKS_IMAGE,
+          resolve = function(file, src)
+            if File.file_exists(src) then
+              return src
+            end
+            if File.file_exists(vim.fs.dirname(file) .. '/' .. src) then
+              return vim.fs.dirname(file) .. '/' .. src
+            end
+            return src
+          end,
+        },
         -- TODO: Fully enable when trouble picker works
         profiler = { enabled = Config.USE_SNACKS_PROFILER },
         -- TODO: Re-enable when dashboard is equal or better than alpha.nvim
