@@ -277,7 +277,9 @@ EOF
 		gnupg2
 		go
 		ffmpeg
-		vim +python311
+		python312
+		pip312
+		vim +python312
 		wget
 		# Needed for building Neovim, among other things
 		cmake gettext-runtime
@@ -298,6 +300,8 @@ EOF
 	)
 	# TODO: figure out how to actually skip interactive questions
 	sudo -B port -N install "${ports[@]}"
+	sudo -B port -N select --set python python312
+	sudo -B port -N select --set pip pip312
 
 	# Install commitmsgfmt
 	pushd "$HOME/thirdparty"
@@ -333,6 +337,9 @@ function install_ccls_for_mac() {
 }
 
 function setup_unix() {
+	# Install uv
+	UV_NO_MODIFY_PATH=1 curl -LsSf https://astral.sh/uv/install.sh | sh
+
 	# shellcheck source=/dev/null
 	source "$HOME/.zshrc"
 	if ! command -v pnpm >/dev/null 2>&1; then
