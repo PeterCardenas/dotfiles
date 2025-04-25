@@ -4,8 +4,9 @@ local Config = require('utils.config')
 ---@return boolean, string
 local function read_api_key(filepath)
   local api_key_filepath = vim.fn.expand(filepath)
-  local api_key_lines = vim.fn.readfile(api_key_filepath) ---@type string[]
-  if #api_key_lines == 0 or api_key_lines[1] == '' then
+  ---@type boolean, string[]
+  local api_key_ok, api_key_lines = pcall(vim.fn.readfile, api_key_filepath)
+  if not api_key_ok or #api_key_lines == 0 or api_key_lines[1] == '' then
     return false, ''
   end
   return true, api_key_lines[1]
