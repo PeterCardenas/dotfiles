@@ -157,6 +157,10 @@ local function maybe_install_python_dependencies()
   if not success or #output == 0 then
     return
   end
+  if vim.fn.executable('uv') == 0 then
+    vim.notify('uv not found, cannot install python dependencies', vim.log.levels.ERROR)
+    return
+  end
   local found_file = cwd .. '/' .. output[1]
 
   local lsp_root = M.find_lsp_root(found_file)
