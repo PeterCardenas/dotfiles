@@ -66,7 +66,7 @@ vim.api.nvim_create_user_command('GHPR', function()
   local gitsigns_async = require('gitsigns.async')
   -- gitsigns async and plenary async are not compatible with each other
   -- So use gitsigns async just for getting blame info.
-  ---@type fun(cb: fun(err, blame_info: [Gitsigns.BlameInfo]?): nil): nil
+  ---@type fun(cb: fun(err, blame_info: Gitsigns.BlameInfo?): nil): nil
   local run = gitsigns_async.create(
     0,
     ---@async
@@ -81,7 +81,7 @@ vim.api.nvim_create_user_command('GHPR', function()
       vim.notify('Getting blame info failed:\n' .. tostring(err), vim.log.levels.ERROR)
       return
     end
-    local blame_info = result and result[1] or nil
+    local blame_info = result
     if not blame_info then
       vim.notify('Blame has not been loaded yet.', vim.log.levels.ERROR)
       return
