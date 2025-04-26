@@ -64,4 +64,32 @@ function M.file_in_directory(file, directory)
   return file:find(directory, 1, true) == 1
 end
 
+--- Writes content to a file, ensuring the directory exists.
+---@param filepath string: The path to the file.
+---@param content string: The content to write to the file.
+---@return boolean, string: Returns true and an empty string on success, or false and an error message on failure.
+function M.write_to_file(filepath, content)
+  local dir = vim.fn.fnamemodify(filepath, ':h')
+  if vim.fn.isdirectory(dir) == 0 then
+    local mkdir_ok = vim.fn.mkdir(dir, 'p')
+    if mkdir_ok == 0 then
+      return false, 'Failed to create directory: ' .. dir
+    end
+  end
+  local file = io.open(filepath, 'w+')
+  if not file then
+    return false, 'Failed to open file'
+  end
+  local error_msg ---@type string?
+  _, error_msg = file:write(content)
+  if error_msg ~= nil and error_msg ~= '' then
+    return false, 'Failed to write to file: ' .. error_msg
+  end
+  local success, _, code = file:close()
+  if not success then
+    return false, 'Failed to close file: ' .. code
+  end
+  return true, ''
+end
+
 return M
