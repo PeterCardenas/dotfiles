@@ -417,7 +417,6 @@ function setup_unix() {
 		fd-find
 		bat
 		ttyper
-		stylua
 		tree-sitter-cli
 		silicon
 		yazi-fm yazi-cli
@@ -428,6 +427,7 @@ function setup_unix() {
 	cargo binstall --no-confirm "${rust_packages[@]}"
 	# --features isn't supported by cargo binstall
 	cargo install --features 'pcre2' ripgrep
+	cargo install stylua --features lua52 --features luajit
 
 	# Setup delta/bat theme
 	mkdir -p "$(bat --config-dir)/themes"
