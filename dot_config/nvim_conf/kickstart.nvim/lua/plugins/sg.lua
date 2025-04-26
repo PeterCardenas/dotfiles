@@ -7,6 +7,16 @@ local function read_api_key(filepath)
   ---@type boolean, string[]
   local api_key_ok, api_key_lines = pcall(vim.fn.readfile, api_key_filepath)
   if not api_key_ok or #api_key_lines == 0 or api_key_lines[1] == '' then
+    local api_key = vim.fn.input({ prompt = 'Enter key at ' .. api_key_filepath .. ': ', cancelreturn = '' })
+    if api_key ~= '' then
+      local write_ok, error_msg = require('utils.file').write_to_file(api_key_filepath, api_key)
+      if write_ok then
+        return true, api_key
+      else
+        vim.notify('Failed to write key to ' .. api_key_filepath .. (error_msg ~= '' and ': ' .. error_msg or ''), vim.log.levels.ERROR)
+        return false, ''
+      end
+    end
     return false, ''
   end
   return true, api_key_lines[1]
@@ -130,18 +140,14 @@ return {
         azure = {
           endpoint = 'https://westus.api.cognitive.microsoft.com/',
 
-          -- model = 'gpt-4o',
-          -- deployment = 'gpt-4o-2024-08-06',
-          -- api_version = '2024-02-01',
-          -- max_tokens = 16384,
+          model = 'gpt-4o',
+          deployment = 'gpt-4o-2024-08-06',
 
           -- model = 'gpt-4o-mini',
           -- deployment = 'gpt-4o-mini-2024-07-18',
-          -- api_version = '2024-02-01',
-          -- max_tokens = 16384,
 
-          model = 'o3-mini',
-          deployment = 'o3-mini-2025-01-31',
+          -- model = 'o3-mini',
+          -- deployment = 'o3-mini-2025-01-31',
           max_completion_tokens = 16384,
         },
         web_search_engine = {
