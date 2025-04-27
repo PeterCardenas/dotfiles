@@ -10,6 +10,79 @@ local enable_pyright = not Config.USE_JEDI
 M.GEN_FILES_PATH = 'bazel-out/k8-fastbuild/bin'
 
 ---@return table<string, custom.LspConfig>
+local function pyright_config()
+  ---@type table<string, custom.LspConfig>
+  local config = {
+    pyright = {
+      enabled = enable_pyright,
+      -- Disabled for performance reasons.
+      -- Reference: https://github.com/neovim/neovim/issues/23291
+      -- Possibly updating neovim can help: https://github.com/neovim/neovim/issues/23291#issuecomment-1817816570
+      capabilities = {
+        workspace = {
+          didChangeWatchedFiles = {
+            dynamicRegistration = false,
+          },
+        },
+      },
+      -- Use for debugging pyright.
+      -- cmd = { os.getenv('HOME') .. '/thirdparty/pyright/packages/pyright/langserver.index.js', '--stdio' },
+      -- TODO: Add code action handle for adding an import. Currently this is done automatically via the format keybind.
+      handlers = {
+        ---@param _ lsp.ResponseError
+        ---@param result lsp.PublishDiagnosticsParams
+        ---@param ctx lsp.HandlerContext
+        ---@param _config table
+        [LspMethod.textDocument_publishDiagnostics] = function(_, result, ctx, _config)
+          local diagnostics = result.diagnostics
+          ---@type lsp.Diagnostic[]
+          local filtered_diagnostics = {}
+          for _, diagnostic in ipairs(diagnostics) do
+            local should_filter = true
+            -- TODO: Remove this when pyright can read venvPath
+            if
+              diagnostic.code == 'reportMissingImports'
+              or diagnostic.code == 'reportAttributeAccessIssue'
+              or diagnostic.code == 'reportMissingModuleSource'
+              -- False positive by not inferring type from default arguments
+              or diagnostic.code == 'reportArgumentType'
+              -- Mypy handles this correctly
+              or diagnostic.code == 'reportInvalidTypeForm'
+            then
+              should_filter = false
+            end
+            local message = diagnostic.message
+            if type(message) == 'string' then
+              if message:match('^"_[%w_]+" is not accessed$') then
+                should_filter = false
+              end
+            end
+            if should_filter then
+              filtered_diagnostics[#filtered_diagnostics + 1] = diagnostic
+            end
+          end
+          result.diagnostics = filtered_diagnostics
+          return vim.lsp.diagnostic.on_publish_diagnostics(_, result, ctx)
+        end,
+      },
+      settings = {
+        python = {
+          analysis = {
+            autoImportCompletions = true,
+            extraPaths = {
+              M.GEN_FILES_PATH,
+            },
+            diagnosticMode = 'workspace',
+            typeCheckingMode = 'off',
+          },
+        },
+      },
+    },
+  }
+  return config
+end
+
+---@return table<string, custom.LspConfig>
 local function pylsp_config()
   -- The following are rules that we want from pylint, but are not supported elsewhere.
   -- 'trailing-newlines'
@@ -291,79 +364,15 @@ function M.python_lsp_config()
     pylyzer = {
       enabled = false,
     },
-    -- Feature rich, but slowest lsp.
     basedpyright = {
       enabled = false,
-    },
-    pyright = {
-      enabled = enable_pyright,
-      -- Disabled for performance reasons.
-      -- Reference: https://github.com/neovim/neovim/issues/23291
-      -- Possibly updating neovim can help: https://github.com/neovim/neovim/issues/23291#issuecomment-1817816570
-      capabilities = {
-        workspace = {
-          didChangeWatchedFiles = {
-            dynamicRegistration = false,
-          },
-        },
-      },
-      -- Use for debugging pyright.
-      -- cmd = { os.getenv('HOME') .. '/thirdparty/pyright/packages/pyright/langserver.index.js', '--stdio' },
-      -- TODO: Add code action handle for adding an import. Currently this is done automatically via the format keybind.
-      handlers = {
-        ---@param _ lsp.ResponseError
-        ---@param result lsp.PublishDiagnosticsParams
-        ---@param ctx lsp.HandlerContext
-        ---@param _config table
-        [LspMethod.textDocument_publishDiagnostics] = function(_, result, ctx, _config)
-          local diagnostics = result.diagnostics
-          ---@type lsp.Diagnostic[]
-          local filtered_diagnostics = {}
-          for _, diagnostic in ipairs(diagnostics) do
-            local should_filter = true
-            -- TODO: Remove this when pyright can read venvPath
-            if
-              diagnostic.code == 'reportMissingImports'
-              or diagnostic.code == 'reportAttributeAccessIssue'
-              or diagnostic.code == 'reportMissingModuleSource'
-              -- False positive by not inferring type from default arguments
-              or diagnostic.code == 'reportArgumentType'
-              -- Mypy handles this correctly
-              or diagnostic.code == 'reportInvalidTypeForm'
-            then
-              should_filter = false
-            end
-            local message = diagnostic.message
-            if type(message) == 'string' then
-              if message:match('^"_[%w_]+" is not accessed$') then
-                should_filter = false
-              end
-            end
-            if should_filter then
-              filtered_diagnostics[#filtered_diagnostics + 1] = diagnostic
-            end
-          end
-          result.diagnostics = filtered_diagnostics
-          return vim.lsp.diagnostic.on_publish_diagnostics(_, result, ctx)
-        end,
-      },
-      settings = {
-        python = {
-          analysis = {
-            autoImportCompletions = true,
-            extraPaths = {
-              M.GEN_FILES_PATH,
-            },
-            diagnosticMode = 'workspace',
-            typeCheckingMode = 'off',
-          },
-        },
-      },
     },
   }
   -- Fastest lsp, but linting/formatting will be moved to ruff.
   local pylsp_configs = pylsp_config()
+  local pyright_configs = pyright_config()
   server_configs = vim.tbl_extend('force', server_configs, pylsp_configs)
+  server_configs = vim.tbl_extend('force', server_configs, pyright_configs)
   return server_configs
 end
 
