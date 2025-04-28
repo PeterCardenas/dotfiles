@@ -578,7 +578,7 @@ return {
     dependencies = {
       'kevinhwang91/promise-async',
     },
-    event = { 'BufRead' },
+    event = 'VeryLazy',
     config = function()
       ---@diagnostic disable-next-line: missing-fields
       require('ufo').setup({
