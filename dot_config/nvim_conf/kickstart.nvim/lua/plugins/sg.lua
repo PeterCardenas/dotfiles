@@ -131,11 +131,12 @@ return {
           enable_claude_text_editor_tool_mode = false,
           enable_token_counting = false,
         },
-        -- rag_service = {
-        --   enabled = true,
-        --   embed_model = 'text-embedding-3-large',
-        --   endpoint = 'https://eastus.api.cognitive.microsoft.com/openai/deployments/text-embedding-3-large-1/',
-        -- },
+        rag_service = {
+          enabled = false,
+          provider = 'azure',
+          embed_model = 'text-embedding-3-large',
+          endpoint = 'https://eastus.api.cognitive.microsoft.com/',
+        },
         system_prompt = 'do not ask for confirmation to make text edits, just execute on them',
         azure = {
           endpoint = 'https://westus.api.cognitive.microsoft.com/',
