@@ -252,12 +252,17 @@ local function maybe_install_python_dependencies()
       ttl = math.huge,
     })
   end)
+  local function clear_fidget()
+    require('fidget').notification.remove('install_python_deps', 'install_python_deps')
+  end
   if not File.file_exists(venv_path) then
     success, output = Shell.async_cmd('python', { '-m', 'venv', venv_path }, nil)
     if not success then
       vim.schedule(function()
         vim.notify('Failed to start virtualenv:\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
+        clear_fidget()
       end)
+      return
     end
   end
   if success then
@@ -265,6 +270,7 @@ local function maybe_install_python_dependencies()
     if not success then
       vim.schedule(function()
         vim.notify('Failed to install python dependencies:\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
+        clear_fidget()
       end)
       return
     end
@@ -274,6 +280,7 @@ local function maybe_install_python_dependencies()
     if not success then
       vim.schedule(function()
         vim.notify('Failed to install python tooling:\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
+        clear_fidget()
       end)
       return
     end
@@ -281,6 +288,7 @@ local function maybe_install_python_dependencies()
   vim.schedule(function()
     local config = pylsp_config()
     config.pylsp.cmd = { venv_path .. '/bin/pylsp' }
+    -- TODO: restart existing lsp server instances
     require('lspconfig').pylsp.setup(config.pylsp)
     require('fidget').notification.remove('install_python_deps', 'install_python_deps')
     require('fidget').notify(' ', vim.log.levels.INFO, {
