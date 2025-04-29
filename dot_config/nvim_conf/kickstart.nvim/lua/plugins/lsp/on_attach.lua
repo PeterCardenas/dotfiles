@@ -193,6 +193,10 @@ function M.on_attach(client, bufnr)
     end, 'Go to document link under cursor')
   end
 
+  if client.name == 'ts_query_ls' then
+    vim.bo[bufnr].omnifunc = 'v:lua.vim.treesitter.query.omnifunc'
+  end
+
   -- Lesser used LSP functionality
   nmap('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
