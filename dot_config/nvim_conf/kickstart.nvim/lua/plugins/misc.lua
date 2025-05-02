@@ -90,7 +90,7 @@ return {
         -- TODO: Change upstream to work for more complex ansi colors.
         enable_ansi = true,
         -- TODO: Exclude higlighting in comments for github issue/pr numbers
-        exclude_filetypes = { 'lazy', 'Avante', 'octo' },
+        exclude_filetypes = { 'lazy', 'Avante', 'octo', 'DiffviewFileHistory' },
       })
     end,
   },
