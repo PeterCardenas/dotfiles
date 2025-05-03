@@ -25,9 +25,15 @@ function M.get_fre_store_name(type)
   return store_name
 end
 
+local function get_global_gitignore_flag()
+  local home = os.getenv('HOME')
+  local global_gitignore = home .. '/.config/git/ignore'
+  return '--ignore-file=' .. global_gitignore
+end
+
 ---@param show_ignore boolean
 function M.rg_files_cmd(show_ignore)
-  local rg_cmd = 'rg --files --color=never ' .. common_rg_args() .. (show_ignore and ' --no-ignore' or '')
+  local rg_cmd = 'rg --files --color=never ' .. common_rg_args() .. (show_ignore and ' --no-ignore' or ' ' .. get_global_gitignore_flag())
   local fre_cmd = 'fre --sorted --store_name ' .. M.get_fre_store_name('files')
   -- De-duplicate results while live streaming results
   -- gstdbuf is only on macos, while stdbuf is on linux
@@ -66,7 +72,7 @@ end
 
 ---@param show_ignore boolean
 function M.rg_words_opts(show_ignore)
-  return '--hidden -g "!.git" --column --line-number --no-heading --color=always --smart-case --max-columns=4096 -e' .. (show_ignore and ' --no-ignore' or '')
+  return '--hidden -g "!.git" --column --line-number --no-heading --color=always --smart-case --max-columns=4096 -e' .. (show_ignore and ' --no-ignore' or ' ' .. get_global_gitignore_flag())
 end
 
 ---@param show_ignore boolean
