@@ -495,7 +495,8 @@ return {
         local filtered_diagnostics = {}
         for _, diagnostic in ipairs(diagnostics) do
           local should_filter = true
-          if diagnostic.code == 'E0611' and diagnostic.message:find('_pb2') then
+          -- Pylint sucks at checking pyi files, so no-name-in-module will fail for these.
+          if diagnostic.code == 'E0611' then
             should_filter = false
           end
           if should_filter then
