@@ -515,6 +515,8 @@ return {
                       local color_item = require('nvim-highlight-colors').format(ctx.item.documentation, { kind = ctx.kind })
                       if color_item and color_item.abbr_hl_group ~= nil and color_item.abbr_hl_group ~= '' then
                         hl = color_item.abbr_hl_group
+                      elseif ctx.kind == 'Variable' then
+                        hl = 'BlinkCmpKindConstructor'
                       end
                     end
                     return hl
