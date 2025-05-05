@@ -54,9 +54,14 @@ keybinding:
 git:
   parseEmoji: true
   overrideGpg: true
+  # TODO: set --verbose when running commit editor
+  # TODO: use branchPrefix but specific to repos
+  # TODO: commitPrefix but specific to repos
   paging:
     colorArg: always
     pager: delta --dark --paging=never
+# TODO: does not chnage bottom prompt when entering patch commit message, or use editor
+# TODO: checkout freezes the gui
 notARepository: 'skip'
 promptToReturnFromSubprocess: false
 disableStartupPopups: true
