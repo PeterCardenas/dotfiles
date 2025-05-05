@@ -66,6 +66,8 @@ notARepository: 'skip'
 promptToReturnFromSubprocess: false
 disableStartupPopups: true
 quitOnTopLevelReturn: true
+# TODO: rebase continue freezes the gui
+# TODO: discard changes freezes the gui
 os:
   editPreset: 'nvim-remote'
   edit: '[ -z "$NVIM" ] && (nvim -- {{filename}}) || (nvim --server "$NVIM" --remote-expr "execute(\"lua vim.cmd([[e {{filename}}]])\")")'
