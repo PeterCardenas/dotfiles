@@ -351,12 +351,6 @@ return {
       buf_ls = {
         enabled = false,
       },
-      starpls = {
-        cmd = { 'starpls', 'server', '--experimental_infer_ctx_attributes', '--experimental_use_code_flow_analysis' },
-        cmd_env = {
-          RUST_BACKTRACE = 'full',
-        },
-      },
     }
     local python_lsp_config = Python.python_lsp_config()
     servers = Table.merge_tables(servers, python_lsp_config)
