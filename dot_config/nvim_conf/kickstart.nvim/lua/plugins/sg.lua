@@ -120,6 +120,12 @@ return {
         hints = {
           enabled = false,
         },
+        windows = {
+          edit = {
+            -- TODO: Change background color of title to be Normal and border to be FloatBorder
+            border = 'rounded',
+          },
+        },
         provider = provider,
         auto_suggestions_provider = provider,
         behaviour = {
