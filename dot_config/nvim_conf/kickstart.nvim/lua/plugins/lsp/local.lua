@@ -134,6 +134,16 @@ function M.setup(capabilities)
     capabilities = capabilities,
   }
   require('lspconfig').ts_query_ls.setup(ts_query_ls_config)
+
+  ---@type custom.LspConfig
+  local starpls_config = {
+    capabilities = capabilities,
+    cmd = { 'starpls', 'server', '--experimental_infer_ctx_attributes', '--experimental_use_code_flow_analysis' },
+    cmd_env = {
+      RUST_BACKTRACE = 'full',
+    },
+  }
+  require('lspconfig').starpls.setup(starpls_config)
 end
 
 return M
