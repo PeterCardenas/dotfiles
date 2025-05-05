@@ -368,9 +368,6 @@ return {
             elseif Treesitter.inside_string() then
               sources[#sources + 1] = 'emoji'
             end
-            if ft == 'fish' then
-              sources[#sources + 1] = 'fish'
-            end
             return sources
           end,
           per_filetype = {
