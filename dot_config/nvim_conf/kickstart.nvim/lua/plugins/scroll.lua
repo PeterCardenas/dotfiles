@@ -4,6 +4,8 @@ local function keymap(key, action)
   vim.keymap.set({ 'n', 'v' }, key, action, { noremap = true, silent = true })
 end
 
+-- TODO: Scrolling doesn't work well with images/virtual lines. Sometimes gets stuck or scrolls too much
+
 keymap('<C-u>', function()
   require('neoscroll').new_scroll(-vim.wo.scroll, { duration = 150, easing = 'sine', move_cursor = true })
 end)
