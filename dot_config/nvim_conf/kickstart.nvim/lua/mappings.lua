@@ -58,6 +58,7 @@ if not Config.USE_TABLINE then
     if #navigable_bufnrs == 1 then
       local alpha = require('alpha')
       alpha.start(false, alpha.default_config)
+      -- TODO: remove annoying scratch buffer that gets created here
     end
   end)
 end

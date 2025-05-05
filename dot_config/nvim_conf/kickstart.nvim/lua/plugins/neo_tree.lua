@@ -103,6 +103,7 @@ return {
           -- TODO: Only want to apply to file previews
           -- width_preview = 75,
         },
+        -- TODO: Allow opening in deleted files
         mappings = {
           go_in = 'L',
           go_in_plus = '<CR>',
