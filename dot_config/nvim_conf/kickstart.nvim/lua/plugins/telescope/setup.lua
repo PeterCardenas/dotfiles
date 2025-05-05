@@ -25,6 +25,7 @@ function M.get_fre_store_name(type)
   return store_name
 end
 
+-- TODO: share with rg_words_cmd
 local function get_global_gitignore_flag()
   local home = os.getenv('HOME')
   local global_gitignore = home .. '/.config/git/ignore'
@@ -72,7 +73,7 @@ end
 
 ---@param show_ignore boolean
 function M.rg_words_opts(show_ignore)
-  return '--hidden -g "!.git" --column --line-number --no-heading --color=always --smart-case --max-columns=4096 -e' .. (show_ignore and ' --no-ignore' or ' ' .. get_global_gitignore_flag())
+  return '--hidden -g "!.git" --column --line-number --no-heading --color=always --smart-case --max-columns=4096 -e' .. (show_ignore and ' --no-ignore' or '')
 end
 
 ---@param show_ignore boolean
