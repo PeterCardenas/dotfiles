@@ -38,6 +38,11 @@ local function get_ts_info()
 end
 
 ---@return boolean
+function M.has_treesitter()
+  return vim.treesitter.get_parser(nil, nil, { error = false }) ~= nil
+end
+
+---@return boolean
 function M.inside_comment_block()
   if vim.api.nvim_get_mode().mode ~= 'i' then
     return false
