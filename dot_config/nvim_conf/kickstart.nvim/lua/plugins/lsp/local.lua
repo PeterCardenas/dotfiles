@@ -7,15 +7,13 @@ local M = {}
 function M.setup(capabilities)
   -- Setup language servers found locally.
   -- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
-  ---@type table<string, lspconfig.Config>
+  ---@type table<string, vim.lsp.Config>
   local custom_servers = {
     emmylua_ls = {
       enabled = vim.fn.executable('emmylua_ls') == 1 and Config.USE_RUST_LUA_LS,
       cmd = { 'emmylua_ls' },
       filetypes = { 'lua' },
-      default_config = {
-        root_dir = require('lspconfig.util').root_pattern('lua'),
-      },
+      root_markers = { 'lua/' },
       cmd_env = {
         RUST_BACKTRACE = 'full',
       },
@@ -34,38 +32,15 @@ function M.setup(capabilities)
     },
   }
 
-  ---@param server_name string
-  local function setup_server(server_name)
-    local server_config = custom_servers[server_name]
-    if server_config.enabled == false then
-      return
+  for server_name, server_config in pairs(custom_servers) do
+    if server_config.enabled ~= false then
+      vim.lsp.config[server_name] = server_config
+      vim.lsp.enable(server_name)
     end
-    ---@class DefaultLSPConfig
-    ---@field default_config lspconfig.Config
-
-    ---@type DefaultLSPConfig
-    require('lspconfig.configs')[server_name] = {
-      default_config = {
-        cmd = server_config.cmd,
-        cmd_env = server_config.cmd_env,
-        filetypes = server_config.filetypes,
-        -- Cannot have functions in settings since they are not serializable.
-        settings = {},
-        ---@diagnostic disable-next-line: undefined-field
-        root_dir = server_config.default_config.root_dir,
-      },
-    }
-    require('lspconfig')[server_name].setup({
-      capabilities = capabilities,
-    })
-  end
-
-  for server_name, _ in pairs(custom_servers) do
-    setup_server(server_name)
   end
 
   local home = os.getenv('HOME')
-  ---@type custom.LspConfig
+  ---@type vim.lsp.Config
   local fish_lsp_config = {
     capabilities = capabilities,
     init_options = {
@@ -82,9 +57,12 @@ function M.setup(capabilities)
       fish_lsp_logfile = '/tmp/fish-lsp.log',
     },
   }
-  require('lspconfig').fish_lsp.setup(fish_lsp_config)
+  local current_fish_config = vim.lsp.config['fish_lsp'] or {}
+  local merged_fish_config = Table.merge_tables(current_fish_config, fish_lsp_config)
+  vim.lsp.config('fish_lsp', merged_fish_config)
+  vim.lsp.enable('fish_lsp')
 
-  ---@type custom.LspConfig
+  ---@type vim.lsp.Config
   local bazelrc_lsp_config = {
     capabilities = capabilities,
     cmd_env = {
@@ -92,7 +70,10 @@ function M.setup(capabilities)
       BAZELRC_LSP_RUN_BAZEL_PATH = 'bazelisk',
     },
   }
-  require('lspconfig').bazelrc_lsp.setup(bazelrc_lsp_config)
+  local current_bazelrc_config = vim.lsp.config['bazelrc_lsp'] or {}
+  local merged_bazelrc_config = Table.merge_tables(current_bazelrc_config, bazelrc_lsp_config)
+  vim.lsp.config('bazelrc_lsp', merged_bazelrc_config)
+  vim.lsp.enable('bazelrc_lsp')
 
   local ccls_capabilities = Table.merge_tables(capabilities, {
     offsetEncoding = { 'utf-16' },
@@ -101,41 +82,56 @@ function M.setup(capabilities)
     },
   })
   if not Config.USE_CLANGD then
-    ---@type custom.LspConfig
+    ---@type vim.lsp.Config
     local ccls_config = {
       capabilities = ccls_capabilities,
       offset_encoding = 'utf-16',
     }
-    require('lspconfig').ccls.setup(ccls_config)
+    local current_ccls_config = vim.lsp.config['ccls'] or {}
+    local merged_ccls_config = Table.merge_tables(current_ccls_config, ccls_config)
+    vim.lsp.config('ccls', merged_ccls_config)
+    vim.lsp.enable('ccls')
   end
 
-  ---@type custom.LspConfig
+  ---@type vim.lsp.Config
   local sourcekit_config = {
     capabilities = capabilities,
     filetypes = { 'swift', 'objc', 'objcpp' },
   }
-  require('lspconfig').sourcekit.setup(sourcekit_config)
+  local current_sourcekit_config = vim.lsp.config['sourcekit'] or {}
+  local merged_sourcekit_config = Table.merge_tables(current_sourcekit_config, sourcekit_config)
+  vim.lsp.config('sourcekit', merged_sourcekit_config)
+  vim.lsp.enable('sourcekit')
 
-  ---@type custom.LspConfig
+  ---@type vim.lsp.Config
   local protols_config = {
     capabilities = capabilities,
   }
-  require('lspconfig').protols.setup(protols_config)
+  local current_protols_config = vim.lsp.config['protols'] or {}
+  local merged_protols_config = Table.merge_tables(current_protols_config, protols_config)
+  vim.lsp.config('protols', merged_protols_config)
+  vim.lsp.enable('protols')
 
-  ---@type custom.LspConfig
+  ---@type vim.lsp.Config
   local gh_actions_ls_config = {
     capabilities = capabilities,
     filetypes = { 'yaml.github' },
   }
-  require('lspconfig').gh_actions_ls.setup(gh_actions_ls_config)
+  local current_gh_actions_ls_config = vim.lsp.config['gh_actions_ls'] or {}
+  local merged_gh_actions_ls_config = Table.merge_tables(current_gh_actions_ls_config, gh_actions_ls_config)
+  vim.lsp.config('gh_actions_ls', merged_gh_actions_ls_config)
+  vim.lsp.enable('gh_actions_ls')
 
-  ---@type custom.LspConfig
+  ---@type vim.lsp.Config
   local ts_query_ls_config = {
     capabilities = capabilities,
   }
-  require('lspconfig').ts_query_ls.setup(ts_query_ls_config)
+  local current_ts_query_ls_config = vim.lsp.config['ts_query_ls'] or {}
+  local merged_ts_query_ls_config = Table.merge_tables(current_ts_query_ls_config, ts_query_ls_config)
+  vim.lsp.config('ts_query_ls', merged_ts_query_ls_config)
+  vim.lsp.enable('ts_query_ls')
 
-  ---@type custom.LspConfig
+  ---@type vim.lsp.Config
   local starpls_config = {
     capabilities = capabilities,
     cmd = { 'starpls', 'server', '--experimental_infer_ctx_attributes', '--experimental_use_code_flow_analysis' },
@@ -143,7 +139,10 @@ function M.setup(capabilities)
       RUST_BACKTRACE = 'full',
     },
   }
-  require('lspconfig').starpls.setup(starpls_config)
+  local current_starpls_config = vim.lsp.config['starpls'] or {}
+  local merged_starpls_config = Table.merge_tables(current_starpls_config, starpls_config)
+  vim.lsp.config('starpls', merged_starpls_config)
+  vim.lsp.enable('starpls')
 end
 
 return M
