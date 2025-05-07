@@ -414,6 +414,11 @@ return {
           changedelete = { text = '~' },
         },
         current_line_blame = false,
+        preview_config = {
+          border = 'rounded',
+          row = 1,
+          col = 0,
+        },
       })
     end,
   },
