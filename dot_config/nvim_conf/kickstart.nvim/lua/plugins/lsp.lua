@@ -11,8 +11,6 @@ local LspMethod = vim.lsp.protocol.Methods
 
 vim.lsp.set_log_level('error')
 
---- @class (partial) custom.LspConfig : lspconfig.Config
-
 -- Removes default behavior of autoformatting on save for zig
 vim.api.nvim_create_autocmd('BufEnter', {
   pattern = '*.zig',
@@ -38,7 +36,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
   end,
 })
 
----@return custom.LspConfig
+---@return vim.lsp.Config
 local function gopls_config()
   local gopls_settings = {
     codelenses = {
@@ -64,7 +62,7 @@ local function gopls_config()
       rangeVariableTypes = true,
     },
   }
-  --- @type custom.LspConfig
+  --- @type vim.lsp.Config
   local config = {
     -- Disabled for performance reasons.
     -- Reference: https://github.com/neovim/neovim/issues/23291
@@ -89,8 +87,6 @@ return {
   -- LSP Configuration & Plugins
   'neovim/nvim-lspconfig',
   dependencies = {
-    'williamboman/mason-lspconfig.nvim',
-
     -- Useful status updates for LSP
     -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
     {
@@ -122,13 +118,13 @@ return {
     local clangd_root = get_clangd_root(vim.fn.expand('%:p:h'))
     local home = os.getenv('HOME')
     local clangd_enabled = clangd_root ~= nil and home ~= nil
-    local compile_commands_dir = clangd_root ~= nil and '--compile-commands-dir=' .. clangd_root .. '/' or ''
-    local clangd_cmd = home ~= nil and home .. '/.local/share/nvim/mason/bin/clangd' or ''
+    ---@type string
+    vim.env.PATH = vim.env.PATH .. ':' .. vim.fn.stdpath('data') .. '/mason/bin'
     local pnpm_home = os.getenv('PNPM_HOME')
     local tsserver_lib = pnpm_home ~= nil and pnpm_home .. '/global/5/node_modules/typescript/lib' or ''
     -- Enable the following language servers
     -- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
-    ---@type table<string, custom.LspConfig>
+    ---@type table<string, vim.lsp.Config>
     local servers = {
       clangd = {
         enabled = clangd_enabled and Config.USE_CLANGD,
@@ -141,9 +137,8 @@ return {
           },
         },
         cmd = {
-          clangd_cmd,
+          'clangd',
           '--header-insertion=never',
-          '--compile-commands-dir=' .. compile_commands_dir,
           '--query-driver=**',
           '--background-index',
           '--clang-tidy',
@@ -358,7 +353,7 @@ return {
     -- nvim-cmp supports additional completion capabilities, so broadcast that to servers
     local capabilities ---@type lsp.ClientCapabilities
     if Config.USE_BLINK_CMP then
-      capabilities = require('blink.cmp').get_lsp_capabilities()
+      capabilities = require('blink.cmp').get_lsp_capabilities() ---@type lsp.ClientCapabilities
     else
       capabilities = vim.lsp.protocol.make_client_capabilities()
       capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities) ---@type lsp.ClientCapabilities
@@ -369,24 +364,17 @@ return {
     -- Setup specific autocmds and ruff_lsp.
     Python.setup(capabilities)
 
-    -- Ensure the servers above are installed
-    local mason_lspconfig = require('mason-lspconfig')
-
-    mason_lspconfig.setup({
-      ensure_installed = {},
-      automatic_installation = true,
-    })
-
-    mason_lspconfig.setup_handlers({
-      function(server_name)
-        local server_config = servers[server_name] or {}
-        if server_config.enabled == false then
-          return
-        end
-        ---@diagnostic disable-next-line: inject-field
+    for server_name, server_config in pairs(servers) do
+      if server_config.enabled ~= false then
         server_config.capabilities = Table.merge_tables(capabilities, server_config.capabilities or {})
-        require('lspconfig')[server_name].setup(server_config)
-      end,
-    })
+        local existing_config = vim.lsp.config[server_name]
+        if existing_config then
+          vim.lsp.config[server_name] = Table.merge_tables(existing_config, server_config)
+        else
+          vim.lsp.config[server_name] = server_config
+        end
+        vim.lsp.enable(server_name)
+      end
+    end
   end,
 }
