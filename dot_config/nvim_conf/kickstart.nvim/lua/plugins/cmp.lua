@@ -362,7 +362,7 @@ return {
           default = function()
             local sources = { 'omni', 'lazydev', 'lsp', 'path', 'snippets' }
             local ft = vim.bo.filetype
-            if ft == '' or ft == 'markdown' or Treesitter.inside_comment_block() then
+            if ft == '' or ft == 'markdown' or not Treesitter.has_treesitter() or Treesitter.inside_comment_block() then
               sources[#sources + 1] = 'emoji'
               sources[#sources + 1] = 'git'
             elseif Treesitter.inside_string() then
