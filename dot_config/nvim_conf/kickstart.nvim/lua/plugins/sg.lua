@@ -117,6 +117,7 @@ return {
       -- TODO: becomes slower the longer the output is.
       -- TODO: sidepanel duplicates
       require('avante').setup({
+        mode = 'legacy',
         hints = {
           enabled = false,
         },

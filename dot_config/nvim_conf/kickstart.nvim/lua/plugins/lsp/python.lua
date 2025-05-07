@@ -9,9 +9,9 @@ local LspMethod = vim.lsp.protocol.Methods
 local enable_pyright = not Config.USE_JEDI
 M.GEN_FILES_PATH = 'bazel-out/k8-fastbuild/bin'
 
----@return table<string, custom.LspConfig>
+---@return table<string, vim.lsp.Config>
 local function pyright_config()
-  ---@type table<string, custom.LspConfig>
+  ---@type table<string, vim.lsp.Config>
   local config = {
     pyright = {
       enabled = enable_pyright,
@@ -82,11 +82,11 @@ local function pyright_config()
   return config
 end
 
----@return table<string, custom.LspConfig>
+---@return table<string, vim.lsp.Config>
 local function pylsp_config()
   -- The following are rules that we want from pylint, but are not supported elsewhere.
   -- 'trailing-newlines'
-  ---@type table<string, custom.LspConfig>
+  ---@type table<string, vim.lsp.Config>
   local config = {
     pylsp = {
       settings = {
@@ -132,7 +132,7 @@ local function pylsp_config()
   return config
 end
 
----@return table<string, custom.LspConfig>
+---@return table<string, vim.lsp.Config>
 local function get_ruff_lsp_config()
   local additional_rules = {
     'D', -- pydocstyle: https://docs.astral.sh/ruff/rules/#pydocstyle-d
@@ -289,7 +289,10 @@ local function maybe_install_python_dependencies()
     local config = pylsp_config()
     config.pylsp.cmd = { venv_path .. '/bin/pylsp' }
     -- TODO: restart existing lsp server instances
-    require('lspconfig').pylsp.setup(config.pylsp)
+    local existing_config = vim.lsp.config['pylsp'] or {}
+    local merged_config = vim.tbl_extend('force', existing_config, config.pylsp)
+    vim.lsp.config('pylsp', merged_config)
+    vim.lsp.enable('pylsp')
     require('fidget').notification.remove('install_python_deps', 'install_python_deps')
     require('fidget').notify(' ', vim.log.levels.INFO, {
       group = 'install_python_deps',
@@ -305,12 +308,11 @@ function M.setup(capabilities)
   Async.void(function() ---@async
     maybe_install_python_dependencies()
   end)
-  -- Need to manually setup ruff_lsp since it was removed from mason-lspconfig and deprecated from nvim-lspconfig.
-  ---@type lspconfig.Config
-  require('lspconfig.configs')['ruff_lsp'] = require('lspconfig.configs.ruff_lsp')
+  local existing_config = vim.lsp.config['ruff_lsp'] or {}
   local ruff_lsp_config = get_ruff_lsp_config()
   ruff_lsp_config = Table.merge_tables(capabilities, ruff_lsp_config.capabilities or {})
-  require('lspconfig.configs')['ruff_lsp'].setup(ruff_lsp_config)
+  vim.lsp.config('ruff_lsp', vim.tbl_extend('force', existing_config, ruff_lsp_config))
+  vim.lsp.enable('ruff_lsp')
   vim.api.nvim_create_autocmd('LspAttach', {
     group = vim.api.nvim_create_augroup('PythonConfig', { clear = true }),
     callback = function(args)
@@ -364,9 +366,9 @@ M.DISABLED_PYLINT_RULES = {
   'logging-too-many-args',
 }
 
----@return table<string, custom.LspConfig>
+---@return table<string, vim.lsp.Config>
 function M.python_lsp_config()
-  ---@type table<string, custom.LspConfig>
+  ---@type table<string, vim.lsp.Config>
   local server_configs = {
     -- Fastest lsp, but not feature rich enough.
     pylyzer = {
