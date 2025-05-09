@@ -89,6 +89,7 @@ function M.find_words(show_ignore)
       end,
     })
   else
+    -- TODO: Add show_ignore being true doesn't work here.
     require('fzf-lua.providers.grep').live_grep_glob({
       ---@type string
       rg_opts = M.rg_words_opts(show_ignore),
