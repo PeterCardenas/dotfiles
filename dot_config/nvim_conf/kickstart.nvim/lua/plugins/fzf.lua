@@ -77,7 +77,7 @@ return {
         },
         grep = {
           git_icons = false,
-          rg_opts = PickerHelpers.rg_words_opts(true),
+          rg_opts = PickerHelpers.rg_words_opts(),
           multiprocess = true,
           multiline = 1,
           fzf_opts = {

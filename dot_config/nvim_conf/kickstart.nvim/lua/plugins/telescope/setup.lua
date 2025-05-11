@@ -71,9 +71,8 @@ function M.find_files(show_ignore)
   end
 end
 
----@param show_ignore boolean
-function M.rg_words_opts(show_ignore)
-  return '--hidden -g "!.git" --column --line-number --no-heading --color=always --smart-case --max-columns=4096 -e' .. (show_ignore and ' --no-ignore' or '')
+function M.rg_words_opts()
+  return '--hidden -g "!.git" --column --line-number --no-heading --color=always --smart-case --max-columns=4096 -e'
 end
 
 ---@param show_ignore boolean
@@ -92,7 +91,9 @@ function M.find_words(show_ignore)
     -- TODO: Add show_ignore being true doesn't work here.
     require('fzf-lua.providers.grep').live_grep_glob({
       ---@type string
-      rg_opts = M.rg_words_opts(show_ignore),
+      rg_opts = M.rg_words_opts(),
+      ---@type boolean
+      no_ignore = show_ignore,
     })
   end
 end
