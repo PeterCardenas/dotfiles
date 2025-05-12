@@ -114,6 +114,7 @@ return {
       })
       vim.treesitter.language.register('markdown', 'markdown.mdx')
       vim.treesitter.language.register('markdown', 'notify')
+      vim.treesitter.language.register('markdown', 'octo')
     end,
   },
 }
