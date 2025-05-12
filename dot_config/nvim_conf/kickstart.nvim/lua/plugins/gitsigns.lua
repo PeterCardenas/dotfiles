@@ -354,6 +354,7 @@ return {
       if not vim.env.GH_TOKEN then
         vim.notify('User not set up for gh cli', vim.log.levels.ERROR)
       end
+      require('octo.utils').state_icon_map.COMMENTED = ' '
       require('octo').setup({
         ssh_aliases = {
           ['personal-github.com'] = 'github.com',
