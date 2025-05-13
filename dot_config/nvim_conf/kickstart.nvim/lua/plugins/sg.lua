@@ -144,7 +144,7 @@ return {
           embed_model = 'text-embedding-3-large',
           endpoint = 'https://eastus.api.cognitive.microsoft.com/',
         },
-        system_prompt = 'do not ask for confirmation to make text edits, just execute on them',
+        system_prompt = 'instead of suggesting what the file would be, always make the edit yourself',
         azure = {
           endpoint = 'https://westus.api.cognitive.microsoft.com/',
 
