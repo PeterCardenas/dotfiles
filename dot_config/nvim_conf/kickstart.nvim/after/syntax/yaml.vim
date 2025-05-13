@@ -85,6 +85,10 @@ execute 'syn match yamlFlowMappingKey /'.s:ns_plain_in.'\%(\s\+'.s:ns_plain_in.'
 
 hi link yamlTemplateVar PreProc
 hi link yamlMappingKey @property
+hi link yamlPlainScalar @string
+hi link yamlBlockString @string
+hi link yamlBlockCollectionItemStart @punctuation.delimiter
+hi link yamlNull @constant.builtin
 
 unlet s:ns_char s:ns_word_char s:ns_uri_char s:ns_tag_char s:c_indicator s:c_flow_indicator
             \ s:ns_anchor_char s:ns_char_without_c_indicator s:_collection s:_neg_collection
