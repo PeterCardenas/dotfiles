@@ -499,7 +499,7 @@ EOF
 	bat --completion fish >"$HOME/.config/fish/completions/bat.fish"
 	delta --generate-completion fish >"$HOME/.config/fish/completions/delta.fish"
 
-	fish -c "pnpm install -g yarn typescript"
+	fish -c "pnpm install -g yarn typescript @mermaid-js/mermaid-cli"
 	fish -c "pnpm approve-builds -g"
 	pushd "$HOME"
 	fish -c "clone personal fish-lsp"
