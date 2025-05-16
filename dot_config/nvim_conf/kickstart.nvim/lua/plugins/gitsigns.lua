@@ -274,7 +274,6 @@ vim.api.nvim_create_autocmd({ 'BufEnter' }, {
   pattern = 'octo://*',
   group = vim.api.nvim_create_augroup('octo.reviews.thread-panel', {}),
   callback = function(opts)
-    ---@type integer
     local bufnr = opts.buf
     vim.keymap.set('n', '<leader>rt', function()
       require('octo.reviews.thread-panel').show_review_threads(true)
