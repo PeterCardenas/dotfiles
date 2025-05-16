@@ -147,6 +147,9 @@ return {
         system_prompt = 'instead of suggesting what the file would be, always make the edit yourself',
         azure = {
           endpoint = 'https://westus.api.cognitive.microsoft.com/',
+          parse_api_key = function()
+            return vim.env.AZURE_OPENAI_API_KEY
+          end,
 
           model = 'gpt-4o',
           deployment = 'gpt-4o-2024-08-06',
