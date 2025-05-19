@@ -278,10 +278,10 @@ return {
       taplo = {},
       vale_ls = {
         filetypes = { 'markdown', 'text', 'dosini', 'yaml', 'markdown.mdx' },
-        root_dir = function(filename)
+        root_dir = function(bufnr, cb)
+          local filename = vim.api.nvim_buf_get_name(bufnr)
           local root_path = File.get_ancestor_dir('.vale.ini', filename)
-          ---@diagnostic disable-next-line: redundant-return-value
-          return root_path
+          cb(root_path)
         end,
         single_file_support = false,
       },
