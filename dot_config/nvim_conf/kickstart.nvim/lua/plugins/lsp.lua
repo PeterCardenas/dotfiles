@@ -346,6 +346,7 @@ return {
       buf_ls = {
         enabled = false,
       },
+      bashls = {},
     }
     local python_lsp_config = Python.python_lsp_config()
     servers = Table.merge_tables(servers, python_lsp_config)
