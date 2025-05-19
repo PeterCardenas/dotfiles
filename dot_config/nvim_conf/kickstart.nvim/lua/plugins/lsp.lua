@@ -124,7 +124,7 @@ return {
     local tsserver_lib = pnpm_home ~= nil and pnpm_home .. '/global/5/node_modules/typescript/lib' or ''
     -- Enable the following language servers
     -- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
-    ---@type table<string, vim.lsp.Config>
+    ---@type table<string, LspTogglableConfig>
     local servers = {
       clangd = {
         enabled = clangd_enabled and Config.USE_CLANGD,
