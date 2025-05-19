@@ -25,4 +25,6 @@ M.USE_SNACKS_IMAGE = os.getenv('USE_IMAGE_NVIM') == nil
 
 M.DISABLE_GOPACKAGESDRIVER = os.getenv('DISABLE_GOPACKAGESDRIVER') ~= nil
 
+M.USE_LUA_LS_TIP = os.getenv('USE_LUA_LS_TIP') ~= nil
+
 return M

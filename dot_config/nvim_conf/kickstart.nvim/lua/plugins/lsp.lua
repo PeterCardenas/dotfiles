@@ -122,6 +122,11 @@ return {
     vim.env.PATH = vim.env.PATH .. ':' .. vim.fn.stdpath('data') .. '/mason/bin'
     local pnpm_home = os.getenv('PNPM_HOME')
     local tsserver_lib = pnpm_home ~= nil and pnpm_home .. '/global/5/node_modules/typescript/lib' or ''
+    local lua_ls_path = 'lua-language-server'
+    local tip_lua_ls_path = vim.fn.expand('~/projects/lua-language-server/bin/lua-language-server')
+    if File.file_exists(tip_lua_ls_path) and Config.USE_LUA_LS_TIP then
+      lua_ls_path = tip_lua_ls_path
+    end
     -- Enable the following language servers
     -- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
     ---@type table<string, LspTogglableConfig>
@@ -175,6 +180,7 @@ return {
       },
       lua_ls = {
         enabled = not Config.USE_RUST_LUA_LS,
+        cmd = { lua_ls_path },
         settings = {
           Lua = {
             workspace = {
