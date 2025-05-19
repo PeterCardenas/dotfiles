@@ -23,4 +23,6 @@ M.USE_BLINK_CMP = os.getenv('USE_LEGACY_CMP') == nil
 
 M.USE_SNACKS_IMAGE = os.getenv('USE_IMAGE_NVIM') == nil
 
+M.DISABLE_GOPACKAGESDRIVER = os.getenv('DISABLE_GOPACKAGESDRIVER') ~= nil
+
 return M
