@@ -393,6 +393,7 @@ return {
           },
           notification = {
             read = { lhs = '<C-r>', desc = 'read notification' },
+            unsubscribe = { lhs = '<C-x>', desc = 'unsubscribe from notifications' },
           },
         },
       })
