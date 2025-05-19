@@ -2,12 +2,15 @@ local Config = require('utils.config')
 local Table = require('utils.table')
 local M = {}
 
+---@class LspTogglableConfig : vim.lsp.Config
+---@field enabled? boolean
+
 ---Setup language servers found locally.
 ---@param capabilities lsp.ClientCapabilities
 function M.setup(capabilities)
   -- Setup language servers found locally.
   -- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
-  ---@type table<string, vim.lsp.Config>
+  ---@type table<string, LspTogglableConfig>
   local custom_servers = {
     emmylua_ls = {
       enabled = vim.fn.executable('emmylua_ls') == 1 and Config.USE_RUST_LUA_LS,
@@ -20,7 +23,7 @@ function M.setup(capabilities)
       settings = {
         Lua = {
           workspace = {
-            ignoreGlobs = { '**/color/utils_spec.lua' },
+            ignoreGlobs = { '**/nvim-highlight-colors/**/*_spec.lua' },
           },
           strict = {
             requirePath = true,
