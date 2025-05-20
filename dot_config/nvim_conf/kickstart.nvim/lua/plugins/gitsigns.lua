@@ -55,7 +55,15 @@ end
 
 vim.api.nvim_create_user_command('GHPR', function()
   local bufnr = vim.api.nvim_get_current_buf()
-  local buf_dir = vim.fn.expand('%:p:h')
+  local buf_name = vim.api.nvim_buf_get_name(bufnr)
+  if buf_name == '' then
+    buf_name = vim.b[bufnr].bufpath
+  end
+  if buf_name == '' then
+    vim.notify('Could not get buffer name', vim.log.levels.ERROR)
+    return
+  end
+  local buf_dir = vim.fn.fnamemodify(buf_name, ':p:h')
   local cache_entry = require('gitsigns.cache').cache[bufnr]
   if not cache_entry then
     vim.notify('No blame for current buffer', vim.log.levels.ERROR)
@@ -115,8 +123,9 @@ vim.api.nvim_create_user_command('GHPR', function()
   end)
 end, { nargs = 0, desc = 'Open/Copy GitHub PR link for current line' })
 
-local function relative_path_to_git_root()
-  local current_file = vim.fn.expand('%:p')
+---@param filename string
+local function relative_path_to_git_root(filename)
+  local current_file = vim.fn.fnamemodify(filename, ':p')
   local git_root = File.get_git_root(current_file)
 
   if git_root and vim.fn.isdirectory(git_root) == 1 then
@@ -147,8 +156,12 @@ end
 
 vim.api.nvim_create_user_command('GHFile', function()
   local start_lnum, end_lnum = vim.fn.line("'<"), vim.fn.line("'>")
-  local buf_dir = vim.fn.expand('%:p:h')
-  local filepath = relative_path_to_git_root()
+  local buf_name = vim.api.nvim_buf_get_name(0)
+  if buf_name == '' then
+    buf_name = vim.b[0].bufpath
+  end
+  local buf_dir = vim.fn.fnamemodify(buf_name, ':p:h')
+  local filepath = relative_path_to_git_root(buf_name)
   if not filepath then
     vim.notify('Could not find relative path to git root', vim.log.levels.ERROR)
     return
