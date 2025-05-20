@@ -388,7 +388,7 @@ return {
           ts = { glyph = '', hl = 'MiniIconsBlue' },
           mts = { glyph = '', hl = 'MiniIconsBlue' },
           cts = { glyph = '', hl = 'MiniIconsBlue' },
-          ['d.ts'] = { glyph = '', hl = 'MiniIconsOrange' },
+          ['d.ts'] = { glyph = '', hl = 'MiniIconsCyan' },
           ['test.ts'] = { glyph = '', hl = 'MiniIconsCyan' },
           ['test.tsx'] = { glyph = '', hl = 'MiniIconsCyan' },
           ['template.yaml'] = { glyph = '', hl = 'MiniIconsGrey' },
