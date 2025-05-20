@@ -75,7 +75,7 @@ return {
     -- Git/GitHub completion
     'PeterCardenas/cmp-git',
     branch = 'working-state',
-    event = { 'InsertEnter' },
+    event = { 'InsertEnter', 'CmdlineEnter' },
     config = function()
       local ssh_aliases = {
         ['personal-github.com'] = 'github.com',
@@ -108,7 +108,19 @@ return {
             debug_name = 'github_mentions',
             trigger_character = '@',
             action = function(sources, trigger_char, callback, _params, git_info)
-              return sources.github:get_mentions(callback, git_info, trigger_char)
+              return sources.github:get_mentions(function(items) ---@param items cmp_git.CompletionList
+                -- Default behavior when not in command line mode
+                if vim.api.nvim_get_mode().mode ~= 'c' then
+                  callback(items)
+                  return
+                end
+                -- We use completion for `Octo reviewer add` in command line mode, which cannot have the `@` prefix
+                local new_items = vim.deepcopy(items)
+                for _, item in ipairs(new_items.items) do
+                  item.insertText = item.insertText:gsub('^@', '')
+                end
+                callback(new_items)
+              end, git_info, trigger_char)
             end,
             resolve = function(sources, item, callback, git_info)
               return sources.github:resolve_mention(item, callback, git_info)
@@ -546,6 +558,9 @@ return {
               -- TODO: buffer completions here are a bit visually buggy, but are functional
               if cmdline:match("[<'%%%$,0-9]*s/") then
                 return { 'buffer' }
+              end
+              if vim.startswith(cmdline, 'Octo reviewer add') then
+                return { 'git' }
               end
               return { 'cmdline' }
             end
