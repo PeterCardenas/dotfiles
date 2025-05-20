@@ -21,6 +21,23 @@ vim.api.nvim_create_autocmd('BufEnter', {
   end,
 })
 
+---@param id string
+---@param path string|fun(): string
+---@param desc string
+local function set_mark(id, path, desc)
+  require('mini.files').set_bookmark(id, path, { desc = desc })
+end
+vim.api.nvim_create_autocmd('User', {
+  pattern = 'MiniFilesExplorerOpen',
+  callback = function()
+    set_mark('w', vim.fn.getcwd, 'Working directory')
+    set_mark('b', function()
+      local cwd = vim.fn.getcwd()
+      return cwd .. '/bazel-out/k8-fastbuild/bin'
+    end, 'Bazel output directory')
+  end,
+})
+
 vim.api.nvim_create_autocmd('BufEnter', {
   desc = 'Add mini.files mappings',
   group = vim.api.nvim_create_augroup('mini_files_enter', { clear = true }),
