@@ -366,6 +366,7 @@ return {
           ['webpack.config.js'] = { glyph = '', hl = 'MiniIconsOrange' },
           ['.eslintrc.js'] = { glyph = '󰱺', hl = 'MiniIconsPurple' },
           ['stylelint.config.js'] = { glyph = '', hl = 'MiniIconsGrey' },
+          ['stylelint.config.mjs'] = { glyph = '', hl = 'MiniIconsGrey' },
           ['.terraform-version'] = { glyph = '󱁢', hl = 'MiniIconsCyan' },
           ['init.lua'] = { glyph = '󰢱', hl = 'MiniIconsAzure' },
           ['nvim.version'] = { glyph = '', hl = 'MiniIconsGreen' },
