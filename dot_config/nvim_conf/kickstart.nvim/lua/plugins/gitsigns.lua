@@ -337,6 +337,15 @@ vim.api.nvim_create_user_command('GHNotifs', function()
   require('octo.pickers.telescope.provider').notifications()
 end, { nargs = 0, desc = 'GitHub notifications' })
 
+local lazy_load_octo = vim.api.nvim_create_augroup('lazy_load_octo', { clear = true })
+vim.api.nvim_create_autocmd({ 'BufReadCmd' }, {
+  group = lazy_load_octo,
+  pattern = 'octo://*',
+  callback = function(args)
+    require('octo').load_buffer({ bufnr = args.buf })
+  end,
+})
+
 ---@type LazyPluginSpec[]
 return {
   {
@@ -353,6 +362,7 @@ return {
       'nvim-treesitter/nvim-treesitter-context',
     },
     config = function()
+      vim.api.nvim_del_augroup_by_id(lazy_load_octo)
       -- TODO: Octo PR buffer doesn't have correct highlighting when first loaded. Need to call some other Octo command to trigger it, e.g. Octo review start.
       -- TODO: Saving PR description doesn't trigger workflow. Should use gh pr edit command to do so.
       -- TODO: Show in virtual text whether a comment is resolved.
