@@ -790,14 +790,19 @@ return {
       end
       require('lazydev.lsp').supports = emmylua_ls_supported
       local lazy_path = vim.fn.stdpath('data') .. '/lazy'
+      local library = {
+        'lazy.nvim',
+        { path = lazy_path .. '/nvim-cmp', mods = { 'cmp' } },
+        { path = 'luvit-meta/library', words = { 'vim%.uv', 'vim%.loop' } },
+      }
+      local cwd = File.get_cwd()
+      -- Do not add snacks.nvim twice to library
+      if not cwd:find('projects/snacks%.nvim') then
+        table.insert(library, { path = 'snacks.nvim', words = { 'Snacks' } })
+      end
       ---@diagnostic disable-next-line: missing-fields
       require('lazydev').setup({
-        library = {
-          'lazy.nvim',
-          { path = lazy_path .. '/nvim-cmp', mods = { 'cmp' } },
-          { path = 'luvit-meta/library', words = { 'vim%.uv', 'vim%.loop' } },
-          { path = 'snacks.nvim', words = { 'Snacks' } },
-        },
+        library = library,
         enabled = function(root_dir)
           return not vim.uv.fs_stat(root_dir .. '/.luarc.json') or root_dir:find('%.local/share/nvim/lazy/')
         end,
