@@ -341,7 +341,8 @@ end, { nargs = 0, desc = 'GitHub notifications' })
 return {
   {
     -- Adds GitHub integration
-    'pwntester/octo.nvim',
+    'PeterCardenas/octo.nvim',
+    branch = 'dev',
     cmd = { 'Octo' },
     dependencies = {
       'nvim-lua/plenary.nvim',
