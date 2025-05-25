@@ -1,4 +1,5 @@
 local Async = require('utils.async')
+local Shell = require('utils.shell')
 local Buf = require('utils.buf')
 local Config = require('utils.config')
 local Git = require('utils.git')
@@ -1036,7 +1037,64 @@ return {
             if File.file_exists(vim.fs.dirname(file) .. '/' .. src) then
               return vim.fs.dirname(file) .. '/' .. src
             end
-            return src
+            return nil
+          end,
+          async_resolve = function(file, src, on_complete)
+            if not vim.startswith(src, 'https://github.com') or not vim.startswith(file, 'octo:/') then
+              return on_complete(nil)
+            end
+            local owner, repo, kind, id = string.match(file, 'octo:/(.+)/(.+)/(.+)/([0-9a-z.]+)')
+            if not owner or (kind ~= 'pull' and kind ~= 'issue') then
+              return on_complete(nil)
+            end
+            Async.void(function() ---@async
+              local success, output = Shell.async_cmd('curl', { '-s', '-X', 'HEAD', '-I', src })
+              if success and #output > 0 and output[1]:match('200') then
+                return on_complete(nil)
+              end
+              local type = kind == 'pull' and 'pullRequest' or 'issue'
+              success, output = Shell.async_cmd('gh', {
+                'api',
+                'graphql',
+                '-F',
+                'owner=' .. owner,
+                '-F',
+                'repo=' .. repo,
+                '-F',
+                'number=' .. id,
+                '-f',
+                'query=' .. [[
+                query GetBody($owner: String!, $repo: String!, $number: Int!) {
+                  repository(owner: $owner, name: $repo) {
+                    ]] .. type .. [[(number: $number) {
+                      bodyHTML
+                      body
+                    }
+                  }
+                }
+              ]],
+              })
+              if not success or #output == 0 then
+                return on_complete(nil)
+              end
+              local response = vim.json.decode(table.concat(output, ''))
+              local bodyHTML = response.data.repository[type].bodyHTML ---@type string
+              local bodyMd = response.data.repository[type].body ---@type string
+              local imageURLsFromBodyMd = {} ---@type string[]
+              for imageURL in bodyMd:gmatch('!%[[^]]+%]%(([^)]+)%)') do
+                imageURLsFromBodyMd[#imageURLsFromBodyMd + 1] = imageURL
+              end
+              local imageURLsFromBodyHTML = {} ---@type string[]
+              for imageURL in bodyHTML:gmatch('src="([^"]+)"') do
+                imageURLsFromBodyHTML[#imageURLsFromBodyHTML + 1] = imageURL
+              end
+              for idx, imageURL in ipairs(imageURLsFromBodyMd) do
+                if imageURL == src then
+                  return on_complete(imageURLsFromBodyHTML[idx])
+                end
+              end
+              on_complete(nil)
+            end)
           end,
         },
         -- TODO: Fully enable when trouble picker works
