@@ -1005,6 +1005,24 @@ return {
         rename = { enabled = true },
         -- TODO: Enable preview virtual lines/window only for svg files, instead of replacing buffer.
         image = {
+          formats = {
+            'png',
+            'jpg',
+            'jpeg',
+            'gif',
+            'bmp',
+            'webp',
+            'tiff',
+            'heic',
+            'avif',
+            'mp4',
+            'mov',
+            'avi',
+            'mkv',
+            'webm',
+            'pdf',
+            'svg',
+          },
           enabled = Config.USE_SNACKS_IMAGE,
           resolve = function(file, src)
             if File.file_exists(src) then
