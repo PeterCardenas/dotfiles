@@ -71,6 +71,8 @@ return {
               -- You can use the capture groups defined in textobjects.scm
               ['aa'] = '@parameter.outer',
               ['ia'] = '@parameter.inner',
+              ['al'] = '@loop.outer',
+              ['il'] = '@loop.inner',
               ['af'] = '@function.outer',
               ['if'] = '@function.inner',
               ['ac'] = '@class.outer',
