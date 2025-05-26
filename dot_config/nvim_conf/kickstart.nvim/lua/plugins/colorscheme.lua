@@ -66,5 +66,10 @@ return {
     vim.api.nvim_set_hl(0, 'WinSeparator', { foreground = '#454d71', bold = true })
     -- Strikethrough is unreadable, TODO: Color is kinda ugly.
     vim.api.nvim_set_hl(0, 'OctoStrikethrough', { strikethrough = true, foreground = '#37579e' })
+    -- Make Octo Draft state brighter
+    local octo_grey = '#6a7c95'
+    vim.api.nvim_set_hl(0, 'OctoGrey', { foreground = octo_grey })
+    vim.api.nvim_set_hl(0, 'OctoGreyFloat', { foreground = octo_grey, background = '#24283b' })
+    vim.api.nvim_set_hl(0, 'OctoBubbleDelimiterGrey', { foreground = octo_grey, background = '#2a354c' })
   end,
 }
