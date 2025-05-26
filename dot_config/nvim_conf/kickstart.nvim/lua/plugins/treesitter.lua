@@ -1,4 +1,3 @@
-local Buf = require('utils.buf')
 ---@type LazyPluginSpec[]
 return {
   -- Sticky scroll
@@ -16,18 +15,6 @@ return {
         separator = '─',
         multiwindow = true,
         zindex = 41,
-        on_attach = function(bufnr)
-          local filetype = vim.api.nvim_get_option_value('filetype', { buf = bufnr })
-          -- Default disable at 512KB
-          local file_size_threshold = 1024 * 512
-          -- YAML files can be handled at 1.75MB
-          if filetype == 'yaml' then
-            file_size_threshold = 1024 * 768 + 1024 * 1024
-          end
-          local is_enabled = not Buf.is_buf_large(bufnr, file_size_threshold)
-
-          return is_enabled
-        end,
       })
     end,
   },
