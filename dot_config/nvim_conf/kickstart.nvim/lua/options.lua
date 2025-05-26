@@ -153,6 +153,15 @@ vim.api.nvim_create_autocmd('FileType', {
   end,
 })
 
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = { 'toml' },
+  group = filetype_options_group,
+  callback = function()
+    -- Fixes taplo formatting
+    vim.bo.eol = false
+  end,
+})
+
 vim.api.nvim_create_autocmd('BufWinEnter', {
   group = filetype_options_group,
   callback = function(args)
