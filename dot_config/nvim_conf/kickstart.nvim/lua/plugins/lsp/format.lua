@@ -57,24 +57,56 @@ local function get_client_offset_encoding(client)
   return (vim.lsp.get_client_by_id(client.id) or {}).offset_encoding or 'utf-16'
 end
 
+---@param bufnr integer
+---@param edit lsp.TextEdit|lsp.AnnotatedTextEdit|lsp.SnippetTextEdit
+local function edit_has_changes(bufnr, edit)
+  local current_lines = vim.api.nvim_buf_get_lines(bufnr, edit.range.start.line, edit.range['end'].line + 1, false)
+  local formatted_lines = vim.split(string.gsub(edit.newText, '\r\n?', '\n'), '\n', { plain = true })
+  local formatted_lines_count = #formatted_lines
+  if
+    formatted_lines_count > 0
+    and formatted_lines[formatted_lines_count] == ''
+    and edit.range['end'].line == edit.range.start.line
+    and edit.range['end'].character == edit.range.start.character
+  then
+    formatted_lines_count = formatted_lines_count - 1
+  end
+  if #current_lines ~= formatted_lines_count then
+    return true
+  else
+    for i, line in ipairs(current_lines) do
+      if line ~= formatted_lines[i] then
+        return true
+      end
+    end
+  end
+end
+
 ---Check if a code action has edits.
----@param _bufnr number
+---@param bufnr number
 ---@param code_action lsp.CodeAction|nil
-local function has_edits(_bufnr, code_action)
+local function has_edits(bufnr, code_action)
   if code_action == nil then
     return false
   end
-  if not vim.tbl_isempty(code_action.edit or {}) then
+  if vim.tbl_isempty(code_action.edit or {}) then
     return false
   end
   for _, change in ipairs(code_action.edit.documentChanges or {}) do
-    if change.newUri ~= change.oldUri or not vim.tbl_isempty(change.edits) then
+    if change.newUri ~= change.oldUri or change.kind then
       return true
     end
+    for _, edit in ipairs(change.edits or {}) do
+      if edit_has_changes(bufnr, edit) then
+        return true
+      end
+    end
   end
-  for _uri, change in pairs(code_action.edit.changes or {}) do
-    if not vim.tbl_isempty(change) then
-      return true
+  for _uri, edits in pairs(code_action.edit.changes or {}) do
+    for _, edit in ipairs(edits) do
+      if edit_has_changes(bufnr, edit) then
+        return true
+      end
     end
   end
   return false
@@ -113,8 +145,9 @@ local function fix_from_code_action(bufnr, ls_name, action_type, dry_run, on_com
       for _, ls_result in ipairs(ls_results or {}) do
         if ls_result.edit then
           local offset_encoding = get_client_offset_encoding(client)
-          did_edit = did_edit or has_edits(bufnr, ls_result)
-          if not dry_run then
+          local would_edit = has_edits(bufnr, ls_result)
+          did_edit = did_edit or would_edit
+          if not dry_run and would_edit then
             vim.lsp.util.apply_workspace_edit(ls_result.edit, offset_encoding)
           end
         end
@@ -363,7 +396,7 @@ local function apply_typescript_codefixes(bufnr, dry_run, on_complete)
       vim.notify('Error running typescript-tools code fixes: ' .. err.message, vim.log.levels.ERROR)
     else
       did_edit = has_edits(bufnr, res)
-      if not dry_run then
+      if not dry_run and did_edit then
         vim.lsp.util.apply_workspace_edit(res.edit, 'utf-8')
       end
     end
@@ -397,17 +430,17 @@ local function remove_typescript_unused_imports(bufnr, dry_run, on_complete)
   end
 
   typescript_client:request(lsp_constants.CustomMethods.OrganizeImports, params, function(err, res)
+    local did_edit = false
     if err ~= nil then
       vim.notify('Error running typescript-tools remove unused imports: ' .. err.message, vim.log.levels.ERROR)
     else
-      if not dry_run then
+      did_edit = has_edits(bufnr, res)
+      if not dry_run and did_edit then
         vim.lsp.util.apply_workspace_edit(res, 'utf-8')
       end
     end
     if on_complete ~= nil then
-      -- TODO: The edit is the same as the content but is very weird. It replaces the first line with the same lines and the lines that exist
-      -- below it, and then removes the lines it replaces in another edit. This is a bug in the typescript-tools server.
-      on_complete(false)
+      on_complete(did_edit)
     end
   end, bufnr)
 end
@@ -491,28 +524,9 @@ local function lsp_format(bufnr, dry_run, on_complete)
           vim.lsp.util.apply_text_edits(results, bufnr, offset_encoding)
         end
         for _, result in ipairs(results or {}) do
-          local current_lines = vim.api.nvim_buf_get_lines(bufnr, result.range.start.line, result.range['end'].line + 1, false)
-          local formatted_lines = vim.split(string.gsub(result.newText, '\r\n?', '\n'), '\n', { plain = true })
-          local formatted_lines_count = #formatted_lines
-          if
-            formatted_lines_count > 0
-            and formatted_lines[formatted_lines_count] == ''
-            and result.range['end'].line == result.range.start.line
-            and result.range['end'].character == result.range.start.character
-          then
-            formatted_lines_count = formatted_lines_count - 1
-          end
-          if #current_lines ~= formatted_lines_count then
+          local has_changes = edit_has_changes(bufnr, result)
+          if has_changes then
             clients_needing_formatting[#clients_needing_formatting + 1] = client.name
-          else
-            for i, line in ipairs(current_lines) do
-              if line ~= formatted_lines[i] then
-                clients_needing_formatting[#clients_needing_formatting + 1] = client.name
-                break
-              end
-            end
-          end
-          if vim.tbl_contains(clients_needing_formatting, client.name) then
             break
           end
         end
