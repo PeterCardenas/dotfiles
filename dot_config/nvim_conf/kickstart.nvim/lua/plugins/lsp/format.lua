@@ -491,7 +491,7 @@ local function lsp_format(bufnr, dry_run, on_complete)
           vim.lsp.util.apply_text_edits(results, bufnr, offset_encoding)
         end
         for _, result in ipairs(results or {}) do
-          local current_lines = vim.api.nvim_buf_get_lines(bufnr, result.range.start.line, result.range['end'].line, false)
+          local current_lines = vim.api.nvim_buf_get_lines(bufnr, result.range.start.line, result.range['end'].line + 1, false)
           local formatted_lines = vim.split(string.gsub(result.newText, '\r\n?', '\n'), '\n', { plain = true })
           local formatted_lines_count = #formatted_lines
           if
