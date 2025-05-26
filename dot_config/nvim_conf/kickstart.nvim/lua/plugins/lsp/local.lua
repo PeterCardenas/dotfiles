@@ -128,6 +128,14 @@ function M.setup(capabilities)
   ---@type vim.lsp.Config
   local ts_query_ls_config = {
     capabilities = capabilities,
+    init_options = {
+      parser_install_directories = {
+        vim.fs.joinpath(vim.fn.stdpath('data'), '/lazy/nvim-treesitter/parser/'),
+      },
+      parser_aliases = {
+        ecma = 'javascript',
+      },
+    },
   }
   local current_ts_query_ls_config = vim.lsp.config['ts_query_ls'] or {}
   local merged_ts_query_ls_config = Table.merge_tables(current_ts_query_ls_config, ts_query_ls_config)
