@@ -37,6 +37,34 @@ vim.api.nvim_create_autocmd('User', {
       local cwd = vim.fn.getcwd()
       return cwd .. '/bazel-out/k8-fastbuild/bin'
     end, 'Bazel output directory')
+    set_mark('r', function()
+      local explorer_state = require('mini.files').get_explorer_state()
+      if explorer_state == nil then
+        return vim.fn.getcwd()
+      end
+      local cur_file = explorer_state.branch[#explorer_state.branch] ---@type string
+      local buf = vim.uri_to_bufnr(vim.uri_from_fname(cur_file))
+
+      local roots = {} ---@type string[]
+      local lsp_clients = vim.lsp.get_clients({ bufnr = buf })
+      for _, client in ipairs(lsp_clients) do
+        local workspace = client.config.workspace_folders
+        for _, ws in ipairs(workspace or {}) do
+          roots[#roots + 1] = vim.uri_to_fname(ws.uri)
+        end
+        if client.root_dir then
+          roots[#roots + 1] = client.root_dir
+        end
+      end
+      roots = vim.tbl_filter(function(path)
+        path = vim.fs.normalize(path)
+        return path and cur_file:find(path, 1, true) == 1
+      end, roots)
+      table.sort(roots, function(a, b)
+        return a:len() > b:len()
+      end)
+      return roots[1]
+    end, 'LSP root directory')
   end,
 })
 
