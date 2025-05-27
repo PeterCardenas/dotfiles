@@ -2,4 +2,4 @@
 
 ((paragraph
   (inline) @image.src)
-  (#lua-match? @image.src "^https://[./a-z0-9%-]+$"))
+  (#lua-match? @image.src "^https://github%.com/user-attachments/assets/[./a-z0-9%-]+$"))
