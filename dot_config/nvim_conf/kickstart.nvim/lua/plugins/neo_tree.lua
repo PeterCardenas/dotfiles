@@ -1,3 +1,5 @@
+local File = require('utils.file')
+
 vim.api.nvim_create_autocmd('BufEnter', {
   desc = 'Open NvimTree on startup with directory',
   group = vim.api.nvim_create_augroup('nvim_tree_start', { clear = true }),
@@ -69,6 +71,11 @@ end)
 nmap('Toggle mini file explorer', 'oo', function()
   local current_buf = vim.api.nvim_get_current_buf()
   local current_buf_filename = vim.api.nvim_buf_get_name(current_buf)
+  if not File.file_exists(current_buf_filename) then
+    local dirname = vim.fn.fnamemodify(current_buf_filename, ':h')
+    require('mini.files').open(dirname)
+    return
+  end
   require('mini.files').open(current_buf_filename)
 end)
 
@@ -120,7 +127,6 @@ return {
           -- TODO: Only want to apply to file previews
           -- width_preview = 75,
         },
-        -- TODO: Allow opening in deleted files
         mappings = {
           go_in = 'L',
           go_in_plus = '<CR>',
