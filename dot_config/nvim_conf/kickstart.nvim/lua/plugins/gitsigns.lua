@@ -333,9 +333,16 @@ vim.api.nvim_create_user_command('MyPRs', function()
   require('octo.pickers.telescope.provider').search({ prompt = 'is:pr sort:updated-desc author:@me is:open' })
 end, { nargs = 0, desc = 'List all PRs that I have created' })
 
-vim.api.nvim_create_user_command('GHNotifs', function()
-  require('octo.pickers.telescope.provider').notifications()
-end, { nargs = 0, desc = 'GitHub notifications' })
+vim.api.nvim_create_user_command('GHNotifs', function(args)
+  local all = args.args == 'all'
+  require('octo.pickers.telescope.provider').notifications({ all = all })
+end, {
+  nargs = '?',
+  desc = 'GitHub notifications',
+  complete = function()
+    return { 'all' }
+  end,
+})
 
 local lazy_load_octo = vim.api.nvim_create_augroup('lazy_load_octo', { clear = true })
 vim.api.nvim_create_autocmd({ 'BufReadCmd' }, {
