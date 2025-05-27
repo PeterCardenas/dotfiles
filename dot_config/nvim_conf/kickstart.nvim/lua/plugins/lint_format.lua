@@ -379,6 +379,10 @@ return {
             ---@type fun(self: conform.JobFormatterConfig, ctx: conform.Context): string|string[]
             args = function(_, ctx)
               local filetype = get_buildifier_filetype(ctx.buf)
+              local buildifier_config = cwd .. '/.buildifier.json'
+              if vim.fn.filereadable(buildifier_config) == 1 then
+                return { '-lint=fix', '--config=' .. buildifier_config, '-type', filetype }
+              end
               return { '-lint=fix', buildifier_warnings_arg, '-type', filetype }
             end,
           },
