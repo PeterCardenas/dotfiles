@@ -88,7 +88,7 @@ return {
       function()
         require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: '))
       end,
-      desc = 'Debug: Set Breakpoint',
+      desc = 'Debug: Add conditional breakpoint',
     },
   },
   config = function()
