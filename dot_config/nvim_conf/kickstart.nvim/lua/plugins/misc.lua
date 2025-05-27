@@ -1000,6 +1000,9 @@ return {
           return original_transform(data)
         end
       end
+      -- TODO: Add double buffering upstream to remove the need for this.
+      ---@type table<string, string>
+      local resolved_url_cache = {}
       require('snacks').setup({
         -- TODO: Re-enable when indent is equal or better than indent-blankline
         -- indent = { enabled = true },
@@ -1040,6 +1043,9 @@ return {
             return nil
           end,
           async_resolve = function(file, src, on_complete)
+            if resolved_url_cache[src] then
+              return on_complete(resolved_url_cache[src])
+            end
             if not vim.startswith(src, 'https://github.com') or not vim.startswith(file, 'octo:/') then
               return on_complete(nil)
             end
@@ -1090,7 +1096,9 @@ return {
               end
               for idx, imageURL in ipairs(imageURLsFromBodyMd) do
                 if imageURL == src then
-                  return on_complete(imageURLsFromBodyHTML[idx])
+                  local resolved_url = imageURLsFromBodyHTML[idx]
+                  resolved_url_cache[src] = resolved_url
+                  return on_complete(resolved_url)
                 end
               end
               on_complete(nil)
