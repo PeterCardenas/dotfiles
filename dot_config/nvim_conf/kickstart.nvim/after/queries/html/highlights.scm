@@ -1,6 +1,6 @@
 ; extends
 
-; add conceal line to comments when they are the only thing on the line
+; conceal comments for octo.nvim
+; TODO: Add a custom directive to check if the comment is the only content on the line, in which case a conceal_line is used.
 ((comment) @conceal
-  (#lua-match? @conceal "<!%-%-[^-<!>]*%-%->")
   (#set! conceal ""))
