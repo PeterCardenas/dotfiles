@@ -285,6 +285,15 @@ end, { desc = 'Jump to previous hunk' })
 
 vim.api.nvim_create_autocmd({ 'BufEnter' }, {
   pattern = 'octo://*',
+  group = vim.api.nvim_create_augroup('octo.remove-close-buffer-mapping', {}),
+  callback = function(args)
+    local bufnr = args.buf
+    vim.keymap.set('n', '<leader>c', '<Nop>', { buffer = bufnr, desc = 'Remove close buffer mapping' })
+  end,
+})
+
+vim.api.nvim_create_autocmd({ 'BufEnter' }, {
+  pattern = 'octo://*',
   group = vim.api.nvim_create_augroup('octo.reviews.thread-panel', {}),
   callback = function(opts)
     local bufnr = opts.buf
