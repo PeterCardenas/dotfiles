@@ -300,23 +300,13 @@ vim.api.nvim_create_autocmd({ 'BufEnter' }, {
     vim.keymap.set('n', '<leader>rt', function()
       require('octo.reviews.thread-panel').show_review_threads(true)
     end, { buffer = bufnr, desc = 'Review thread' })
-    vim.keymap.set({ 'n', 'v' }, '<leader>rca', function()
-      local current_review = require('octo.reviews').get_current_review()
-      -- HACK: Go into insert mode since starting in visual mode causes the cursor to be stuck in visual mode
-      vim.cmd('startinsert')
-      if current_review and require('octo.utils').in_diff_window() then
-        current_review:add_comment(false)
-      else
-        require('octo.commands').add_comment()
-      end
-    end, { buffer = bufnr, desc = 'Add comment to review thread' })
     vim.keymap.set({ 'n', 'v' }, '<leader>rs', function()
       require('octo.reviews').add_review_comment(true)
     end, { buffer = bufnr, desc = 'Add suggestion to review thread' })
     vim.keymap.set({ 'n', 'v' }, '<leader>rf', function()
       require('octo.commands').reaction_action('confused')
     end, { buffer = bufnr, desc = 'React with confused to review thread' })
-    vim.keymap.set({ 'n', 'v' }, '<leader>rcd', function()
+    vim.keymap.set({ 'n', 'v' }, '<leader>rd', function()
       require('octo.commands').delete_comment()
     end, { buffer = bufnr, desc = 'Delete review comment' })
     vim.keymap.set({ 'n', 'v' }, '<leader>rrt', function()
