@@ -1042,6 +1042,14 @@ return {
             end
             return nil
           end,
+          ---@diagnostic disable-next-line: missing-fields
+          convert = {
+            url = {
+              headers = {
+                ['User-Agent'] = 'github-camo',
+              },
+            },
+          },
           async_resolve = function(file, src, on_complete)
             if resolved_url_cache[src] then
               return on_complete(resolved_url_cache[src])
