@@ -1033,6 +1033,9 @@ return {
             'svg',
           },
           enabled = Config.USE_SNACKS_IMAGE,
+          math = {
+            enabled = false,
+          },
           resolve = function(file, src)
             if File.file_exists(src) then
               return src
