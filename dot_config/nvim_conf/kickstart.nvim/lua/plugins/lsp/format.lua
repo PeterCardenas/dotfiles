@@ -84,15 +84,13 @@ end
 
 ---Check if a code action has edits.
 ---@param bufnr number
----@param code_action lsp.CodeAction|nil
+---@param code_action lsp.CodeAction|lsp.WorkspaceEdit|nil
 local function has_edits(bufnr, code_action)
   if code_action == nil then
     return false
   end
-  if vim.tbl_isempty(code_action.edit or {}) then
-    return false
-  end
-  for _, change in ipairs(code_action.edit.documentChanges or {}) do
+  local code_action_edit = code_action.edit or {}
+  for _, change in ipairs(code_action_edit.documentChanges or {}) do
     if change.newUri ~= change.oldUri or change.kind then
       return true
     end
@@ -102,7 +100,14 @@ local function has_edits(bufnr, code_action)
       end
     end
   end
-  for _uri, edits in pairs(code_action.edit.changes or {}) do
+  for _uri, edits in pairs(code_action_edit.changes or {}) do
+    for _, edit in ipairs(edits) do
+      if edit_has_changes(bufnr, edit) then
+        return true
+      end
+    end
+  end
+  for _uri, edits in pairs(code_action.changes or {}) do
     for _, edit in ipairs(edits) do
       if edit_has_changes(bufnr, edit) then
         return true
