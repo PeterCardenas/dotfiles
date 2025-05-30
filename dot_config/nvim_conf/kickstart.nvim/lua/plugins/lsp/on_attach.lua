@@ -201,6 +201,7 @@ function M.on_attach(client, bufnr)
   nmap('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
   -- Do not overwrite todo/fixme highlights with semantic tokens.
+  -- Bazelrc files are the exception since there is no syntax highlighting for comments.
   vim.api.nvim_create_autocmd('LspTokenUpdate', {
     buffer = bufnr,
     group = semantic_tokens_group,
@@ -218,7 +219,7 @@ function M.on_attach(client, bufnr)
         ---@type vim.api.keyset.extmark_details?
         local extmark_details = extmark[4]
         local extmark_id = extmark[1]
-        if extmark_details ~= nil and extmark_details.hl_group:match('^@lsp%.type%.comment%..*') then
+        if extmark_details ~= nil and extmark_details.hl_group:match('^@lsp%.type%.comment%..*') and client.name ~= 'bazelrc_lsp' then
           vim.api.nvim_buf_del_extmark(bufnr, namespace_id, extmark_id)
         end
       end
