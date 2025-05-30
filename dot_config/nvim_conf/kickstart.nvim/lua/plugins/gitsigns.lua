@@ -395,7 +395,7 @@ return {
         github_hostname = 'github.com',
         remotes = { 'origin', 'upstream' },
         picker = 'fzf-lua',
-        default_merge_method = 'rebase',
+        default_merge_method = 'squash',
         suppress_missing_scope = {
           projects_v2 = true,
         },
