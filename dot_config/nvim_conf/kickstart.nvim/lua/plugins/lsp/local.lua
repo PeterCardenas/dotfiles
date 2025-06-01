@@ -57,7 +57,8 @@ function M.setup(capabilities)
       fish_lsp_diagnostic_disable_error_codes = {
         4004,
       },
-      fish_lsp_logfile = '/tmp/fish-lsp.log',
+      fish_lsp_log_file = '/tmp/fish-lsp.log',
+      fish_lsp_enable_experimental_diagnostics = true,
     },
   }
   local current_fish_config = vim.lsp.config['fish_lsp'] or {}
