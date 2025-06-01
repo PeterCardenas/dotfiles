@@ -3,10 +3,6 @@ local File = require('utils.file')
 local Config = require('utils.config')
 local OSC = require('utils.osc')
 
--- Disable async parsing, many flickering issues
--- Re-enable when the following is closed: https://github.com/neovim/neovim/issues/32660
-vim.g._ts_force_sync_parsing = true
-
 -- [[ Setting options ]]
 -- Folding setup for nvim-ufo
 vim.o.foldcolumn = '1'
