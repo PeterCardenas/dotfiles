@@ -69,8 +69,13 @@ return {
     -- TODO: Go back to upstream when relevant PRs are merged.
     'PeterCardenas/avante.nvim',
     branch = 'dev',
+    keys = {
+      { '<leader>aa', '<Plug>(AvanteAsk)', mode = { 'n', 'v' }, desc = 'avante: ask' },
+      { '<leader>an', '<Plug>(AvanteAskNew)', mode = { 'n', 'v' }, desc = 'avante: ask new' },
+      { '<leader>ae', '<Plug>(AvanteEdit)', mode = { 'n', 'v' }, desc = 'avante: edit' },
+    },
+    cmd = { 'AvanteAsk', 'AvanteEdit' },
     build = 'make',
-    event = { 'VeryLazy' },
     cond = function()
       local api_key_filepath = vim.fn.expand('~/.local/share/anthropic/api_key')
       return vim.fn.filereadable(api_key_filepath) == 1
