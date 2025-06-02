@@ -237,7 +237,7 @@ local function maybe_install_python_dependencies()
   local found_file = cwd .. '/' .. output[1]
 
   local lsp_root = M.find_lsp_root(found_file)
-  local venv_path = lsp_root .. '/venv'
+  local venv_path = lsp_root .. '/.venv'
   local requirements_path ---@type string
   if File.file_exists(lsp_root .. '/requirements.txt') then
     requirements_path = lsp_root .. '/requirements.txt'
@@ -326,7 +326,6 @@ function M.setup(capabilities)
   })
 end
 
-M.VENV_PATH = os.getenv('HOME') .. '/.local/share/nvim/mason/packages/python-lsp-server/venv'
 -- TODO(@PeterCardenas): Replace all useful pylint rules with ruff rules.
 M.DISABLED_PYLINT_RULES = {
   'invalid-name',
