@@ -30,7 +30,8 @@ if test $os = Darwin
     # Added by OrbStack: command-line tools and integration
     source ~/.orbstack/shell/init2.fish 2>/dev/null || :
 else
-    fish_add_path -P -m "$HOME/.local/kitty.app/bin"
+    fish_add_path -P -m "$HOME/.local/kitty.app/bin" \
+        /snap/bin
 end
 
 # Update PATH for both interactive and non-interactive shells
