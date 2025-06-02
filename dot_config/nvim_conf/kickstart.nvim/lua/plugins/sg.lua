@@ -1,4 +1,5 @@
 local Config = require('utils.config')
+vim.cmd([[cab cc CodeCompanion]])
 
 ---@param filepath string
 ---@return boolean, string
@@ -263,7 +264,20 @@ return {
     },
     cmd = { 'CodeCompanion', 'CodeCompanionCmd', 'CodeCompanionChat', 'CodeCompanionActions' },
     config = function()
+      local azure_openai_key_ok, azure_openai_key = read_api_key('~/.local/share/azure/api_key')
+      if not azure_openai_key_ok then
+        vim.notify('Azure OpenAI API key not found', vim.log.levels.ERROR)
+      else
+        vim.env.AZURE_OPENAI_API_KEY = azure_openai_key
+      end
       require('codecompanion').setup({
+        display = {
+          chat = {
+            window = {
+              position = 'right',
+            },
+          },
+        },
         adapters = {
           azure_openai = function()
             return require('codecompanion.adapters').extend('azure_openai', {
