@@ -393,6 +393,7 @@ return {
             -- TODO: Adding the following makes loading the sidebar really slow
             AvanteInput = {},
             -- AvanteInput = { 'avante_commands', 'avante_mentions', 'avante_files' },
+            codecompanion = { 'codecompanion' },
           },
           providers = {
             avante_commands = {
