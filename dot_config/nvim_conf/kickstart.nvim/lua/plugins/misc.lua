@@ -1136,13 +1136,10 @@ return {
                 imageURLsFromBodyHTML[#imageURLsFromBodyHTML + 1] = imageURL
               end
               for idx, imageURL in ipairs(imageURLsFromBodyMd) do
-                if imageURL == src then
-                  local resolved_url = imageURLsFromBodyHTML[idx]
-                  resolved_url_cache[src] = resolved_url
-                  return on_complete(resolved_url)
-                end
+                local resolved_url = imageURLsFromBodyHTML[idx]
+                resolved_url_cache[imageURL] = resolved_url
               end
-              on_complete(nil)
+              on_complete(resolved_url_cache[src])
             end)
           end,
         },
