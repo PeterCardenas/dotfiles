@@ -95,7 +95,6 @@
   },
   "terminal.integrated.fontFamily": "Dank Mono",
   "zenMode.fullScreen": false,
-  "zenMode.hideTabs": false,
   "zenMode.hideStatusBar": false,
   "editor.minimap.enabled": false,
   "editor.renderWhitespace": "all",
@@ -108,6 +107,17 @@
       ],
       "commands": [
         "terminal.focus"
+      ],
+      "silent": true
+    },
+    {
+      "before": [
+        "<leader>",
+        "f",
+        "u"
+      ],
+      "commands": [
+        "workbench.action.quickOpen"
       ],
       "silent": true
     },
@@ -427,6 +437,24 @@
         "git.revertSelectedRanges"
       ],
       "silent": true
+    },
+    {
+      "before": [
+        "[",
+        "d"
+      ],
+      "commands": [
+        "editor.action.marker.prev"
+      ]
+    },
+    {
+      "before": [
+        "]",
+        "d"
+      ],
+      "commands": [
+        "editor.action.marker.next"
+      ]
     }
   ],
   "vim.visualModeKeyBindings": [
@@ -488,6 +516,14 @@
   "vim.insertModeKeyBindings": [
     {
       "before": [
+        "<C-y>"
+      ],
+      "commands": [
+        "editor.action.acceptCursorTabSuggestion"
+      ]
+    },
+    {
+      "before": [
         "j",
         "j"
       ],
@@ -510,8 +546,9 @@
   "vim.highlightedyank.enable": true,
   "vim.visualstar": true,
   "vim.handleKeys": {
-    "<C-d>": false
+    "<C-d>": true
   },
+  "vim.enableNeovim": true,
   "javascript.preferences.importModuleSpecifier": "non-relative",
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "eslint.validate": [
@@ -536,12 +573,10 @@
     "javascriptreact"
   ],
   "editor.lineNumbers": "on",
-  "python.linting.pylintEnabled": true,
   "[python]": {
     "editor.defaultFormatter": "ms-python.python",
     "editor.formatOnSave": true
   },
-  "python.formatting.provider": "black",
   "workbench.quickOpen.closeOnFocusLost": false,
   "vim.useSystemClipboard": true,
   "zenMode.hideLineNumbers": false,
@@ -564,7 +599,7 @@
   ],
   "[scss]": {
     "editor.codeActionsOnSave": {
-      "source.fixAll.stylelint": true
+      "source.fixAll.stylelint": "explicit"
     }
   },
   "[jsonc]": {
@@ -591,12 +626,15 @@
     "typescriptreact"
   ],
   "settingsSync.keybindingsPerPlatform": false,
-  "workbench.activityBar.visible": false,
   "vscode-pets.theme": "none",
   "vscode-pets.throwBallWithMouse": true,
   "workbench.iconTheme": "material-icon-theme",
   "githubPullRequests.fileListLayout": "tree",
   "svg.preview.mode": "svg",
   "workbench.editorLargeFileConfirmation": 20,
-  "tabnine.experimentalAutoImports": true
+  "tabnine.experimentalAutoImports": true,
+  "workbench.activityBar.location": "hidden",
+  "editor.cursorSmoothCaretAnimation": "on",
+  "vim.neovimUseConfigFile": true,
+  "workbench.editor.showTabs": "none"
 }
