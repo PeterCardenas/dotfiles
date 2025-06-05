@@ -33,6 +33,7 @@ else
     fish_add_path -P -m "$HOME/.local/kitty.app/bin" \
         /snap/bin
 end
+set -gx GHOSTTY_BIN_DIR (dirname (which ghostty))
 
 # Update PATH for both interactive and non-interactive shells
 set -gx PNPM_HOME "$HOME/.local/share/pnpm"
