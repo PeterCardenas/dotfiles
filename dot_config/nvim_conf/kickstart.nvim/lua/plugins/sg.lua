@@ -151,21 +151,23 @@ return {
           endpoint = 'https://eastus.api.cognitive.microsoft.com/',
         },
         system_prompt = 'instead of suggesting what the file would be, always make the edit yourself',
-        azure = {
-          endpoint = 'https://westus.api.cognitive.microsoft.com/',
-          parse_api_key = function()
-            return vim.env.AZURE_OPENAI_API_KEY
-          end,
+        providers = {
+          azure = {
+            endpoint = 'https://westus.api.cognitive.microsoft.com/',
+            parse_api_key = function()
+              return vim.env.AZURE_OPENAI_API_KEY
+            end,
 
-          model = 'gpt-4o',
-          deployment = 'gpt-4o-2024-08-06',
+            model = 'gpt-4o',
+            deployment = 'gpt-4o-2024-08-06',
 
-          -- model = 'gpt-4o-mini',
-          -- deployment = 'gpt-4o-mini-2024-07-18',
+            -- model = 'gpt-4o-mini',
+            -- deployment = 'gpt-4o-mini-2024-07-18',
 
-          -- model = 'o3-mini',
-          -- deployment = 'o3-mini-2025-01-31',
-          max_completion_tokens = 16384,
+            -- model = 'o3-mini',
+            -- deployment = 'o3-mini-2025-01-31',
+            max_completion_tokens = 16384,
+          },
         },
         web_search_engine = {
           provider = 'brave',
