@@ -804,7 +804,7 @@ return {
       ---@diagnostic disable-next-line: missing-fields
       require('lazydev').setup({
         library = library,
-        enabled = function(root_dir)
+        enabled = function(root_dir) ---@param root_dir string
           return not vim.uv.fs_stat(root_dir .. '/.luarc.json') or root_dir:find('%.local/share/nvim/lazy/')
         end,
       })
