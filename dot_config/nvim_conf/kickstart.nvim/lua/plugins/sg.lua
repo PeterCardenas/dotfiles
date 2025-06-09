@@ -67,9 +67,7 @@ return {
     end,
   },
   {
-    -- TODO: Go back to upstream when relevant PRs are merged.
-    'PeterCardenas/avante.nvim',
-    branch = 'dev',
+    'yetone/avante.nvim',
     keys = {
       { '<leader>aa', '<Plug>(AvanteAsk)', mode = { 'n', 'v' }, desc = 'avante: ask' },
       { '<leader>an', '<Plug>(AvanteAskNew)', mode = { 'n', 'v' }, desc = 'avante: ask new' },
@@ -166,7 +164,9 @@ return {
 
             -- model = 'o3-mini',
             -- deployment = 'o3-mini-2025-01-31',
-            max_completion_tokens = 16384,
+            extra_response_body = {
+              max_completion_tokens = 16384,
+            },
           },
         },
         web_search_engine = {
