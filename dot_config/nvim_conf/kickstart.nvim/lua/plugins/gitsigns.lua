@@ -325,11 +325,11 @@ vim.api.nvim_create_user_command('ApprovePR', function()
 end, { nargs = 0, desc = 'Approve a PR' })
 
 vim.api.nvim_create_user_command('ReviewablePRs', function()
-  require('octo.pickers.telescope.provider').search({ prompt = 'is:pr sort:updated-desc user-review-requested:@me is:open' })
+  require('octo.pickers.fzf-lua.pickers.search')({ prompt = 'is:pr sort:updated-desc user-review-requested:@me is:open' })
 end, { nargs = 0, desc = 'List all PRs that can be reviewed' })
 
 vim.api.nvim_create_user_command('MyPRs', function()
-  require('octo.pickers.telescope.provider').search({ prompt = 'is:pr sort:updated-desc author:@me is:open' })
+  require('octo.pickers.fzf-lua.pickers.search')({ prompt = 'is:pr sort:updated-desc author:@me is:open' })
 end, { nargs = 0, desc = 'List all PRs that I have created' })
 
 vim.api.nvim_create_user_command('GHNotifs', function(args)
