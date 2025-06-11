@@ -211,18 +211,13 @@ vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter' }, {
   desc = 'Lint from bazel build output on write',
   group = vim.api.nvim_create_augroup('GoBazelLint', { clear = true }),
   pattern = '*.go',
-  callback = function()
+  callback = function(args)
     local abs_filepath = vim.fn.expand('%:p')
     if type(abs_filepath) ~= 'string' then
       return
     end
-    if #bazel_go_lint_queue == 0 then
-      Async.void(
-        ---@async
-        function()
-          bazel_go_lint(abs_filepath)
-        end
-      )
+    if vim.bo[args.buf].buftype ~= '' then
+      return
     end
     bazel_go_lint_queue[abs_filepath] =
       ---@async
