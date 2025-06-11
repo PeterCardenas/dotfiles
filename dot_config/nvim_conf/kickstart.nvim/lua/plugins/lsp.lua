@@ -36,7 +36,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
   end,
 })
 
----@return vim.lsp.Config
+---@return LspTogglableConfig
 local function gopls_config()
   local gopls_settings = {
     codelenses = {
