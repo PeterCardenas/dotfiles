@@ -219,11 +219,9 @@ vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter' }, {
     if vim.bo[args.buf].buftype ~= '' then
       return
     end
-    bazel_go_lint_queue[abs_filepath] =
-      ---@async
-      function()
-        bazel_go_lint(abs_filepath)
-      end
+    bazel_go_lint_queue[abs_filepath] = function() ---@async
+      bazel_go_lint(abs_filepath)
+    end
   end,
 })
 
