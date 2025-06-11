@@ -162,7 +162,7 @@ return {
       -- Prefer to use nogo, but there is not language server for it yet.
       golangci_lint_ls = {
         init_options = {
-          command = { 'golangci-lint', 'run', '--out-format', 'json', '--disable-all', '--enable', 'errcheck,ineffassign,unused' },
+          command = { 'golangci-lint', 'run', '--default', 'none', '--enable', 'errcheck,ineffassign,unused' },
         },
       },
       eslint = {
