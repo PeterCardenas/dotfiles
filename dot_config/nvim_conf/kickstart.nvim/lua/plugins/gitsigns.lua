@@ -444,6 +444,7 @@ return {
           topdelete = { text = '‾' },
           changedelete = { text = '~' },
         },
+        attach_to_untracked = true,
         current_line_blame = false,
         preview_config = {
           border = 'rounded',
