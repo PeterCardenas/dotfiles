@@ -421,6 +421,9 @@ return {
             add_suggestion = { lhs = '<leader>rs', desc = 'add suggestion' },
             react_confused = { lhs = '<leader>rf', desc = 'react with confused' },
           },
+          submit_win = {
+            approve_review = { lhs = '<C-s>', desc = 'approve review', mode = { 'n', 'i' } },
+          },
           notification = {
             read = { lhs = '<C-r>', desc = 'read notification' },
             unsubscribe = { lhs = '<C-x>', desc = 'unsubscribe from notifications' },
