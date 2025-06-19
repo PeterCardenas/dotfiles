@@ -428,6 +428,8 @@ function setup_unix() {
 	# --features isn't supported by cargo binstall
 	cargo install --features 'pcre2' ripgrep
 	cargo install stylua --features lua52 --features luajit
+	# cargo binstall installs the x86_64 version on MacOS
+	cargo install bob-nvim
 
 	# Setup delta/bat theme
 	mkdir -p "$(bat --config-dir)/themes"
@@ -517,8 +519,8 @@ EOF
 	echo "Installing Neovim plugins, and TreeSitter parsers..."
 	# Install plugins via Lazy.nvim
 	nvim --headless "+Lazy! restore" +qa
-	# Install TreeSitter parsers
-	nvim --headless "+TSInstallSync! all" +qa
+	# Install TreeSitter parsers (Doesn't really work rn)
+	nvim --headless "+TSInstall! all" +qa
 	# TODO Install Mason dependencies
 	install_ccls_for_mac
 	# TODO: setup gpg (need bitwarden or copy over)
