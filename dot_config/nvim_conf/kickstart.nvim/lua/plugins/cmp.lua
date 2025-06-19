@@ -284,10 +284,8 @@ return {
   },
   {
     'saghen/blink.cmp',
-    version = '*',
     event = { 'InsertEnter', 'CmdlineEnter' },
-    -- TODO: Allow building from main with build = 'cargo build --release'
-    -- Currently it's trying to build for arm when neovim is currently built with x86_64
+    build = 'cargo build --release',
     cond = function()
       return Config.USE_BLINK_CMP
     end,
@@ -314,11 +312,6 @@ return {
         },
         fuzzy = {
           implementation = 'prefer_rust',
-          prebuilt_binaries = {
-            download = true,
-            force_version = 'v1.0.0',
-            ignore_version_mismatch = true,
-          },
           sorts = {
             'score',
             -- TODO: The goal is to prefer shorter matches. However, this doesn't work sometimes, like with "art" or "broom" when completing emojis
