@@ -164,7 +164,7 @@ return {
 
             -- model = 'o3-mini',
             -- deployment = 'o3-mini-2025-01-31',
-            extra_response_body = {
+            extra_request_body = {
               max_completion_tokens = 16384,
             },
           },
