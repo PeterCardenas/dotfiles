@@ -1,3 +1,15 @@
+vim.api.nvim_create_autocmd({ 'FileType' }, {
+  group = vim.api.nvim_create_augroup('TreesitterAttach', { clear = true }),
+  callback = function(args)
+    local filetype = vim.bo[args.buf].filetype
+    -- TODO: Maybe use dockerfile treesitter highlighting when the following is fixed: https://github.com/camdencheek/tree-sitter-dockerfile/issues/51
+    if filetype == 'dockerfile' or filetype == 'tmux' or (filetype == 'yaml' and vim.api.nvim_buf_get_name(args.buf):match('template%.yaml$')) then
+      return
+    end
+    pcall(vim.treesitter.start, args.buf)
+  end,
+})
+
 ---@type LazyPluginSpec[]
 return {
   -- Sticky scroll
@@ -21,87 +33,61 @@ return {
   {
     -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
-    event = { 'BufReadPre', 'BufNewFile' },
-    cmd = { 'TSInstall', 'TSInstallSync' },
+    branch = 'main',
+    lazy = false,
     dependencies = {
-      'nvim-treesitter/nvim-treesitter-textobjects',
+      {
+        'nvim-treesitter/nvim-treesitter-textobjects',
+        branch = 'main',
+        config = function()
+          require('nvim-treesitter-textobjects').setup({
+            select = {
+              lookahead = true,
+              include_surrounding_whitespace = false,
+            },
+            move = {
+              set_jumps = false,
+            },
+          })
+          ---@param mapping string
+          ---@param textobject string
+          local function add_select_keymap(mapping, textobject)
+            vim.keymap.set({ 'x', 'o' }, mapping, function()
+              require('nvim-treesitter-textobjects.select').select_textobject(textobject, 'textobjects')
+            end, { desc = 'Select ' .. textobject })
+          end
+          add_select_keymap('aa', '@parameter.outer')
+          add_select_keymap('ia', '@parameter.inner')
+          add_select_keymap('al', '@loop.outer')
+          add_select_keymap('il', '@loop.inner')
+          add_select_keymap('af', '@function.outer')
+          add_select_keymap('if', '@function.inner')
+          add_select_keymap('ac', '@class.outer')
+          add_select_keymap('ic', '@class.inner')
+          add_select_keymap('ai', '@conditional.outer')
+          add_select_keymap('ii', '@conditional.inner')
+          add_select_keymap('gb', '@comment.outer')
+          ---@param mapping string
+          ---@param textobject string
+          ---@param action 'goto_next_start'|'goto_next_end'|'goto_previous_start'|'goto_previous_end'
+          local function set_move_keymap(mapping, textobject, action)
+            vim.keymap.set({ 'n', 'x', 'o' }, mapping, function()
+              require('nvim-treesitter-textobjects.move')[action](textobject, 'textobjects')
+            end, { desc = action .. textobject })
+          end
+          set_move_keymap(']f', '@function.outer', 'goto_next_start')
+          set_move_keymap(']c', '@class.outer', 'goto_next_start')
+          set_move_keymap('[f', '@function.outer', 'goto_previous_start')
+          set_move_keymap('[c', '@class.outer', 'goto_previous_start')
+          set_move_keymap(']F', '@function.outer', 'goto_next_end')
+          set_move_keymap(']C', '@class.outer', 'goto_next_end')
+          set_move_keymap('[F', '@function.outer', 'goto_previous_end')
+          set_move_keymap('[C', '@class.outer', 'goto_previous_end')
+        end,
+      },
     },
     build = ':TSUpdate',
     config = function()
-      -- [[ Configure Treesitter ]]
-      -- See `:help nvim-treesitter`
-      -- TODO: Use ~/.local/share/nvim/site for treesitter parsers using `parser_install_dir`
-      require('nvim-treesitter.configs').setup({
-        -- Add languages to be installed here that you want installed for treesitter
-        ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript', 'vimdoc', 'vim', 'markdown', 'fish', 'latex' },
-
-        -- Autoinstall languages that are not installed. Defaults to false (but you can change for yourself!)
-        auto_install = false,
-        modules = {},
-        ignore_install = {},
-        sync_install = false,
-
-        highlight = {
-          enable = true,
-          disable = function(lang, bufnr)
-            if lang == 'markdown' then
-              require('snacks.image').setup()
-            end
-            -- TODO: Maybe use dockerfile treesitter highlighting when the following is fixed: https://github.com/camdencheek/tree-sitter-dockerfile/issues/51
-            return (lang == 'yaml' and vim.api.nvim_buf_get_name(bufnr):match('template%.yaml$')) or lang == 'tmux' or lang == 'dockerfile'
-          end,
-        },
-        indent = { enable = true },
-        incremental_selection = {
-          enable = true,
-          keymaps = {
-            init_selection = '<c-space>',
-            node_incremental = '<c-space>',
-            scope_incremental = '<c-s>',
-            node_decremental = '<M-space>',
-          },
-        },
-        textobjects = {
-          select = {
-            enable = true,
-            lookahead = true, -- Automatically jump forward to textobj, similar to targets.vim
-            keymaps = {
-              -- You can use the capture groups defined in textobjects.scm
-              ['aa'] = '@parameter.outer',
-              ['ia'] = '@parameter.inner',
-              ['al'] = '@loop.outer',
-              ['il'] = '@loop.inner',
-              ['af'] = '@function.outer',
-              ['if'] = '@function.inner',
-              ['ac'] = '@class.outer',
-              ['ic'] = '@class.inner',
-              ['ai'] = '@conditional.outer',
-              ['ii'] = '@conditional.inner',
-              ['gb'] = '@comment.outer',
-            },
-          },
-          move = {
-            enable = true,
-            set_jumps = true, -- whether to set jumps in the jumplist
-            goto_next_start = {
-              [']f'] = '@function.outer',
-              [']c'] = '@class.outer',
-            },
-            goto_next_end = {
-              [']F'] = '@function.outer',
-              [']C'] = '@class.outer',
-            },
-            goto_previous_start = {
-              ['[f'] = '@function.outer',
-              ['[c'] = '@class.outer',
-            },
-            goto_previous_end = {
-              ['[F'] = '@function.outer',
-              ['[C'] = '@class.outer',
-            },
-          },
-        },
-      })
       vim.treesitter.language.register('markdown', 'markdown.mdx')
       vim.treesitter.language.register('markdown', 'notify')
       vim.treesitter.language.register('markdown', 'octo')
