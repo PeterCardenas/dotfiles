@@ -553,8 +553,8 @@ return {
               if cmdline:match("[<'%%%$,0-9]*s/") then
                 return { 'buffer' }
               end
-              if vim.startswith(cmdline, 'Octo reviewer add') then
-                return { 'git' }
+              if vim.startswith(cmdline, 'Octo reviewer add') or string.match(cmdline, '^%s*Octo .*search') then
+                return { 'git', 'cmdline' }
               end
               return { 'cmdline' }
             end
