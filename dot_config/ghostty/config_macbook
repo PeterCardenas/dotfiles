@@ -36,4 +36,4 @@ font-feature = "ss08"
 font-feature = "ss09"
 font-feature = "ss10"
 
-custom-shader = ./shaders/matrix-hallway.glsl
+# custom-shader = ./shaders/matrix-hallway.glsl
