@@ -150,7 +150,7 @@ vim.api.nvim_create_autocmd('FileType', {
 })
 
 vim.api.nvim_create_autocmd('FileType', {
-  pattern = { 'toml' },
+  pattern = { 'toml', 'glsl' },
   group = filetype_options_group,
   callback = function()
     -- Fixes taplo formatting
