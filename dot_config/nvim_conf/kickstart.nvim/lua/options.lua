@@ -23,6 +23,21 @@ vim.o.tabstop = 2
 -- Don't show concealed text while in normal mode or when entering a command.
 vim.o.concealcursor = 'nc'
 
+-- TODO: doesn't work rn
+vim.treesitter.query.add_directive('unset!', function(_, _, _, predicate, metadata)
+  if #predicate == 3 then
+    -- (#unset! capture key)
+    local capture_id, key = predicate[2], predicate[3]
+    if metadata[capture_id] then
+      metadata[capture_id][key] = nil
+    end
+    return
+  end
+  -- (#unset! key)
+  local key = predicate[2]
+  metadata[key] = nil
+end, {})
+
 function vim.brint(...)
   local output = {} --- @type string[]
   for i = 1, select('#', ...) do
