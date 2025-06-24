@@ -161,8 +161,9 @@ return {
       rust_analyzer = { enabled = false },
       -- Prefer to use nogo, but there is not language server for it yet.
       golangci_lint_ls = {
+        enabled = false,
         init_options = {
-          command = { 'golangci-lint', 'run', '--default', 'none', '--enable', 'errcheck,ineffassign,unused' },
+          command = { 'golangci-lint', 'run', '--output.json.path', 'stdout', '--default', 'none', '--enable', 'errcheck,ineffassign,unused' },
         },
       },
       eslint = {
