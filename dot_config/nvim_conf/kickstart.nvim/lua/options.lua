@@ -23,6 +23,34 @@ vim.o.tabstop = 2
 -- Don't show concealed text while in normal mode or when entering a command.
 vim.o.concealcursor = 'nc'
 
+vim.treesitter.query.add_directive('maybe-conceal-whole-line!', function(match, _, source, predicate, metadata)
+  if type(source) == 'string' or #predicate ~= 2 then
+    return
+  end
+  local capture_id = predicate[2]
+  ---@param key 'conceal'|'conceal_lines'
+  local function set_metadata(key)
+    if not metadata[capture_id] then
+      metadata[capture_id] = {}
+    end
+    metadata[capture_id][key] = '' ---@type string
+  end
+  for _, nodes in pairs(match) do
+    local node = type(nodes) == 'table' and nodes[1] or nodes
+    local _, start_col, end_row, end_col = node:range()
+    if start_col ~= 0 then
+      set_metadata('conceal')
+      return
+    end
+    local end_line_text = vim.api.nvim_buf_get_lines(source, end_row, end_row + 1, true)[1]
+    if end_col ~= #end_line_text then
+      set_metadata('conceal')
+      return
+    end
+  end
+  set_metadata('conceal_lines')
+end, {})
+
 -- TODO: doesn't work rn
 vim.treesitter.query.add_directive('unset!', function(_, _, _, predicate, metadata)
   if #predicate == 3 then
