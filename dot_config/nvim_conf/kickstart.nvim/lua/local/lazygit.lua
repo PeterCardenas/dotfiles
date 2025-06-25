@@ -8,13 +8,25 @@ local function setup_lazygit_buffer()
     pattern = 'term://*lazygit',
     once = true,
     callback = function(args)
+      local dirty_buf_enter = false
       ---@type integer
       local bufnr = args.buf
       local function correct_size()
+        local temp_bufnr = vim.api.nvim_create_buf(false, true)
         vim.cmd('resize 0 0')
+        local cur_dirty_buf_enter = dirty_buf_enter
         vim.defer_fn(function()
           vim.cmd('resize 100 100')
+          if not cur_dirty_buf_enter then
+            dirty_buf_enter = true
+            vim.api.nvim_set_current_buf(temp_bufnr)
+            vim.api.nvim_set_current_buf(bufnr)
+            vim.api.nvim_buf_delete(temp_bufnr, { force = true })
+          end
         end, 50)
+        if dirty_buf_enter then
+          dirty_buf_enter = false
+        end
       end
       vim.keymap.set({ 't' }, 'q', function()
         local last_line_content = vim.api.nvim_buf_get_lines(bufnr, -2, -1, false)[1]
