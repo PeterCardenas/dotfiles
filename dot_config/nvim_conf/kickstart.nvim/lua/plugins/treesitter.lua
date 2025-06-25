@@ -6,6 +6,10 @@ vim.api.nvim_create_autocmd({ 'FileType' }, {
     if filetype == 'dockerfile' or filetype == 'tmux' or (filetype == 'yaml' and vim.api.nvim_buf_get_name(args.buf):match('template%.yaml$')) then
       return
     end
+    local lang = vim.treesitter.language.get_lang(filetype)
+    if lang == 'markdown' then
+      require('snacks.image').setup()
+    end
     pcall(vim.treesitter.start, args.buf)
   end,
 })
