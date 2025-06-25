@@ -288,10 +288,11 @@ local function maybe_install_python_dependencies()
   vim.schedule(function()
     local config = pylsp_config()
     config.pylsp.cmd = { venv_path .. '/bin/pylsp' }
-    -- TODO: restart existing lsp server instances
     local existing_config = vim.lsp.config['pylsp'] or {}
     local merged_config = vim.tbl_extend('force', existing_config, config.pylsp)
     vim.lsp.config('pylsp', merged_config)
+    -- Restart pylsp with correct config.
+    vim.lsp.enable('pylsp', false)
     vim.lsp.enable('pylsp')
     require('fidget').notification.remove('install_python_deps', 'install_python_deps')
     require('fidget').notify(' ', vim.log.levels.INFO, {
