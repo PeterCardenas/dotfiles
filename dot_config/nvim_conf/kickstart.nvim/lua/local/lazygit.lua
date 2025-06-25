@@ -78,8 +78,23 @@ local function setup_lazygit_buffer()
               end
               local last_line_content = vim.api.nvim_buf_get_lines(bufnr, -2, -1, false)[1]
               if last_line_content:match('Donate') then
+                local first_line_content = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
+                ---@type string?
+                local panel_content_title = first_line_content:match('╭─([a-zA-Z ]+)─')
+
                 -- Focus the files panel, go to the top, and refresh it.
                 vim.api.nvim_feedkeys('2<R', 't', false)
+                -- Switch back to the panel before the files panel.
+                local panel_content_title_to_id = {
+                  ['Log'] = '3',
+                  ['Remote'] = '3',
+                  ['Patch'] = '4',
+                  ['Reflog Entry'] = '4',
+                  ['Stash'] = '5',
+                }
+                if panel_content_title_to_id[panel_content_title] then
+                  vim.api.nvim_feedkeys(panel_content_title_to_id[panel_content_title], 't', false)
+                end
                 timer:stop()
               end
             end)
