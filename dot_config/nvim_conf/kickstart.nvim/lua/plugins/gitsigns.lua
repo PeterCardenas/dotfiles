@@ -2,6 +2,7 @@ local Async = require('utils.async')
 local File = require('utils.file')
 local Shell = require('utils.shell')
 local Git = require('utils.git')
+local Buf = require('utils.buf')
 
 ---@async
 ---@param cwd string
@@ -289,6 +290,7 @@ vim.api.nvim_create_autocmd({ 'BufEnter' }, {
   callback = function(args)
     local bufnr = args.buf
     vim.keymap.set('n', '<leader>c', '<Nop>', { buffer = bufnr, desc = 'Remove close buffer mapping' })
+    vim.keymap.set('n', '<leader>cc', Buf.close_current_buffer, { buffer = bufnr, desc = 'Remove close buffer mapping' })
   end,
 })
 
