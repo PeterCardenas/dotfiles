@@ -9,7 +9,6 @@ local function setup_lazygit_buffer()
     once = true,
     callback = function(args)
       local dirty_buf_enter = false
-      ---@type integer
       local bufnr = args.buf
       local function correct_size()
         local temp_bufnr = vim.api.nvim_create_buf(false, true)
@@ -53,7 +52,7 @@ local function setup_lazygit_buffer()
         end
         vim.api.nvim_set_current_buf(bufnrs[1])
       end, { buffer = bufnr })
-      vim.api.nvim_buf_set_option(bufnr, 'buflisted', false)
+      vim.bo[bufnr].buflisted = false
       vim.api.nvim_create_autocmd('VimResized', {
         buffer = bufnr,
         callback = function()
