@@ -52,15 +52,7 @@ vim.keymap.set({ 'v', 'n' }, 'gk', '<C-o>', { desc = 'Go to previous location' }
 Lazygit.set_keymap()
 
 if not Config.USE_TABLINE then
-  nmap('[C]lose current buffer', 'c', function()
-    local navigable_bufnrs = Buf.get_navigable_buffers(true)
-    require('bufdelete').bufdelete()
-    if #navigable_bufnrs == 1 then
-      local alpha = require('alpha')
-      alpha.start(false, alpha.default_config)
-      -- TODO: remove annoying scratch buffer that gets created here
-    end
-  end)
+  nmap('[C]lose current buffer', 'c', Buf.close_current_buffer)
 end
 
 -- Diagnostic keymaps

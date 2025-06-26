@@ -30,4 +30,14 @@ function M.is_buf_large(bufnr, file_size_threshold)
   return file_size > file_size_threshold
 end
 
+function M.close_current_buffer()
+  local navigable_bufnrs = M.get_navigable_buffers(true)
+  require('bufdelete').bufdelete()
+  if #navigable_bufnrs == 1 then
+    local alpha = require('alpha')
+    alpha.start(false, alpha.default_config)
+    -- TODO: remove annoying scratch buffer that gets created here
+  end
+end
+
 return M
