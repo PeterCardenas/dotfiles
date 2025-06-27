@@ -414,14 +414,10 @@ return {
             copy_url = { lhs = '<leader>pu', desc = 'copy url to system clipboard' },
           },
           review_thread = {
-            add_comment = { lhs = '<leader>rc', desc = 'add comment' },
-            add_suggestion = { lhs = '<leader>rs', desc = 'add suggestion' },
-            react_confused = { lhs = '<leader>rf', desc = 'react with confused' },
+            add_suggestion = { lhs = '<leader>cs', desc = 'add suggestion' },
           },
           review_diff = {
-            add_comment = { lhs = '<leader>rc', desc = 'add comment' },
-            add_suggestion = { lhs = '<leader>rs', desc = 'add suggestion' },
-            react_confused = { lhs = '<leader>rf', desc = 'react with confused' },
+            add_review_suggestion = { lhs = '<leader>cs', desc = 'add suggestion' },
           },
           submit_win = {
             approve_review = { lhs = '<C-s>', desc = 'approve review', mode = { 'n', 'i' } },
