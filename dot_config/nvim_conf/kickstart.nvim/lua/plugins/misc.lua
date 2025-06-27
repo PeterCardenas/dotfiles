@@ -595,6 +595,12 @@ return {
           return { 'treesitter', 'indent' }
         end,
       })
+      vim.api.nvim_create_autocmd('BufEnter', {
+        group = vim.api.nvim_create_augroup('ufo-enable-on-enter', { clear = true }),
+        callback = function(args)
+          require('ufo').enableFold(args.buf)
+        end,
+      })
     end,
   },
 
