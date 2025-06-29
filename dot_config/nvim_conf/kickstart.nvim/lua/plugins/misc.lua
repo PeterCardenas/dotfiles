@@ -615,6 +615,7 @@ return {
       -- TODO: Jumping backwards does not work in visual mode.
       vim.keymap.set({ 'n', 'v', 'x' }, 'S', '<Plug>(leap-backward)')
       require('leap.opts').default.substitute_chars = { ['{'] = 'b', ['}'] = 'b', ['('] = 'p', [')'] = 'p', ['['] = 'b', [']'] = 'b' }
+      vim.keymap.del({ 's' }, 's')
     end,
   },
 
