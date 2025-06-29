@@ -411,7 +411,8 @@ return {
           },
           issue = {
             -- Unmap from <C-y> default
-            copy_url = { lhs = '<leader>pu', desc = 'copy url to system clipboard' },
+            copy_url = { lhs = '<leader>iu', desc = 'copy url to system clipboard' },
+            add_assignee = { lhs = '<leader>ia', desc = 'add assignee' },
           },
           review_thread = {
             add_suggestion = { lhs = '<leader>cs', desc = 'add suggestion' },
