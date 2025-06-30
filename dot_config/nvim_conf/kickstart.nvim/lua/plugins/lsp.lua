@@ -376,11 +376,25 @@ return {
       if server_config.enabled ~= false then
         server_config.capabilities = Table.merge_tables(capabilities, server_config.capabilities or {})
         local existing_config = vim.lsp.config[server_name]
+        local merged_config ---@type vim.lsp.Config
         if existing_config then
-          vim.lsp.config[server_name] = Table.merge_tables(existing_config, server_config)
+          merged_config = Table.merge_tables(existing_config, server_config)
         else
-          vim.lsp.config[server_name] = server_config
+          merged_config = server_config
         end
+        -- Prevent LSP from attaching to octo:// buffers
+        local original_root_dir = merged_config.root_dir
+        merged_config.root_dir = function(bufnr, on_dir)
+          local filename = vim.api.nvim_buf_get_name(bufnr)
+          if vim.startswith(filename, 'octo:/') then
+            return
+          end
+          if original_root_dir then
+            return original_root_dir(bufnr, on_dir)
+          end
+          on_dir(vim.fs.dirname(vim.fs.find(merged_config.root_markers, { path = filename, upward = true })[1]))
+        end
+        vim.lsp.config[server_name] = merged_config
         vim.lsp.enable(server_name)
       end
     end
