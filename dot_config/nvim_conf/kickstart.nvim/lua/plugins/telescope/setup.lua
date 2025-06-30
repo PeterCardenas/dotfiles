@@ -21,7 +21,7 @@ end
 ---@return string
 function M.get_fre_store_name(type)
   local cwd = vim.fn.getcwd()
-  local store_name = 'type:' .. type .. '::cwd:' .. cwd:gsub('/', '_') .. '.json'
+  local store_name = 'type:' .. type .. '::cwd:' .. cwd:gsub('[/() ]', '_') .. '.json'
   return store_name
 end
 
