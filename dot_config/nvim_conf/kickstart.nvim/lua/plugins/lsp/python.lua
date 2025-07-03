@@ -170,6 +170,8 @@ local function get_ruff_lsp_config()
   }
   -- TODO(PeterPCardenas): Fork https://github.com/astral-sh/ruff-lsp
   -- Add support to adding rules without changing how the codebase selects and fixes rules.
+
+  ---@type table<string, vim.lsp.Config>
   return {
     -- TODO: Try conform for formatting instead since getting issues with the formatter not using the right version.
     ruff_lsp = {
