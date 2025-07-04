@@ -1,3 +1,5 @@
+local File = require('utils.file')
+
 local M = {}
 
 local function setup_lazygit_buffer()
@@ -119,7 +121,7 @@ function M.open_lazygit()
     return
   end
   setup_lazygit_buffer()
-  vim.cmd('term lazygit')
+  vim.cmd('term lazygit --path ' .. File.get_git_root())
 end
 
 function M.set_keymap()
