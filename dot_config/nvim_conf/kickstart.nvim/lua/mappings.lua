@@ -109,6 +109,13 @@ nmap('Toggle status line', 'ul', function()
   is_showing_statusline = not is_showing_statusline
   require('lualine').hide({ unhide = is_showing_statusline, place = { 'statusline' } })
 end)
+nmap('Toggle conceal level', 'uc', function()
+  ---@type 0|1|2
+  local cur_level = vim.opt_local.conceallevel:get()
+  local new_level = cur_level == 0 and 2 or 0
+  vim.opt_local.conceallevel:remove(cur_level)
+  vim.opt_local.conceallevel:append(new_level)
+end)
 
 nmap('Load current[.] directory [s]ession', 'S.', function()
   require('session_manager').load_current_dir_session()
