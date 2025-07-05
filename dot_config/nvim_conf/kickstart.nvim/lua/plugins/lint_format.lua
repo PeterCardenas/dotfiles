@@ -149,7 +149,7 @@ local function bazel_go_lint(abs_filepath)
     'fish',
     { '-c', string.format('bazel %s build --unified_protos=false --config=dev --color=no %s', output_base_flag, table.concat(matched_targets, ' ')) }
   )
-  ---@type table<string, lsp.Diagnostic[]>
+  ---@type table<string, vim.Diagnostic[]>
   local file_diagnostics = {}
   ---@param line string
   local function parse_line(line)
@@ -349,9 +349,10 @@ return {
     config = function()
 
       local buildifier_warnings_arg = get_buildifier_warnings_arg()
+      local has_editor_config = vim.fn.filereadable(File.get_cwd() .. '/.editorconfig') == 1
       require('conform').setup({
         formatters_by_ft = {
-          lua = { 'stylua' },
+          lua = has_editor_config and {} or { 'stylua' },
           go = { 'golines' },
           bzl = { 'buildifier' },
           json = function(bufnr)
