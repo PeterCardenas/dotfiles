@@ -163,6 +163,7 @@ return {
 
             -- model = 'o3-mini',
             -- deployment = 'o3-mini-2025-01-31',
+            context_window = 128000,
             extra_request_body = {
               max_completion_tokens = 16384,
             },
