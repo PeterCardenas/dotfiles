@@ -23,6 +23,7 @@ local function setup_lazygit_buffer()
             vim.api.nvim_set_current_buf(temp_bufnr)
             vim.api.nvim_set_current_buf(bufnr)
             vim.api.nvim_buf_delete(temp_bufnr, { force = true })
+            vim.cmd('startinsert')
           end
         end, 50)
         if dirty_buf_enter then
