@@ -1,5 +1,4 @@
 local Config = require('utils.config')
-vim.cmd([[cab cc CodeCompanion]])
 
 ---@param filepath string
 ---@return boolean, string
