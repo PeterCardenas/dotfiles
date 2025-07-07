@@ -31,6 +31,7 @@ return {
           builtin = {
             ['<C-D>'] = 'preview-page-down',
             ['<C-U>'] = 'preview-page-up',
+            ['<C-L>'] = 'focus-preview',
           },
         },
         winopts = {
