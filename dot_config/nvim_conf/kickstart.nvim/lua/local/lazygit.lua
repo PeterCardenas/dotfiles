@@ -7,7 +7,7 @@ local function setup_lazygit_buffer()
   require('statuscol')
   require('dropbar')
   vim.api.nvim_create_autocmd('TermOpen', {
-    pattern = 'term://*lazygit',
+    pattern = 'term://*lazygit*',
     once = true,
     callback = function(args)
       local dirty_buf_enter = false
