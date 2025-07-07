@@ -439,6 +439,7 @@ return {
       -- See `:help gitsigns.txt`
       require('gitsigns').setup({
         max_file_length = 50000,
+        gh = true,
         signs = {
           add = { text = '+' },
           change = { text = '~' },
