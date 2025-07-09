@@ -22,6 +22,9 @@ function M.setup(capabilities)
       },
       settings = {
         Lua = {
+          diagnostics = {
+            disable = { 'unnecessary-if' },
+          },
           workspace = {
             ignoreGlobs = { '**/nvim-highlight-colors/**/*_spec.lua' },
           },
