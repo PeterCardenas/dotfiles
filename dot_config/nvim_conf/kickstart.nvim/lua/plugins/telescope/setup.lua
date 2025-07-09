@@ -170,6 +170,9 @@ function M.create_keymaps()
       vim.defer_fn(
         vim.schedule_wrap(function()
           local fzfwin = require('fzf-lua.win').__SELF() ---@module "fzf-lua.win"
+          if not fzfwin then
+            return
+          end
           local winid = fzfwin.fzf_winid
           local current_height = vim.api.nvim_win_get_height(winid)
           vim.api.nvim_win_set_height(winid, current_height - 5)
