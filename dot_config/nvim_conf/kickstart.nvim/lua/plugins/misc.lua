@@ -1050,9 +1050,9 @@ return {
           },
           enabled = Config.USE_SNACKS_IMAGE,
           icons = {
-            mov = '🎬',
-            mp4 = '🎬',
-            gif = '🎬',
+            mov = '🎬 ',
+            mp4 = '🎬 ',
+            gif = '🎬 ',
           },
           math = {
             enabled = false,
