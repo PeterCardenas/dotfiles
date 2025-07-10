@@ -9,72 +9,70 @@ local LspMethod = vim.lsp.protocol.Methods
 local enable_pyright = not Config.USE_JEDI
 M.GEN_FILES_PATH = 'bazel-out/k8-fastbuild/bin'
 
----@return table<string, vim.lsp.Config>
+---@return vim.lsp.Config
 local function pyright_config()
-  ---@type table<string, vim.lsp.Config>
+  ---@type vim.lsp.Config
   local config = {
-    pyright = {
-      enabled = enable_pyright,
-      -- Disabled for performance reasons.
-      -- Reference: https://github.com/neovim/neovim/issues/23291
-      -- Possibly updating neovim can help: https://github.com/neovim/neovim/issues/23291#issuecomment-1817816570
-      capabilities = {
-        workspace = {
-          didChangeWatchedFiles = {
-            dynamicRegistration = false,
-          },
+    enabled = enable_pyright,
+    -- Disabled for performance reasons.
+    -- Reference: https://github.com/neovim/neovim/issues/23291
+    -- Possibly updating neovim can help: https://github.com/neovim/neovim/issues/23291#issuecomment-1817816570
+    capabilities = {
+      workspace = {
+        didChangeWatchedFiles = {
+          dynamicRegistration = false,
         },
       },
-      -- Use for debugging pyright.
-      -- cmd = { os.getenv('HOME') .. '/thirdparty/pyright/packages/pyright/langserver.index.js', '--stdio' },
-      -- TODO: Add code action handle for adding an import. Currently this is done automatically via the format keybind.
-      handlers = {
-        ---@param _ lsp.ResponseError
-        ---@param result lsp.PublishDiagnosticsParams
-        ---@param ctx lsp.HandlerContext
-        ---@param _config table
-        [LspMethod.textDocument_publishDiagnostics] = function(_, result, ctx, _config)
-          local diagnostics = result.diagnostics
-          ---@type lsp.Diagnostic[]
-          local filtered_diagnostics = {}
-          for _, diagnostic in ipairs(diagnostics) do
-            local should_filter = true
-            -- TODO: Remove this when pyright can read venvPath
-            if
-              diagnostic.code == 'reportMissingImports'
-              or diagnostic.code == 'reportAttributeAccessIssue'
-              or diagnostic.code == 'reportMissingModuleSource'
-              -- False positive by not inferring type from default arguments
-              or diagnostic.code == 'reportArgumentType'
-              -- Mypy handles this correctly
-              or diagnostic.code == 'reportInvalidTypeForm'
-            then
+    },
+    -- Use for debugging pyright.
+    -- cmd = { os.getenv('HOME') .. '/thirdparty/pyright/packages/pyright/langserver.index.js', '--stdio' },
+    -- TODO: Add code action handle for adding an import. Currently this is done automatically via the format keybind.
+    handlers = {
+      ---@param _ lsp.ResponseError
+      ---@param result lsp.PublishDiagnosticsParams
+      ---@param ctx lsp.HandlerContext
+      ---@param _config table
+      [LspMethod.textDocument_publishDiagnostics] = function(_, result, ctx, _config)
+        local diagnostics = result.diagnostics
+        ---@type lsp.Diagnostic[]
+        local filtered_diagnostics = {}
+        for _, diagnostic in ipairs(diagnostics) do
+          local should_filter = true
+          -- TODO: Remove this when pyright can read venvPath
+          if
+            diagnostic.code == 'reportMissingImports'
+            or diagnostic.code == 'reportAttributeAccessIssue'
+            or diagnostic.code == 'reportMissingModuleSource'
+            -- False positive by not inferring type from default arguments
+            or diagnostic.code == 'reportArgumentType'
+            -- Mypy handles this correctly
+            or diagnostic.code == 'reportInvalidTypeForm'
+          then
+            should_filter = false
+          end
+          local message = diagnostic.message
+          if type(message) == 'string' then
+            if message:match('^"_[%w_]+" is not accessed$') then
               should_filter = false
             end
-            local message = diagnostic.message
-            if type(message) == 'string' then
-              if message:match('^"_[%w_]+" is not accessed$') then
-                should_filter = false
-              end
-            end
-            if should_filter then
-              filtered_diagnostics[#filtered_diagnostics + 1] = diagnostic
-            end
           end
-          result.diagnostics = filtered_diagnostics
-          return vim.lsp.diagnostic.on_publish_diagnostics(_, result, ctx)
-        end,
-      },
-      settings = {
-        python = {
-          analysis = {
-            autoImportCompletions = true,
-            extraPaths = {
-              M.GEN_FILES_PATH,
-            },
-            diagnosticMode = 'workspace',
-            typeCheckingMode = 'off',
+          if should_filter then
+            filtered_diagnostics[#filtered_diagnostics + 1] = diagnostic
+          end
+        end
+        result.diagnostics = filtered_diagnostics
+        return vim.lsp.diagnostic.on_publish_diagnostics(_, result, ctx)
+      end,
+    },
+    settings = {
+      python = {
+        analysis = {
+          autoImportCompletions = true,
+          extraPaths = {
+            M.GEN_FILES_PATH,
           },
+          diagnosticMode = 'workspace',
+          typeCheckingMode = 'off',
         },
       },
     },
@@ -82,47 +80,44 @@ local function pyright_config()
   return config
 end
 
----@return table<string, vim.lsp.Config>
 local function pylsp_config()
   -- The following are rules that we want from pylint, but are not supported elsewhere.
   -- 'trailing-newlines'
-  ---@type table<string, vim.lsp.Config>
+  ---@type vim.lsp.Config
   local config = {
-    pylsp = {
-      settings = {
-        pylsp = {
-          plugins = {
-            jedi = {
-              enabled = true,
-              extra_paths = {
-                M.GEN_FILES_PATH,
-              },
+    settings = {
+      pylsp = {
+        plugins = {
+          jedi = {
+            enabled = true,
+            extra_paths = {
+              M.GEN_FILES_PATH,
             },
-            pylint = {
-              enabled = false,
-            },
-            pylsp_mypy = {
-              enabled = false,
-            },
-            -- Disable other default formatters and linters in favor of ruff and pylint.
-            black = {
-              enabled = false,
-            },
-            mccabe = {
-              enabled = false,
-            },
-            pyflakes = {
-              enabled = false,
-            },
-            yapf = {
-              enabled = false,
-            },
-            autopep8 = {
-              enabled = false,
-            },
-            pycodestyle = {
-              enabled = false,
-            },
+          },
+          pylint = {
+            enabled = false,
+          },
+          pylsp_mypy = {
+            enabled = false,
+          },
+          -- Disable other default formatters and linters in favor of ruff and pylint.
+          black = {
+            enabled = false,
+          },
+          mccabe = {
+            enabled = false,
+          },
+          pyflakes = {
+            enabled = false,
+          },
+          yapf = {
+            enabled = false,
+          },
+          autopep8 = {
+            enabled = false,
+          },
+          pycodestyle = {
+            enabled = false,
           },
         },
       },
@@ -132,7 +127,7 @@ local function pylsp_config()
   return config
 end
 
----@return table<string, vim.lsp.Config>
+---@return vim.lsp.Config>
 local function get_ruff_lsp_config()
   local additional_rules = {
     'D', -- pydocstyle: https://docs.astral.sh/ruff/rules/#pydocstyle-d
@@ -171,17 +166,16 @@ local function get_ruff_lsp_config()
   -- TODO(PeterPCardenas): Fork https://github.com/astral-sh/ruff-lsp
   -- Add support to adding rules without changing how the codebase selects and fixes rules.
 
-  ---@type table<string, vim.lsp.Config>
-  return {
+  ---@type vim.lsp.Config
+  local config = {
     -- TODO: Try conform for formatting instead since getting issues with the formatter not using the right version.
-    ruff_lsp = {
-      init_options = {
-        settings = {
-          args = ruff_args,
-        },
+    init_options = {
+      settings = {
+        args = ruff_args,
       },
     },
   }
+  return config
 end
 
 --  Configures a language server after it attaches to a buffer.
@@ -306,16 +300,10 @@ local function maybe_install_python_dependencies()
   end)
 end
 
----@param capabilities lsp.ClientCapabilities
-function M.setup(capabilities)
+function M.setup()
   Async.void(function() ---@async
     maybe_install_python_dependencies()
   end)
-  local existing_config = vim.lsp.config['ruff_lsp'] or {}
-  local ruff_lsp_config = get_ruff_lsp_config()
-  ruff_lsp_config = Table.merge_tables(capabilities, ruff_lsp_config.capabilities or {})
-  vim.lsp.config('ruff_lsp', vim.tbl_extend('force', existing_config, ruff_lsp_config))
-  vim.lsp.enable('ruff_lsp')
   vim.api.nvim_create_autocmd('LspAttach', {
     group = vim.api.nvim_create_augroup('PythonConfig', { clear = true }),
     callback = function(args)
@@ -368,24 +356,17 @@ M.DISABLED_PYLINT_RULES = {
   'logging-too-many-args',
 }
 
----@return table<string, vim.lsp.Config>
-function M.python_lsp_config()
-  ---@type table<string, vim.lsp.Config>
-  local server_configs = {
-    -- Fastest lsp, but not feature rich enough.
-    pylyzer = {
-      enabled = false,
-    },
-    basedpyright = {
-      enabled = false,
-    },
+---@param servers table<string, LspTogglableConfig>
+function M.add_config(servers)
+  servers.pylyzer = {
+    enabled = false,
   }
-  -- Fastest lsp, but linting/formatting will be moved to ruff.
-  local pylsp_configs = pylsp_config()
-  local pyright_configs = pyright_config()
-  server_configs = vim.tbl_extend('force', server_configs, pylsp_configs)
-  server_configs = vim.tbl_extend('force', server_configs, pyright_configs)
-  return server_configs
+  servers.basedpyright = {
+    enabled = false,
+  }
+  servers.pyright = pyright_config()
+  servers.pylsp = pylsp_config()
+  servers.ruff_lsp = get_ruff_lsp_config()
 end
 
 return M
