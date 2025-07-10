@@ -406,7 +406,13 @@ return {
           if original_root_dir then
             return original_root_dir(bufnr, on_dir)
           end
-          on_dir(vim.fs.dirname(vim.fs.find(merged_config.root_markers, { path = filename, upward = true })[1]))
+          for _, marker in ipairs(merged_config.root_markers or {}) do
+            local root = vim.fs.root(bufnr, marker)
+            if root then
+              return on_dir(root)
+            end
+          end
+          on_dir(nil)
         end
         vim.lsp.config[server_name] = merged_config
         vim.lsp.enable(server_name)
