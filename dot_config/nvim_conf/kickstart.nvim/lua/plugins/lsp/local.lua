@@ -27,6 +27,7 @@ function M.setup(capabilities)
           },
           workspace = {
             ignoreGlobs = { '**/nvim-highlight-colors/**/*_spec.lua' },
+            enableReindex = true,
           },
           strict = {
             requirePath = true,
