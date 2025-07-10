@@ -1054,6 +1054,7 @@ return {
             mov = '🎬 ',
             mp4 = '🎬 ',
             gif = '🎬 ',
+            webm = '🎬 ',
           },
           math = {
             enabled = false,
