@@ -62,7 +62,7 @@ local function gopls_config()
       rangeVariableTypes = true,
     },
   }
-  --- @type vim.lsp.Config
+  --- @type LspTogglableConfig
   local config = {
     -- Disabled for performance reasons.
     -- Reference: https://github.com/neovim/neovim/issues/23291
