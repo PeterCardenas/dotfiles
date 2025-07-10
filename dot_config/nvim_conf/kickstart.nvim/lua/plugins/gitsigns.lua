@@ -371,17 +371,33 @@ return {
     },
     config = function()
       vim.api.nvim_del_augroup_by_id(lazy_load_octo)
-      -- TODO: Octo PR buffer doesn't have correct highlighting when first loaded. Need to call some other Octo command to trigger it, e.g. Octo review start.
       -- TODO: Saving PR description doesn't trigger workflow. Should use gh pr edit command to do so.
-      -- TODO: Show in virtual text whether a comment is resolved.
       -- TODO: Add option for keeping diff shown when viewing a comment thread.
       -- TODO: Make virtual text for comments brighter when hovering on the lines associated with the comment.
       -- TODO: Add user events to use for auto commands to trigger for fidget.nvim notifications.
-      -- TODO: Next thread keymap gets removed sometimes (when switching between tabs maybe?)
       -- TODO: Add add to project event in issue
-      -- TODO: Fetch whether a file has been viewed when resuming/starting a review.
       -- TODO: Load resolved comments previous reviews in current review.
       -- TODO: Search across files in a PR.
+      -- TODO: add ignore whitespace options: set diffopt+=iwhiteall
+      -- TODO: Octo review close closes all pr review tabs
+      -- TODO: group review files by shared directories
+      -- TODO: Add some indicator of the range referenced by a comment
+      -- TODO: keymap to go to next/previous diffhunk
+      -- TODO: toggle as file viewed when not in file panel should toggle the current file not the last one the cursor was on in the file panel
+      -- TODO: refresh PR buffer when review submitted
+      -- TODO: pr checkout "Switched to a new branch x" should be info notification not error
+      -- TODO: issue status from notification preview does not match issue buffer
+      -- TODO: status column for dirty state doesn't update until move cursor
+      -- TODO: improve error message when adding pull request comment when already in pr review
+      -- TODO: add codeownership in file panel
+      -- TODO: add <leader>gi to open referenced issue in timeline
+      -- TODO: handle orgs/owner/name/discussions in hover preview
+      -- TODO: highlight pr number based on open/closed in Octo pr search
+      -- TODO: show commit references in pr buffer
+      -- TODO: highlight/visualize suggestions better
+      -- TODO: add extmarks for diff filetype based on filetype of hunks
+      -- TODO: highlight injected languages in diffhunk
+      -- TODO: fetch and show diff for git lfs
       if not vim.env.GH_TOKEN then
         vim.notify('User not set up for gh cli', vim.log.levels.ERROR)
       end

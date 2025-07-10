@@ -1082,6 +1082,7 @@ return {
             if not vim.startswith(src, 'https://github.com') or not vim.startswith(file, 'octo:/') then
               return on_complete(nil)
             end
+            -- TODO: resolve images in comments
             local owner, repo, kind, id = string.match(file, 'octo:/(.+)/(.+)/(.+)/([0-9a-z.]+)')
             if not owner or (kind ~= 'pull' and kind ~= 'issue') then
               return on_complete(nil)
