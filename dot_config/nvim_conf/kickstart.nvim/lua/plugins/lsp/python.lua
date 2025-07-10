@@ -1,7 +1,6 @@
 local Config = require('utils.config')
 local Shell = require('utils.shell')
 local File = require('utils.file')
-local Table = require('utils.table')
 local Async = require('utils.async')
 local M = {}
 local LspMethod = vim.lsp.protocol.Methods
@@ -9,9 +8,9 @@ local LspMethod = vim.lsp.protocol.Methods
 local enable_pyright = not Config.USE_JEDI
 M.GEN_FILES_PATH = 'bazel-out/k8-fastbuild/bin'
 
----@return vim.lsp.Config
+---@return LspTogglableConfig
 local function pyright_config()
-  ---@type vim.lsp.Config
+  ---@type LspTogglableConfig
   local config = {
     enabled = enable_pyright,
     -- Disabled for performance reasons.
@@ -83,7 +82,7 @@ end
 local function pylsp_config()
   -- The following are rules that we want from pylint, but are not supported elsewhere.
   -- 'trailing-newlines'
-  ---@type vim.lsp.Config
+  ---@type LspTogglableConfig
   local config = {
     settings = {
       pylsp = {
@@ -127,7 +126,7 @@ local function pylsp_config()
   return config
 end
 
----@return vim.lsp.Config>
+---@return LspTogglableConfig
 local function get_ruff_lsp_config()
   local additional_rules = {
     'D', -- pydocstyle: https://docs.astral.sh/ruff/rules/#pydocstyle-d
@@ -166,13 +165,27 @@ local function get_ruff_lsp_config()
   -- TODO(PeterPCardenas): Fork https://github.com/astral-sh/ruff-lsp
   -- Add support to adding rules without changing how the codebase selects and fixes rules.
 
-  ---@type vim.lsp.Config
+  ---@type LspTogglableConfig
   local config = {
     -- TODO: Try conform for formatting instead since getting issues with the formatter not using the right version.
     init_options = {
       settings = {
         args = ruff_args,
       },
+    },
+    -- TODO: doesn't work
+    handlers = {
+      ---@param _ lsp.ResponseError
+      ---@param result lsp.PublishDiagnosticsParams
+      ---@param ctx lsp.HandlerContext
+      ---@param _config table
+      [LspMethod.textDocument_publishDiagnostics] = function(_, result, ctx, _config)
+        -- Change severity of ruff warnings to errors.
+        for _, diagnostic in ipairs(result.diagnostics) do
+          diagnostic.severity = vim.lsp.protocol.DiagnosticSeverity.Error
+        end
+        return vim.lsp.diagnostic.on_publish_diagnostics(_, result, ctx)
+      end,
     },
   }
   return config
@@ -283,9 +296,9 @@ local function maybe_install_python_dependencies()
   end
   vim.schedule(function()
     local config = pylsp_config()
-    config.pylsp.cmd = { venv_path .. '/bin/pylsp' }
+    config.cmd = { venv_path .. '/bin/pylsp' }
     local existing_config = vim.lsp.config['pylsp'] or {}
-    local merged_config = vim.tbl_extend('force', existing_config, config.pylsp)
+    local merged_config = vim.tbl_extend('force', existing_config, config)
     vim.lsp.config('pylsp', merged_config)
     -- Restart pylsp with correct config.
     vim.lsp.enable('pylsp', false)
