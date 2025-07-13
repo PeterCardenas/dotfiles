@@ -421,12 +421,16 @@ return {
           auto_show_threads = false,
         },
         mappings = {
+          discussion = {
+            -- Remove conflict with <C-y> for scrolling
+            copy_url = { lhs = '<leader>di', desc = 'copy url to system clipboard' },
+          },
           pull_request = {
-            -- Unmap from <C-y> default
+            -- Remove conflict with <C-y> for scrolling
             copy_url = { lhs = '<leader>pu', desc = 'copy url to system clipboard' },
           },
           issue = {
-            -- Unmap from <C-y> default
+            -- Remove conflict with <C-y> for scrolling
             copy_url = { lhs = '<leader>iu', desc = 'copy url to system clipboard' },
             add_assignee = { lhs = '<leader>ia', desc = 'add assignee' },
           },
