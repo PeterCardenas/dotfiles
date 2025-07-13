@@ -1,4 +1,8 @@
 function setup_fork -d "Sets up a fork with ssh alias and sets default repo" -a fork_name
+    if test -n "$(git config --get remote.upstream.url)"; and test -n "$(git config --get remote.origin.url)"
+        print_error "Fork already set up"
+        return 1
+    end
     set -l fork_url (git config --get remote.origin.url)
     if test -z "$fork_url"
         print_error "Failed to get fork url for remote origin: $fork_url"
