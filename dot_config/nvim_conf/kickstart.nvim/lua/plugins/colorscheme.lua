@@ -58,6 +58,8 @@ return {
     vim.api.nvim_set_hl(0, 'GitSignsStagedDelete', { link = 'GitSignsDelete' })
     vim.api.nvim_set_hl(0, 'TroubleIndent', { foreground = side_col_highlight.foreground })
     vim.api.nvim_set_hl(0, 'OctoStatusColumn', { foreground = '#2ac3de', background = side_col_highlight.background })
+    -- Dim strikethrough
+    vim.api.nvim_set_hl(0, '@markup.strikethrough', { strikethrough = true, foreground = '#7c7c7c' })
     -- Make winbar not dim on blur.
     local winbar_hl = vim.api.nvim_get_hl(0, { name = 'WinBar' })
     vim.api.nvim_set_hl(0, 'WinBar', { foreground = winbar_hl.fg, background = side_col_highlight.background })
