@@ -109,13 +109,49 @@ return {
             trigger_character = '@',
             action = function(sources, trigger_char, callback, _params, git_info)
               return sources.github:get_mentions(function(items) ---@param items cmp_git.CompletionList
+                local bufnr = vim.api.nvim_get_current_buf()
+                local filename = vim.api.nvim_buf_get_name(bufnr)
+                if
+                  filename:match('^octo:/') and (octo_buffers[bufnr]:isDiscussion() or octo_buffers[bufnr]:isPullRequest() or octo_buffers[bufnr]:isIssue())
+                then
+                  local config = require('cmp_git.config').github.mentions
+                  items = vim.deepcopy(items)
+                  local seen_participants = {} ---@type table<string, boolean>
+                  for _, item in ipairs(items.items) do
+                    seen_participants[item.data.login] = true
+                  end
+                  local participants = {} ---@type { login: string }[]
+                  ---@param participant { login: string }
+                  local function add_participant(participant)
+                    if not seen_participants[participant.login] then
+                      seen_participants[participant.login] = true
+                      participants[#participants + 1] = participant
+                    end
+                  end
+                  if octo_buffers[bufnr]:isDiscussion() then
+                    add_participant(octo_buffers[bufnr].node.author)
+                    for _, comment in ipairs(octo_buffers[bufnr].node.comments.nodes) do
+                      add_participant(comment.author)
+                      for _, reply in ipairs(comment.replies.nodes) do
+                        add_participant(reply.author)
+                      end
+                    end
+                  else
+                    for _, participant in ipairs(octo_buffers[bufnr].node.participants.nodes) do
+                      add_participant(participant)
+                    end
+                  end
+                  for _, participant in ipairs(participants) do
+                    table.insert(items.items, 1, require('cmp_git.format').item(config, trigger_char, participant))
+                  end
+                end
                 -- Default behavior when not in command line mode
                 if vim.api.nvim_get_mode().mode ~= 'c' then
                   callback(items)
                   return
                 end
-                -- We use completion for `Octo reviewer add` in command line mode, which cannot have the `@` prefix
                 local new_items = vim.deepcopy(items)
+                -- We use completion for `Octo reviewer add` in command line mode, which cannot have the `@` prefix
                 for _, item in ipairs(new_items.items) do
                   item.insertText = item.insertText:gsub('^@', '')
                 end
