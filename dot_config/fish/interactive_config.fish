@@ -79,6 +79,7 @@ set -gx SUDO_EDITOR nvim
 # How many commands to wait before removing bad commands from shell history.
 # Reference: https://github.com/meaningful-ooo/sponge#-adjusting-delay
 set -gx sponge_delay 10
+set -gx sponge_successful_exit_codes 0 127 141
 
 # Make Ctrl-H work in tmux pane navigation.
 bind -M insert \ch "tmux select-pane -L"
