@@ -91,7 +91,7 @@ return {
             limit = 100,
           },
           mentions = {
-            limit = math.huge,
+            limit = math.floor(math.huge),
             prefetch = true,
             fetch_teams = true,
           },
