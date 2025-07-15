@@ -9,7 +9,8 @@ if test $os = Darwin
         /opt/local/bin \
         /opt/local/sbin \
         /usr/local/bin \
-        /opt/homebrew/bin
+        /opt/homebrew/bin \
+        "$HOME/Library/Python/3.12/bin"
 
     set -l path_parts (string split ":" $DYLD_FALLBACK_LIBRARY_PATH)
     if test (count $path_parts) -eq 0
