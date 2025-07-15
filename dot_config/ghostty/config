@@ -14,7 +14,8 @@ custom-shader = ./shaders/cursor-smear-fade.glsl
 # custom-shader = ./shaders/blaze-trail.glsl
 custom-shader-animation = always
 
-selection-invert-fg-bg = true
+selection-background = cell-foreground
+selection-foreground = cell-background
 
 window-decoration = false
 
