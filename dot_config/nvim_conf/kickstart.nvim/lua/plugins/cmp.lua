@@ -118,7 +118,11 @@ return {
                   items = vim.deepcopy(items)
                   local seen_participants = {} ---@type table<string, boolean>
                   for _, item in ipairs(items.items) do
-                    seen_participants[item.data.login] = true
+                    if item.data.login then
+                      seen_participants[item.data.login] = true
+                    else
+                      seen_participants[item.data.name] = true
+                    end
                   end
                   local participants = {} ---@type { login: string }[]
                   ---@param participant { login: string }
