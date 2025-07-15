@@ -17,6 +17,8 @@ custom-shader-animation = always
 selection-background = cell-foreground
 selection-foreground = cell-background
 
+adjust-icon-height = 10%
+
 window-decoration = false
 
 window-padding-y = 0
