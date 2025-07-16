@@ -393,14 +393,12 @@ return {
       -- TODO: add <leader>gi to open referenced issue in timeline
       -- TODO: handle orgs/owner/name/discussions in hover preview
       -- TODO: highlight pr number based on open/closed in Octo pr search
-      -- TODO: show commit references in pr buffer
       -- TODO: highlight/visualize suggestions better
       -- TODO: add extmarks for diff filetype based on filetype of hunks
       -- TODO: highlight injected languages in diffhunk
       -- TODO: fetch and show diff for git lfs
       -- TODO: open discussions with goto_issue
       -- TODO: hide tooltip after moving cursor
-      -- TODO: show force push in timeline
       -- TODO: show (outdated) on pr comment
       -- TODO: show entire contents in fzf-lua preview
       if not vim.env.GH_TOKEN then
