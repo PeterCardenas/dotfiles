@@ -401,6 +401,9 @@ return {
       -- TODO: hide tooltip after moving cursor
       -- TODO: show (outdated) on pr comment
       -- TODO: show entire contents in fzf-lua preview
+      -- TODO: escape double quotes inside review comments.
+      -- TODO: improve performance on large files
+      -- TODO: fix diff highlighting
       if not vim.env.GH_TOKEN then
         vim.notify('User not set up for gh cli', vim.log.levels.ERROR)
       end
