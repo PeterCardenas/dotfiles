@@ -434,6 +434,7 @@ return {
           pull_request = {
             -- Remove conflict with <C-y> for scrolling
             copy_url = { lhs = '<leader>pu', desc = 'copy url to system clipboard' },
+            copy_sha = { lhs = '<leader>ph', desc = 'copy sha to system clipboard' },
           },
           issue = {
             -- Remove conflict with <C-y> for scrolling
@@ -445,6 +446,7 @@ return {
           },
           review_diff = {
             add_review_suggestion = { lhs = '<leader>cs', desc = 'add suggestion' },
+            copy_sha = { lhs = '<leader>ph', desc = 'copy sha to system clipboard' },
           },
           submit_win = {
             approve_review = { lhs = '<C-s>', desc = 'approve review', mode = { 'n', 'i' } },
