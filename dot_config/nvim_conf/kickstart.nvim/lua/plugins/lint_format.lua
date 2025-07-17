@@ -4,20 +4,47 @@ local Format = require('plugins.lsp.format')
 local Shell = require('utils.shell')
 local Python = require('plugins.lsp.python')
 
-local LINT_POLL_INTERVAL_MS = 500
+local LINT_POLL_INTERVAL_MS = 16
+---@type uv_timer_t?
 local lint_poll_timer = nil
+---@type Anime?
+local spinner = nil
+local function get_spinner()
+  if not spinner then
+    spinner = require('fidget').spinner.animate('moon')
+  end
+  return spinner
+end
+---@type uv_timer_t?
+local finish_timer = nil
 
 local function update_lint_notification()
   local running_linters = require('lint').get_running()
   if #running_linters > 0 then
-    require('fidget').notify('Running ' .. table.concat(running_linters, ', ') .. '...', vim.log.levels.INFO, {
+    local anime = get_spinner()(vim.uv.now() / 1000.0)
+    require('fidget').notify(anime .. ' Running ' .. table.concat(running_linters, ', ') .. '...', vim.log.levels.INFO, {
       group = 'lint_status',
       key = 'lint_status',
       annote = '',
       ttl = math.huge,
     })
   else
-    require('fidget').notification.remove('lint_status', 'lint_status')
+    if finish_timer then
+      finish_timer:stop()
+    end
+    require('fidget').notify('✅ Linting complete', vim.log.levels.INFO, {
+      group = 'lint_status',
+      key = 'lint_status',
+      annote = '',
+      ttl = math.huge,
+    })
+    finish_timer = vim.uv.new_timer()
+    finish_timer:start(1000, 0, function()
+      running_linters = require('lint').get_running()
+      if #running_linters == 0 then
+        require('fidget').notification.remove('lint_status', 'lint_status')
+      end
+    end)
   end
 end
 
@@ -73,7 +100,7 @@ vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter', 'BufNewFile' }, {
 
     -- Start polling timer if not already running
     if not lint_poll_timer then
-      lint_poll_timer = vim.loop.new_timer()
+      lint_poll_timer = vim.uv.new_timer()
       lint_poll_timer:start(
         0,
         LINT_POLL_INTERVAL_MS,
