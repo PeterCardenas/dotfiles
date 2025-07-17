@@ -3,26 +3,19 @@ local File = require('utils.file')
 local Format = require('plugins.lsp.format')
 local Shell = require('utils.shell')
 local Python = require('plugins.lsp.python')
+local Spinner = require('utils.spinner')
 
 local LINT_POLL_INTERVAL_MS = 16
 ---@type uv_timer_t?
 local lint_poll_timer = nil
----@type Anime?
-local spinner = nil
-local function get_spinner()
-  if not spinner then
-    spinner = require('fidget').spinner.animate('moon')
-  end
-  return spinner
-end
+local spinner = Spinner.create_spinner('moon')
 ---@type uv_timer_t?
 local finish_timer = nil
 
 local function update_lint_notification()
   local running_linters = require('lint').get_running()
   if #running_linters > 0 then
-    local anime = get_spinner()(vim.uv.now() / 1000.0)
-    require('fidget').notify(anime .. ' Running ' .. table.concat(running_linters, ', ') .. '...', vim.log.levels.INFO, {
+    require('fidget').notify(spinner() .. ' Running ' .. table.concat(running_linters, ', ') .. '...', vim.log.levels.INFO, {
       group = 'lint_status',
       key = 'lint_status',
       annote = '',
