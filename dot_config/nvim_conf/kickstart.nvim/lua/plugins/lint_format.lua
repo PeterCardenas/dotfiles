@@ -34,19 +34,19 @@ local function update_lint_configs_for_buf(bufnr)
   if not lsp_root then
     return
   end
-  local pylint_cmd = lsp_root .. '/venv/bin/pylint'
+  local pylint_cmd = lsp_root .. '/.venv/bin/pylint'
   if vim.fn.executable(pylint_cmd) == 1 then
-    require('lint').linters.pylint.cmd = lsp_root .. '/venv/bin/pylint'
+    require('lint').linters.pylint.cmd = lsp_root .. '/.venv/bin/pylint'
     require('lint').linters.pylint.env = {
-      VIRTUAL_ENV = lsp_root .. '/venv',
+      VIRTUAL_ENV = lsp_root .. '/.venv',
       PYTHONPATH = lsp_root .. ':' .. lsp_root .. '/' .. Python.GEN_FILES_PATH,
     }
   end
-  local dmypy_cmd = lsp_root .. '/venv/bin/dmypy'
+  local dmypy_cmd = lsp_root .. '/.venv/bin/dmypy'
   if vim.fn.executable(dmypy_cmd) == 1 then
-    require('lint').linters.dmypy.cmd = lsp_root .. '/venv/bin/dmypy'
+    require('lint').linters.dmypy.cmd = lsp_root .. '/.venv/bin/dmypy'
     require('lint').linters.dmypy.env = {
-      VIRTUAL_ENV = lsp_root .. '/venv',
+      VIRTUAL_ENV = lsp_root .. '/.venv',
       COLUMNS = 1000,
       MYPYPATH = lsp_root .. ':' .. lsp_root .. '/' .. Python.GEN_FILES_PATH,
     }
