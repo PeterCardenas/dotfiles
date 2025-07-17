@@ -1,4 +1,5 @@
 local Config = require('utils.config')
+local Spinner = require('utils.spinner')
 local Shell = require('utils.shell')
 local File = require('utils.file')
 local Async = require('utils.async')
@@ -253,15 +254,24 @@ local function maybe_install_python_dependencies()
   else
     return
   end
-  vim.schedule(function()
+  local timer = Spinner.create_timer()
+  local spinner = Spinner.create_spinner({
+    '▰▱▱▱',
+    '▰▰▱▱',
+    '▰▰▰▱',
+    '▰▰▰▰',
+    '▰▱▱▱',
+  })
+  timer.start(function()
     require('fidget').notify(' ', vim.log.levels.WARN, {
       group = 'install_python_deps',
       key = 'install_python_deps',
-      annote = 'Installing python dependencies...',
+      annote = spinner() .. ' Installing python dependencies...',
       ttl = math.huge,
     })
   end)
   local function clear_fidget()
+    timer.stop()
     require('fidget').notification.remove('install_python_deps', 'install_python_deps')
   end
   if not File.file_exists(venv_path) then
@@ -303,7 +313,7 @@ local function maybe_install_python_dependencies()
     -- Restart pylsp with correct config.
     vim.lsp.enable('pylsp', false)
     vim.lsp.enable('pylsp')
-    require('fidget').notification.remove('install_python_deps', 'install_python_deps')
+    clear_fidget()
     require('fidget').notify(' ', vim.log.levels.INFO, {
       group = 'install_python_deps',
       key = 'install_python_deps',
