@@ -72,6 +72,7 @@ function M.add_config(current_config)
   end
 
   current_config['sourcekit'] = {
+    enabled = vim.fn.has('mac') == 1,
     filetypes = { 'swift', 'objc', 'objcpp' },
   }
 
