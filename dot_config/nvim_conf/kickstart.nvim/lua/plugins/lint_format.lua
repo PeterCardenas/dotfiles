@@ -14,6 +14,7 @@ local function update_lint_notification()
       group = 'lint_status',
       key = 'lint_status',
       annote = '',
+      ttl = math.huge,
     })
   else
     require('fidget').notification.remove('lint_status', 'lint_status')
