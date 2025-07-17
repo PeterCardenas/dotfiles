@@ -265,7 +265,7 @@ local function maybe_install_python_dependencies()
     require('fidget').notification.remove('install_python_deps', 'install_python_deps')
   end
   if not File.file_exists(venv_path) then
-    success, output = Shell.async_cmd('python', { '-m', 'venv', venv_path }, nil)
+    success, output = Shell.async_cmd('python3.10', { '-m', 'venv', venv_path }, nil)
     if not success then
       vim.schedule(function()
         vim.notify('Failed to start virtualenv:\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
@@ -285,7 +285,7 @@ local function maybe_install_python_dependencies()
     end
   end
   if success then
-    success, output = Shell.async_cmd('bash', { '-c', 'source ' .. venv_path .. '/bin/activate && uv pip install python-lsp-server mypy pylint' })
+    success, output = Shell.async_cmd('bash', { '-c', 'source ' .. venv_path .. '/bin/activate && uv pip install python-lsp-server==1.13.0 mypy pylint' })
     if not success then
       vim.schedule(function()
         vim.notify('Failed to install python tooling:\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
