@@ -52,7 +52,16 @@ vim.keymap.set({ 'v', 'n' }, 'gk', '<C-o>', { desc = 'Go to previous location' }
 Lazygit.set_keymap()
 
 if not Config.USE_TABLINE then
-  nmap('[C]lose current buffer', 'c', Buf.close_current_buffer)
+  vim.api.nvim_create_autocmd({ 'BufReadPre', 'BufNewFile' }, {
+    group = vim.api.nvim_create_augroup('close_current_buffer', { clear = true }),
+    callback = function(args)
+      local bufname = vim.api.nvim_buf_get_name(args.buf)
+      if vim.startswith(bufname, 'octo:/') then
+        return
+      end
+      vim.keymap.set('n', '<leader>c', Buf.close_current_buffer, { buffer = args.buf, desc = 'Close buffer' })
+    end,
+  })
 end
 
 -- Diagnostic keymaps
