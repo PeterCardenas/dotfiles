@@ -5,9 +5,10 @@ local chezmoi_augroup = vim.api.nvim_create_augroup('Chezmoi', { clear = true })
 
 ---@async
 ---Returns whether the apply errored and the error logs if errored.
+---@param source_path string
 ---@param filepath string
 ---@return boolean, string[]
-local function apply_filepath(filepath)
+local function apply_filepath(source_path, filepath)
   local chezmoi_root = os.getenv('HOME') .. '/.local/share/chezmoi/'
   if not filepath:find('^' .. chezmoi_root) then
     return false, {}
@@ -18,11 +19,11 @@ local function apply_filepath(filepath)
     return false, {}
   end
   -- Do not apply ignored files.
-  local success, output = Shell.async_cmd('chezmoi', { 'ignored' })
+  local success, output = Shell.async_cmd('chezmoi', { '--source', source_path, 'ignored' })
   if success and vim.tbl_contains(output, relative_filepath) then
     return false, {}
   end
-  success, output = Shell.async_cmd('chezmoi', { 'target-path', filepath })
+  success, output = Shell.async_cmd('chezmoi', { '--source', source_path, 'target-path', filepath })
   if not success then
     return true, output
   end
@@ -37,40 +38,12 @@ local function apply_filepath(filepath)
     end
   end
 
-  success, output = Shell.async_cmd('chezmoi', { 'apply', '--source-path', filepath })
+  success, output = Shell.async_cmd('chezmoi', { '--source', source_path, 'apply', '--source-path', filepath })
   if not success or #output > 0 then
     return true, output
   end
   return false, {}
 end
-
-vim.api.nvim_create_autocmd('BufWritePost', {
-  callback = function(args)
-    ---@type integer
-    local bufnr = args.buf
-    local filepath = vim.api.nvim_buf_get_name(bufnr)
-    Async.void(
-      ---@async
-      function()
-        require('fidget').notify(' ', vim.log.levels.WARN, {
-          group = 'chezmoi_apply',
-          key = 'chezmoi_apply',
-          annote = 'Applying changes with chezmoi...',
-          ttl = math.huge,
-        })
-        local errored, logs = apply_filepath(filepath)
-        require('fidget').notification.remove('chezmoi_apply', 'chezmoi_apply')
-        if errored then
-          vim.schedule(function()
-            vim.notify('chezmoi apply failed: ' .. table.concat(logs, '\n'), vim.log.levels.ERROR)
-          end)
-        end
-      end
-    )
-  end,
-  group = chezmoi_augroup,
-  pattern = '*',
-})
 
 ---@async
 local function track_lazy_lock()
@@ -107,3 +80,34 @@ vim.api.nvim_create_autocmd('User', {
   group = chezmoi_augroup,
   pattern = { 'LazyInstall', 'LazyUpdate', 'LazyClean', 'LazyDone', 'LazyReload' },
 })
+
+local M = {}
+
+---@param source_path string
+function M.setup(source_path)
+  vim.api.nvim_create_autocmd('BufWritePost', {
+    callback = function(args)
+      ---@type integer
+      local bufnr = args.buf
+      local filepath = vim.api.nvim_buf_get_name(bufnr)
+      Async.void(function() ---@async
+        require('fidget').notify(' ', vim.log.levels.WARN, {
+          group = 'chezmoi_apply',
+          key = 'chezmoi_apply',
+          annote = 'Applying changes with chezmoi...',
+          ttl = math.huge,
+        })
+        local errored, logs = apply_filepath(source_path, filepath)
+        require('fidget').notification.remove('chezmoi_apply', 'chezmoi_apply')
+        if errored then
+          vim.schedule(function()
+            vim.notify('chezmoi apply failed: ' .. table.concat(logs, '\n'), vim.log.levels.ERROR)
+          end)
+        end
+      end)
+    end,
+    pattern = '*',
+  })
+end
+
+return M
