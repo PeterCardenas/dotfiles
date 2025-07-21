@@ -32,7 +32,7 @@ local function update_lint_notification()
       ttl = math.huge,
     })
     finish_timer = vim.uv.new_timer()
-    finish_timer:start(1000, 0, function()
+    finish_timer:start(500, 0, function()
       running_linters = require('lint').get_running()
       if #running_linters == 0 then
         require('fidget').notification.remove('lint_status', 'lint_status')
