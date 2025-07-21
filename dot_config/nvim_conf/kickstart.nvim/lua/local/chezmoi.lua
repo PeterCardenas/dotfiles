@@ -9,11 +9,10 @@ local chezmoi_augroup = vim.api.nvim_create_augroup('Chezmoi', { clear = true })
 ---@param filepath string
 ---@return boolean, string[]
 local function apply_filepath(source_path, filepath)
-  local chezmoi_root = os.getenv('HOME') .. '/.local/share/chezmoi/'
-  if not filepath:find('^' .. chezmoi_root) then
+  if not filepath:find('^' .. source_path) then
     return false, {}
   end
-  local relative_filepath = filepath:sub(#chezmoi_root + 1)
+  local relative_filepath = filepath:sub(#source_path + 1)
   -- Ignore files that should never be applied
   if relative_filepath:match('^%.git') or relative_filepath:match('^%.chezmoi') then
     return false, {}
