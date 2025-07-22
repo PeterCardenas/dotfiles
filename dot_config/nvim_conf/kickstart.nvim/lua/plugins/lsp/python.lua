@@ -90,6 +90,7 @@ local function pylsp_config()
         plugins = {
           jedi = {
             enabled = true,
+            prioritize_extra_paths = true,
             extra_paths = {
               M.GEN_FILES_PATH,
             },
