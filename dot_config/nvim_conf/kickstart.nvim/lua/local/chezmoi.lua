@@ -12,7 +12,7 @@ local function apply_filepath(source_path, filepath)
   if not filepath:find('^' .. source_path) then
     return false, {}
   end
-  local relative_filepath = filepath:sub(#source_path + 1)
+  local relative_filepath = filepath:sub(#source_path + 2)
   -- Ignore files that should never be applied
   if relative_filepath:match('^%.git') or relative_filepath:match('^%.chezmoi') then
     return false, {}
