@@ -28,6 +28,7 @@ protols.toml
 
 # Ignore venv (automatically installed in nvim config)
 venv/
+.venv/
 
 # MacOS
 **/.DS_Store
