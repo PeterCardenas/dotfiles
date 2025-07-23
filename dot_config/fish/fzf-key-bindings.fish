@@ -36,7 +36,7 @@ end
 
 function fzf-history-widget -d "Show command history"
     begin
-        set -lx FZF_DEFAULT_OPTS "--height 40% $FZF_DEFAULT_OPTS --bind=ctrl-r:toggle-sort,ctrl-z:ignore --no-sort $FZF_CTRL_R_OPTS +m"
+        set -lx FZF_DEFAULT_OPTS "--height 40% $FZF_DEFAULT_OPTS --bind=ctrl-r:toggle-sort,ctrl-z:ignore $FZF_CTRL_R_OPTS +m"
 
         history -z | eval fzf --read0 --print0 -q '(commandline)' | read -lz result
         and commandline -- $result
