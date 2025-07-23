@@ -72,7 +72,7 @@
   "nvim-ts-context-commentstring": { "branch": "main", "commit": "1b212c2eee76d787bbea6aa5e92a2b534e7b4f8f" },
   "nvim-ufo": { "branch": "main", "commit": "80fe8215ba566df2fbf3bf4d25f59ff8f41bc0e1" },
   "nvim-various-textobjs": { "branch": "main", "commit": "1a3e524c01c26e0174a1eeb69e45d0bd74b1ef94" },
-  "octo.nvim": { "branch": "dev", "commit": "21756ec24db8fc9769e814ef5b8e52064c6a3fd2" },
+  "octo.nvim": { "branch": "dev", "commit": "85259fc54755bf7a8aafe6c797a37cf4958e62a6" },
   "oil.nvim": { "branch": "master", "commit": "bbad9a76b2617ce1221d49619e4e4b659b3c61fc" },
   "one-small-step-for-vimkind": { "branch": "main", "commit": "81fa8fe2b9ed69a2c2af5fa79a2d4fe7a6ca60e5" },
   "plenary.nvim": { "branch": "master", "commit": "857c5ac632080dba10aae49dba902ce3abf91b35" },
