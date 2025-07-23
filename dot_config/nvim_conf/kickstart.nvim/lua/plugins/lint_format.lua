@@ -93,7 +93,11 @@ vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter', 'BufNewFile' }, {
     end
     filename_to_last_edited[bufname] = last_edited
     update_lint_configs_for_buf(bufnr)
-    require('lint').try_lint()
+    local linter_names = require('lint')._resolve_linter_by_ft(vim.bo[bufnr].filetype)
+    if #linter_names == 0 then
+      return
+    end
+    require('lint').try_lint(linter_names)
 
     -- Start polling timer if not already running
     if not lint_poll_timer then
