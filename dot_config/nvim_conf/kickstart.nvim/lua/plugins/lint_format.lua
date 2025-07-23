@@ -79,6 +79,10 @@ vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter', 'BufNewFile' }, {
   callback = function(opts)
     local bufnr = opts.buf
     local bufname = vim.api.nvim_buf_get_name(bufnr)
+    -- Prevent linting in review buffers.
+    if vim.startswith(bufname, 'octo:/') then
+      return
+    end
     -- Don't lint if the file wasn't edited.
     local last_edited = vim.fn.getftime(bufname)
     if filename_to_last_edited[bufname] then
