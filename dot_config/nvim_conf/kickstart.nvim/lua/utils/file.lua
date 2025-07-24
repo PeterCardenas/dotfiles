@@ -61,7 +61,7 @@ end
 ---@param directory string
 ---@return boolean
 function M.file_in_directory(file, directory)
-  return file:find(directory, 1, true) == 1
+  return vim.startswith(file, directory)
 end
 
 --- Writes content to a file, ensuring the directory exists.

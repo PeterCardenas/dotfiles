@@ -9,7 +9,7 @@ local chezmoi_augroup = vim.api.nvim_create_augroup('Chezmoi', { clear = true })
 ---@param filepath string
 ---@return boolean, string[]
 local function apply_filepath(source_path, filepath)
-  if not filepath:find('^' .. source_path) then
+  if not vim.startswith(filepath, source_path) then
     return false, {}
   end
   local relative_filepath = filepath:sub(#source_path + 2)
