@@ -1,14 +1,12 @@
 -- Install package manager
---    https://github.com/folke/lazy.nvim
---    `:help lazy.nvim.txt` for more info
 local lazypath = vim.fn.stdpath('data') .. '/lazy/lazy.nvim'
 if not vim.uv.fs_stat(lazypath) then
   local output = vim.fn.system({
     'git',
     'clone',
     '--filter=blob:none',
-    'https://github.com/folke/lazy.nvim.git',
-    '--branch=stable', -- latest stable release
+    'https://github.com/PeterCardenas/lazy.nvim.git',
+    '--branch=dev', -- branch with patches
     lazypath,
   })
   if vim.v.shell_error ~= 0 then
