@@ -94,7 +94,13 @@ function M.add_config(current_config)
   }
 
   current_config['starpls'] = {
-    cmd = { 'starpls', 'server', '--experimental_infer_ctx_attributes', '--experimental_use_code_flow_analysis' },
+    cmd = {
+      'starpls',
+      'server',
+      '--experimental_infer_ctx_attributes',
+      '--experimental_use_code_flow_analysis',
+      '--experimental_goto_definition_skip_re_exports',
+    },
     cmd_env = {
       RUST_BACKTRACE = 'full',
     },
