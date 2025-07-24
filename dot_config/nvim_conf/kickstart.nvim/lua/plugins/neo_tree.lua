@@ -58,7 +58,7 @@ vim.api.nvim_create_autocmd('User', {
       end
       roots = vim.tbl_filter(function(path)
         path = vim.fs.normalize(path)
-        return path and cur_file:find(path, 1, true) == 1
+        return path and vim.startswith(cur_file, path)
       end, roots)
       table.sort(roots, function(a, b)
         return a:len() > b:len()
