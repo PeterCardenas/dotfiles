@@ -285,25 +285,21 @@ local function maybe_install_python_dependencies()
       return
     end
   end
-  if success then
-    success, output = Shell.async_cmd('bash', { '-c', 'source ' .. venv_path .. '/bin/activate && uv pip sync ' .. requirements_path })
-    if not success then
-      vim.schedule(function()
-        vim.notify('Failed to install python dependencies:\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
-        clear_fidget()
-      end)
-      return
-    end
+  success, output = Shell.async_cmd('bash', { '-c', 'source ' .. venv_path .. '/bin/activate && uv pip sync ' .. requirements_path })
+  if not success then
+    vim.schedule(function()
+      vim.notify('Failed to install python dependencies:\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
+      clear_fidget()
+    end)
+    return
   end
-  if success then
-    success, output = Shell.async_cmd('bash', { '-c', 'source ' .. venv_path .. '/bin/activate && uv pip install python-lsp-server==1.13.0 mypy pylint' })
-    if not success then
-      vim.schedule(function()
-        vim.notify('Failed to install python tooling:\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
-        clear_fidget()
-      end)
-      return
-    end
+  success, output = Shell.async_cmd('bash', { '-c', 'source ' .. venv_path .. '/bin/activate && uv pip install python-lsp-server==1.13.0 mypy pylint' })
+  if not success then
+    vim.schedule(function()
+      vim.notify('Failed to install python tooling:\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
+      clear_fidget()
+    end)
+    return
   end
   vim.schedule(function()
     local config = pylsp_config()
