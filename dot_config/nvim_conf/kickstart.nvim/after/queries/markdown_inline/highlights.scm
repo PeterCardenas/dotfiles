@@ -6,22 +6,16 @@
     "["
     "]"
     (link_label)
-  ] @markup.link
-  (#set! priority 105)
-  (#unset! conceal))
+  ] @noconceal)
 
 (collapsed_reference_link
   [
     "["
     "]"
-  ] @markup.link
-  (#set! priority 105)
-  (#unset! conceal))
+  ] @noconceal)
 
 (shortcut_link
   [
     "["
     "]"
-  ] @markup.link
-  (#set! priority 105)
-  (#unset! conceal))
+  ] @noconceal)
