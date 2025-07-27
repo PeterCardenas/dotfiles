@@ -378,10 +378,9 @@ return {
     config = function()
 
       local buildifier_warnings_arg = get_buildifier_warnings_arg()
-      local has_editor_config = vim.fn.filereadable(File.get_cwd() .. '/.editorconfig') == 1
       require('conform').setup({
         formatters_by_ft = {
-          lua = has_editor_config and {} or { 'stylua' },
+          lua = { 'stylua' },
           go = { 'golines' },
           bzl = { 'buildifier' },
           json = function(bufnr)
