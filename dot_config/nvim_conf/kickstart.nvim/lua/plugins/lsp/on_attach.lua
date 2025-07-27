@@ -19,8 +19,7 @@ function M.on_attach(client, bufnr)
       client.handlers[LspMethod.textDocument_publishDiagnostics] = function() end
     end
   end
-  local has_editor_config = vim.fn.filereadable(File.get_cwd() .. '/.editorconfig') == 1
-  if client.name == 'lua_ls' and not has_editor_config then
+  if client.name == 'lua_ls' then
     -- Defer to stylua for formatting.
     client.server_capabilities.documentFormattingProvider = false
     client.server_capabilities.documentRangeFormattingProvider = false
