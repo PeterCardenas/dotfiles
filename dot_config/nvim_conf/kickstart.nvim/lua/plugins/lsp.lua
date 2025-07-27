@@ -372,6 +372,8 @@ return {
 
     servers.graphql = {}
 
+    servers.marksman = {}
+
     Python.add_config(servers)
 
     -- nvim-cmp supports additional completion capabilities, so broadcast that to servers
