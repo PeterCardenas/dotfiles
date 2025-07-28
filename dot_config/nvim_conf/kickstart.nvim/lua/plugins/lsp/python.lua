@@ -263,7 +263,11 @@ local function maybe_install_python_dependencies()
     '▰▰▰▰',
     '▰▱▱▱',
   })
+  local cleared = false
   timer.start(function()
+    if cleared then
+      return
+    end
     require('fidget').notify(' ', vim.log.levels.WARN, {
       group = 'install_python_deps',
       key = 'install_python_deps',
@@ -272,6 +276,7 @@ local function maybe_install_python_dependencies()
     })
   end)
   local function clear_fidget()
+    cleared = true
     timer.stop()
     require('fidget').notification.remove('install_python_deps', 'install_python_deps')
   end
