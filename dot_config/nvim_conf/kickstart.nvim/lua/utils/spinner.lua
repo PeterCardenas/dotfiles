@@ -22,6 +22,7 @@ function M.create_timer()
     end,
     stop = function()
       timer:stop()
+      timer:close()
     end,
   }
 end
