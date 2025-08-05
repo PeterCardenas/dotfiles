@@ -403,6 +403,12 @@ return {
       -- TODO: escape double quotes inside review comments.
       -- TODO: improve performance on large files
       -- TODO: fix diff highlighting
+      -- TODO: add auto merge command
+      -- TODO: update title status when `Octo pr ready` and `Octo pr merge` are called
+      -- TODO: add profile images with /users/<login> .avatar_url
+      -- TODO: add UNSTABLE reason: e.g. baseRef.branchProtectionRule.requiresConversationResolution
+      --       Reference: https://docs.github.com/en/graphql/reference/objects#branchprotectionrule
+      --       Reference: https://docs.github.com/en/graphql/reference/enums#mergestatestatus
       if not vim.env.GH_TOKEN then
         vim.notify('User not set up for gh cli', vim.log.levels.ERROR)
       end
