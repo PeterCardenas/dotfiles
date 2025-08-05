@@ -419,6 +419,7 @@ return {
         remotes = { 'origin', 'upstream' },
         picker = 'fzf-lua',
         default_merge_method = 'squash',
+        snippet_context_lines = 6,
         suppress_missing_scope = {
           projects_v2 = true,
         },
