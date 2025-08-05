@@ -175,7 +175,6 @@ local function get_ruff_lsp_config()
         args = ruff_args,
       },
     },
-    -- TODO: doesn't work
     handlers = {
       ---@param _ lsp.ResponseError
       ---@param result lsp.PublishDiagnosticsParams
