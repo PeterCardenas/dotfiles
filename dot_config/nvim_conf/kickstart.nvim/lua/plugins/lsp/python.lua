@@ -218,6 +218,9 @@ end
 ---@param filepath string
 ---@return string|nil
 function M.find_lsp_root(filepath)
+  if not File.file_exists(filepath) then
+    return nil
+  end
   local targets = { 'pyproject.toml', 'setup.py', 'requirements.txt', '.git' }
   local root = nil
   for _, target in ipairs(targets) do
@@ -247,6 +250,9 @@ local function maybe_install_python_dependencies()
   local found_file = cwd .. '/' .. output[1]
 
   local lsp_root = M.find_lsp_root(found_file)
+  if not lsp_root then
+    return
+  end
   local venv_path = lsp_root .. '/.venv'
   local requirements_path ---@type string
   if File.file_exists(lsp_root .. '/requirements.txt') then
