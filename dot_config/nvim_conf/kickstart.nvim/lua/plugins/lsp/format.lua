@@ -362,12 +362,15 @@ local function apply_typescript_codefixes(bufnr, dry_run, on_complete)
     7027,
     -- '{0}' refers to a UMD global, but the current file is a module. Consider adding an import instead.
     2686,
+    -- Non-abstract class '{0}' is missing implementations for the following members of '{1}': {2}.
+    2654,
   }
   -- Reference: https://github.com/microsoft/TypeScript/tree/main/src/services/codefixes
   local fix_names = {
     'import',
     'fixAwaitInSyncFunction',
     'fixUnreachableCode',
+    'fixClassDoesntImplementInheritedAbstractMember',
   }
 
   ---@type BatchCodeActionParams
