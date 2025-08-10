@@ -139,9 +139,8 @@ local function fix_from_code_action(bufnr, ls_name, action_type, dry_run, on_com
     ---@type lsp.CodeActionParams
     local params = vim.lsp.util.make_range_params(0, client.offset_encoding)
     params.context = { only = { action_type }, diagnostics = {} }
-    ---@param err any
     ---@param ls_results lsp.CodeAction[]
-    client:request(LspMethod.textDocument_codeAction, params, function(err, ls_results, _, _)
+    client:request(LspMethod.textDocument_codeAction, params, function(err, ls_results, _ctx, _config)
       -- TODO: ruff is pretty noisy about errors
       if err and client.name ~= 'ruff_lsp' then
         vim.notify('Error running ' .. ls_name .. ' code action: ' .. vim.inspect(err), vim.log.levels.ERROR)
