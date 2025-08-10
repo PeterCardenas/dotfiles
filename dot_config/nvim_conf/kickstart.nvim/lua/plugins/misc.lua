@@ -878,6 +878,22 @@ return {
     'mrcjkb/rustaceanvim',
     version = '^5',
     lazy = false,
+    init = function()
+      ---@type rustaceanvim.Opts
+      vim.g.rustaceanvim = {
+        ---@type rustaceanvim.lsp.ClientOpts
+        server = {
+          default_settings = {
+            ['rust-analyzer'] = {
+              check = {
+                allTargets = false,
+                -- command = 'clippy',
+              },
+            },
+          },
+        },
+      }
+    end,
   },
 
   -- Support textDocument/documentLink
