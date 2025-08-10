@@ -522,7 +522,11 @@ local function lsp_format(bufnr, dry_run, on_complete)
       ---@param results lsp.TextEdit[]
       client:request(LspMethod.textDocument_formatting, formatting_params, function(err, results, _, _)
         if err then
-          if client.name ~= 'gopls' and client.name ~= 'ruff_lsp' then
+          if
+            client.name ~= 'gopls'
+            and client.name ~= 'ruff_lsp'
+            and (client.name ~= 'rust-analyzer' or (not vim.startswith(err.message, 'file not found') and not vim.startswith(err.message, 'content modified')))
+          then
             vim.notify('Error checking formatting: ' .. vim.inspect(err), vim.log.levels.ERROR)
           end
         end
