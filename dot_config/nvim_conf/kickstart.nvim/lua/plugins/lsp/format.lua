@@ -685,6 +685,10 @@ local M = {}
 -- TODO: Add diagnostics where formatting would be applied (similar to eslint-plugin-prettier) and move the following diagnostic to fidget
 ---@param bufnr integer
 function M.setup_formatting_diagnostic(bufnr)
+  local filename = vim.api.nvim_buf_get_name(bufnr)
+  if not File.file_exists(filename) then
+    return
+  end
   -- Format check is slow for large typescript files, so disable them for now.
   local filetype = vim.api.nvim_get_option_value('filetype', { buf = bufnr })
   local is_typescript = vim.tbl_contains(TypeScript.SUPPORTED_FT, filetype)
@@ -692,12 +696,8 @@ function M.setup_formatting_diagnostic(bufnr)
     return
   end
   local git_root_dir = File.get_git_root()
-  local filename = vim.api.nvim_buf_get_name(bufnr)
   --- Disable format checking when there's no git root or the file is not in the git root.
   if filetype ~= 'gitcommit' and (git_root_dir == nil or not File.file_in_directory(filename, git_root_dir)) then
-    return
-  end
-  if filename:match('^octo://') then
     return
   end
   Async.void(
@@ -740,6 +740,9 @@ end
 ---@param bufnr integer
 function M.format(bufnr)
   local filename = vim.api.nvim_buf_get_name(bufnr)
+  if not File.file_exists(filename) then
+    return
+  end
   local git_root_dir = File.get_git_root()
   if vim.bo[bufnr].filetype ~= 'gitcommit' and (git_root_dir == nil or not File.file_in_directory(filename, git_root_dir)) then
     vim.notify('Cannot format files outside of the git root', vim.log.levels.ERROR)
