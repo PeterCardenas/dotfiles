@@ -881,6 +881,11 @@ return {
     init = function()
       ---@type rustaceanvim.Opts
       vim.g.rustaceanvim = {
+        tools = {
+          float_win_config = {
+            border = 'rounded',
+          },
+        },
         ---@type rustaceanvim.lsp.ClientOpts
         server = {
           default_settings = {
