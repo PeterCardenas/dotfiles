@@ -618,6 +618,7 @@ return {
       require('leap.opts').default.substitute_chars = { ['{'] = 'b', ['}'] = 'b', ['('] = 'p', [')'] = 'p', ['['] = 'b', [']'] = 'b' }
       require('leap.opts').default.vim_opts['wo.conceallevel'] = nil
       vim.keymap.del({ 's' }, 's')
+      vim.keymap.del({ 's' }, 'S')
     end,
   },
 
