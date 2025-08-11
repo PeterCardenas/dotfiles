@@ -120,14 +120,14 @@ function M.on_attach(client, bufnr)
   end
 
   ---@param keys string
-  ---@param func fun(): nil
+  ---@param action fun(): nil
   ---@param desc string
-  local function nmap(keys, func, desc)
+  local function nmap(keys, action, desc)
     if desc then
       desc = 'LSP: ' .. desc
     end
 
-    vim.keymap.set('n', keys, func, { buffer = bufnr, desc = desc })
+    vim.keymap.set('n', keys, action, { buffer = bufnr, desc = desc })
   end
 
   nmap('<leader>lr', function()
@@ -163,8 +163,6 @@ function M.on_attach(client, bufnr)
     require('telescope.builtin').lsp_dynamic_workspace_symbols()
   end, 'Workspace Symbols')
 
-  -- See `:help K` for why this keymap
-  nmap('K', vim.lsp.buf.hover, 'Hover Documentation')
   vim.keymap.set({ 'n', 'i' }, '<C-s>', function()
     vim.lsp.buf.signature_help()
   end, { desc = 'LSP: Signature Documentation', buffer = bufnr })
@@ -200,6 +198,14 @@ function M.on_attach(client, bufnr)
 
   if client.name == 'ts_query_ls' then
     vim.bo[bufnr].omnifunc = 'v:lua.vim.treesitter.query.omnifunc'
+  end
+
+  if client.name == 'rust-analyzer' then
+    nmap('K', function()
+      require('rustaceanvim.hover_actions').hover_actions()
+    end, 'Hover Documentation')
+  else
+    nmap('K', vim.lsp.buf.hover, 'Hover Documentation')
   end
 
   -- Lesser used LSP functionality
