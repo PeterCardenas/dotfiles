@@ -4,7 +4,7 @@
   "LuaSnip": { "branch": "master", "commit": "66b5c2707e624dcd2cd3605676c64a2efe47e9d1" },
   "actions-preview.nvim": { "branch": "master", "commit": "36513ad213855d497b7dd3391a24d1d75d58e36f" },
   "alpha-nvim": { "branch": "main", "commit": "2b3cbcdd980cae1e022409289245053f62fb50f6" },
-  "avante.nvim": { "branch": "main", "commit": "2fc63d4128d2dc2fef0913c7480b4586959ebe4e" },
+  "avante.nvim": { "branch": "main", "commit": "1e0c8520bcd6dfd1759343887bc0f497c2aa2271" },
   "blink-emoji.nvim": { "branch": "master", "commit": "f22ce8cac02a6ece05368220f1e38bd34fe376f9" },
   "blink.cmp": { "branch": "main", "commit": "f66e22e3003c9dfe2eb7cddb4d314a57e48ac752" },
   "blink.compat": { "branch": "main", "commit": "1454f14a8d855a578ceeba77c62538fa1459a67c" },
