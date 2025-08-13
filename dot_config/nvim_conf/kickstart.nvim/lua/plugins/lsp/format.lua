@@ -363,6 +363,8 @@ local function apply_typescript_codefixes(bufnr, dry_run, on_complete)
     2686,
     -- Non-abstract class '{0}' is missing implementations for the following members of '{1}': {2}.
     2654,
+    -- Non-abstract class '{0}' does not implement inherited abstract member {1} from class '{2}'.
+    2515,
   }
   -- Reference: https://github.com/microsoft/TypeScript/tree/main/src/services/codefixes
   local fix_names = {
