@@ -142,7 +142,18 @@ local function fix_from_code_action(bufnr, ls_name, action_type, dry_run, on_com
     ---@param ls_results lsp.CodeAction[]
     client:request(LspMethod.textDocument_codeAction, params, function(err, ls_results, _ctx, _config)
       -- TODO: ruff is pretty noisy about errors
-      if err and client.name ~= 'ruff_lsp' then
+      if
+        err
+        and client.name ~= 'ruff_lsp'
+        and (
+          client.name ~= 'rust-analyzer'
+          or (
+            not vim.startswith(err.message, 'content modified')
+            and not vim.startswith(err.message, 'file not found')
+            and not vim.startswith(err.message, 'url is not a file')
+          )
+        )
+      then
         vim.notify('Error running ' .. ls_name .. ' code action: ' .. vim.inspect(err), vim.log.levels.ERROR)
       end
       local did_edit = false
@@ -180,6 +191,14 @@ local function fix_ruff_errors(bufnr, dry_run, on_complete)
   fix_from_code_action(bufnr, 'ruff_lsp', 'source.organizeImports', dry_run, function()
     fix_from_code_action(bufnr, 'ruff_lsp', 'source.fixAll', dry_run, on_complete)
   end)
+end
+
+---Fix all auto-fixable rust_analyzer errors.
+---@param bufnr integer
+---@param dry_run boolean
+---@param on_complete? FormatCallback
+local function fix_rust_analyzer_errors(bufnr, dry_run, on_complete)
+  fix_from_code_action(bufnr, 'rust-analyzer', 'source.organizeImports', dry_run, on_complete)
 end
 
 ---@param bufnr integer
@@ -527,7 +546,14 @@ local function lsp_format(bufnr, dry_run, on_complete)
           if
             client.name ~= 'gopls'
             and client.name ~= 'ruff_lsp'
-            and (client.name ~= 'rust-analyzer' or (not vim.startswith(err.message, 'file not found') and not vim.startswith(err.message, 'content modified')))
+            and (
+              client.name ~= 'rust-analyzer'
+              or (
+                not vim.startswith(err.message, 'file not found')
+                and not vim.startswith(err.message, 'content modified')
+                and not vim.startswith(err.message, 'url is not a file')
+              )
+            )
           then
             vim.notify('Error checking formatting: ' .. vim.inspect(err), vim.log.levels.ERROR)
           end
@@ -567,6 +593,7 @@ local function format_with_check(bufnr, dry_run, on_complete)
     { 'pyright', auto_import_pyright },
     { 'ruff_lsp', fix_ruff_errors },
     { 'typescript-tools', fix_typescript_errors },
+    { 'rust-analyzer', fix_rust_analyzer_errors },
   }
 
   local possible_formatter_names = require('conform').list_formatters_for_buffer(bufnr)
