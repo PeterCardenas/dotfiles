@@ -2,6 +2,8 @@ local File = require('utils.file')
 local EntryDisplay = require('plugins.telescope.entry_display')
 local Buf = require('utils.buf')
 
+local ns_previewer = vim.api.nvim_create_namespace('buffer_picker_previewer')
+
 local function make_buffer_entry()
   local icon_width = require('plenary.strings').strdisplaywidth((require('telescope.utils').get_devicons('fname')))
   local opts = {}
@@ -132,8 +134,94 @@ function M.find_buffers()
         results = buffers,
         entry_maker = make_buffer_entry(),
       }),
-      -- TODO: Use octo previewer for octo buffers
-      previewer = require('telescope.config').values.grep_previewer(opts),
+      previewer = {
+        (function(previewer_opts)
+          previewer_opts = previewer_opts or {}
+          local cwd = previewer_opts.cwd or vim.loop.cwd()
+
+          local function jump_to_line(self, bufnr, entry)
+            if entry.lnum and entry.lnum > 0 then
+              ---@type number, number
+              local lnum, lnend = entry.lnum - 1, (entry.lnend or entry.lnum) - 1
+
+              local col, colend = 0, -1
+              -- Both col delimiters should be provided for them to take effect.
+              -- This is to ensure that column range highlighting was opted in, as `col`
+              -- is already used to determine the buffer jump position elsewhere.
+              if entry.col and entry.colend then
+                ---@type number, number
+                col, colend = entry.col - 1, entry.colend - 1
+              end
+
+              for i = lnum, lnend do
+                pcall(vim.api.nvim_buf_add_highlight, bufnr, ns_previewer, 'TelescopePreviewLine', i, i == lnum and col or 0, i == lnend and colend or -1)
+              end
+
+              local middle_ln = math.floor(lnum + (lnend - lnum) / 2)
+              pcall(vim.api.nvim_win_set_cursor, self.state.winid, { middle_ln + 1, 0 })
+              if bufnr ~= nil then
+                vim.api.nvim_buf_call(bufnr, function()
+                  vim.cmd('norm! zz')
+                end)
+              end
+            end
+          end
+
+          local from_entry = require('telescope.from_entry')
+          return require('telescope.previewers').new_buffer_previewer({
+            title = 'Grep Preview',
+            dyn_title = function(_, entry)
+              local Path = require('plenary.path')
+              return Path:new(from_entry.path(entry, false, false)):normalize(cwd)
+            end,
+
+            get_buffer_by_name = function(_, entry)
+              return from_entry.path(entry, false, false)
+            end,
+
+            define_preview = function(self, entry)
+              -- builtin.buffers: bypass path validation for terminal buffers that don't have appropriate path
+              local has_buftype = entry.bufnr and vim.api.nvim_buf_is_valid(entry.bufnr) and vim.api.nvim_buf_get_option(entry.bufnr, 'buftype') ~= '' or false
+              ---@type string
+              local p
+              if not has_buftype then
+                p = from_entry.path(entry, true, false) --[[@as string]]
+                if p == nil or p == '' then
+                  return
+                end
+              end
+
+              -- Workaround for unnamed buffer when using builtin.buffer
+              if entry.bufnr and (p == '[No Name]' or has_buftype or octo_buffers[entry.bufnr]) then
+                local lines = vim.api.nvim_buf_get_lines(entry.bufnr, 0, -1, false)
+                vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
+                -- schedule so that the lines are actually there and can be jumped onto when we call jump_to_line
+                vim.schedule(function()
+                  if octo_buffers[entry.bufnr] then
+                    local extmarks = vim.api.nvim_buf_get_extmarks(entry.bufnr, -1, 0, -1, { details = true })
+                    for _, extmark in ipairs(extmarks) do
+                      local _, row, col, details = unpack(extmark)
+                      details.ns_id = nil
+                      vim.api.nvim_buf_set_extmark(self.state.bufnr, ns_previewer, row, col, details)
+                    end
+                  end
+                  jump_to_line(self, self.state.bufnr, entry)
+                end)
+              else
+                require('telescope.config').values.buffer_previewer_maker(p, self.state.bufnr, {
+                  bufname = self.state.bufname,
+                  winid = self.state.winid,
+                  preview = previewer_opts.preview,
+                  callback = function(bufnr)
+                    jump_to_line(self, bufnr, entry)
+                  end,
+                  file_encoding = previewer_opts.file_encoding,
+                })
+              end
+            end,
+          })
+        end)(),
+      },
       sorter = require('telescope.config').values.generic_sorter(opts),
       attach_mappings = function(prompt_bufnr_, map)
         EntryDisplay.create_autocommands(prompt_bufnr_)
