@@ -204,6 +204,8 @@ function M.find_buffers()
                       details.ns_id = nil
                       vim.api.nvim_buf_set_extmark(self.state.bufnr, ns_previewer, row, col, details)
                     end
+                    vim.bo[self.state.bufnr].filetype = 'markdown'
+                    vim.api.nvim_buf_set_option(self.state.bufnr, 'conceallevel', 2)
                   end
                   jump_to_line(self, self.state.bufnr, entry)
                 end)
