@@ -43,6 +43,10 @@ local function make_buffer_entry()
       icon = ''
     end
     local buftype = vim.bo[entry.bufnr].buftype
+    if buftype == 'terminal' then
+      icon = ''
+      hl_group = 'MiniIconsOrange'
+    end
     local is_removed = buftype ~= 'terminal' and buftype ~= 'acwrite' and buftype ~= 'nofile' and vim.fn.filereadable(full_path) == 0
 
     return displayer({
