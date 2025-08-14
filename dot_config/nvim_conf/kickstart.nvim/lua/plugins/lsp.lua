@@ -404,7 +404,7 @@ return {
         local original_root_dir = merged_config.root_dir
         merged_config.root_dir = function(bufnr, on_dir)
           local filename = vim.api.nvim_buf_get_name(bufnr)
-          if vim.startswith(filename, 'octo:/') then
+          if not File.file_exists(filename) then
             return
           end
           if original_root_dir then
