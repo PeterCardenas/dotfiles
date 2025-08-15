@@ -11,9 +11,9 @@ local function on_attach(client, bufnr)
     client.server_capabilities.semanticTokensProvider = nil
   end
   OnAttach.on_attach(client, bufnr)
-  vim.keymap.set({ 'n' }, 'gD', function()
+  vim.keymap.set({ 'n' }, 'gS', function()
     require('typescript-tools.api').go_to_source_definition(false)
-  end, { buffer = bufnr })
+  end, { buffer = bufnr, desc = 'Go to source definition' })
 end
 
 -- TODO: Add LspDetach support
