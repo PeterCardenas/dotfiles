@@ -370,7 +370,9 @@ return {
 
     servers.bashls = {}
 
-    servers.graphql = {}
+    servers.graphql = {
+      filetypes = { 'graphql' },
+    }
 
     servers.marksman = {}
 
