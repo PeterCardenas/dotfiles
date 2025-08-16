@@ -1038,6 +1038,11 @@ return {
           return original_transform(data)
         end
       end
+      -- Hack to get mermaid visualization to work on ubuntu.
+      local chrome_sandbox_location = vim.fn.expand('~/.local/bin/chrome-sandbox')
+      if vim.fn.has('linux') == 1 and vim.fn.executable(chrome_sandbox_location) == 1 then
+        vim.env.CHROME_DEVEL_SANDBOX = chrome_sandbox_location
+      end
       -- TODO: Add double buffering upstream to remove the need for this.
       ---@type table<string, string>
       local resolved_url_cache = {}
