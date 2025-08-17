@@ -178,7 +178,9 @@ return {
             name = 'run_command',
             description = 'Run a command in the terminal in a given directory',
             ---@type AvanteLLMToolFunc<{rel_path: string, command: string}>
-            func = function(opts, on_log, on_complete)
+            func = function(opts, func_opts)
+              local on_complete = func_opts.on_complete
+              local on_log = func_opts.on_log
               if not on_complete then
                 return false, 'Cannot use run_command tool'
               end
