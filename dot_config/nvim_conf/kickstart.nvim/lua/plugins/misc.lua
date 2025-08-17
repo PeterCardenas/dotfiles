@@ -880,6 +880,7 @@ return {
     version = '^5',
     lazy = false,
     init = function()
+      ---@module 'rustaceanvim'
       ---@type rustaceanvim.Opts
       vim.g.rustaceanvim = {
         tools = {
