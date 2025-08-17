@@ -84,7 +84,6 @@ function fzf-widget -a widget_name
 end
 
 bind \ct "fzf-widget file"
-bind \cr "fzf-widget history"
 bind \ec "fzf-widget cd"
 
 if bind -M insert >/dev/null 2>&1
