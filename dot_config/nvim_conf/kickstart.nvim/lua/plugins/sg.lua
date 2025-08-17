@@ -217,7 +217,7 @@ return {
                   local result, err = handle_result(output, exit_code)
                   on_complete(result, err)
                 end, abs_path)
-              end)
+              end, nil, func_opts.session_ctx)
             end,
             param = {
               type = 'table',
