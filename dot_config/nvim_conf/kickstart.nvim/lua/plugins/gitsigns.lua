@@ -413,7 +413,14 @@ return {
       --       Reference: https://docs.github.com/en/graphql/reference/objects#branchprotectionrule
       --       Reference: https://docs.github.com/en/graphql/reference/enums#mergestatestatus
       if not vim.env.GH_TOKEN then
-        vim.notify('User not set up for gh cli', vim.log.levels.ERROR)
+        vim.wait(1000, function()
+          return _G.GH_TOKEN ~= nil
+        end, 100)
+        if not _G.GH_TOKEN then
+          vim.notify('User not set up for gh cli', vim.log.levels.ERROR)
+        else
+          vim.env.GH_TOKEN = _G.GH_TOKEN
+        end
       end
       require('octo.utils').state_icon_map.COMMENTED = ' '
       require('octo').setup({
