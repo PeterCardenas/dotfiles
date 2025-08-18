@@ -82,11 +82,16 @@ local function make_buffer_entry()
         lnum = entry.info.lnum
       end
     end
+    local octo_title = ''
+    if octo_buffers and octo_buffers[entry.bufnr] then
+      local octo_buf = octo_buffers[entry.bufnr]
+      octo_title = octo_buf.titleMetadata.body or ''
+    end
 
     ---@type BufferPickerEntry
     local buffer_picker_entry = {
       value = bufname,
-      ordinal = entry.bufnr .. ' : ' .. bufname,
+      ordinal = entry.bufnr .. ' : ' .. bufname .. octo_title,
       display = make_display,
       bufnr = entry.bufnr,
       path = filename,
