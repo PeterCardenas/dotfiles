@@ -87,15 +87,16 @@ local function setup_lazygit_buffer()
                 -- Focus the files panel, go to the top, and refresh it.
                 vim.api.nvim_feedkeys('2<R', 't', false)
                 -- Switch back to the panel before the files panel.
-                local panel_content_title_to_id = {
+                local panel_content_title_to_keys = {
                   ['Log'] = '3',
                   ['Remote'] = '3',
                   ['Patch'] = '4',
                   ['Reflog Entry'] = '4',
                   ['Stash'] = '5',
+                  ['Command log'] = '@j\r', -- Open command log picker, select focus and enter.
                 }
-                if panel_content_title_to_id[panel_content_title] then
-                  vim.api.nvim_feedkeys(panel_content_title_to_id[panel_content_title], 't', false)
+                if panel_content_title_to_keys[panel_content_title] then
+                  vim.api.nvim_feedkeys(panel_content_title_to_keys[panel_content_title], 't', false)
                 end
                 timer:stop()
               end
