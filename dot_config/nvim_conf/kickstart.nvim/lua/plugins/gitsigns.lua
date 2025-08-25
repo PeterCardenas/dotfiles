@@ -237,15 +237,17 @@ vim.api.nvim_create_autocmd({ 'BufEnter' }, {
     local lnum = vim.api.nvim_win_get_cursor(0)[1]
     local config = require('gitsigns.config').config
     local gitsigns_async = require('gitsigns.async')
-    -- gitsigns async and plenary async are not compatible with each other
-    -- So use gitsigns async just for getting blame info.
     ---@type fun(cb?: fun(blame_info: Gitsigns.BlameInfo?): nil): nil
     local run = gitsigns_async.create(
       0,
       ---@async
       ---@return Gitsigns.BlameInfo?
       function()
-        local blame_info = cache_entry:get_blame(lnum, config.current_line_blame_opts)
+        -- Defers error notification to hover keymap
+        local is_ok, blame_info = pcall(cache_entry.get_blame, cache_entry, lnum, config.current_line_blame_opts)
+        if not is_ok then
+          return nil
+        end
         return blame_info
       end
     )
