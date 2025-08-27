@@ -38,7 +38,6 @@ local function make_buffer_entry()
     local Path = require('plenary.path')
     ---@type string
     local full_path = Path:new(entry.filename):expand()
-    ---@module 'octo'
     if octo_buffers and octo_buffers[entry.bufnr] then
       local octo_buf = octo_buffers[entry.bufnr]
       display_bufname = octo_buf.titleMetadata.body or ''

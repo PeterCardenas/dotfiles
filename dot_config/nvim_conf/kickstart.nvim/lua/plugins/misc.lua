@@ -814,6 +814,9 @@ return {
       if not cwd:find('projects/snacks%.nvim') then
         table.insert(library, { path = 'snacks.nvim', words = { 'Snacks' } })
       end
+      if not cwd:find('projects/octo%.nvim') then
+        table.insert(library, { path = 'octo.nvim', words = { 'octo_buffers' } })
+      end
       ---@diagnostic disable-next-line: missing-fields
       require('lazydev').setup({
         library = library,
