@@ -125,6 +125,16 @@ nmap('Toggle conceal level', 'uc', function()
   vim.opt_local.conceallevel:remove(cur_level)
   vim.opt_local.conceallevel:append(new_level)
 end)
+nmap('Toggle whitespace in diff', 'uw', function()
+  ---@type string[]
+  local diffopt = vim.opt_local.diffopt:get()
+  local has_whitespace = vim.tbl_contains(diffopt, 'iwhiteall')
+  if has_whitespace then
+    vim.opt_local.diffopt:remove('iwhiteall')
+  else
+    vim.opt_local.diffopt:append('iwhiteall')
+  end
+end)
 
 nmap('Load current[.] directory [s]ession', 'S.', function()
   require('session_manager').load_current_dir_session()
