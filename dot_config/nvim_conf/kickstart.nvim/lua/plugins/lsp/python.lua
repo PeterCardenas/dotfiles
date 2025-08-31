@@ -235,8 +235,9 @@ function M.find_lsp_root(filepath)
 end
 
 ---@async
+---@param override_requirements_path? string
 ---Installs python dependencies according to requirements.txt in the workspace.
-local function maybe_install_python_dependencies()
+function M.maybe_install_python_dependencies(override_requirements_path)
   local cwd = File.get_cwd()
   -- Find a Python file in the current directory
   local success, output = Shell.async_cmd('rg', { '--files', '-g', '*.py' })
@@ -255,7 +256,9 @@ local function maybe_install_python_dependencies()
   end
   local venv_path = lsp_root .. '/.venv'
   local requirements_path ---@type string
-  if File.file_exists(lsp_root .. '/requirements.txt') then
+  if override_requirements_path and File.file_exists(override_requirements_path) then
+    requirements_path = override_requirements_path
+  elseif File.file_exists(lsp_root .. '/requirements.txt') then
     requirements_path = lsp_root .. '/requirements.txt'
   else
     return
@@ -332,7 +335,7 @@ end
 
 function M.setup()
   Async.void(function() ---@async
-    maybe_install_python_dependencies()
+    M.maybe_install_python_dependencies()
   end)
   vim.api.nvim_create_autocmd('LspAttach', {
     group = vim.api.nvim_create_augroup('PythonConfig', { clear = true }),
