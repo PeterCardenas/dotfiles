@@ -66,7 +66,7 @@ function __bazel_complete_targets --argument-names query
     if test (count $query) -eq 0
         set query "//..."
     end
-    bazel query -k $query 2>/dev/null
+    command bazel query -k $query 2>/dev/null
 end
 
 complete -c bazel -n "not __bazel_seen_subcommand" -l autodetect_server_javabase -d "a boolean; default: \"true\""
