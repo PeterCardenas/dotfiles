@@ -442,6 +442,7 @@ function setup_unix() {
 	go install github.com/jesseduffield/lazygit@latest
 	go install golang.org/x/lint/golint@latest
 	go install github.com/iximiuz/cdebug@latest
+	go install github.com/bazelbuild/buildtools/buildozer@latest
 
 	# Install gh extensions
 	gh extension install https://github.com/nektos/gh-act
