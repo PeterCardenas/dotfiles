@@ -28,6 +28,27 @@ function rg_fzf_files
     end
 end
 
+function bazel_fzf_files
+    set cmd (commandline -o)
+    set packages
+    if contains -- build $cmd; or contains -- run $cmd
+    else if contains -- test $cmd
+    else
+        return 0
+    end
+
+    set -lx FZF_DEFAULT_OPTS "--height 40% --reverse --bind=ctrl-z:ignore $FZF_DEFAULT_OPTS"
+    set result (if contains -- build $cmd; or contains -- run $cmd
+        buildozer 'print label' "...:*"
+    else if contains -- test $cmd
+        buildozer 'print label kind' "...:*" | rg '_test' | cut -d ' ' -f1
+    end | sort | fzf)
+
+    if test -n "$result"
+        echo $result
+    end
+end
+
 function fzf-file-widget -d "List files and folders"
     set cmd (commandline -o)
     commandline -i (rg_fzf_files)
