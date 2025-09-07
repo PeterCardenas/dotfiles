@@ -29,7 +29,7 @@ function rg_fzf_files
 end
 
 function __bazel_find_targets --description "More performant but more limited method for finding targets"
-    set cmd (commandline -o)
+    set cmd (commandline -xpc)
 
     set -lx FZF_DEFAULT_OPTS "--height 40% --reverse --bind=ctrl-z:ignore $FZF_DEFAULT_OPTS"
     set result (if contains -- build $cmd; or contains -- run $cmd
@@ -44,7 +44,7 @@ function __bazel_find_targets --description "More performant but more limited me
 end
 
 function __should_find_bazel_targets
-    set cmd (commandline -o)
+    set cmd (commandline -xpc)
     if not contains -- bazel $cmd
         return 1
     end
@@ -60,7 +60,6 @@ end
 dict set ctrl_t_commands __should_find_bazel_targets __bazel_find_targets
 
 function fzf-file-widget -d "List files and folders"
-    set cmd (commandline -o)
     set -l found_ctrl_t_command false
     for checker in (dict keys ctrl_t_commands)
         if $checker
