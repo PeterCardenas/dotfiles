@@ -28,19 +28,13 @@ function rg_fzf_files
     end
 end
 
-function bazel_fzf_files
+function __bazel_find_targets --description "More performant but more limited method for finding targets"
     set cmd (commandline -o)
-    set packages
-    if contains -- build $cmd; or contains -- run $cmd
-    else if contains -- test $cmd
-    else
-        return 0
-    end
 
     set -lx FZF_DEFAULT_OPTS "--height 40% --reverse --bind=ctrl-z:ignore $FZF_DEFAULT_OPTS"
     set result (if contains -- build $cmd; or contains -- run $cmd
         buildozer 'print label' "...:*"
-    else if contains -- test $cmd
+    else # Should be bazel test here
         buildozer 'print label kind' "...:*" | rg '_test' | cut -d ' ' -f1
     end | sort | fzf)
 
@@ -49,9 +43,36 @@ function bazel_fzf_files
     end
 end
 
+function __should_find_bazel_targets
+    set cmd (commandline -o)
+    if not contains -- bazel $cmd
+        return 1
+    end
+    if contains -- build $cmd; or contains -- run $cmd; or contains -- test $cmd
+        return 0
+    end
+    return 1
+end
+
+if not set -q ctrl_t_commands
+    set -g ctrl_t_commands
+end
+dict set ctrl_t_commands __should_find_bazel_targets __bazel_find_targets
+
 function fzf-file-widget -d "List files and folders"
     set cmd (commandline -o)
-    commandline -i (rg_fzf_files)
+    set -l found_ctrl_t_command false
+    for checker in (dict keys ctrl_t_commands)
+        if $checker
+            set found_ctrl_t_command true
+            set -l ctrl_t_command (dict get ctrl_t_commands $checker)
+            commandline -i ($ctrl_t_command)
+            break
+        end
+    end
+    if not $found_ctrl_t_command
+        commandline -i (rg_fzf_files)
+    end
     commandline -f repaint
 end
 
