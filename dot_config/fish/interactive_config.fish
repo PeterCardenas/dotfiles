@@ -11,9 +11,6 @@ function fish_greeting
     set_color normal
 end
 
-# Clear all previous abbreviations
-abbr -e (abbr -l)
-
 # Enable vim keybindings
 set -g fish_key_bindings fish_vi_key_bindings
 # Bar cursor for insert mode
