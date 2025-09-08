@@ -134,14 +134,35 @@ function M.on_attach(client, bufnr)
     vim.lsp.buf.rename()
   end, '[L]anguage [R]ename')
   nmap('<leader>la', function()
-    require('actions-preview').code_actions()
+    require('fzf-lua.providers.lsp').code_actions({
+      winopts = { height = 0.33, width = 1, relative = 'cursor', backdrop = 100, preview = {
+        layout = 'vertical',
+      } },
+      toggle_behavior = 'extend',
+      silent = true,
+    })
   end, '[L]anguage [A]ction')
 
   nmap('gd', function()
     require('trouble').open('lsp_definitions')
+    -- require('fzf-lua.providers.lsp').definitions({
+    --   winopts = { height = 0.5, width = 1, relative = 'cursor', backdrop = 100, preview = {
+    --     layout = 'vertical',
+    --   } },
+    --   toggle_behavior = 'extend',
+    -- })
   end, '[G]oto [D]efinition')
   nmap('gr', function()
     require('trouble').open('lsp_references')
+    -- TODO: width 1 doesn't take up the whole screen width
+
+    -- require('fzf-lua.providers.lsp').references({
+    --   winopts = { height = 0.5, width = 1, relative = 'cursor', backdrop = 100, preview = {
+    --     layout = 'vertical',
+    --   } },
+    --   includeDeclaration = false,
+    --   toggle_behavior = 'extend',
+    -- })
   end, '[G]oto [R]eferences')
   nmap('gI', function()
     require('telescope.builtin').lsp_implementations()
