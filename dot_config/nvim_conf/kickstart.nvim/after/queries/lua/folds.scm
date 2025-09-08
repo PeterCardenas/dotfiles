@@ -1,9 +1,8 @@
 ; extends
 
-; TODO: Doesn't work when comments come before the block.
 (if_statement
-  consequence: (block) @fold
-  (#offset! @fold -1 0 0 0))
+  condition: (_) @fold
+  consequence: (block) @fold)
 
 (if_statement
   alternative: (elseif_statement) @fold)
