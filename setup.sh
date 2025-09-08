@@ -428,8 +428,6 @@ function setup_unix() {
 	# --features isn't supported by cargo binstall
 	cargo install --features 'pcre2' ripgrep
 	cargo install stylua --features lua52 --features luajit
-	# cargo binstall installs the x86_64 version on MacOS
-	cargo install bob-nvim
 
 	# Setup delta/bat theme
 	mkdir -p "$(bat --config-dir)/themes"
