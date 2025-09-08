@@ -44,6 +44,10 @@ require('lazy').setup({
 
   -- TODO: Unsure if this is causing delays in startup rather than requiring the plugin configs manually.
   { import = 'plugins' },
+  {
+    'PeterCardenas/lazy.nvim',
+    branch = 'dev',
+  },
 }, {
   change_detection = {
     -- TODO: 1 day this will be useful, but today is not that day.
