@@ -54,10 +54,27 @@ function __should_find_bazel_targets
     return 1
 end
 
+function __find_python_files
+    set -lx FZF_DEFAULT_OPTS "--height 40% --reverse --bind=ctrl-z:ignore $FZF_DEFAULT_OPTS"
+    set result (rg --files --hidden --glob '*.py' 2> /dev/null | \
+        fzf --query "$INITIAL_QUERY" \
+        --bind "change:reload:sleep 0.1; rg --files --hidden --glob '*.py' 2> /dev/null | fzf --query {q} || true")
+    echo $result
+end
+
+function __is_running_python
+    set cmd (commandline -xpc)
+    if contains -- python $cmd
+        return 0
+    end
+    return 1
+end
+
 if not set -q ctrl_t_commands
     set -g ctrl_t_commands
 end
 dict set ctrl_t_commands __should_find_bazel_targets __bazel_find_targets
+dict set ctrl_t_commands __is_running_python __find_python_files
 
 function fzf-file-widget -d "List files and folders"
     set -l found_ctrl_t_command false
