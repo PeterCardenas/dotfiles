@@ -1,0 +1,6 @@
+grid_activation_key: A-M-x
+hint_activation_key: A-M-v
+scroll_speed: 1
+scroll_speed_max: 1
+scroll_acceleration: 100000
+scroll_deceleration: -1000000
