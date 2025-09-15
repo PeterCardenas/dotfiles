@@ -27,4 +27,6 @@ M.DISABLE_GOPACKAGESDRIVER = os.getenv('DISABLE_GOPACKAGESDRIVER') ~= nil
 
 M.USE_LUA_LS_TIP = os.getenv('USE_LUA_LS_TIP') ~= nil
 
+M.USE_ZUBAN = os.getenv('USE_ZUBAN') ~= nil
+
 return M
