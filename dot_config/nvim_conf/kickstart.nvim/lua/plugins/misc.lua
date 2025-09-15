@@ -166,6 +166,7 @@ return {
   {
     'famiu/bufdelete.nvim',
     lazy = true,
+    cmd = { 'Bdelete' },
   },
 
   -- Copilot AI autocompletion
