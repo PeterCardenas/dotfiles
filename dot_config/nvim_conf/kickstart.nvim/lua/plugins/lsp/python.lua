@@ -13,7 +13,7 @@ M.GEN_FILES_PATH = 'bazel-out/k8-fastbuild/bin'
 local function pyright_config()
   ---@type LspTogglableConfig
   local config = {
-    enabled = enable_pyright,
+    enabled = enable_pyright and not Config.USE_ZUBAN,
     -- Disabled for performance reasons.
     -- Reference: https://github.com/neovim/neovim/issues/23291
     -- Possibly updating neovim can help: https://github.com/neovim/neovim/issues/23291#issuecomment-1817816570
@@ -85,6 +85,7 @@ local function pylsp_config()
   -- 'trailing-newlines'
   ---@type LspTogglableConfig
   local config = {
+    enabled = not Config.USE_ZUBAN,
     settings = {
       pylsp = {
         plugins = {
@@ -315,14 +316,6 @@ function M.maybe_install_python_dependencies(override_requirements_path)
     return
   end
   vim.schedule(function()
-    local config = pylsp_config()
-    config.cmd = { venv_path .. '/bin/pylsp' }
-    local existing_config = vim.lsp.config['pylsp'] or {}
-    local merged_config = vim.tbl_extend('force', existing_config, config)
-    vim.lsp.config('pylsp', merged_config)
-    -- Restart pylsp with correct config.
-    vim.lsp.enable('pylsp', false)
-    vim.lsp.enable('pylsp')
     clear_fidget()
     require('fidget').notify(' ', vim.log.levels.INFO, {
       group = 'install_python_deps',
@@ -330,6 +323,17 @@ function M.maybe_install_python_dependencies(override_requirements_path)
       annote = '✅ Installed python dependencies',
       ttl = 3,
     })
+    local config = pylsp_config()
+    if config.enabled == false then
+      return
+    end
+    config.cmd = { venv_path .. '/bin/pylsp' }
+    local existing_config = vim.lsp.config['pylsp'] or {}
+    local merged_config = vim.tbl_extend('force', existing_config, config)
+    vim.lsp.config('pylsp', merged_config)
+    -- Restart pylsp with correct config.
+    vim.lsp.enable('pylsp', false)
+    vim.lsp.enable('pylsp')
   end)
 end
 
@@ -400,6 +404,7 @@ function M.add_config(servers)
   servers.pyright = pyright_config()
   servers.pylsp = pylsp_config()
   servers.ruff_lsp = get_ruff_lsp_config()
+  servers.zuban = { enabled = Config.USE_ZUBAN, cmd_env = { ZUBAN_LOG_FILE = '/tmp/zuban.log', ZUBAN_LOG = 'debug' } }
 end
 
 return M
