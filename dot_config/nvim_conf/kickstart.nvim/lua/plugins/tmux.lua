@@ -170,7 +170,7 @@ local function update_ssh_connection_from_tmux()
   end
   if #output ~= 1 then
     vim.schedule(function()
-      vim.notify('Unexpected output from tmux showenv: ' .. vim.inspect(output), vim.log.levels.ERROR)
+      vim.notify('Could not get SSH_CONNECTION from tmux env' .. vim.inspect(output), vim.log.levels.ERROR)
     end)
     return
   end
@@ -181,6 +181,27 @@ local function update_ssh_connection_from_tmux()
       return
     end
     vim.env.SSH_CONNECTION = tmux_ssh_connection
+  end)
+  success, output = Shell.async_cmd('fish', { '-c', "tmux showenv | string match -rg '^DISPLAY=(.*?)$'" })
+  if not success then
+    vim.schedule(function()
+      vim.env.DISPLAY = nil
+    end)
+    return
+  end
+  if #output ~= 1 then
+    vim.schedule(function()
+      vim.notify('Could not get DISPLAY from tmux env' .. vim.inspect(output), vim.log.levels.ERROR)
+    end)
+    return
+  end
+  local tmux_display = output[1]
+  vim.schedule(function()
+    if tmux_display == '' then
+      vim.env.DISPLAY = nil
+      return
+    end
+    vim.env.DISPLAY = tmux_display
   end)
 end
 
