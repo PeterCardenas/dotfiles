@@ -64,7 +64,8 @@ end
 
 function __is_running_python
     set cmd (commandline -xpc)
-    if contains -- python $cmd
+    # Handle prefixes like `env`
+    if string match -r -q -- python "$cmd[1]"
         return 0
     end
     return 1
