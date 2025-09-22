@@ -83,7 +83,27 @@ function vim.brint(...)
   -- Use a space to separate the arguments.
   print(table.concat(output, ' '))
 end
+-- Gets the current word being completed for insert mode
+local function get_current_word()
+  local pos = vim.fn.getpos('.')
+  local line = vim.fn.getline(pos[2])
+  local col = pos[3] - 1
 
+  local start_col, end_col = col, col
+  while start_col > 1 and not line:sub(start_col, start_col):match('%s') do
+    start_col = start_col - 1
+  end
+  if line:sub(start_col, start_col):match('%s') then
+    start_col = start_col + 1
+  end
+
+  while end_col <= #line and not line:sub(end_col, end_col):match('%s') do
+    end_col = end_col + 1
+  end
+
+  local current_word = line:sub(start_col, end_col - 1)
+  return current_word
+end
 ---Workaround https://github.com/hrsh7th/cmp-omni/pull/10
 ---@diagnostic disable-next-line: duplicate-set-field
 vim.treesitter.query.omnifunc = function(...)
@@ -91,7 +111,16 @@ vim.treesitter.query.omnifunc = function(...)
   if type(ret) ~= 'table' or type(ret.words) ~= 'table' then
     return ret
   end
-  return Table.remove_duplicates(ret.words)
+  ---@type string[]
+  local words = Table.remove_duplicates(ret.words)
+  local current_word = get_current_word()
+  if not current_word:match('#') then
+    words = vim.tbl_filter(function(word) ---@param word string
+      return not word:match('#')
+    end, words)
+  else
+  end
+  return words
 end
 
 -- Fish startup can be slow, which results in things like lazygit and fzf-lua being slow
