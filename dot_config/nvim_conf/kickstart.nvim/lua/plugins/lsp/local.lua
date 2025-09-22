@@ -110,6 +110,11 @@ function M.add_config(current_config)
   if not success then
     vim.notify('Failed to parse nvim-treesitter config: ' .. nvim_treesitter_config_str, vim.log.levels.ERROR)
     config = {}
+  else
+    config.valid_directives.maybe_conceal_whole_line = {
+      description = 'Conceal the whole line if the match covers entire lines.',
+      parameters = { { type = 'capture', arity = 'required' } },
+    }
   end
   current_config['ts_query_ls'] = {
     init_options = config,
