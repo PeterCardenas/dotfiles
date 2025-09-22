@@ -113,6 +113,10 @@ function M.add_config(current_config)
   end
   current_config['ts_query_ls'] = {
     init_options = config,
+    on_attach = function(_client, bufnr)
+      -- TODO: use completion fromo ts_query_ls
+      vim.bo[bufnr].omnifunc = 'v:lua.vim.treesitter.query.omnifunc'
+    end,
   }
 
   current_config['starpls'] = {
