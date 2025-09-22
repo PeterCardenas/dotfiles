@@ -64,6 +64,23 @@ local function gopls_config()
   }
   --- @type LspTogglableConfig
   local config = {
+    on_attach = function(client, _bufnr)
+      -- workaround for gopls not supporting semanticTokensProvider
+      -- https://github.com/golang/go/issues/54531#issuecomment-1464982242
+      if not client.server_capabilities.semanticTokensProvider then
+        local semantic = client.config.capabilities.textDocument.semanticTokens
+        if semantic then
+          client.server_capabilities.semanticTokensProvider = {
+            full = true,
+            legend = {
+              tokenTypes = semantic.tokenTypes,
+              tokenModifiers = semantic.tokenModifiers,
+            },
+            range = true,
+          }
+        end
+      end
+    end,
     -- Disabled for performance reasons.
     -- Reference: https://github.com/neovim/neovim/issues/23291
     -- Possibly updating neovim can help: https://github.com/neovim/neovim/issues/23291#issuecomment-1817816570
@@ -135,6 +152,9 @@ return {
           positionEncodings = { 'utf-16' },
         },
       },
+      on_attach = function(_client, _bufnr)
+        require('clangd_extensions.inlay_hints').setup_autocmd()
+      end,
       cmd = {
         'clangd',
         '--header-insertion=never',
@@ -187,6 +207,11 @@ return {
     servers.lua_ls = {
       enabled = not Config.USE_RUST_LUA_LS,
       cmd = { lua_ls_path },
+      on_attach = function(client, _bufnr)
+        -- Defer to stylua for formatting.
+        client.server_capabilities.documentFormattingProvider = false
+        client.server_capabilities.documentRangeFormattingProvider = false
+      end,
       settings = {
         Lua = {
           workspace = {
@@ -229,6 +254,11 @@ return {
 
     servers.jsonls = {
       filetypes = { 'json', 'jsonc' },
+      on_attach = function(client, _bufnr)
+        -- Defer to jq for formatting.
+        client.server_capabilities.documentFormattingProvider = false
+        client.server_capabilities.documentRangeFormattingProvider = false
+      end,
       settings = {
         json = {
           validate = { enable = true },
@@ -289,6 +319,15 @@ return {
           ['schemaStore.enable'] = true,
         },
       },
+      on_attach = function(client, bufnr)
+        local file_name = vim.api.nvim_buf_get_name(bufnr)
+        -- If file name ends with template.yaml, then we disable yamlls diagnostics since jinja templates cannot be parsed correctly.
+        local template_yaml_extension = 'template.yaml'
+        if file_name:sub(-#template_yaml_extension) == template_yaml_extension then
+          ---@type lsp.Handler
+          client.handlers[LspMethod.textDocument_publishDiagnostics] = function() end
+        end
+      end,
     }
 
     servers.taplo = {}
@@ -368,7 +407,13 @@ return {
       enabled = false,
     }
 
-    servers.bashls = {}
+    servers.bashls = {
+      on_attach = function(client, _bufnr)
+        -- Defer to shfmt for formatting.
+        client.server_capabilities.documentFormattingProvider = false
+        client.server_capabilities.documentRangeFormattingProvider = false
+      end,
+    }
 
     servers.graphql = {
       filetypes = { 'graphql' },

@@ -17,6 +17,11 @@ function M.add_config(current_config)
     cmd_env = {
       RUST_BACKTRACE = 'full',
     },
+    on_attach = function(client, _bufnr)
+      -- Defer to stylua for formatting.
+      client.server_capabilities.documentFormattingProvider = false
+      client.server_capabilities.documentRangeFormattingProvider = false
+    end,
     settings = {
       Lua = {
         diagnostics = {
@@ -37,6 +42,11 @@ function M.add_config(current_config)
 
   local home = os.getenv('HOME')
   current_config['fish_lsp'] = {
+    on_attach = function(client, _bufnr)
+      -- Defer to fish_indent for formatting.
+      client.server_capabilities.documentFormattingProvider = false
+      client.server_capabilities.documentRangeFormattingProvider = false
+    end,
     init_options = {
       fish_lsp_all_indexed_paths = {
         home .. '/.local/share/chezmoi/dot_config/fish',
@@ -69,6 +79,11 @@ function M.add_config(current_config)
         },
       },
       offset_encoding = 'utf-16',
+      on_attach = function(client, _bufnr)
+        -- Defer to clang-format for formatting.
+        client.server_capabilities.documentFormattingProvider = false
+        client.server_capabilities.documentRangeFormattingProvider = false
+      end,
     }
   end
 
@@ -77,7 +92,13 @@ function M.add_config(current_config)
     filetypes = { 'swift', 'objc', 'objcpp' },
   }
 
-  current_config['protols'] = {}
+  current_config['protols'] = {
+    on_attach = function(client, _bufnr)
+      -- Defer to clang-format for formatting.
+      client.server_capabilities.documentFormattingProvider = false
+      client.server_capabilities.documentRangeFormattingProvider = false
+    end,
+  }
 
   current_config['gh_actions_ls'] = {
     filetypes = { 'yaml.github' },
@@ -105,6 +126,26 @@ function M.add_config(current_config)
     cmd_env = {
       RUST_BACKTRACE = 'full',
     },
+    on_attach = function(client, bufnr)
+      vim.api.nvim_buf_create_user_command(bufnr, 'StarlarkSyntaxTree', function()
+        local method = 'starpls/showSyntaxTree'
+
+        local params = {
+          textDocument = {
+            uri = vim.uri_from_bufnr(bufnr),
+          },
+        }
+
+        client:request(method, params, function(err, result, _)
+          if err then
+            vim.print('Error: ' .. err.message)
+            return
+          end
+
+          vim.print('Starlark syntax tree:', vim.inspect(result):gsub('\\n', '\n'))
+        end)
+      end, { nargs = 0 })
+    end,
   }
 end
 
