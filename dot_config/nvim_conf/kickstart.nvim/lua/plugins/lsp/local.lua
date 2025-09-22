@@ -1,4 +1,5 @@
 local Config = require('utils.config')
+local File = require('utils.file')
 local M = {}
 
 -- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
@@ -82,15 +83,15 @@ function M.add_config(current_config)
     filetypes = { 'yaml.github' },
   }
 
+  local nvim_treesitter_config_path = vim.fs.joinpath(vim.fn.stdpath('data') --[[@as string]], '/lazy/nvim-treesitter/.tsqueryrc.json')
+  local nvim_treesitter_config_str = File.read_file(nvim_treesitter_config_path)
+  local success, config = pcall(vim.json.decode, nvim_treesitter_config_str)
+  if not success then
+    vim.notify('Failed to parse nvim-treesitter config: ' .. nvim_treesitter_config_str, vim.log.levels.ERROR)
+    config = {}
+  end
   current_config['ts_query_ls'] = {
-    init_options = {
-      parser_install_directories = {
-        vim.fs.joinpath(vim.fn.stdpath('data') --[[@as string]], '/lazy/nvim-treesitter/parser/'),
-      },
-      parser_aliases = {
-        ecma = 'javascript',
-      },
-    },
+    init_options = config,
   }
 
   current_config['starpls'] = {
