@@ -237,11 +237,6 @@ return {
       },
     }
 
-    servers.bzl = {
-      enabled = false,
-      filetypes = { 'bzl' },
-    }
-
     local pnpm_home = os.getenv('PNPM_HOME')
     local tsserver_lib = pnpm_home ~= nil and pnpm_home .. '/global/5/node_modules/typescript/lib' or ''
     servers.mdx_analyzer = {
