@@ -92,4 +92,17 @@ function M.write_to_file(filepath, content)
   return true, ''
 end
 
+---Read a file into a string.
+---@param filepath string
+---@return string
+function M.read_file(filepath)
+  local file = io.open(filepath, 'r')
+  if not file then
+    return ''
+  end
+  local content = file:read('*a')
+  file:close()
+  return content
+end
+
 return M
