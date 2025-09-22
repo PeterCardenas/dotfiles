@@ -10,11 +10,6 @@ local semantic_tokens_group = vim.api.nvim_create_augroup('vim_lsp_semantic_toke
 ---@param client vim.lsp.Client
 ---@param bufnr integer
 function M.on_attach(client, bufnr)
-  -- Setup github issues and PR completion.
-  -- This overrides the lsp omnifunc.
-  require('octo.completion').setup()
-  vim.api.nvim_set_option_value('omnifunc', 'v:lua.octo_omnifunc', { buf = bufnr })
-
   local filename = vim.api.nvim_buf_get_name(bufnr)
   local git_root = File.get_git_root()
   local is_in_git_root = git_root ~= nil and File.file_in_directory(filename, git_root)
@@ -120,10 +115,6 @@ function M.on_attach(client, bufnr)
     nmap('gx', function()
       require('lsplinks').gx()
     end, 'Go to document link under cursor')
-  end
-
-  if client.name == 'ts_query_ls' then
-    vim.bo[bufnr].omnifunc = 'v:lua.vim.treesitter.query.omnifunc'
   end
 
   if client.name == 'rust-analyzer' then
