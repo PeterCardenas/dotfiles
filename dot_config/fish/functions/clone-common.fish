@@ -1,4 +1,4 @@
-function clone-common --description 'Clone a repository' -a ssh_alias -a git_dir -a user -a alias_name -a repo_name
+function clone-common --description 'Clone a repository' -a ssh_alias -a git_dir -a user -a repo_name
     set -l git_dir "$HOME/$git_dir/.git"
     set -l repo_matches (string match -gr '.*/(.*)' $repo_name)
     if test (count $repo_matches) -ne 1
@@ -6,7 +6,7 @@ function clone-common --description 'Clone a repository' -a ssh_alias -a git_dir
         return 1
     end
     set -l repo $repo_matches[1]
-    git clone "$ssh_alias:$repo_name" $argv[3..-1]
+    git clone "$ssh_alias:$repo_name" $argv[5..-1]
     if test $status -ne 0
         print_error "Failed to clone $repo_name"
         return 1
@@ -26,7 +26,7 @@ function clone-common --description 'Clone a repository' -a ssh_alias -a git_dir
         git config --local user.email "$user_email"
         git config --local user.signingkey "$signing_key"
     else
-        print_error "Known git dir for alias $alias_name not found: $git_dir"
+        print_error "Known git dir not found: $git_dir"
         return 1
     end
     set -l existing_fork (gh repo list --fork --json parent --jq ".[] | .parent.owner.login + \"/\" + .parent.name | select(. == \"$user/$repo\")")
