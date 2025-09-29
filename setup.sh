@@ -8,10 +8,10 @@ if [ "$EUID" -eq 0 ]; then
 fi
 
 function install_ghostty() {
-	zvm use v0.13.0
+	zvm use v0.14.1
 	pushd "$HOME/projects"
 	if [ ! -d "$HOME/projects/ghostty" ]; then
-		fish -c "clone personal ghostty-org/ghostty.git"
+		fish -c "clone ghostty-org/ghostty.git"
 		pushd ghostty
 		fish -c "setup_fork"
 	else
@@ -503,7 +503,7 @@ EOF
 	fish -c "pnpm install -g yarn typescript @mermaid-js/mermaid-cli"
 	fish -c "pnpm approve-builds -g"
 	pushd "$HOME"
-	fish -c "clone personal fish-lsp"
+	fish -c "clone fish-lsp"
 	mv "$HOME/fish-lsp" "$HOME/.fish-lsp"
 	popd
 	pushd "$HOME/.fish-lsp"
