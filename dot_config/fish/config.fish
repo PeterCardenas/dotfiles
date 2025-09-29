@@ -34,7 +34,11 @@ else
     fish_add_path -P -m "$HOME/.local/kitty.app/bin" \
         /snap/bin
 end
-set -gx GHOSTTY_BIN_DIR (dirname (which ghostty))
+if command -q ghostty
+    set -gx GHOSTTY_BIN_DIR (dirname (which ghostty))
+else
+    echo "ghostty command not found"
+end
 
 # Update PATH for both interactive and non-interactive shells
 set -gx PNPM_HOME "$HOME/.local/share/pnpm"
