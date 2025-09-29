@@ -34,11 +34,6 @@ else
     fish_add_path -P -m "$HOME/.local/kitty.app/bin" \
         /snap/bin
 end
-if command -q ghostty
-    set -gx GHOSTTY_BIN_DIR (dirname (which ghostty))
-else
-    echo "ghostty command not found"
-end
 
 # Update PATH for both interactive and non-interactive shells
 set -gx PNPM_HOME "$HOME/.local/share/pnpm"
@@ -52,6 +47,12 @@ fish_add_path -P -m "$HOME/.local/share/bob/nvim-bin" \
     "$PNPM_HOME" \
     "$HOME/.zvm/bin" \
     "$ZVM_INSTALL/"
+
+if command -q ghostty
+    set -gx GHOSTTY_BIN_DIR (dirname (which ghostty))
+else
+    echo "ghostty command not found"
+end
 
 function __prompt -a prompt_name
     set -l prompt_file $HOME/.config/starship_$prompt_name.toml
