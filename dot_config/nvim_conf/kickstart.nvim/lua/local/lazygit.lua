@@ -112,7 +112,7 @@ function M.open_lazygit()
   local bufnrs = vim.api.nvim_list_bufs()
   local lazygit_bufnr = vim.tbl_filter(function(bufnr) ---@param bufnr integer
     local bufname = vim.api.nvim_buf_get_name(bufnr)
-    return bufname:match('term://.*lazygit')
+    return bufname:match('term://.*lazygit %-%-path ' .. File.get_git_root())
   end, bufnrs)[1]
   if lazygit_bufnr ~= nil then
     local bufinfo = vim.fn.getbufinfo(lazygit_bufnr)[1]
