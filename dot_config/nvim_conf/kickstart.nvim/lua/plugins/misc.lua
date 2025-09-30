@@ -797,13 +797,6 @@ return {
     'folke/lazydev.nvim',
     ft = 'lua', -- only load on lua files
     config = function()
-      -- TODO: Remove this hack once the following is merged: https://github.com/folke/lazydev.nvim/pull/96
-      local supported_clients = { 'lua_ls', 'emmylua_ls' }
-      ---@param client vim.lsp.Client
-      local function emmylua_ls_supported(client)
-        return client and vim.tbl_contains(supported_clients, client.name)
-      end
-      require('lazydev.lsp').supports = emmylua_ls_supported
       local lazy_path = vim.fn.stdpath('data') .. '/lazy'
       local library = {
         'lazy.nvim',
