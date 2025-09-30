@@ -225,10 +225,12 @@ end, { nargs = 0, desc = 'Edit the PR for the current branch' })
 
 local nmap = require('utils.keymap').nmap
 
-vim.api.nvim_create_autocmd({ 'BufEnter' }, {
+---@type table<integer,boolean>
+local blame_fetch_map = {}
+
+vim.api.nvim_create_autocmd({ 'BufEnter', 'CursorMoved' }, {
   group = vim.api.nvim_create_augroup('gitsigns-prefetch-blame', { clear = true }),
   callback = function(opts)
-    ---@type integer
     local bufnr = opts.buf
     local cache_entry = require('gitsigns.cache').cache[bufnr]
     if not cache_entry then
@@ -237,6 +239,10 @@ vim.api.nvim_create_autocmd({ 'BufEnter' }, {
     local lnum = vim.api.nvim_win_get_cursor(0)[1]
     local config = require('gitsigns.config').config
     local gitsigns_async = require('gitsigns.async')
+    if blame_fetch_map[bufnr] then
+      return
+    end
+    blame_fetch_map[bufnr] = true
     ---@type fun(cb?: fun(blame_info: Gitsigns.BlameInfo?): nil): nil
     local run = gitsigns_async.create(
       0,
@@ -244,11 +250,10 @@ vim.api.nvim_create_autocmd({ 'BufEnter' }, {
       ---@return Gitsigns.BlameInfo?
       function()
         -- Defers error notification to hover keymap
-        local is_ok, blame_info = pcall(cache_entry.get_blame, cache_entry, lnum, config.current_line_blame_opts)
-        if not is_ok then
-          return nil
-        end
-        return blame_info
+        pcall(function() ---@async
+          return cache_entry:get_blame(lnum, config.current_line_blame_opts)
+        end)
+        blame_fetch_map[bufnr] = false
       end
     )
     run()
@@ -258,6 +263,7 @@ vim.api.nvim_create_autocmd({ 'BufEnter' }, {
 -- TODO: show github pr preview, similar to https://github.com/dlvhdr/gh-blame.nvim/blob/main/lua/gh-blame/gh.lua, but with better loading state.
 nmap('Show blame for current line', 'gh', function()
   local config = require('gitsigns.config').config
+  vim.brint('show blame')
   require('gitsigns.actions').blame_line(config.current_line_blame_opts)
 end)
 nmap('Show blame for current line with -C', 'gH', function()
