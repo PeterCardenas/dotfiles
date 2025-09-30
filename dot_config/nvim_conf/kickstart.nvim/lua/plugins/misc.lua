@@ -611,7 +611,9 @@ return {
     dependencies = { 'tpope/vim-repeat' },
     event = { 'BufReadPre', 'BufNewFile', 'BufEnter' },
     config = function()
-      vim.keymap.set({ 'n', 'v', 'x' }, 'gs', '<Plug>(leap-from-window)')
+      vim.keymap.set({ 'n', 'v', 'x' }, 'gs', function()
+        require('leap.remote').action()
+      end)
       vim.keymap.set({ 'n', 'v', 'x' }, 's', '<Plug>(leap-forward)')
       -- TODO: Jumping backwards does not work in visual mode.
       vim.keymap.set({ 'n', 'v', 'x' }, 'S', '<Plug>(leap-backward)')
