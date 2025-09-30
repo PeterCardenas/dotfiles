@@ -416,6 +416,21 @@ return {
 
     servers.marksman = {}
 
+    servers.terraformls = {
+      settings = {
+        terraform = {
+          experimentalFeatures = {
+            validateOnSave = true,
+          },
+        },
+      },
+      on_attach = function(client, _bufnr)
+        -- Relies on terraform being on PATH
+        client.server_capabilities.documentFormattingProvider = false
+        client.server_capabilities.documentRangeFormattingProvider = false
+      end,
+    }
+
     Python.add_config(servers)
 
     -- nvim-cmp supports additional completion capabilities, so broadcast that to servers
