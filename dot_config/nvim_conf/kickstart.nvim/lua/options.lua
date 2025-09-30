@@ -13,6 +13,9 @@ vim.o.fillchars = 'eob: ,fold: ,foldopen:+,foldsep:│,foldclose:-'
 
 vim.o.swapfile = false
 
+-- Ignore whitespace in diffs by default
+vim.o.diffopt = vim.o.diffopt .. ',iwhiteall'
+
 -- Default cursor + bar for terminal (for fzf-lua in particular) and always blinking
 vim.o.guicursor =
   'n-v-c-sm:block-blinkon500-blinkoff500,i-ci-ve:ver25-blinkon500-blinkoff500,r-cr-o:hor20-blinkon500-blinkoff500,t:ver25-blinkon500-blinkoff500-TermCursor'
