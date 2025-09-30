@@ -133,15 +133,16 @@ return {
                     end
                   end
                   if octo_buffers[bufnr]:isDiscussion() then
-                    add_participant(octo_buffers[bufnr].node.author)
-                    for _, comment in ipairs(octo_buffers[bufnr].node.comments.nodes) do
+                    add_participant(octo_buffers[bufnr]:discussion().author)
+                    for _, comment in ipairs(octo_buffers[bufnr]:discussion().comments.nodes) do
                       add_participant(comment.author)
                       for _, reply in ipairs(comment.replies.nodes) do
                         add_participant(reply.author)
                       end
                     end
                   else
-                    for _, participant in ipairs(octo_buffers[bufnr].node.participants.nodes) do
+                    local issue_or_pr = octo_buffers[bufnr]:isIssue() and octo_buffers[bufnr]:issue() or octo_buffers[bufnr]:pullRequest()
+                    for _, participant in ipairs(issue_or_pr.participants.nodes) do
                       add_participant(participant)
                     end
                   end
