@@ -115,6 +115,10 @@ function M.add_config(current_config)
       description = 'Conceal the whole line if the match covers entire lines.',
       parameters = { { type = 'capture', arity = 'required' } },
     }
+    config.valid_captures.images = {
+      ['image'] = 'what the image should replace/represent',
+      ['image.src'] = 'url/path to the image',
+    }
   end
   current_config['ts_query_ls'] = {
     init_options = config,
