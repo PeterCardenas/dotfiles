@@ -4,6 +4,7 @@ local Buf = require('utils.buf')
 local Config = require('utils.config')
 local Git = require('utils.git')
 local File = require('utils.file')
+local Treesitter = require('utils.treesitter')
 
 local large_file_group = vim.api.nvim_create_augroup('Disable Large File Plugins', { clear = true })
 vim.api.nvim_create_autocmd('BufReadPre', {
@@ -92,6 +93,9 @@ return {
         enable_ansi = true,
         -- TODO: Exclude higlighting in comments for github issue/pr numbers
         exclude_filetypes = { 'lazy', 'Avante', 'octo', 'DiffviewFileHistory', '' },
+        exclude_pattern = function(bufnr, row, col)
+          return Treesitter.inside_comment_block(bufnr, row, col)
+        end,
       })
     end,
   },
