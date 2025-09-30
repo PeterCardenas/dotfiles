@@ -1182,7 +1182,7 @@ return {
               end
 
               local imageURLsFromBodyHTML = {} ---@type string[]
-              for imageURL in bodyHTML:gmatch('src="([^"]+)"') do
+              for imageURL in bodyHTML:gmatch(' src="([^"]+)"') do
                 imageURLsFromBodyHTML[#imageURLsFromBodyHTML + 1] = imageURL
               end
               for idx, imageURL in ipairs(imageURLsFromBodyMd) do
