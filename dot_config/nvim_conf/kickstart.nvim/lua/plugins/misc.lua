@@ -92,7 +92,7 @@ return {
         -- TODO: Change upstream to work for more complex ansi colors.
         enable_ansi = true,
         -- TODO: Exclude higlighting in comments for github issue/pr numbers
-        exclude_filetypes = { 'lazy', 'Avante', 'octo', 'DiffviewFileHistory', '' },
+        exclude_filetypes = { 'lazy', 'Avante', 'octo', 'DiffviewFileHistory', '', 'markdown' },
         exclude_pattern = function(bufnr, row, col)
           return Treesitter.inside_comment_block(bufnr, row, col)
         end,
