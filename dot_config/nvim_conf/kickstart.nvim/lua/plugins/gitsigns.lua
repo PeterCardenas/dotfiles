@@ -70,7 +70,7 @@ vim.api.nvim_create_user_command('GHPR', function()
     vim.notify('No blame for current buffer', vim.log.levels.ERROR)
     return
   end
-  local lnum = vim.api.nvim_win_get_cursor(0)[1]
+  local start_lnum, end_lnum = vim.fn.line('w0'), vim.fn.line('w$')
   local config = require('gitsigns.config').config
   local gitsigns_async = require('gitsigns.async')
   -- gitsigns async and plenary async are not compatible with each other
@@ -227,6 +227,8 @@ local nmap = require('utils.keymap').nmap
 
 ---@type table<integer,boolean>
 local blame_fetch_map = {}
+---@type table<integer,table<integer,boolean>>
+local blame_line_fetch_map = {}
 
 vim.api.nvim_create_autocmd({ 'BufEnter', 'CursorMoved' }, {
   group = vim.api.nvim_create_augroup('gitsigns-prefetch-blame', { clear = true }),
@@ -236,27 +238,51 @@ vim.api.nvim_create_autocmd({ 'BufEnter', 'CursorMoved' }, {
     if not cache_entry then
       return
     end
-    local lnum = vim.api.nvim_win_get_cursor(0)[1]
-    local config = require('gitsigns.config').config
-    local gitsigns_async = require('gitsigns.async')
-    if blame_fetch_map[bufnr] then
+    local buf_line_count = vim.api.nvim_buf_line_count(bufnr)
+    local will_blame_whole_file = buf_line_count <= 10000
+    if blame_fetch_map[bufnr] and will_blame_whole_file then
       return
     end
     blame_fetch_map[bufnr] = true
-    ---@type fun(cb?: fun(blame_info: Gitsigns.BlameInfo?): nil): nil
-    local run = gitsigns_async.create(
-      0,
+    local config = require('gitsigns.config').config
+    local gitsigns_async = require('gitsigns.async')
+    ---@type fun(lnum: integer, on_done: fun():nil): nil
+    local prefetch_blame = gitsigns_async.create(
+      2,
       ---@async
+      ---@param lnum integer
+      ---@param on_done fun():nil
       ---@return Gitsigns.BlameInfo?
-      function()
+      function(lnum, on_done)
         -- Defers error notification to hover keymap
         pcall(function() ---@async
           return cache_entry:get_blame(lnum, config.current_line_blame_opts)
         end)
-        blame_fetch_map[bufnr] = false
+        on_done()
       end
     )
-    run()
+    local cursor_lnum = vim.api.nvim_win_get_cursor(0)[1]
+    blame_line_fetch_map[bufnr] = blame_line_fetch_map[bufnr] or {}
+    if not blame_line_fetch_map[bufnr][cursor_lnum] then
+      blame_line_fetch_map[bufnr][cursor_lnum] = true
+      prefetch_blame(cursor_lnum, function()
+        blame_fetch_map[bufnr] = false
+        blame_line_fetch_map[bufnr][cursor_lnum] = false
+        if will_blame_whole_file then
+          return
+        end
+        local start_lnum = math.max(1, cursor_lnum - 20)
+        local end_lnum = math.min(buf_line_count, cursor_lnum + 20)
+        for lnum = start_lnum, end_lnum do
+          if not blame_line_fetch_map[bufnr][lnum] then
+            blame_line_fetch_map[bufnr][lnum] = true
+            prefetch_blame(lnum, function()
+              blame_line_fetch_map[bufnr][lnum] = false
+            end)
+          end
+        end
+      end)
+    end
   end,
 })
 
@@ -489,7 +515,7 @@ return {
     config = function()
       -- See `:help gitsigns.txt`
       require('gitsigns').setup({
-        max_file_length = 50000,
+        max_file_length = 60000,
         gh = true,
         signs = {
           add = { text = '+' },
