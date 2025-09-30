@@ -200,7 +200,7 @@ return {
       require('supermaven-nvim').setup({
         keymaps = {
           accept_suggestion = '<C-Y>',
-          accept_word = '<C-S-Y>',
+          accept_word = '<M-]>',
         },
         log_level = 'warn',
       })
