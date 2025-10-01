@@ -31,7 +31,7 @@ end
 ---@param col? integer
 ---@return TSNode?, vim.treesitter.LanguageTree?, vim.treesitter.Query?
 local function get_ts_info(bufnr, row, col)
-  if (row and row < 1) or (col and col < 1) then
+  if (row and (not bufnr or row < 1 or row > vim.api.nvim_buf_line_count(bufnr))) or (col and col < 1) then
     return nil, nil, nil
   end
   local node_under_cursor = vim.treesitter.get_node({
