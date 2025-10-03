@@ -376,7 +376,6 @@ return {
     'stevearc/conform.nvim',
     lazy = true,
     config = function()
-
       local buildifier_warnings_arg = get_buildifier_warnings_arg()
       require('conform').setup({
         formatters_by_ft = {
