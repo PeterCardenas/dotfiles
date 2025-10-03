@@ -70,7 +70,7 @@ vim.api.nvim_create_user_command('GHPR', function()
     vim.notify('No blame for current buffer', vim.log.levels.ERROR)
     return
   end
-  local start_lnum, end_lnum = vim.fn.line('w0'), vim.fn.line('w$')
+  local lnum = vim.api.nvim_win_get_cursor(0)[1]
   local config = require('gitsigns.config').config
   local gitsigns_async = require('gitsigns.async')
   -- gitsigns async and plenary async are not compatible with each other
