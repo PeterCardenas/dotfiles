@@ -7,6 +7,9 @@ font-style-bold-italic = "Bold"
 font-style-italic = "Medium"
 font-family-italic = "MonaspiceRn Nerd Font"
 
+# (worse) performance issues on macos, so only enable background shader on linux
+custom-shader = ./shaders/cubes.glsl
+
 # Reference: https://fontdrop.info/#/?darkmode=true
 # https://github.com/githubnext/monaspace#character-variants
 # Reference: https://fontdrop.info/#/?darkmode=true
