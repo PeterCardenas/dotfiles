@@ -9,7 +9,7 @@ window-width = 9999
 
 gtk-titlebar = false
 
-# custom-shader = ./shaders/cubes.glsl
+custom-shader = ./shaders/cubes.glsl
 custom-shader = ./shaders/cursor-smear-fade.glsl
 # custom-shader = ./shaders/blaze-trail.glsl
 custom-shader-animation = always
