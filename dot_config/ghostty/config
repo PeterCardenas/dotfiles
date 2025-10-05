@@ -14,6 +14,8 @@ custom-shader = ./shaders/cursor-smear-fade.glsl
 # custom-shader = ./shaders/blaze-trail.glsl
 custom-shader-animation = always
 
+bell-features = border
+
 selection-background = cell-foreground
 selection-foreground = cell-background
 
