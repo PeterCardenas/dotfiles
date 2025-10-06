@@ -232,8 +232,31 @@ local function bazel_go_lint(abs_filepath)
     end
     file_diagnostics[filename][#file_diagnostics[filename] + 1] = diagnostic
   end
+  ---@type table<string, string[]>
+  local missing_deps_for_filename = {}
+  ---@param line string
+  ---@return boolean
+  local function parse_missing_dep_info(line)
+    local filename, missing_dep = line:match('^.*/execroot/[a-zA-z_]+/([^:]+): import of "([^"]+)"$')
+    if not filename then
+      return false
+    end
+    if not missing_deps_for_filename[filename] then
+      missing_deps_for_filename[filename] = {}
+    end
+    missing_deps_for_filename[filename][#missing_deps_for_filename[filename] + 1] = missing_dep
+    return true
+  end
+  local finding_strict_deps = false
   for _, line in ipairs(output) do
-    parse_line(line)
+    if line == 'compilepkg: missing strict dependencies:' then
+      finding_strict_deps = true
+    elseif finding_strict_deps then
+      finding_strict_deps = parse_missing_dep_info(line)
+    end
+    if not finding_strict_deps then
+      parse_line(line)
+    end
   end
   local function filename_to_bufnr(filename)
     local file_uri = vim.uri_from_fname(workspace_root .. '/' .. filename)
@@ -256,6 +279,37 @@ local function bazel_go_lint(abs_filepath)
           enqueue_next_bazel_go_lint()
         end
       )
+    end
+    for filename, missing_deps in pairs(missing_deps_for_filename) do
+      local bufnr = filename_to_bufnr(filename)
+      local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      ---@type vim.Diagnostic[]
+      local missing_dep_diagnostics = {}
+      for _, missing_dep in ipairs(missing_deps) do
+        for line_num, line in ipairs(lines) do
+          local start_col, end_col = line:find(missing_dep, 1, true)
+          if start_col then
+            ---@type vim.Diagnostic
+            local diagnostic = {
+              source = 'bazel-go-build',
+              message = string.format('missing strict dependency for import: %s', missing_dep),
+              range = {
+                start = { line = line_num - 1, character = start_col - 1 },
+                ['end'] = { line = line_num - 1, character = end_col },
+              },
+              severity = vim.diagnostic.severity.ERROR,
+              lnum = line_num - 1,
+              col = start_col - 1,
+              end_col = end_col,
+            }
+            missing_dep_diagnostics[#missing_dep_diagnostics + 1] = diagnostic
+            break
+          end
+        end
+      end
+      if #missing_dep_diagnostics > 0 then
+        vim.diagnostic.set(nogo_diagnostic_ns, bufnr, missing_dep_diagnostics, { underline = true })
+      end
     end
   end
   vim.schedule(set_diagnostics)
@@ -611,3 +665,4 @@ return {
     end,
   },
 }
+
