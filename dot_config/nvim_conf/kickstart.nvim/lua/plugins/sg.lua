@@ -360,6 +360,11 @@ return {
           require('avante.config').providers[provider_name] = nil
         end
       end
+      for provider_name, _ in pairs(require('avante.config').acp_providers) do
+        if provider_name ~= 'claude-code' then
+          require('avante.config').acp_providers[provider_name] = nil
+        end
+      end
     end,
   },
   {
