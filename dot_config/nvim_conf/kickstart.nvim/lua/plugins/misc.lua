@@ -815,6 +815,9 @@ return {
       if not cwd:find('projects/snacks%.nvim') then
         table.insert(library, { path = 'snacks.nvim', words = { 'Snacks' } })
       end
+      if not cwd:find('projects/mini%.icons') then
+        table.insert(library, { path = 'mini.icons', words = { 'MiniIcons' } })
+      end
       if not cwd:find('projects/octo%.nvim') then
         table.insert(library, { path = 'octo.nvim', words = { 'octo_buffers' } })
       end
