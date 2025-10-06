@@ -127,6 +127,10 @@ local nogo_diagnostic_ns = vim.api.nvim_create_namespace('GoBazelLint')
 ---@type table<string, async fun(): nil>
 local bazel_go_lint_queue = {}
 
+---@type SpinnerTimer?
+local bazel_go_lint_spinner_timer = nil
+local bazel_go_lint_spinner = Spinner.create_spinner('moon')
+
 ---@async
 local function enqueue_next_bazel_go_lint()
   local filename, exec = next(bazel_go_lint_queue)
@@ -152,14 +156,25 @@ local function bazel_go_lint(abs_filepath)
   end
   local output_base_id = workspace_root:gsub('/', '_')
   local output_base_flag = string.format('--output_base=$HOME/.cache/bazel/_bazel_go_build_lint_%s', output_base_id)
+  bazel_go_lint_spinner_timer = Spinner.create_timer()
+  bazel_go_lint_spinner_timer.start(function()
+    require('fidget').notify(bazel_go_lint_spinner() .. ' Querying for go targets...', vim.log.levels.INFO, {
+      group = 'bazel_go_lint',
+      key = 'bazel_go_lint',
+      annote = '',
+      ttl = math.huge,
+    })
+  end)
   local relative_filepath = string.sub(abs_filepath, #workspace_root + 2)
   local current_filename = vim.fn.fnamemodify(abs_filepath, ':t')
   local relative_parent_dir = string.sub(relative_filepath, 1, string.len(relative_filepath) - string.len(current_filename) - 1)
   local query_targets = string.format('kind(go_*, rdeps(//%s/..., %s, 1))', relative_parent_dir, relative_filepath)
-  success, output = Shell.async_cmd('fish', { '-c', string.format('bazel %s query --color=no "%s"', output_base_flag, query_targets) })
+  success, output = Shell.async_cmd('bazel', { output_base_flag, 'query', '--color=no', query_targets })
+  bazel_go_lint_spinner_timer.stop()
+  require('fidget').notification.remove('bazel_go_lint', 'bazel_go_lint')
   if not success then
     vim.schedule(function()
-      vim.notify('Failed to bazel query for go', vim.log.levels.ERROR)
+      vim.notify('Failed to bazel query for go: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
     end)
     enqueue_next_bazel_go_lint()
     return
@@ -174,10 +189,18 @@ local function bazel_go_lint(abs_filepath)
     end
   end
 
-  success, output = Shell.async_cmd(
-    'fish',
-    { '-c', string.format('bazel %s build --unified_protos=false --config=dev --color=no %s', output_base_flag, table.concat(matched_targets, ' ')) }
-  )
+  bazel_go_lint_spinner_timer = Spinner.create_timer()
+  bazel_go_lint_spinner_timer.start(function()
+    require('fidget').notify(bazel_go_lint_spinner() .. ' Running bazel go build...', vim.log.levels.INFO, {
+      group = 'bazel_go_lint',
+      key = 'bazel_go_lint',
+      annote = '',
+      ttl = math.huge,
+    })
+  end)
+  success, output = Shell.async_cmd('bazel', { output_base_flag, 'build', '--color=no', table.concat(matched_targets, ' ') })
+  bazel_go_lint_spinner_timer.stop()
+  require('fidget').notification.remove('bazel_go_lint', 'bazel_go_lint')
   ---@type table<string, vim.Diagnostic[]>
   local file_diagnostics = {}
   ---@param line string
@@ -246,6 +269,12 @@ vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter' }, {
       return
     end
     if vim.bo[args.buf].buftype ~= '' then
+      return
+    end
+    if not next(bazel_go_lint_queue) then
+      Async.void(function() ---@async
+        bazel_go_lint(abs_filepath)
+      end)
       return
     end
     bazel_go_lint_queue[abs_filepath] = function() ---@async
