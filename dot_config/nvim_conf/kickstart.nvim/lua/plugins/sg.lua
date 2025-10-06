@@ -73,7 +73,7 @@ return {
       { '<leader>an', '<Plug>(AvanteAskNew)', mode = { 'n', 'v' }, desc = 'avante: ask new' },
       { '<leader>ae', '<Plug>(AvanteEdit)', mode = { 'n', 'v' }, desc = 'avante: edit' },
     },
-    cmd = { 'AvanteAsk', 'AvanteEdit' },
+    cmd = { 'AvanteAsk', 'AvanteEdit', 'AvanteSwitchProvider' },
     build = 'make',
     cond = function()
       local api_key_filepath = vim.fn.expand('~/.local/share/anthropic/api_key')
