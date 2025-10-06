@@ -206,7 +206,7 @@ local function bazel_go_lint(abs_filepath)
   ---@type table<string, vim.Diagnostic[]>
   local file_diagnostics = {}
   ---@param line string
-  local function parse_line(line)
+  local function parse_diagnostic_with_lnum(line)
     local filename, line_num_str, col_num_str, error_msg = string.match(line, '^(%S+):(%d+):(%d+): (.+)$')
     if not filename then
       return
@@ -255,7 +255,7 @@ local function bazel_go_lint(abs_filepath)
       finding_strict_deps = parse_missing_dep_info(line)
     end
     if not finding_strict_deps then
-      parse_line(line)
+      parse_diagnostic_with_lnum(line)
     end
   end
   local function filename_to_bufnr(filename)
