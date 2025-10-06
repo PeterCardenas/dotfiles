@@ -37,7 +37,9 @@ function M.create_timer()
     stop = function()
       is_cleared = true
       timer:stop()
-      timer:close()
+      pcall(function()
+        timer:close()
+      end)
     end,
   }
 end
