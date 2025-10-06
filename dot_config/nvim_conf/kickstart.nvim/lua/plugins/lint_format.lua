@@ -169,7 +169,7 @@ local function bazel_go_lint(abs_filepath)
   local current_filename = vim.fn.fnamemodify(abs_filepath, ':t')
   local relative_parent_dir = string.sub(relative_filepath, 1, string.len(relative_filepath) - string.len(current_filename) - 1)
   local query_targets = string.format('kind(go_*, rdeps(//%s/..., %s, 1))', relative_parent_dir, relative_filepath)
-  success, output = Shell.async_cmd('bazel', { output_base_flag, 'query', '--color=no', query_targets })
+  local success, output = Shell.async_cmd('bazel', { output_base_flag, 'query', '--color=no', query_targets })
   bazel_go_lint_spinner_timer.stop()
   require('fidget').notification.remove('bazel_go_lint', 'bazel_go_lint')
   if not success then
