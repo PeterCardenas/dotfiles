@@ -155,7 +155,7 @@ local function bazel_go_lint(abs_filepath)
     return
   end
   local output_base_id = workspace_root:gsub('/', '_')
-  local output_base_flag = string.format('--output_base=$HOME/.cache/bazel/_bazel_go_build_lint_%s', output_base_id)
+  local output_base_flag = string.format('--output_base=' .. os.getenv('HOME') .. '/.cache/bazel/_bazel_go_build_lint_%s', output_base_id)
   bazel_go_lint_spinner_timer = Spinner.create_timer()
   bazel_go_lint_spinner_timer.start(function()
     require('fidget').notify(bazel_go_lint_spinner() .. ' Querying for go targets...', vim.log.levels.INFO, {
