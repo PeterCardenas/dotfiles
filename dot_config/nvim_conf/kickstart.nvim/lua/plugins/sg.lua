@@ -354,6 +354,12 @@ return {
           },
         },
       })
+      -- Remove providers for autocomplete in AvanteSwitchProvider
+      for provider_name, _ in pairs(require('avante.config').providers) do
+        if provider_name ~= 'bedrock' and not vim.startswith(provider_name, 'azure_') then
+          require('avante.config').providers[provider_name] = nil
+        end
+      end
     end,
   },
   {
