@@ -898,7 +898,8 @@ return {
             ['rust-analyzer'] = {
               check = {
                 allTargets = false,
-                -- command = 'clippy',
+                -- Feedback is too slow on mac
+                command = vim.fn.has('mac') and nil or 'clippy',
               },
             },
           },
