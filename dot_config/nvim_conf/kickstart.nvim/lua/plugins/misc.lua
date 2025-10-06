@@ -374,6 +374,7 @@ return {
           ['webpack.config.mts'] = { glyph = '', hl = 'MiniIconsBlue' },
           ['webpack.config.js'] = { glyph = '', hl = 'MiniIconsOrange' },
           ['.eslintrc.js'] = { glyph = '󰱺', hl = 'MiniIconsPurple' },
+          ['.eslintignore'] = { glyph = '󰱺', hl = 'MiniIconsPurple' },
           ['stylelint.config.js'] = { glyph = '', hl = 'MiniIconsGrey' },
           ['stylelint.config.mjs'] = { glyph = '', hl = 'MiniIconsGrey' },
           ['.terraform-version'] = { glyph = '󱁢', hl = 'MiniIconsCyan' },
