@@ -4,6 +4,9 @@ adjust-cell-height = 27%
 window-position-x = 0
 window-position-y = 0
 
+# Enough to show btop
+quick-terminal-size = 450px
+
 font-family = "Monaspace Krypton Var"
 font-family-bold-italic = "Monaspace Radon Var"
 font-style-bold-italic = "Bold"
