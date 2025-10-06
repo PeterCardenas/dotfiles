@@ -168,13 +168,12 @@ local function bazel_go_lint(abs_filepath)
   local relative_filepath = string.sub(abs_filepath, #workspace_root + 2)
   local current_filename = vim.fn.fnamemodify(abs_filepath, ':t')
   local relative_parent_dir = string.sub(relative_filepath, 1, string.len(relative_filepath) - string.len(current_filename) - 1)
-  local query_targets = string.format('kind(go_*, rdeps(//%s/..., %s, 1))', relative_parent_dir, relative_filepath)
-  local success, output = Shell.async_cmd('bazel', { output_base_flag, 'query', '--color=no', query_targets })
+  local success, output = Shell.async_cmd('buildozer', { '-types', 'go_library', 'print label srcs', '//' .. relative_parent_dir .. ':*' })
   bazel_go_lint_spinner_timer.stop()
   require('fidget').notification.remove('bazel_go_lint', 'bazel_go_lint')
   if not success then
     vim.schedule(function()
-      vim.notify('Failed to bazel query for go: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
+      vim.notify('Failed to buildozer query for go: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
     end)
     enqueue_next_bazel_go_lint()
     return
@@ -182,16 +181,19 @@ local function bazel_go_lint(abs_filepath)
   ---@type string[]
   local matched_targets = {}
   for _, line in ipairs(output) do
-    -- TODO: Make regex more robust.
-    local target = string.match(line, '//[a-zA-Z_:/]+$')
-    if target then
+    local target, srcs_str = line:match('^(//[a-zA-Z_:/]+)%s+%[(.*)%]$')
+    local srcs = vim.split(srcs_str, ' ')
+    local matched_srcs = vim.tbl_filter(function(src) ---@param src string
+      return src == current_filename
+    end, srcs)
+    if #matched_srcs > 0 then
       matched_targets[#matched_targets + 1] = target
     end
   end
 
   bazel_go_lint_spinner_timer = Spinner.create_timer()
   bazel_go_lint_spinner_timer.start(function()
-    require('fidget').notify(bazel_go_lint_spinner() .. ' Running bazel go build...', vim.log.levels.INFO, {
+    require('fidget').notify(bazel_go_lint_spinner() .. ' Building go target...', vim.log.levels.INFO, {
       group = 'bazel_go_lint',
       key = 'bazel_go_lint',
       annote = '',
