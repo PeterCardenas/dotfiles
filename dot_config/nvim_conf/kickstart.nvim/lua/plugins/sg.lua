@@ -1,4 +1,5 @@
 local Config = require('utils.config')
+local Shell = require('utils.shell')
 
 ---@param filepath string
 ---@return boolean, string
@@ -113,6 +114,11 @@ return {
         vim.env.OPENAI_API_KEY = azure_embedding_key
       end
 
+      -- HACK: bedrock provider fails early if BEDROCK_KEYS is not set
+      require('avante.providers.bedrock').is_env_set = function()
+        return true
+      end
+
       local AvanteToolsHelpers = require('avante.llm_tools.helpers')
       -- TODO: Properly respect gitignore for repo map
       -- TODO: building repo map should be async
@@ -131,7 +137,7 @@ return {
             border = 'rounded',
           },
         },
-        provider = 'claude-code',
+        provider = 'bedrock',
         auto_suggestions_provider = 'azure',
         behaviour = {
           auto_suggestions = not Config.USE_SUPERMAVEN,
@@ -160,6 +166,48 @@ return {
           },
         },
         providers = {
+          bedrock = {
+            model = 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
+            model_names = {
+              'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
+              'us.anthropic.claude-3-5-haiku-20241022-v1:0',
+            },
+            aws_region = 'us-east-1',
+            parse_api_key = function()
+              local base_args = 'aws configure get '
+              local region = 'us-east-1'
+              local specific_args = ' --profile default --region ' .. region
+
+              local success, output = Shell.sync_cmd(base_args .. 'aws_access_key_id' .. specific_args)
+              local api_key = ''
+              if success then
+                api_key = output[1]
+              else
+                vim.notify('Failed to run AWS command: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
+                return nil
+              end
+
+              success, output = Shell.sync_cmd(base_args .. 'aws_secret_access_key' .. specific_args)
+              if success then
+                api_key = api_key .. ',' .. output[1]
+              else
+                vim.notify('Failed to run AWS command: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
+                return nil
+              end
+
+              api_key = api_key .. ',' .. region
+
+              success, output = Shell.sync_cmd(base_args .. 'aws_session_token' .. specific_args)
+              if success then
+                api_key = api_key .. ',' .. output[1]
+              else
+                vim.notify('Failed to run AWS command: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
+                return nil
+              end
+
+              return api_key
+            end,
+          },
           azure = {
             parse_api_key = function()
               return azure_openai_key
