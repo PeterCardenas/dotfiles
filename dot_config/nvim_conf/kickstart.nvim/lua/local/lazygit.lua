@@ -83,6 +83,10 @@ local function setup_lazygit_buffer()
                 local first_line_content = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
                 ---@type string?
                 local panel_content_title = first_line_content:match('╭─%[0%]─([a-zA-Z ]+)─')
+                -- Command log doesn't have 0 keybinding to focus
+                if not panel_content_title then
+                  panel_content_title = first_line_content:match('╭─([a-zA-Z ]+)─')
+                end
 
                 -- Focus the files panel, go to the top, and refresh it.
                 vim.api.nvim_feedkeys('2<R', 't', false)
