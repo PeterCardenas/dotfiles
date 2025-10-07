@@ -82,7 +82,7 @@ local function setup_lazygit_buffer()
               if last_line_content:match('Donate') then
                 local first_line_content = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
                 ---@type string?
-                local panel_content_title = first_line_content:match('╭─([a-zA-Z ]+)─')
+                local panel_content_title = first_line_content:match('╭─%[0%]─([a-zA-Z ]+)─')
 
                 -- Focus the files panel, go to the top, and refresh it.
                 vim.api.nvim_feedkeys('2<R', 't', false)
