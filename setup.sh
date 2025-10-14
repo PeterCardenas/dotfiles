@@ -49,6 +49,8 @@ function setup_ubuntu() {
 		fortune
 		ccls
 		btop
+		# Used for ghostty to generate man pages
+		pandoc
 		# Used for neovim file watching on Linux
 		fswatch
 		# Needed for building Neovim, among other things
