@@ -1066,6 +1066,14 @@ return {
         rename = { enabled = true },
         -- TODO: Enable preview virtual lines/window only for svg files, instead of replacing buffer.
         image = {
+          doc = {
+            ---@param lang string
+            ---@param type snacks.image.Type
+            ---@param src string
+            conceal = function(lang, type, src)
+              return vim.endswith(src, '.svg') or type == 'math'
+            end,
+          },
           formats = {
             'png',
             'jpg',
