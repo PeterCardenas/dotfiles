@@ -541,6 +541,9 @@ return {
   {
     'chrisgrieser/nvim-various-textobjs',
     keys = {
+      -- TODO: capitalized acronyms are not deleted correctly
+      -- i.e. select3DObject
+      --             ^ ci<leader>w deletes 'DO' when 3D should be deleted
       { 'a<leader>w', '<cmd>lua require("various-textobjs").subword("outer")<CR>', mode = { 'o', 'x' } },
       { 'i<leader>w', '<cmd>lua require("various-textobjs").subword("inner")<CR>', mode = { 'o', 'x' } },
       {
