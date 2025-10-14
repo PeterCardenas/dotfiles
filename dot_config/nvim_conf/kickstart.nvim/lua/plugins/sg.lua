@@ -129,7 +129,7 @@ return {
       require('avante').setup({
         mode = 'agentic',
         selection = {
-          hints_display = 'none',
+          hint_display = 'none',
         },
         windows = {
           edit = {
