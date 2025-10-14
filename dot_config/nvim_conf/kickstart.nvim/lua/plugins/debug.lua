@@ -28,6 +28,9 @@ return {
       dependencies = {
         'nvim-treesitter/nvim-treesitter',
       },
+      config = function()
+        require('nvim-dap-virtual-text').setup({})
+      end,
     },
 
     -- Installs the debug adapters for you
