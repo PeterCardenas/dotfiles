@@ -30,6 +30,7 @@ return {
       local luasnip = require('luasnip')
       require('luasnip.loaders.from_vscode').lazy_load()
       luasnip.config.setup({})
+      luasnip.filetype_extend('octo', { 'markdown' })
       vim.keymap.set({ 'n', 'i', 's' }, '<Tab>', function()
         if luasnip.expand_or_jumpable() then
           return luasnip.expand_or_jump()
@@ -417,7 +418,7 @@ return {
             return sources
           end,
           per_filetype = {
-            octo = { 'emoji', 'git', 'path' },
+            octo = { 'emoji', 'git', 'path', 'snippets' },
             gitcommit = { 'git', 'emoji', 'path' },
             ghostty = { 'omni', 'path', 'fonts', 'emoji' },
             query = { 'omni' },
