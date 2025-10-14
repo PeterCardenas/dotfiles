@@ -128,8 +128,8 @@ return {
       -- TODO: sidepanel duplicates
       require('avante').setup({
         mode = 'agentic',
-        hints = {
-          enabled = false,
+        selection = {
+          hints_display = 'none',
         },
         windows = {
           edit = {
