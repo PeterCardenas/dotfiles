@@ -16,6 +16,7 @@
 # Function is called at the end of the file
 function rg_fzf_files
     set INITIAL_QUERY $argv
+    # TODO try to use toggle-raw to view matching results in context of all results
     set -lx FZF_DEFAULT_OPTS "--height 40% --reverse --bind=ctrl-z:ignore $FZF_DEFAULT_OPTS"
     set result (
             rg --files --hidden 2> /dev/null | \
