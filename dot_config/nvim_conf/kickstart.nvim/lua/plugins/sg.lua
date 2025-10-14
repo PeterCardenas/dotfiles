@@ -268,7 +268,8 @@ return {
         web_search_engine = {
           provider = 'brave',
         },
-        disabled_tools = { 'python', 'bash', 'dispatch_agent', 'git_commit', 'git_diff', 'view' },
+        -- TODO: read_definitions is broken
+        disabled_tools = { 'python', 'bash', 'dispatch_agent', 'git_commit', 'git_diff', 'view', 'read_definitions' },
         custom_tools = {
           {
             name = 'run_command',
