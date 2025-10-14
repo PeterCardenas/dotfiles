@@ -8,7 +8,7 @@ if [ "$EUID" -eq 0 ]; then
 fi
 
 function install_ghostty() {
-	zvm use v0.14.1
+	zvm use v0.15.1
 	pushd "$HOME/projects"
 	if [ ! -d "$HOME/projects/ghostty" ]; then
 		fish -c "clone ghostty-org/ghostty.git"
@@ -17,9 +17,8 @@ function install_ghostty() {
 	else
 		pushd ghostty
 	fi
-	git checkout working-state
 	if [ "$(uname)" == "Linux" ]; then
-		zig build -p "$HOME/.local" -Doptimize=ReleaseFast
+		zig build -p "$HOME/.local" -Doptimize=ReleaseFast -Demit-docs
 	elif [ "$(uname)" == "Darwin" ]; then
 		zig build -Doptimize=ReleaseFast
 		pushd macos
