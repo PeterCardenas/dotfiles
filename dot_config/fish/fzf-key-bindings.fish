@@ -31,12 +31,21 @@ end
 
 function __bazel_find_targets --description "More performant but more limited method for finding targets"
     set cmd (commandline -xpc)
+    set target_scope
+    if set -q BAZEL_FZF_TARGET_SCOPE
+        set target_scope
+        for scope in $BAZEL_FZF_TARGET_SCOPE
+            set target_scope $target_scope "$scope/...:*"
+        end
+    else
+        set target_scope "...:*"
+    end
 
     set -lx FZF_DEFAULT_OPTS "--height 40% --reverse --bind=ctrl-z:ignore $FZF_DEFAULT_OPTS"
     set result (if contains -- build $cmd; or contains -- run $cmd
-        buildozer 'print label' "...:*"
+        buildozer 'print label' $target_scope
     else # Should be bazel test here
-        buildozer 'print label kind' "...:*" | rg '_test' | cut -d ' ' -f1
+        buildozer 'print label kind' $target_scope | rg '_test' | cut -d ' ' -f1
     end | sort | fzf)
 
     if test -n "$result"
