@@ -25,7 +25,7 @@ local function setup_lazygit_buffer()
             vim.api.nvim_buf_delete(temp_bufnr, { force = true })
             vim.cmd('startinsert')
           end
-        end, 50)
+        end, 10)
         if dirty_buf_enter then
           dirty_buf_enter = false
         end
@@ -66,46 +66,34 @@ local function setup_lazygit_buffer()
         buffer = bufnr,
         callback = function()
           vim.cmd('startinsert')
-          correct_size()
-          -- Wait for lazygit to load
-          local timer = vim.loop.new_timer()
-          timer:start(
-            0,
-            50,
-            vim.schedule_wrap(function()
-              local current_bufnr = vim.api.nvim_get_current_buf()
-              if current_bufnr ~= bufnr then
-                timer:stop()
-                return
+          if not dirty_buf_enter then
+            local last_line_content = vim.api.nvim_buf_get_lines(bufnr, -2, -1, false)[1]
+            if last_line_content:match('Donate') then
+              local first_line_content = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
+              ---@type string?
+              local panel_content_title = first_line_content:match('╭─%[0%]─([a-zA-Z ]+)─')
+              -- Command log doesn't have 0 keybinding to focus
+              if not panel_content_title then
+                panel_content_title = first_line_content:match('╭─([a-zA-Z ]+)─')
               end
-              local last_line_content = vim.api.nvim_buf_get_lines(bufnr, -2, -1, false)[1]
-              if last_line_content:match('Donate') then
-                local first_line_content = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
-                ---@type string?
-                local panel_content_title = first_line_content:match('╭─%[0%]─([a-zA-Z ]+)─')
-                -- Command log doesn't have 0 keybinding to focus
-                if not panel_content_title then
-                  panel_content_title = first_line_content:match('╭─([a-zA-Z ]+)─')
-                end
 
-                -- Focus the files panel, go to the top, and refresh it.
-                vim.api.nvim_feedkeys('2<R', 't', false)
-                -- Switch back to the panel before the files panel.
-                local panel_content_title_to_keys = {
-                  ['Log'] = '3',
-                  ['Remote'] = '3',
-                  ['Patch'] = '4',
-                  ['Reflog Entry'] = '4',
-                  ['Stash'] = '5',
-                  ['Command log'] = '@j\r', -- Open command log picker, select focus and enter.
-                }
-                if panel_content_title_to_keys[panel_content_title] then
-                  vim.api.nvim_feedkeys(panel_content_title_to_keys[panel_content_title], 't', false)
-                end
-                timer:stop()
+              -- Focus the files panel, go to the top, and refresh it.
+              vim.api.nvim_feedkeys('2<R', 't', false)
+              -- Switch back to the panel before the files panel.
+              local panel_content_title_to_keys = {
+                ['Log'] = '3',
+                ['Remote'] = '3',
+                ['Patch'] = '4',
+                ['Reflog Entry'] = '4',
+                ['Stash'] = '5',
+                ['Command log'] = '@j\r', -- Open command log picker, select focus and enter.
+              }
+              if panel_content_title_to_keys[panel_content_title] then
+                vim.api.nvim_feedkeys(panel_content_title_to_keys[panel_content_title], 't', false)
               end
-            end)
-          )
+            end
+          end
+          correct_size()
         end,
       })
     end,
