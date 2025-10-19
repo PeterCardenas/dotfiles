@@ -83,6 +83,7 @@ local function setup_lazygit_buffer()
               local panel_content_title_to_keys = {
                 ['Log'] = '3',
                 ['Remote'] = '3',
+                ['Commit'] = '3',
                 ['Patch'] = '4',
                 ['Reflog Entry'] = '4',
                 ['Stash'] = '5',
