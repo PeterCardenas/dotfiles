@@ -81,6 +81,7 @@ local function setup_lazygit_buffer()
               vim.api.nvim_feedkeys('2<R', 't', false)
               -- Switch back to the panel before the files panel.
               local panel_content_title_to_keys = {
+                ['Unstaged changes'] = '2',
                 ['Log'] = '3',
                 ['Remote'] = '3',
                 ['Commit'] = '3',
