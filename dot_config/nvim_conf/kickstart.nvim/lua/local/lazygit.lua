@@ -90,8 +90,38 @@ local function setup_lazygit_buffer()
                 ['Stash'] = '5',
                 ['Command log'] = '@j\r', -- Open command log picker, select focus and enter.
               }
-              if panel_content_title_to_keys[panel_content_title] then
-                vim.api.nvim_feedkeys(panel_content_title_to_keys[panel_content_title], 't', false)
+              local panel_key = panel_content_title_to_keys[panel_content_title]
+              if panel_key then
+                vim.api.nvim_feedkeys(panel_key, 't', false)
+                local buffer_content = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+                local finding_index = false
+                local selected_index ---@type integer?
+                for _, line in ipairs(buffer_content) do
+                  if not finding_index then
+                    if line:match('^╭─%[' .. panel_key .. '%]─') then
+                      finding_index = true
+                    end
+                  else
+                    local current_index = line:match('^╰─[^0-9]+(%d+) of %d+─╯')
+                    if current_index then
+                      selected_index = tonumber(current_index)
+                      break
+                    end
+                  end
+                end
+                if selected_index and selected_index > 1 then
+                  vim.api.nvim_feedkeys('<', 't', false)
+                  -- Defer to wait for the size correction to finish
+                  vim.defer_fn(function()
+                    if vim.api.nvim_get_current_buf() ~= bufnr then
+                      return
+                    end
+                    local input = string.rep('j', selected_index - 1)
+                    vim.api.nvim_feedkeys(input, 't', false)
+                    -- Preview window doesn't update sometimes, so switch between previous and current to force update.
+                    vim.api.nvim_feedkeys('kj', 't', false)
+                  end, 100)
+                end
               end
             end
           end
