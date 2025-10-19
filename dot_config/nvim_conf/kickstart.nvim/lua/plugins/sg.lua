@@ -145,6 +145,8 @@ return {
           enable_cursor_planning_mode = false,
           -- TODO: auto apply/ask to apply when running tools, maybe add a continue keymap and pause when applying diffs
           auto_apply_diff_after_generation = false,
+          auto_approve_tool_permissions = false,
+          confirmation_ui_style = 'popup',
           enable_claude_text_editor_tool_mode = false,
           enable_token_counting = false,
         },
@@ -154,7 +156,7 @@ return {
           embed_model = 'text-embedding-3-large',
           endpoint = 'https://eastus.api.cognitive.microsoft.com/',
         },
-        system_prompt = 'instead of suggesting what the file would be, always make the edit yourself',
+        system_prompt = 'instead of suggesting what the file would be, always make the edit yourself. DO NOT run tests, i will run tests myself',
         acp_providers = {
           ['claude-code'] = {
             CLAUDE_CODE_USE_BEDROCK = 1,
