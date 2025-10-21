@@ -135,6 +135,9 @@ nmap('Toggle whitespace in diff', 'uw', function()
     vim.opt_local.diffopt:append('iwhiteall')
   end
 end)
+nmap('Toggle line wrap', 'ur', function()
+  vim.o.wrap = not vim.o.wrap
+end)
 
 nmap('Load current[.] directory [s]ession', 'S.', function()
   require('session_manager').load_current_dir_session()
