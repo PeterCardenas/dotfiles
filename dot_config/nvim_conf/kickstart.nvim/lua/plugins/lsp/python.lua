@@ -237,8 +237,9 @@ end
 
 ---@async
 ---@param override_requirements_path? string
+---@param force_python_version? string
 ---Installs python dependencies according to requirements.txt in the workspace.
-function M.maybe_install_python_dependencies(override_requirements_path)
+function M.maybe_install_python_dependencies(override_requirements_path, force_python_version)
   local cwd = File.get_cwd()
   -- Find a Python file in the current directory
   local success, output = Shell.async_cmd('rg', { '--files', '-g', '*.py' })
@@ -289,8 +290,14 @@ function M.maybe_install_python_dependencies(override_requirements_path)
     timer.stop()
     require('fidget').notification.remove('install_python_deps', 'install_python_deps')
   end
-  if not File.file_exists(venv_path) then
-    success, output = Shell.async_cmd('python3.10', { '-m', 'venv', venv_path }, nil)
+  if not File.file_exists(venv_path) or (force_python_version and not File.file_exists(venv_path .. '/lib/python' .. force_python_version)) then
+    local venv_args = { 'venv', '--allow-python-downloads', '--managed-python' }
+    if force_python_version then
+      venv_args[#venv_args + 1] = '--python'
+      venv_args[#venv_args + 1] = force_python_version
+    end
+    venv_args[#venv_args + 1] = venv_path
+    success, output = Shell.async_cmd('uv', venv_args, nil)
     if not success then
       vim.schedule(function()
         vim.notify('Failed to start virtualenv:\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
