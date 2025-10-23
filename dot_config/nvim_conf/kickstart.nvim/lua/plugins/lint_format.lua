@@ -324,7 +324,7 @@ vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter' }, {
     if type(abs_filepath) ~= 'string' then
       return
     end
-    if vim.bo[args.buf].buftype ~= '' then
+    if vim.bo[args.buf].buftype ~= '' or not File.file_exists(abs_filepath) then
       return
     end
     if not next(bazel_go_lint_queue) then
