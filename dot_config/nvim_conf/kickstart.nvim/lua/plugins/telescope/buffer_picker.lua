@@ -206,7 +206,9 @@ function M.find_buffers()
                     for _, extmark in ipairs(extmarks) do
                       local _, row, col, details = unpack(extmark)
                       details.ns_id = nil
-                      vim.api.nvim_buf_set_extmark(self.state.bufnr, ns_previewer, row, col, details)
+                      pcall(function()
+                        vim.api.nvim_buf_set_extmark(self.state.bufnr, ns_previewer, row, col, details)
+                      end)
                     end
                     vim.bo[self.state.bufnr].filetype = 'markdown'
                     vim.api.nvim_buf_set_option(self.state.bufnr, 'conceallevel', 2)
