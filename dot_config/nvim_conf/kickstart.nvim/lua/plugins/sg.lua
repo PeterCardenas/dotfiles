@@ -38,6 +38,37 @@ vim.api.nvim_create_user_command('AvanteToggleAgentMode', function(opts)
   end
 end, { desc = 'avante: toggle agent mode' })
 
+vim.api.nvim_create_user_command('AvanteChangeProvider', function(args)
+  local provider = vim.trim(args.args or '')
+  require('avante.api').switch_provider(provider)
+end, {
+  desc = 'avante: change provider',
+  nargs = 1,
+  complete = function(_, line, _)
+    local prefix = line:match('AvanteChangeProvider%s*(.*)$') or ''
+    local avante_config = require('avante.config')
+    local providers = vim.tbl_filter(
+      ---@param key string
+      function(key)
+        return key:find(prefix, 1, true) == 1
+      end,
+      vim.tbl_keys(avante_config.providers)
+    )
+    for acp_provider_name, _ in pairs(avante_config.acp_providers) do
+      if acp_provider_name:find(prefix, 1, true) == 1 then
+        providers[#providers + 1] = acp_provider_name
+      end
+    end
+    local filtered_providers = {} ---@type string[]
+    for _, provider in ipairs(providers) do
+      if vim.startswith(provider, 'bedrock_') or vim.startswith(provider, 'azure_') or provider == 'claude-code' then
+        filtered_providers[#filtered_providers + 1] = provider
+      end
+    end
+    return filtered_providers
+  end,
+})
+
 ---@type LazyPluginSpec[]
 return {
   {
@@ -373,17 +404,6 @@ return {
           },
         },
       })
-      -- Remove providers for autocomplete in AvanteSwitchProvider
-      for provider_name, _ in pairs(require('avante.config').providers) do
-        if provider_name ~= 'bedrock' and not vim.startswith(provider_name, 'azure_') then
-          require('avante.config').providers[provider_name] = nil
-        end
-      end
-      for provider_name, _ in pairs(require('avante.config').acp_providers) do
-        if provider_name ~= 'claude-code' then
-          require('avante.config').acp_providers[provider_name] = nil
-        end
-      end
     end,
   },
   {
