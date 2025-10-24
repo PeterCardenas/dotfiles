@@ -135,6 +135,7 @@ return {
       -- TODO: allow cancelling, but keep chat history
       -- TODO: becomes slower the longer the output is.
       -- TODO: sidepanel duplicates
+      local provider = 'azure_gpt_4o'
       require('avante').setup({
         mode = 'agentic',
         selection = {
@@ -146,8 +147,8 @@ return {
             border = 'rounded',
           },
         },
-        provider = 'azure_gpt_4o',
-        auto_suggestions_provider = 'azure_gpt_4o',
+        provider = provider,
+        auto_suggestions_provider = provider,
         behaviour = {
           auto_suggestions = not Config.USE_SUPERMAVEN,
           -- TODO: Use this when it's fast and less buggy
