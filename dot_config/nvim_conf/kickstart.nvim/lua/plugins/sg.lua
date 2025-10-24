@@ -165,6 +165,41 @@ return {
         return true
       end
 
+      local function parse_bedrock_key()
+        local base_args = 'aws configure get '
+        local region = 'us-east-1'
+        local specific_args = ' --profile default --region ' .. region
+
+        local success, output = Shell.sync_cmd(base_args .. 'aws_access_key_id' .. specific_args)
+        local api_key = ''
+        if success then
+          api_key = output[1]
+        else
+          vim.notify('Failed to run AWS command: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
+          return nil
+        end
+
+        success, output = Shell.sync_cmd(base_args .. 'aws_secret_access_key' .. specific_args)
+        if success then
+          api_key = api_key .. ',' .. output[1]
+        else
+          vim.notify('Failed to run AWS command: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
+          return nil
+        end
+
+        api_key = api_key .. ',' .. region
+
+        success, output = Shell.sync_cmd(base_args .. 'aws_session_token' .. specific_args)
+        if success then
+          api_key = api_key .. ',' .. output[1]
+        else
+          vim.notify('Failed to run AWS command: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
+          return nil
+        end
+
+        return api_key
+      end
+
       local AvanteToolsHelpers = require('avante.llm_tools.helpers')
       -- TODO: Properly respect gitignore for repo map
       -- TODO: building repo map should be async
@@ -215,47 +250,23 @@ return {
           },
         },
         providers = {
-          bedrock = {
+          bedrock_sonnet = {
+            __inherited_from = 'bedrock',
             model = 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
-            model_names = {
-              'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
-              'us.anthropic.claude-3-5-haiku-20241022-v1:0',
-            },
             aws_region = 'us-east-1',
-            parse_api_key = function()
-              local base_args = 'aws configure get '
-              local region = 'us-east-1'
-              local specific_args = ' --profile default --region ' .. region
-
-              local success, output = Shell.sync_cmd(base_args .. 'aws_access_key_id' .. specific_args)
-              local api_key = ''
-              if success then
-                api_key = output[1]
-              else
-                vim.notify('Failed to run AWS command: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
-                return nil
-              end
-
-              success, output = Shell.sync_cmd(base_args .. 'aws_secret_access_key' .. specific_args)
-              if success then
-                api_key = api_key .. ',' .. output[1]
-              else
-                vim.notify('Failed to run AWS command: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
-                return nil
-              end
-
-              api_key = api_key .. ',' .. region
-
-              success, output = Shell.sync_cmd(base_args .. 'aws_session_token' .. specific_args)
-              if success then
-                api_key = api_key .. ',' .. output[1]
-              else
-                vim.notify('Failed to run AWS command: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
-                return nil
-              end
-
-              return api_key
-            end,
+            parse_api_key = parse_bedrock_key,
+          },
+          bedrock_haiku = {
+            __inherited_from = 'bedrock',
+            model = 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
+            aws_region = 'us-east-1',
+            parse_api_key = parse_bedrock_key,
+          },
+          bedrock_opus = {
+            __inherited_from = 'bedrock',
+            model = 'us.anthropic.claude-opus-4-1-20250805-v1:0',
+            aws_region = 'us-east-1',
+            parse_api_key = parse_bedrock_key,
           },
           azure_gpt_4o = {
             __inherited_from = 'azure',
