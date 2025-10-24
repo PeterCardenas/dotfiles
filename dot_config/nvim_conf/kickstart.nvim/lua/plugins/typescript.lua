@@ -48,7 +48,7 @@ return {
         return root_dir
       end,
       settings = {
-        tsserver_max_memory = 8192,
+        tsserver_max_memory = 16384,
         separate_diagnostic_server = true,
         complete_function_calls = false,
         publish_diagnostic_on = 'insert_leave',
