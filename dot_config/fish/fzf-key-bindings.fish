@@ -55,7 +55,7 @@ end
 
 function __should_find_bazel_targets
     set cmd (commandline -xpc)
-    if not contains -- bazel $cmd
+    if not contains -- bazel $cmd; and not contains -- ibazel $cmd
         return 1
     end
     if contains -- build $cmd; or contains -- run $cmd; or contains -- test $cmd
