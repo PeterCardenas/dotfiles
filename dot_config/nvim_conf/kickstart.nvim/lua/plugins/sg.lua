@@ -30,6 +30,12 @@ vim.api.nvim_create_user_command('AvanteToggleAgentMode', function(opts)
       auto_approve_tool_permissions = not config.behaviour.auto_approve_tool_permissions,
     },
   })
+  config = require('avante.config')
+  if config.behaviour.auto_approve_tool_permissions then
+    vim.notify('Agent mode enabled', vim.log.levels.INFO)
+  else
+    vim.notify('Agent mode disabled', vim.log.levels.INFO)
+  end
 end, { desc = 'avante: toggle agent mode' })
 
 ---@type LazyPluginSpec[]
