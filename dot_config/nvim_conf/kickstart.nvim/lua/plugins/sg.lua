@@ -23,6 +23,15 @@ local function read_api_key(filepath)
   return true, api_key_lines[1]
 end
 
+vim.api.nvim_create_user_command('AvanteToggleAgentMode', function(opts)
+  local config = require('avante.config')
+  require('avante.config').override({
+    behaviour = {
+      auto_approve_tool_permissions = not config.behaviour.auto_approve_tool_permissions,
+    },
+  })
+end, { desc = 'avante: toggle agent mode' })
+
 ---@type LazyPluginSpec[]
 return {
   {
@@ -316,7 +325,7 @@ return {
                   local result, err = handle_result(output, exit_code)
                   on_complete(result, err)
                 end, abs_path)
-              end, nil, func_opts.session_ctx)
+              end, nil, func_opts.session_ctx, 'run_command')
             end,
             param = {
               type = 'table',
