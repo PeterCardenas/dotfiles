@@ -80,18 +80,35 @@ return {
       desc = 'Debug: Step Out',
     },
     {
-      '<leader>db',
+      '<leader>dbb',
       function()
         require('dap').toggle_breakpoint()
       end,
       desc = 'Debug: Toggle Breakpoint',
     },
     {
-      '<leader>dB',
+      '<leader>dbc',
       function()
-        require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: '))
+        local condition = vim.trim(vim.fn.input('Breakpoint condition: '))
+        if condition:len() == 0 then
+          vim.notify('No breakpoint condition', vim.log.levels.ERROR)
+          return
+        end
+        require('dap').set_breakpoint(condition)
       end,
       desc = 'Debug: Add conditional breakpoint',
+    },
+    {
+      '<leader>dbl',
+      function()
+        local log_message = vim.trim(vim.fn.input('Log message: '))
+        if log_message:len() == 0 then
+          vim.notify('No log message', vim.log.levels.ERROR)
+          return
+        end
+        require('dap').set_breakpoint(nil, nil, log_message)
+      end,
+      desc = 'Debug: Add logpoint',
     },
   },
   config = function()
