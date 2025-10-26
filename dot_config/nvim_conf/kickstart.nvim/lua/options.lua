@@ -373,7 +373,7 @@ local signs = {
   { name = 'DapBreakpoint', text = '', texthl = 'DapUILineNumber' },
   { name = 'DapBreakpointRejected', text = '', texthl = 'DiagnosticError' },
   { name = 'DapBreakpointCondition', text = '', texthl = 'DiagnosticInfo' },
-  { name = 'DapLogPoint', text = '.>', texthl = 'DiagnosticInfo' },
+  { name = 'DapLogPoint', text = '>', texthl = 'DiagnosticInfo' },
 }
 for _, sign in ipairs(signs) do
   if not sign.texthl then
