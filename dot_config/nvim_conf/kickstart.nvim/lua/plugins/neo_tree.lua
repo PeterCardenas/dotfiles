@@ -144,16 +144,15 @@ return {
 
   -- File explorer as a buffer and as a tree view
   {
-    'echasnovski/mini.files',
+    'PeterCardenas/mini.files',
+    branch = 'dev',
     version = false,
     lazy = true,
     config = function()
       require('mini.files').setup({
         windows = {
           preview = true,
-          -- width_focus = 25,
-          -- TODO: Only want to apply to file previews
-          -- width_preview = 75,
+          width_file_preview = 100,
         },
         mappings = {
           go_in = 'L',
