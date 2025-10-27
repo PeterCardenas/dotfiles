@@ -388,6 +388,9 @@ end
 -- Adds relatedInformation to the diagnostic message
 ---@param diag vim.Diagnostic
 local function format_diagnostic(diag)
+  if vim.fn.has('nvim-0.12') == 1 then
+    return diag.message
+  end
   local message = diag.message
   ---@class lsp.DiagnosticInfo
   ---@field client_name? string

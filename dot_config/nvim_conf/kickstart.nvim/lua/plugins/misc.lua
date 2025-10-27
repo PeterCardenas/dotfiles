@@ -1168,47 +1168,53 @@ return {
               local bodyHTML = response.data.repository[type].bodyHTML ---@type string
               local bodyMd = response.data.repository[type].body ---@type string
               -- TODO: Automatically parse injected languages
-              local languages = { 'markdown', 'markdown_inline', 'html' }
-              local urls_with_range = {} ---@type [string, number, number][]
-              for _, language in ipairs(languages) do
-                local parser = vim.treesitter.get_string_parser(bodyMd, language)
-                parser:parse()
-                parser:for_each_tree(function(tstree, tree)
-                  local query = vim.treesitter.query.get(tree:lang(), 'images')
-                  if not query then
-                    goto continue
-                  end
-                  for _, match, _ in query:iter_matches(tstree:root(), bodyMd, 0, -1) do
-                    for capture_id, nodes in pairs(match) do
-                      local name = query.captures[capture_id]
-                      if name == 'image.src' then
-                        local url = vim.treesitter.get_node_text(nodes[1], bodyMd)
-                        local row, col = nodes[1]:range()
-                        urls_with_range[#urls_with_range + 1] = { url, row, col }
+              -- TODO: Remove vim.schedule once https://github.com/neovim/neovim/issues/36306 is resolved
+              -- Necessary on nightly (nvim-0.12)
+              vim.schedule(function()
+                local languages = { 'markdown', 'markdown_inline', 'html' }
+                local urls_with_range = {} ---@type [string, number, number][]
+                for _, language in ipairs(languages) do
+                  local parser = vim.treesitter.get_string_parser(bodyMd, language)
+                  parser:parse()
+                  parser:for_each_tree(function(tstree, tree)
+                    local query = vim.treesitter.query.get(tree:lang(), 'images')
+                    if not query then
+                      goto continue
+                    end
+                    for _, match, _ in query:iter_matches(tstree:root(), bodyMd, 0, -1) do
+                      for capture_id, nodes in pairs(match) do
+                        local name = query.captures[capture_id]
+                        if name == 'image.src' then
+                          local url = vim.treesitter.get_node_text(nodes[1], bodyMd)
+                          local row, col = nodes[1]:range()
+                          urls_with_range[#urls_with_range + 1] = { url, row, col }
+                        end
                       end
                     end
+                    ::continue::
+                  end)
+                end
+                Async.void(function()
+                  table.sort(urls_with_range, function(a, b)
+                    return a[2] < b[2] and a[3] < b[3]
+                  end)
+                  local imageURLsFromBodyMd = {} ---@type string[]
+                  for _, url_with_range in ipairs(urls_with_range) do
+                    local url = url_with_range[1]
+                    imageURLsFromBodyMd[#imageURLsFromBodyMd + 1] = url
                   end
-                  ::continue::
-                end)
-              end
-              table.sort(urls_with_range, function(a, b)
-                return a[2] < b[2] and a[3] < b[3]
-              end)
-              local imageURLsFromBodyMd = {} ---@type string[]
-              for _, url_with_range in ipairs(urls_with_range) do
-                local url = url_with_range[1]
-                imageURLsFromBodyMd[#imageURLsFromBodyMd + 1] = url
-              end
 
-              local imageURLsFromBodyHTML = {} ---@type string[]
-              for imageURL in bodyHTML:gmatch(' src="([^"]+)"') do
-                imageURLsFromBodyHTML[#imageURLsFromBodyHTML + 1] = imageURL
-              end
-              for idx, imageURL in ipairs(imageURLsFromBodyMd) do
-                local resolved_url = imageURLsFromBodyHTML[idx]
-                resolved_url_cache[imageURL] = resolved_url
-              end
-              on_complete(resolved_url_cache[src])
+                  local imageURLsFromBodyHTML = {} ---@type string[]
+                  for imageURL in bodyHTML:gmatch(' src="([^"]+)"') do
+                    imageURLsFromBodyHTML[#imageURLsFromBodyHTML + 1] = imageURL
+                  end
+                  for idx, imageURL in ipairs(imageURLsFromBodyMd) do
+                    local resolved_url = imageURLsFromBodyHTML[idx]
+                    resolved_url_cache[imageURL] = resolved_url
+                  end
+                  on_complete(resolved_url_cache[src])
+                end)
+              end)
             end)
           end,
         },
