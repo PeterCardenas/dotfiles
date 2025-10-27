@@ -9,7 +9,12 @@ local Table = require('utils.table')
 
 local LspMethod = vim.lsp.protocol.Methods
 
-vim.lsp.set_log_level('error')
+if vim.fn.has('nvim-0.12') == 1 then
+  vim.lsp.log.set_level('error')
+  vim.lsp.linked_editing_range.enable(true)
+else
+  vim.lsp.set_log_level('error')
+end
 
 -- Removes default behavior of autoformatting on save for zig
 vim.api.nvim_create_autocmd('BufEnter', {
