@@ -119,7 +119,7 @@ return {
       { '<leader>an', '<Plug>(AvanteAskNew)', mode = { 'n', 'v' }, desc = 'avante: ask new' },
       { '<leader>ae', '<Plug>(AvanteEdit)', mode = { 'n', 'v' }, desc = 'avante: edit' },
     },
-    cmd = { 'AvanteAsk', 'AvanteEdit', 'AvanteSwitchProvider' },
+    cmd = { 'AvanteAsk', 'AvanteEdit' },
     build = 'make',
     cond = function()
       local api_key_filepath = vim.fn.expand('~/.local/share/anthropic/api_key')
@@ -415,6 +415,7 @@ return {
           },
         },
       })
+      vim.api.nvim_del_user_command('AvanteSwitchProvider')
     end,
   },
   {
