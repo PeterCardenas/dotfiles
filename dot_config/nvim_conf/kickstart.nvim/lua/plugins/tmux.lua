@@ -182,7 +182,11 @@ local function update_ssh_connection_from_tmux()
     end
     vim.env.SSH_CONNECTION = tmux_ssh_connection
   end)
-  success, output = Shell.async_cmd('fish', { '-c', "tmux showenv | string match -rg '^DISPLAY=(.*?)$'" })
+end
+
+---@async
+local function update_display_from_tmux()
+  local success, output = Shell.async_cmd('fish', { '-c', "tmux showenv | string match -rg '^DISPLAY=(.*?)$'" })
   if not success then
     vim.schedule(function()
       vim.env.DISPLAY = nil
@@ -211,6 +215,7 @@ local function poll_update_tmux_env()
     ---@async
     function()
       update_ssh_connection_from_tmux()
+      update_display_from_tmux()
       if nvim_is_open then
         tmux_cmd:set_is_vim()
       end
