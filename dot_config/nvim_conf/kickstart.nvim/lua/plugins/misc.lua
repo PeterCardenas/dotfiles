@@ -1070,6 +1070,8 @@ return {
         -- TODO: Enable preview virtual lines/window only for svg files, instead of replacing buffer.
         image = {
           doc = {
+            inline = true,
+            float = false,
             ---@param lang string
             ---@param type snacks.image.Type
             ---@param src string
