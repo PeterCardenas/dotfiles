@@ -354,11 +354,16 @@ local function get_buildifier_filetype(bufnr)
   end
 end
 
+local tracked_buffers = {} ---@type table<integer, boolean>
+
 vim.api.nvim_create_autocmd({ 'BufEnter', 'BufRead', 'BufNewFile' }, {
   desc = 'Setup formatting',
   callback = function(args)
-    ---@type number
     local bufnr = args.buf
+    if tracked_buffers[bufnr] then
+      return
+    end
+    tracked_buffers[bufnr] = true
     vim.keymap.set({ 'n', 'v' }, '<leader>lf', function()
       Format.format(bufnr)
     end, {
@@ -456,6 +461,7 @@ return {
     config = function()
       local buildifier_warnings_arg = get_buildifier_warnings_arg()
       require('conform').setup({
+        log_level = vim.log.levels.DEBUG,
         formatters_by_ft = {
           lua = { 'stylua' },
           go = { 'golines' },
