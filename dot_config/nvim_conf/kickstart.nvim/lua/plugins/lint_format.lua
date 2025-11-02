@@ -135,7 +135,6 @@ local bazel_go_lint_spinner = Spinner.create_spinner('moon')
 local function enqueue_next_bazel_go_lint()
   local filename, exec = next(bazel_go_lint_queue)
   if filename then
-    bazel_go_lint_queue[filename] = nil
     if not exec then
       vim.schedule(function()
         vim.notify('Failed to lint file with bazel-go-build', vim.log.levels.ERROR)
@@ -143,6 +142,8 @@ local function enqueue_next_bazel_go_lint()
       return
     end
     exec()
+    bazel_go_lint_queue[filename] = nil
+    enqueue_next_bazel_go_lint()
   end
 end
 
@@ -151,7 +152,6 @@ end
 local function bazel_go_lint(abs_filepath)
   local workspace_root = File.get_ancestor_dir('WORKSPACE')
   if not workspace_root then
-    enqueue_next_bazel_go_lint()
     return
   end
   local output_base_id = workspace_root:gsub('/', '_')
@@ -175,7 +175,6 @@ local function bazel_go_lint(abs_filepath)
     vim.schedule(function()
       vim.notify('Failed to buildozer query for go: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
     end)
-    enqueue_next_bazel_go_lint()
     return
   end
   ---@type string[]
@@ -273,12 +272,6 @@ local function bazel_go_lint(abs_filepath)
     for filename, diagnostics in pairs(file_diagnostics) do
       local bufnr = filename_to_bufnr(filename)
       vim.diagnostic.set(nogo_diagnostic_ns, bufnr, diagnostics, { underline = true })
-      Async.void(
-        ---@async
-        function()
-          enqueue_next_bazel_go_lint()
-        end
-      )
     end
     for filename, missing_deps in pairs(missing_deps_for_filename) do
       local bufnr = filename_to_bufnr(filename)
@@ -327,14 +320,14 @@ vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter' }, {
     if vim.bo[args.buf].buftype ~= '' or not File.file_exists(abs_filepath) then
       return
     end
-    if not next(bazel_go_lint_queue) then
-      Async.void(function() ---@async
-        bazel_go_lint(abs_filepath)
-      end)
-      return
-    end
+    local has_next = next(bazel_go_lint_queue)
     bazel_go_lint_queue[abs_filepath] = function() ---@async
       bazel_go_lint(abs_filepath)
+    end
+    if not has_next then
+      Async.void(function() ---@async
+        enqueue_next_bazel_go_lint()
+      end)
     end
   end,
 })
