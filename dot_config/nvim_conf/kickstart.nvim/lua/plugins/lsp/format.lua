@@ -641,7 +641,7 @@ local function format_with_check(bufnr, dry_run, on_complete)
       dry_run = dry_run,
       quiet = dry_run,
       lsp_format = 'never',
-    }, function(_, would_edit_from_formatter)
+    }, function(_err, would_edit_from_formatter)
       if would_edit_from_formatter then
         sources_with_edits[#sources_with_edits + 1] = formatter_name
       end
@@ -690,13 +690,32 @@ local function update_format_diagnostic(bufnr, sources_needing_formatting)
   vim.diagnostic.set(format_diagnostic_namespace, bufnr, { format_diagnostic }, {})
 end
 
+local queued_format_checks = {} ---@type table<integer, boolean>
+
 ---@param bufnr integer
 local function check_if_needs_formatting(bufnr)
   if is_buffer_locked(bufnr) then
     return
   end
+  -- Conform doesn't behave well when isssuing multiple format requests at once.
+  -- So we debounce to only ever have one format check at a time.
+  if queued_format_checks[bufnr] == true then
+    return
+  end
+  if queued_format_checks[bufnr] == nil then
+    queued_format_checks[bufnr] = false
+  else
+    queued_format_checks[bufnr] = true
+    return
+  end
+
   format_with_check(bufnr, true, function(sources_needing_formatting)
     update_format_diagnostic(bufnr, sources_needing_formatting)
+    local has_queued_format_check = queued_format_checks[bufnr]
+    queued_format_checks[bufnr] = nil
+    if has_queued_format_check then
+      check_if_needs_formatting(bufnr)
+    end
   end)
 end
 
