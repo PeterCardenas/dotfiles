@@ -391,6 +391,7 @@ M.DISABLED_PYLINT_RULES = {
   'protected-access',
   'unspecified-encoding',
   'unnecessary-comprehension',
+  'unnecessary-lambda',
   'bare-except',
   'consider-using-get',
   'unexpected-special-method-signature',
