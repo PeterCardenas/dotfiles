@@ -37,6 +37,9 @@ function __bazel_find_targets --description "More performant but more limited me
         for scope in $BAZEL_FZF_TARGET_SCOPE
             set target_scope $target_scope "$scope/...:*"
         end
+        if set -q BAZEL_FZF_INCLUDE_ROOT; and $BAZEL_FZF_INCLUDE_ROOT
+            set target_scope $target_scope "@//:*"
+        end
     else
         set target_scope "...:*"
     end
