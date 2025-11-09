@@ -360,16 +360,27 @@ vim.api.nvim_create_autocmd({ 'BufEnter', 'BufRead', 'BufNewFile' }, {
   desc = 'Setup formatting',
   callback = function(args)
     local bufnr = args.buf
+    -- Somehow formatting diagnostic is updated while tracked, but keymap is not.
+    local existing_keymaps = vim.api.nvim_buf_get_keymap(bufnr, 'n')
+    local has_keymap = false
+    for _, keymap in ipairs(existing_keymaps) do
+      if keymap.lhs == '<leader>lf' then
+        has_keymap = true
+        break
+      end
+    end
+    if not has_keymap then
+      vim.keymap.set({ 'n', 'v' }, '<leader>lf', function()
+        Format.format(bufnr)
+      end, {
+        desc = 'Format buffer',
+        buffer = bufnr,
+      })
+    end
     if tracked_buffers[bufnr] then
       return
     end
     tracked_buffers[bufnr] = true
-    vim.keymap.set({ 'n', 'v' }, '<leader>lf', function()
-      Format.format(bufnr)
-    end, {
-      desc = 'Format buffer',
-      buffer = bufnr,
-    })
     Format.setup_formatting_diagnostic(bufnr)
   end,
 })
