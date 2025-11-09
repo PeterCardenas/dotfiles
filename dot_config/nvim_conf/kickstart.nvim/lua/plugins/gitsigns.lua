@@ -438,6 +438,9 @@ return {
       end
       require('octo.utils').state_icon_map.COMMENTED = ' '
       require('octo').setup({
+        debug = {
+          notify_missing_timeline_items = true,
+        },
         ssh_aliases = {
           ['personal-github.com'] = 'github.com',
           ['work-github.com'] = 'github.com',
