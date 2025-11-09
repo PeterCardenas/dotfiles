@@ -20,7 +20,7 @@ end
 ---@type LazyPluginSpec
 return {
   'pmizio/typescript-tools.nvim',
-  dependencies = { 'nvim-lua/plenary.nvim', 'neovim/nvim-lspconfig' },
+  dependencies = { 'nvim-lua/plenary.nvim' },
   ft = TypeScript.SUPPORTED_FT,
   config = function()
     -- Following issues remain:
