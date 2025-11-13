@@ -150,7 +150,7 @@ end
 ---@async
 ---@param abs_filepath string
 local function bazel_go_lint(abs_filepath)
-  local workspace_root = File.get_ancestor_dir('WORKSPACE')
+  local workspace_root = File.get_ancestor_dir('WORKSPACE', abs_filepath)
   if not workspace_root then
     return
   end
@@ -199,7 +199,7 @@ local function bazel_go_lint(abs_filepath)
       ttl = math.huge,
     })
   end)
-  success, output = Shell.async_cmd('bazel', { output_base_flag, 'build', '--color=no', table.concat(matched_targets, ' ') })
+  success, output = Shell.async_cmd('bazel', { output_base_flag, 'build', '--color=no', table.concat(matched_targets, ' ') }, workspace_root)
   bazel_go_lint_spinner_timer.stop()
   require('fidget').notification.remove('bazel_go_lint', 'bazel_go_lint')
   ---@type table<string, vim.Diagnostic[]>
