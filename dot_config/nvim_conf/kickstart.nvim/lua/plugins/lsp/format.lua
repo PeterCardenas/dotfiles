@@ -653,8 +653,10 @@ local function format_with_check(bufnr, dry_run, on_complete)
   format_next()
 end
 
+local M = {}
+
 local format_diagnostic_autocmd_group = vim.api.nvim_create_augroup('FormatChecker', { clear = true })
-local format_diagnostic_namespace = vim.api.nvim_create_namespace('FormatChecker')
+M.format_diagnostic_namespace = vim.api.nvim_create_namespace('FormatChecker')
 
 ---@return integer
 local function get_current_lnum()
@@ -673,7 +675,7 @@ end
 ---@param sources_needing_formatting string[]
 local function update_format_diagnostic(bufnr, sources_needing_formatting)
   if #sources_needing_formatting == 0 then
-    vim.diagnostic.reset(format_diagnostic_namespace, bufnr)
+    vim.diagnostic.reset(M.format_diagnostic_namespace, bufnr)
     return
   end
   local lnum = get_current_lnum()
@@ -687,7 +689,7 @@ local function update_format_diagnostic(bufnr, sources_needing_formatting)
     end_lnum = lnum,
     message = 'Format needed from ' .. table.concat(sources_needing_formatting, ', '),
   }
-  vim.diagnostic.set(format_diagnostic_namespace, bufnr, { format_diagnostic }, {})
+  vim.diagnostic.set(M.format_diagnostic_namespace, bufnr, { format_diagnostic }, {})
 end
 
 local queued_format_checks = {} ---@type table<integer, boolean>
@@ -720,7 +722,7 @@ local function check_if_needs_formatting(bufnr)
 end
 
 local function update_formatting_diagnostic_position(bufnr)
-  local current_diagnostics = vim.diagnostic.get(bufnr, { namespace = format_diagnostic_namespace })
+  local current_diagnostics = vim.diagnostic.get(bufnr, { namespace = M.format_diagnostic_namespace })
   if #current_diagnostics ~= 1 then
     return
   end
@@ -728,10 +730,8 @@ local function update_formatting_diagnostic_position(bufnr)
   local new_diagnostic = vim.deepcopy(current_diagnostics[1])
   new_diagnostic.lnum = lnum
   new_diagnostic.end_lnum = lnum
-  vim.diagnostic.set(format_diagnostic_namespace, bufnr, { new_diagnostic }, {})
+  vim.diagnostic.set(M.format_diagnostic_namespace, bufnr, { new_diagnostic }, {})
 end
-
-local M = {}
 
 -- TODO: Add diagnostics where formatting would be applied (similar to eslint-plugin-prettier) and move the following diagnostic to fidget
 ---@param bufnr integer
