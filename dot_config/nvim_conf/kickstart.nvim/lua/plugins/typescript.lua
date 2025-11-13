@@ -1,5 +1,6 @@
 local TypeScript = require('utils.typescript')
 local OnAttach = require('plugins.lsp.on_attach')
+local File = require('utils.file')
 
 ---@param client vim.lsp.Client
 ---@param bufnr integer
@@ -32,9 +33,10 @@ return {
       ---@param bufnr integer
       ---@return string?
       root_dir = function(filename, bufnr)
-        if vim.startswith(filename, 'octo:/') then
+        if not File.file_exists(filename) then
           return
         end
+
         local root_dir = vim.fs.root(bufnr, { 'tsconfig.json', 'package.json', '.git' })
         if not root_dir then
           return
