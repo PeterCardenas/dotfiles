@@ -201,7 +201,7 @@ function M.find_buffers()
                 vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
                 -- schedule so that the lines are actually there and can be jumped onto when we call jump_to_line
                 vim.schedule(function()
-                  if octo_buffers[entry.bufnr] then
+                  if octo_buffers and octo_buffers[entry.bufnr] then
                     local extmarks = vim.api.nvim_buf_get_extmarks(entry.bufnr, -1, 0, -1, { details = true })
                     for _, extmark in ipairs(extmarks) do
                       local _, row, col, details = unpack(extmark)
