@@ -70,7 +70,6 @@ local function jump_to_diagnostic(count)
   local diagnostic ---@type vim.Diagnostic?
   repeat
     diagnostic = vim.diagnostic.jump({ count = count })
-    vim.brint('diagnostic', diagnostic and diagnostic.namespace, Format.format_diagnostic_namespace)
   until not diagnostic or diagnostic.namespace ~= Format.format_diagnostic_namespace
 end
 
