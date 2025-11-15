@@ -67,10 +67,12 @@ end
 ---@param count number
 local function jump_to_diagnostic(count)
   local Format = require('plugins.lsp.format')
+  local seen_namespace_count = 0
   local diagnostic ---@type vim.Diagnostic?
   repeat
     diagnostic = vim.diagnostic.jump({ count = count })
-  until not diagnostic or diagnostic.namespace ~= Format.format_diagnostic_namespace
+    seen_namespace_count = seen_namespace_count + (diagnostic and diagnostic.namespace == Format.format_diagnostic_namespace and 1 or 0)
+  until not diagnostic or diagnostic.namespace ~= Format.format_diagnostic_namespace or seen_namespace_count > 1
 end
 
 -- Diagnostic keymaps
