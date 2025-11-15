@@ -208,7 +208,13 @@ local function bazel_go_lint(abs_filepath)
   local function parse_diagnostic_with_lnum(line)
     local filename, line_num_str, col_num_str, error_msg = string.match(line, '^(%S+):(%d+):(%d+): (.+)$')
     if not filename then
-      return
+      filename, line_num_str, col_num_str, error_msg = string.match(line, '^ERROR: (%S+):(%d+):(%d+): (.+)$')
+      if not filename then
+        return
+      end
+      if vim.startswith(filename, workspace_root) then
+        filename = string.sub(filename, #workspace_root + 2)
+      end
     end
     local line_num, col_num = tonumber(line_num_str), tonumber(col_num_str)
     if line_num == nil or col_num == nil then
