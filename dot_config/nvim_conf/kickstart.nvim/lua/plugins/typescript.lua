@@ -1,5 +1,4 @@
 local TypeScript = require('utils.typescript')
-local OnAttach = require('plugins.lsp.on_attach')
 local File = require('utils.file')
 
 ---@param client vim.lsp.Client
@@ -11,7 +10,6 @@ local function on_attach(client, bufnr)
     client.server_capabilities.documentRangeFormattingProvider = false
     client.server_capabilities.semanticTokensProvider = nil
   end
-  OnAttach.on_attach(client, bufnr)
   vim.keymap.set({ 'n' }, 'gS', function()
     require('typescript-tools.api').go_to_source_definition(false)
   end, { buffer = bufnr, desc = 'Go to source definition' })
@@ -29,48 +27,40 @@ return {
     ---@type vim.lsp.Config
     local config = {
       on_attach = on_attach,
-      ---@param filename string
-      ---@param bufnr integer
-      ---@return string?
-      root_dir = function(filename, bufnr)
+      root_dir = function(bufnr, on_dir)
+        local filename = vim.api.nvim_buf_get_name(bufnr)
         if not File.file_exists(filename) then
           return
         end
 
-        local root_dir = vim.fs.root(bufnr, { 'tsconfig.json', 'package.json', '.git' })
-        if not root_dir then
-          return
-        end
-        -- INFO: this is needed to make sure we don't pick up root_dir inside node_modules
-        local node_modules_index = root_dir and root_dir:find('node_modules', 1, true)
-        if node_modules_index and node_modules_index > 0 then
-          root_dir = root_dir:sub(1, node_modules_index - 2)
-        end
-
-        return root_dir
+        local util = require('typescript-tools.utils')
+        on_dir(util.get_root_dir(bufnr))
       end,
-      settings = {
-        tsserver_max_memory = 16384,
-        separate_diagnostic_server = true,
-        complete_function_calls = false,
-        publish_diagnostic_on = 'insert_leave',
-        tsserver_format_options = {
-          indentSize = 2,
-          convertTabsToSpaces = true,
-        },
-        tsserver_file_preferences = {
-          includeInlayEnumMemberValueHints = true,
-          includeInlayParameterNameHints = 'literals',
-          importModuleSpecifierPreference = 'non-relative',
-          quotePreference = 'single',
-        },
-        tsserver_logs = 'verbose',
-        jsx_close_tag = {
-          enable = true,
-        },
+    }
+    local ts_settings = {
+      tsserver_max_memory = 16384,
+      separate_diagnostic_server = true,
+      complete_function_calls = false,
+      publish_diagnostic_on = 'insert_leave',
+      tsserver_format_options = {
+        indentSize = 2,
+        convertTabsToSpaces = true,
+      },
+      tsserver_file_preferences = {
+        includeInlayEnumMemberValueHints = true,
+        includeInlayParameterNameHints = 'literals',
+        importModuleSpecifierPreference = 'non-relative',
+        quotePreference = 'single',
+      },
+      tsserver_logs = 'verbose',
+      jsx_close_tag = {
+        enable = true,
       },
     }
 
-    require('typescript-tools').setup(config)
+    require('typescript-tools').setup({
+      config = config,
+      settings = ts_settings,
+    })
   end,
 }
