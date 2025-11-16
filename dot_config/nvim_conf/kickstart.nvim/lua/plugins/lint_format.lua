@@ -156,6 +156,13 @@ local function bazel_go_lint(abs_filepath)
   end
   local output_base_id = workspace_root:gsub('/', '_')
   local output_base_flag = string.format('--output_base=' .. os.getenv('HOME') .. '/.cache/bazel/_bazel_go_build_lint_%s', output_base_id)
+  local relative_filepath = string.sub(abs_filepath, #workspace_root + 2)
+  local current_filename = vim.fn.fnamemodify(abs_filepath, ':t')
+  local relative_parent_dir = string.sub(relative_filepath, 1, string.len(relative_filepath) - string.len(current_filename) - 1)
+  -- Ignore bazel output directories
+  if vim.startswith(relative_parent_dir, 'bazel-') then
+    return
+  end
   bazel_go_lint_spinner_timer = Spinner.create_timer()
   bazel_go_lint_spinner_timer.start(function()
     require('fidget').notify(bazel_go_lint_spinner() .. ' Querying for go targets...', vim.log.levels.INFO, {
@@ -165,9 +172,6 @@ local function bazel_go_lint(abs_filepath)
       ttl = math.huge,
     })
   end)
-  local relative_filepath = string.sub(abs_filepath, #workspace_root + 2)
-  local current_filename = vim.fn.fnamemodify(abs_filepath, ':t')
-  local relative_parent_dir = string.sub(relative_filepath, 1, string.len(relative_filepath) - string.len(current_filename) - 1)
   local success, output = Shell.async_cmd('buildozer', { '-types', 'go_library', 'print label srcs', '//' .. relative_parent_dir .. ':*' })
   bazel_go_lint_spinner_timer.stop()
   require('fidget').notification.remove('bazel_go_lint', 'bazel_go_lint')
