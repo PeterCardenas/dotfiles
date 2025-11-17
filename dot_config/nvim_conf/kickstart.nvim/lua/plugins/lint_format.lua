@@ -172,7 +172,7 @@ local function bazel_go_lint(abs_filepath)
       ttl = math.huge,
     })
   end)
-  local success, output = Shell.async_cmd('buildozer', { '-types', 'go_library', 'print label srcs', '//' .. relative_parent_dir .. ':*' })
+  local success, output = Shell.async_cmd('buildozer', { '-types', 'go_library,go_test', 'print label srcs', '//' .. relative_parent_dir .. ':*' })
   bazel_go_lint_spinner_timer.stop()
   require('fidget').notification.remove('bazel_go_lint', 'bazel_go_lint')
   if not success then
