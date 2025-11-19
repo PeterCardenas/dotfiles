@@ -23,8 +23,8 @@ set -g fish_cursor_replace underscore blink
 # Force cursor for tmux (since it is supported).
 set -g fish_vi_force_cursor 1
 
-# Allow mouse for less
-set -gx LESS "--mouse --wheel-lines=3"
+# Allow mouse and ansi colors for less
+set -gx LESS "--mouse --wheel-lines=3 -R"
 
 # Make null color more visible.
 set -gx JQ_COLORS "0;36:0;39:0;39:0;39:0;32:1;39:1;39"
