@@ -254,7 +254,8 @@ return {
           },
           bedrock_haiku = {
             __inherited_from = 'bedrock',
-            model = 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
+            -- model = 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
+            model = 'us.anthropic.claude-3-5-haiku-20241022-v1:0',
             aws_region = 'us-east-1',
             parse_api_key = parse_bedrock_key,
           },
