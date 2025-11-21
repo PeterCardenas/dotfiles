@@ -273,7 +273,7 @@ return {
             model = 'gpt-4o',
             deployment = 'gpt-4o-2024-08-06',
             -- Make smaller than max (128k) because token count calculation is undershooting
-            context_window = 110000,
+            context_window = 100000,
             extra_request_body = {
               max_completion_tokens = 16384,
             },
