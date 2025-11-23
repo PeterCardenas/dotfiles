@@ -32,6 +32,7 @@ M.FT_WITH_LSP = {
   'yaml.github',
   'query',
   'terraform',
+  'graphql',
 }
 
 if vim.fn.has('mac') == 1 then
