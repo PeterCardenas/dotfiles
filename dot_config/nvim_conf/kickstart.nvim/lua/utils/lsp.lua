@@ -1,6 +1,7 @@
 local M = {}
 
 M.FT_WITH_LSP = {
+  'html',
   'typescript',
   'typescriptreact',
   'javascript',

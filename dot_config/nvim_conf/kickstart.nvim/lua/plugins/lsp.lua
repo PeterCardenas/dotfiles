@@ -436,6 +436,8 @@ return {
       end,
     }
 
+    servers.html = {}
+
     Python.add_config(servers)
 
     -- nvim-cmp supports additional completion capabilities, so broadcast that to servers
