@@ -477,7 +477,8 @@ end
 return {
   -- Formatting.
   {
-    'stevearc/conform.nvim',
+    'PeterCardenas/conform.nvim',
+    branch = 'support-nested-tmpfile-format',
     lazy = true,
     config = function()
       local buildifier_warnings_arg = get_buildifier_warnings_arg()

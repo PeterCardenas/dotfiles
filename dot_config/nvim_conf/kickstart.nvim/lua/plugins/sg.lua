@@ -113,7 +113,8 @@ return {
     end,
   },
   {
-    'yetone/avante.nvim',
+    'PeterCardenas/avante.nvim',
+    branch = 'handle-utf8-errors',
     keys = {
       { '<leader>aa', '<Plug>(AvanteAsk)', mode = { 'n', 'v' }, desc = 'avante: ask' },
       { '<leader>an', '<Plug>(AvanteAskNew)', mode = { 'n', 'v' }, desc = 'avante: ask new' },
