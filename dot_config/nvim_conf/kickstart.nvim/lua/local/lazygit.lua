@@ -68,6 +68,8 @@ local function setup_lazygit_buffer()
           vim.cmd('startinsert')
           if not dirty_buf_enter then
             local last_line_content = vim.api.nvim_buf_get_lines(bufnr, -2, -1, false)[1]
+            -- TODO: maybe consider the case where lazygit isn't loaded on buffer enter.
+            -- TODO: consider shpool for backgrounding the process and sharing lazygit session
             if last_line_content:match('Donate') then
               local first_line_content = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
               ---@type string?
