@@ -29,4 +29,6 @@ M.USE_LUA_LS_TIP = os.getenv('USE_LUA_LS_TIP') ~= nil
 
 M.USE_ZUBAN = os.getenv('USE_ZUBAN') ~= nil
 
+M.FZF_LUA_REPO = 'PeterCardenas/fzf-lua'
+
 return M

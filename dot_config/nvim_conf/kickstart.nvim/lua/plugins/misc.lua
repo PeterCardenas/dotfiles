@@ -85,7 +85,8 @@ end)
 return {
   -- Add a background color to colors defined in css.
   {
-    'brenoprata10/nvim-highlight-colors',
+    'PeterCardenas/nvim-highlight-colors',
+    branch = 'exclude-pattern-config',
     event = { 'BufReadPre', 'BufNewFile' },
     config = function()
       require('nvim-highlight-colors').setup({

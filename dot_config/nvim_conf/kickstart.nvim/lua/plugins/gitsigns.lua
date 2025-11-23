@@ -3,6 +3,7 @@ local File = require('utils.file')
 local Shell = require('utils.shell')
 local Git = require('utils.git')
 local Buf = require('utils.buf')
+local Config = require('utils.config')
 
 ---@async
 ---@param cwd string
@@ -379,7 +380,7 @@ return {
     cmd = { 'Octo' },
     dependencies = {
       'nvim-lua/plenary.nvim',
-      'ibhagwan/fzf-lua',
+      Config.FZF_LUA_REPO,
       'echasnovski/mini.icons',
       -- Not actual dependencies, but plugins that I want to be lazy loaded in addition to octo.nvim
       'Bekaboo/dropbar.nvim',
@@ -494,7 +495,8 @@ return {
   },
   {
     -- Adds git related signs to the gutter, as well as utilities for managing changes
-    'lewis6991/gitsigns.nvim',
+    'PeterCardenas/gitsigns.nvim',
+    branch = 'support-fetching-line-ranges',
     event = { 'BufReadPre', 'BufNewFile' },
     config = function()
       -- See `:help gitsigns.txt`

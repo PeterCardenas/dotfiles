@@ -1,12 +1,14 @@
 local Async = require('utils.async')
 local Shell = require('utils.shell')
 local PickerHelpers = require('plugins.telescope.setup')
+local Config = require('utils.config')
 PickerHelpers.create_keymaps()
 
 ---@type LazyPluginSpec[]
 return {
   {
-    'ibhagwan/fzf-lua',
+    Config.FZF_LUA_REPO,
+    branch = 'fix-code-action-window-position',
     dependencies = {
       'echasnovski/mini.icons',
       'nvim-treesitter/nvim-treesitter',
