@@ -121,7 +121,7 @@ return {
       { '<leader>ae', '<Plug>(AvanteEdit)', mode = { 'n', 'v' }, desc = 'avante: edit' },
     },
     cmd = { 'AvanteAsk', 'AvanteEdit' },
-    build = 'make',
+    build = 'make BUILD_FROM_SOURCE=true',
     cond = function()
       local api_key_filepath = vim.fn.expand('~/.local/share/anthropic/api_key')
       return vim.fn.filereadable(api_key_filepath) == 1
