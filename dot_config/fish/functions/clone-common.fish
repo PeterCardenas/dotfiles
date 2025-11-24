@@ -32,20 +32,22 @@ function clone-common --description 'Clone a repository' -a ssh_alias -a git_dir
     end
     set -l existing_fork (gh api graphql -f query="
 query GetUserForksForRepo {
-  organization(login: \"$owner\") {
-    repository(name: \"$repo\") {
-      forks(first: 1, affiliations: [OWNER]) {
-        nodes {
-          name
-          owner {
-            login
-          }
+  repository(name: \"$repo\", owner: \"$owner\") {
+    forks(first: 1, affiliations: [OWNER]) {
+      nodes {
+        name
+        owner {
+          login
         }
       }
     }
   }
 }
-    " --jq ".data.organization.repository.forks.nodes[] | .owner.login + \"/\" + .name")
+    " --jq ".data.repository.forks.nodes[]? | .owner.login + \"/\" + .name")
+    if test $status -ne 0
+        print_error "Failed to get forks for $repo"
+        return 1
+    end
     if test (count $existing_fork) -eq 1
         print_info "Setting up existing fork"
         setup_fork
