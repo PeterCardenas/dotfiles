@@ -1,11 +1,12 @@
 function clone-common --description 'Clone a repository' -a ssh_alias -a git_dir -a user -a repo_name
     set -l git_dir "$HOME/$git_dir/.git"
-    set -l repo_matches (string match -gr '.*/(.*)' $repo_name)
-    if test (count $repo_matches) -ne 1
+    set -l repo_matches (string match -gr '(.*)/(.*)' $repo_name)
+    if test (count $repo_matches) -ne 2
         print_error "Failed to parse repo name: $repo_name"
         return 1
     end
-    set -l repo $repo_matches[1]
+    set -l owner $repo_matches[1]
+    set -l repo $repo_matches[2]
     git clone "$ssh_alias:$repo_name" $argv[5..-1]
     if test $status -ne 0
         print_error "Failed to clone $repo_name"
@@ -29,7 +30,22 @@ function clone-common --description 'Clone a repository' -a ssh_alias -a git_dir
         print_error "Known git dir not found: $git_dir"
         return 1
     end
-    set -l existing_fork (gh repo list --fork --json parent --jq ".[] | .parent.owner.login + \"/\" + .parent.name | select(. == \"$user/$repo\")")
+    set -l existing_fork (gh api graphql -f query="
+query GetUserForksForRepo {
+  organization(login: \"$owner\") {
+    repository(name: \"$repo\") {
+      forks(first: 1, affiliations: [OWNER]) {
+        nodes {
+          name
+          owner {
+            login
+          }
+        }
+      }
+    }
+  }
+}
+    " --jq ".data.organization.repository.forks.nodes[] | .owner.login + \"/\" + .name")
     if test (count $existing_fork) -eq 1
         print_info "Setting up existing fork"
         setup_fork
