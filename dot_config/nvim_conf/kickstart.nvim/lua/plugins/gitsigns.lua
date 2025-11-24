@@ -370,6 +370,13 @@ vim.api.nvim_create_autocmd({ 'BufReadCmd' }, {
     require('octo').load_buffer({ bufnr = args.buf })
   end,
 })
+vim.api.nvim_create_autocmd({ 'BufReadPre' }, {
+  group = lazy_load_octo,
+  pattern = '*/octo.nvim/lua/octo/gh/*.lua',
+  callback = function()
+    require('octo')
+  end,
+})
 
 ---@type LazyPluginSpec[]
 return {
