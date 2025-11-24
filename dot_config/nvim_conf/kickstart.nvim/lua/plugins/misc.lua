@@ -829,7 +829,16 @@ return {
       require('lazydev').setup({
         library = library,
         enabled = function(root_dir) ---@param root_dir string
-          return not vim.uv.fs_stat(root_dir .. '/.luarc.json') or root_dir:find('%.local/share/nvim/lazy/')
+          local luarc_path = root_dir .. '/.luarc.json'
+          -- only disable if luarc contains libraries needed for workspace
+          if vim.uv.fs_stat(luarc_path) then
+            local luarc_contents = File.read_file(luarc_path)
+            local luarc = vim.json.decode(luarc_contents)
+            if luarc.workspace and luarc.workspace.library then
+              return false
+            end
+          end
+          return true
         end,
       })
     end,
