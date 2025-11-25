@@ -347,9 +347,17 @@ vim.api.nvim_create_user_command('ReviewedPRs', function()
   require('octo.pickers.fzf-lua.pickers.search')({ prompt = 'is:pr sort:updated-desc reviewed-by:@me is:open' })
 end, { nargs = 0, desc = 'List all PRs I have reviewed' })
 
-vim.api.nvim_create_user_command('MyPRs', function()
-  require('octo.pickers.fzf-lua.pickers.search')({ prompt = 'is:pr sort:updated-desc author:@me is:open' })
-end, { nargs = 0, desc = 'List all PRs that I have created' })
+vim.api.nvim_create_user_command('MyPRs', function(args)
+  local all = args.args == 'all'
+  local status_filter = all and '' or 'is:open'
+  require('octo.pickers.fzf-lua.pickers.search')({ prompt = 'is:pr sort:updated-desc author:@me ' .. status_filter })
+end, {
+  nargs = '?',
+  desc = 'List all PRs that I have created',
+  complete = function()
+    return { 'all' }
+  end,
+})
 
 vim.api.nvim_create_user_command('GHNotifs', function(args)
   local all = args.args == 'all'
