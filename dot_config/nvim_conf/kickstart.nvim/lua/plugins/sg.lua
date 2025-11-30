@@ -435,7 +435,9 @@ return {
           },
         },
       })
-      vim.api.nvim_del_user_command('AvanteSwitchProvider')
+      for _, cmd in ipairs({ 'AvanteSwitchProvider', 'AvanteChat', 'AvanteAsk', 'AvanteEdit', 'AvanteChatNew' }) do
+        vim.api.nvim_del_user_command(cmd)
+      end
     end,
   },
   {
