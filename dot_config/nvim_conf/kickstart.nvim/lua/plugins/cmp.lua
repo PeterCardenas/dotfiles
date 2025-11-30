@@ -412,7 +412,8 @@ return {
             if ft == '' or ft == 'markdown' or not Treesitter.has_treesitter() or Treesitter.inside_comment_block() then
               sources[#sources + 1] = 'emoji'
               sources[#sources + 1] = 'git'
-            elseif Treesitter.inside_string() then
+            elseif Treesitter.inside_string() and ft ~= 'bzl' then
+              -- possibly want to ignore emoji completion for other filetypes in strings
               sources[#sources + 1] = 'emoji'
             end
             return sources
