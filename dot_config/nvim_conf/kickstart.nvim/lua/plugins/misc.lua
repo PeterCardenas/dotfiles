@@ -896,7 +896,6 @@ return {
   -- Better rust tools
   {
     'mrcjkb/rustaceanvim',
-    version = '^5',
     lazy = false,
     init = function()
       ---@module 'rustaceanvim'
