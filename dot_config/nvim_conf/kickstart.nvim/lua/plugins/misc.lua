@@ -303,9 +303,7 @@ return {
         },
       })
       vim.schedule(function()
-        if vim.notify ~= require('noice.source.notify').notify then
-          vim.notify('Noice not enabled yet', vim.log.levels.WARN)
-        else
+        if vim.notify == require('noice.source.notify').notify then
           ---@diagnostic disable-next-line: duplicate-set-field
           vim.notify = function(msg, level, opts)
             opts = opts or {}
