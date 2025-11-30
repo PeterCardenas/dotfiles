@@ -251,7 +251,8 @@ return {
 
   -- Better UI for select, notifications, popups, and many others.
   {
-    'folke/noice.nvim',
+    'PeterCardenas/noice.nvim',
+    branch = 'fix-blink-cmp-cmdline-completion',
     priority = 999,
     dependencies = {
       'MunifTanjim/nui.nvim',
