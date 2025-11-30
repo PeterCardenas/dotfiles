@@ -156,7 +156,7 @@ return {
       else
         vim.env.OPENAI_API_KEY = azure_embedding_key
       end
-      local AWS_REGION = 'us-east-1'
+      local AWS_REGION = 'us-west-1'
 
       -- HACK: bedrock provider fails early if BEDROCK_KEYS is not set
       require('avante.providers.bedrock').is_env_set = function()
