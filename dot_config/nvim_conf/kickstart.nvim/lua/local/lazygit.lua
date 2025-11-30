@@ -1,4 +1,5 @@
 local File = require('utils.file')
+local Spinner = require('utils.spinner')
 
 local M = {}
 
@@ -62,77 +63,106 @@ local function setup_lazygit_buffer()
           correct_size()
         end,
       })
+
+      local function resume_lazygit_layout()
+        -- TODO: consider shpool for backgrounding the process and sharing lazygit session
+        local first_line_content = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
+        ---@type string?
+        local panel_content_title = first_line_content:match('╭─%[0%]─([a-zA-Z ]+)─')
+        -- Command log doesn't have 0 keybinding to focus
+        if not panel_content_title then
+          panel_content_title = first_line_content:match('╭─([a-zA-Z ]+)─')
+        end
+
+        -- Focus the files panel, go to the top, and refresh it.
+        vim.api.nvim_feedkeys('2<R', 't', false)
+        -- Switch back to the panel before the files panel.
+        local panel_content_title_to_keys = {
+          ['Unstaged changes'] = '2',
+          ['Log'] = '3',
+          ['Remote'] = '3',
+          ['Commit'] = '3',
+          ['Patch'] = '4',
+          ['Reflog Entry'] = '4',
+          ['Stash'] = '5',
+          ['Command log'] = '@j\r', -- Open command log picker, select focus and enter.
+        }
+        local panel_key = panel_content_title_to_keys[panel_content_title]
+        if panel_key then
+          vim.api.nvim_feedkeys(panel_key, 't', false)
+          local buffer_content = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+          local cur_panel_index ---@type integer?
+          local panel_to_selected_indices = {} ---@type table<integer, integer>
+          for _, line in ipairs(buffer_content) do
+            local current_index_str = line:match('^╭─%[(%d)%]─')
+            if current_index_str then
+              cur_panel_index = tonumber(current_index_str)
+            elseif cur_panel_index then
+              local current_index = line:match('^╰─[^0-9]+(%d+) of %d+─╯')
+              if current_index then
+                panel_to_selected_indices[cur_panel_index] = tonumber(current_index)
+                cur_panel_index = nil
+              end
+            end
+          end
+          if next(panel_to_selected_indices) then
+            for panel_index, _ in pairs(panel_to_selected_indices) do
+              vim.api.nvim_feedkeys(panel_index .. '<', 't', false)
+            end
+            -- Defer to wait for the size correction to finish
+            vim.defer_fn(function()
+              if vim.api.nvim_get_current_buf() ~= bufnr then
+                return
+              end
+              for panel_index, selected_index in pairs(panel_to_selected_indices) do
+                vim.api.nvim_feedkeys(tostring(panel_index), 't', false)
+                local input = string.rep('j', selected_index - 1)
+                vim.api.nvim_feedkeys(input, 't', false)
+                -- Preview window doesn't update sometimes, so switch between previous and current to force update.
+                vim.api.nvim_feedkeys('kj', 't', false)
+              end
+              vim.api.nvim_feedkeys(panel_key, 't', false)
+            end, 100)
+          end
+        end
+      end
+
+      ---@type SpinnerTimer?
+      local donate_timer
+
+      local function stop_donate_timer()
+        if donate_timer then
+          donate_timer.stop()
+          donate_timer = nil
+        end
+      end
+
+      local function start_donate_timer()
+        stop_donate_timer()
+        donate_timer = Spinner.create_timer()
+        donate_timer.start(function()
+          if not vim.api.nvim_buf_is_valid(bufnr) then
+            stop_donate_timer()
+            return
+          end
+          local last_line = vim.api.nvim_buf_get_lines(bufnr, -2, -1, false)[1] or ''
+          if last_line:match('Donate') then
+            stop_donate_timer()
+            resume_lazygit_layout()
+          end
+        end)
+      end
+
       vim.api.nvim_create_autocmd('BufEnter', {
         buffer = bufnr,
         callback = function()
           vim.cmd('startinsert')
           if not dirty_buf_enter then
-            local last_line_content = vim.api.nvim_buf_get_lines(bufnr, -2, -1, false)[1]
-            -- TODO: maybe consider the case where lazygit isn't loaded on buffer enter.
-            -- TODO: consider shpool for backgrounding the process and sharing lazygit session
-            if last_line_content:match('Donate') then
-              local first_line_content = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
-              ---@type string?
-              local panel_content_title = first_line_content:match('╭─%[0%]─([a-zA-Z ]+)─')
-              -- Command log doesn't have 0 keybinding to focus
-              if not panel_content_title then
-                panel_content_title = first_line_content:match('╭─([a-zA-Z ]+)─')
-              end
-
-              -- Focus the files panel, go to the top, and refresh it.
-              vim.api.nvim_feedkeys('2<R', 't', false)
-              -- Switch back to the panel before the files panel.
-              local panel_content_title_to_keys = {
-                ['Unstaged changes'] = '2',
-                ['Log'] = '3',
-                ['Remote'] = '3',
-                ['Commit'] = '3',
-                ['Patch'] = '4',
-                ['Reflog Entry'] = '4',
-                ['Stash'] = '5',
-                ['Command log'] = '@j\r', -- Open command log picker, select focus and enter.
-              }
-              local panel_key = panel_content_title_to_keys[panel_content_title]
-              if panel_key then
-                vim.api.nvim_feedkeys(panel_key, 't', false)
-                local buffer_content = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-                local cur_panel_index ---@type integer?
-                local panel_to_selected_indices = {} ---@type table<integer, integer>
-                for _, line in ipairs(buffer_content) do
-                  local current_index_str = line:match('^╭─%[(%d)%]─')
-                  if current_index_str then
-                    cur_panel_index = tonumber(current_index_str)
-                  elseif cur_panel_index then
-                    local current_index = line:match('^╰─[^0-9]+(%d+) of %d+─╯')
-                    if current_index then
-                      panel_to_selected_indices[cur_panel_index] = tonumber(current_index)
-                      cur_panel_index = nil
-                    end
-                  end
-                end
-                if next(panel_to_selected_indices) then
-                  for panel_index, _ in pairs(panel_to_selected_indices) do
-                    vim.api.nvim_feedkeys(panel_index .. '<', 't', false)
-                  end
-                  -- Defer to wait for the size correction to finish
-                  vim.defer_fn(function()
-                    if vim.api.nvim_get_current_buf() ~= bufnr then
-                      return
-                    end
-                    for panel_index, selected_index in pairs(panel_to_selected_indices) do
-                      vim.api.nvim_feedkeys(tostring(panel_index), 't', false)
-                      local input = string.rep('j', selected_index - 1)
-                      vim.api.nvim_feedkeys(input, 't', false)
-                      -- Preview window doesn't update sometimes, so switch between previous and current to force update.
-                      vim.api.nvim_feedkeys('kj', 't', false)
-                    end
-                    vim.api.nvim_feedkeys(panel_key, 't', false)
-                  end, 100)
-                end
-              end
-            end
+            start_donate_timer()
+            correct_size()
+          else
+            stop_donate_timer()
           end
-          correct_size()
         end,
       })
     end,
