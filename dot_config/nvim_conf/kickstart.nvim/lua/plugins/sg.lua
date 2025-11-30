@@ -156,6 +156,7 @@ return {
       else
         vim.env.OPENAI_API_KEY = azure_embedding_key
       end
+      local AWS_REGION = 'us-east-1'
 
       -- HACK: bedrock provider fails early if BEDROCK_KEYS is not set
       require('avante.providers.bedrock').is_env_set = function()
@@ -164,8 +165,7 @@ return {
 
       local function parse_bedrock_key()
         local base_args = 'aws configure get '
-        local region = 'us-east-1'
-        local specific_args = ' --profile default --region ' .. region
+        local specific_args = ' --profile default --region ' .. AWS_REGION
 
         local success, output = Shell.sync_cmd(base_args .. 'aws_access_key_id' .. specific_args)
         local api_key = ''
@@ -184,7 +184,7 @@ return {
           return nil
         end
 
-        api_key = api_key .. ',' .. region
+        api_key = api_key .. ',' .. AWS_REGION
 
         success, output = Shell.sync_cmd(base_args .. 'aws_session_token' .. specific_args)
         if success then
@@ -239,7 +239,7 @@ return {
         acp_providers = {
           ['claude-code'] = {
             CLAUDE_CODE_USE_BEDROCK = 1,
-            AWS_REGION = 'us-east-1',
+            AWS_REGION = AWS_REGION,
             CLAUDE_CODE_MAX_OUTPUT_TOKENS = 4096,
             MAX_THINKING_TOKENS = 1024,
             ANTHROPIC_MODEL = 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
@@ -250,20 +250,20 @@ return {
           bedrock_sonnet = {
             __inherited_from = 'bedrock',
             model = 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
-            aws_region = 'us-east-1',
+            aws_region = AWS_REGION,
             parse_api_key = parse_bedrock_key,
           },
           bedrock_haiku = {
             __inherited_from = 'bedrock',
             -- model = 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
             model = 'us.anthropic.claude-3-5-haiku-20241022-v1:0',
-            aws_region = 'us-east-1',
+            aws_region = AWS_REGION,
             parse_api_key = parse_bedrock_key,
           },
           bedrock_opus = {
             __inherited_from = 'bedrock',
             model = 'us.anthropic.claude-opus-4-1-20250805-v1:0',
-            aws_region = 'us-east-1',
+            aws_region = AWS_REGION,
             parse_api_key = parse_bedrock_key,
           },
           azure_gpt_4o = {
