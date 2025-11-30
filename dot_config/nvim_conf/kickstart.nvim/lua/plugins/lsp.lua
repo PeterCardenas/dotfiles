@@ -113,7 +113,6 @@ return {
     -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
     {
       'j-hui/fidget.nvim',
-      tag = 'v1.5.0',
       config = function()
         require('fidget').setup({
           notification = {
