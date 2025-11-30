@@ -581,8 +581,6 @@ return {
           },
         },
         cmdline = {
-          ---TODO: remove ignore when the following gets merged: https://github.com/Saghen/blink.cmp/pull/1622
-          ---@diagnostic disable-next-line: assign-type-mismatch
           sources = function()
             local type = vim.fn.getcmdtype()
             if type == '/' or type == '?' then
