@@ -54,6 +54,11 @@ else
     echo "ghostty command not found"
 end
 
+set -g STARSHIP_CMD_PIPESTATUS
+set -g STARSHIP_CMD_STATUS
+set -g STARSHIP_DURATION
+set -g STARSHIP_JOBS
+
 function __prompt -a prompt_name
     set -l prompt_file $HOME/.config/starship_$prompt_name.toml
     switch "$fish_key_bindings"
@@ -62,10 +67,6 @@ function __prompt -a prompt_name
         case '*'
             set STARSHIP_KEYMAP insert
     end
-    set STARSHIP_CMD_PIPESTATUS $pipestatus
-    set STARSHIP_CMD_STATUS $status
-    set STARSHIP_DURATION "$CMD_DURATION"
-    set STARSHIP_JOBS (count (jobs -p))
     env STARSHIP_CONFIG=$prompt_file starship prompt --status=$STARSHIP_CMD_STATUS --pipestatus="$STARSHIP_CMD_PIPESTATUS" --keymap=$STARSHIP_KEYMAP --cmd-duration=$STARSHIP_DURATION --jobs=$STARSHIP_JOBS
 end
 set -g prev_dir
@@ -109,6 +110,12 @@ set -gx XDG_CONFIG_HOME $HOME/.config
 export BAT_THEME="tokyonight_storm"
 
 if not set -q FAST_PROMPT
+    function _prompt_post_exec --on-event fish_postexec
+        set STARSHIP_CMD_PIPESTATUS $pipestatus
+        set STARSHIP_CMD_STATUS $status
+        set STARSHIP_DURATION "$CMD_DURATION"
+        set STARSHIP_JOBS (count (jobs -p))
+    end
     # MUST BE AT END OF FILE
     function fish_prompt
         __prompt before_git_status
