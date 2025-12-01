@@ -119,6 +119,7 @@ return {
       { '<leader>aa', '<Plug>(AvanteAsk)', mode = { 'n', 'v' }, desc = 'avante: ask' },
       { '<leader>an', '<Plug>(AvanteAskNew)', mode = { 'n', 'v' }, desc = 'avante: ask new' },
       { '<leader>ae', '<Plug>(AvanteEdit)', mode = { 'n', 'v' }, desc = 'avante: edit' },
+      { '<leader>at', '<Plug>(AvanteToggle)', mode = { 'n', 'v' }, desc = 'avante: toggle' },
     },
     cmd = { 'AvanteAsk', 'AvanteEdit' },
     build = 'make BUILD_FROM_SOURCE=true',
