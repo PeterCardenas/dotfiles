@@ -146,16 +146,20 @@ return {
       else
         vim.env.BRAVE_API_KEY = brave_search_key
       end
-      local azure_openai_key_ok, azure_openai_key = read_api_key('~/.local/share/azure/api_key')
-      if not azure_openai_key_ok then
-        vim.notify('Azure OpenAI API key not found', vim.log.levels.ERROR)
+      local function parse_azure_openai_key()
+        local azure_openai_key_ok, azure_openai_key = read_api_key('~/.local/share/azure/api_key')
+        if not azure_openai_key_ok then
+          vim.notify('Azure OpenAI API key not found', vim.log.levels.ERROR)
+          return nil
+        end
+        return azure_openai_key
       end
-      local azure_embedding_key_ok, azure_embedding_key = read_api_key('~/.local/share/azure/embedding_key')
-      if not azure_embedding_key_ok then
-        vim.notify('Azure Embedding API key not found', vim.log.levels.ERROR)
-      else
-        vim.env.OPENAI_API_KEY = azure_embedding_key
-      end
+      -- local azure_embedding_key_ok, azure_embedding_key = read_api_key('~/.local/share/azure/embedding_key')
+      -- if not azure_embedding_key_ok then
+      --   vim.notify('Azure Embedding API key not found', vim.log.levels.ERROR)
+      -- else
+      --   vim.env.OPENAI_API_KEY = azure_embedding_key
+      -- end
 
       -- HACK: bedrock provider fails early if BEDROCK_KEYS is not set
       require('avante.providers.bedrock').is_env_set = function()
@@ -243,9 +247,7 @@ return {
           },
           azure_gpt_4o = {
             __inherited_from = 'azure',
-            parse_api_key = function()
-              return azure_openai_key
-            end,
+            parse_api_key = parse_azure_openai_key,
             endpoint = 'https://westus.api.cognitive.microsoft.com/',
             model = 'gpt-4o',
             deployment = 'gpt-4o-2024-08-06',
@@ -257,9 +259,7 @@ return {
           },
           azure_gpt_4o_mini = {
             __inherited_from = 'azure',
-            parse_api_key = function()
-              return azure_openai_key
-            end,
+            parse_api_key = parse_azure_openai_key,
             endpoint = 'https://eastus.api.cognitive.microsoft.com/',
             model = 'gpt-4o-mini',
             deployment = 'gpt-4o-mini-2024-07-18',
@@ -271,9 +271,7 @@ return {
           },
           azure_o3_mini = {
             __inherited_from = 'azure',
-            parse_api_key = function()
-              return azure_openai_key
-            end,
+            parse_api_key = parse_azure_openai_key,
             endpoint = 'https://eastus.api.cognitive.microsoft.com/',
             model = 'o3-mini',
             deployment = 'o3-mini-2025-01-31',
