@@ -211,12 +211,14 @@ return {
         system_prompt = 'instead of suggesting what the file would be, always make the edit yourself. DO NOT run tests, i will run tests myself',
         acp_providers = {
           ['claude-code'] = {
-            CLAUDE_CODE_USE_BEDROCK = 1,
-            AWS_REGION = AWS_REGION,
-            CLAUDE_CODE_MAX_OUTPUT_TOKENS = 4096,
-            MAX_THINKING_TOKENS = 1024,
-            ANTHROPIC_MODEL = 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
-            ANTHROPIC_SMALL_FAST_MODEL = 'us.anthropic.claude-3-5-haiku-20241022-v1:0',
+            env = {
+              CLAUDE_CODE_USE_BEDROCK = 1,
+              AWS_REGION = AWS.AWS_REGION,
+              CLAUDE_CODE_MAX_OUTPUT_TOKENS = 4096,
+              MAX_THINKING_TOKENS = 1024,
+              ANTHROPIC_MODEL = 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
+              ANTHROPIC_SMALL_FAST_MODEL = 'us.anthropic.claude-3-5-haiku-20241022-v1:0',
+            },
           },
         },
         providers = {
