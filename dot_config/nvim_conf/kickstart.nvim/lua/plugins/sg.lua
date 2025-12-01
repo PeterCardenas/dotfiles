@@ -182,7 +182,7 @@ return {
       -- TODO: allow cancelling, but keep chat history
       -- TODO: becomes slower the longer the output is.
       -- TODO: sidepanel duplicates
-      local provider = 'azure_gpt_5_1'
+      local provider = 'claude-code'
       require('avante').setup({
         mode = 'agentic',
         selection = {
