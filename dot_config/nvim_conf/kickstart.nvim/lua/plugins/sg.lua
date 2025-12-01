@@ -408,7 +408,7 @@ return {
           },
         },
       })
-      for _, cmd in ipairs({ 'AvanteSwitchProvider', 'AvanteChat', 'AvanteAsk', 'AvanteEdit', 'AvanteChatNew' }) do
+      for _, cmd in ipairs({ 'AvanteSwitchProvider', 'AvanteChat', 'AvanteAsk', 'AvanteEdit', 'AvanteChatNew', 'AvanteClear' }) do
         vim.api.nvim_del_user_command(cmd)
       end
     end,
