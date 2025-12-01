@@ -1,5 +1,5 @@
 local Config = require('utils.config')
-local Shell = require('utils.shell')
+local AWS = require('utils.aws')
 
 ---@param filepath string
 ---@return boolean, string
@@ -156,7 +156,6 @@ return {
       else
         vim.env.OPENAI_API_KEY = azure_embedding_key
       end
-      local AWS_REGION = 'us-west-1'
 
       -- HACK: bedrock provider fails early if BEDROCK_KEYS is not set
       require('avante.providers.bedrock').is_env_set = function()
@@ -164,37 +163,11 @@ return {
       end
 
       local function parse_bedrock_key()
-        local base_args = 'aws configure get '
-        local specific_args = ' --profile default --region ' .. AWS_REGION
-
-        local success, output = Shell.sync_cmd(base_args .. 'aws_access_key_id' .. specific_args)
-        local api_key = ''
-        if success then
-          api_key = output[1]
-        else
-          vim.notify('Failed to run AWS command: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
+        local aws_info = AWS.get_aws_login_info()
+        if aws_info == nil then
           return nil
         end
-
-        success, output = Shell.sync_cmd(base_args .. 'aws_secret_access_key' .. specific_args)
-        if success then
-          api_key = api_key .. ',' .. output[1]
-        else
-          vim.notify('Failed to run AWS command: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
-          return nil
-        end
-
-        api_key = api_key .. ',' .. AWS_REGION
-
-        success, output = Shell.sync_cmd(base_args .. 'aws_session_token' .. specific_args)
-        if success then
-          api_key = api_key .. ',' .. output[1]
-        else
-          vim.notify('Failed to run AWS command: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
-          return nil
-        end
-
-        return api_key
+        return table.concat({ aws_info.access_key_id, aws_info.secret_access_key, AWS.AWS_REGION, aws_info.session_token }, ',')
       end
 
       local AvanteToolsHelpers = require('avante.llm_tools.helpers')
@@ -250,20 +223,20 @@ return {
           bedrock_sonnet = {
             __inherited_from = 'bedrock',
             model = 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
-            aws_region = AWS_REGION,
+            aws_region = AWS.AWS_REGION,
             parse_api_key = parse_bedrock_key,
           },
           bedrock_haiku = {
             __inherited_from = 'bedrock',
             -- model = 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
             model = 'us.anthropic.claude-3-5-haiku-20241022-v1:0',
-            aws_region = AWS_REGION,
+            aws_region = AWS.AWS_REGION,
             parse_api_key = parse_bedrock_key,
           },
           bedrock_opus = {
             __inherited_from = 'bedrock',
             model = 'us.anthropic.claude-opus-4-1-20250805-v1:0',
-            aws_region = AWS_REGION,
+            aws_region = AWS.AWS_REGION,
             parse_api_key = parse_bedrock_key,
           },
           azure_gpt_4o = {
