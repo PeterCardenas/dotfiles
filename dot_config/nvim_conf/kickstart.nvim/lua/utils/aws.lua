@@ -4,8 +4,16 @@ local M = {}
 
 M.AWS_REGION = 'us-east-1'
 
----@return { access_key_id: string, secret_access_key: string, session_token: string }|nil
+---@alias AWSLoginInfo { access_key_id: string, secret_access_key: string, session_token: string }
+
+---@type AWSLoginInfo?
+local cached_login_info = nil
+
+---@return AWSLoginInfo?
 function M.get_aws_login_info()
+  if cached_login_info then
+    return cached_login_info
+  end
   local base_args = 'aws configure get '
   local specific_args = ' --profile default --region ' .. M.AWS_REGION
 
@@ -36,11 +44,12 @@ function M.get_aws_login_info()
     return nil
   end
 
-  return {
+  cached_login_info = {
     access_key_id = access_key_id,
     secret_access_key = secret_access_key,
     session_token = session_token,
   }
+  return cached_login_info
 end
 
 return M
