@@ -202,7 +202,7 @@ return {
           enable_cursor_planning_mode = false,
           -- TODO: auto apply/ask to apply when running tools, maybe add a continue keymap and pause when applying diffs
           auto_apply_diff_after_generation = false,
-          auto_approve_tool_permissions = false,
+          auto_approve_tool_permissions = true,
           confirmation_ui_style = 'popup',
           enable_claude_text_editor_tool_mode = false,
           enable_token_counting = false,
