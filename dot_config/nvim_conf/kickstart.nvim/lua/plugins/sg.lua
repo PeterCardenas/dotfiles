@@ -258,48 +258,6 @@ return {
               max_completion_tokens = 16384,
             },
           },
-          azure_gpt_4o_mini = {
-            __inherited_from = 'azure',
-            parse_api_key = parse_azure_openai_key,
-            endpoint = 'https://eastus.api.cognitive.microsoft.com/',
-            model = 'gpt-4o-mini',
-            deployment = 'gpt-4o-mini-2024-07-18',
-            -- Make smaller than max (128k) because token count calculation is undershooting
-            context_window = 110000,
-            extra_request_body = {
-              max_completion_tokens = 16384,
-            },
-          },
-          azure_o3_mini = {
-            __inherited_from = 'azure',
-            parse_api_key = parse_azure_openai_key,
-            endpoint = 'https://eastus.api.cognitive.microsoft.com/',
-            model = 'o3-mini',
-            deployment = 'o3-mini-2025-01-31',
-            -- Make smaller than max (128k) because token count calculation is undershooting
-            context_window = 110000,
-            extra_request_body = {
-              max_completion_tokens = 16384,
-            },
-          },
-          azure_gpt_5 = {
-            __inherited_from = 'azure',
-            parse_api_key = function()
-              local azure_openai_gpt_5_key_ok, azure_openai_gpt_5_key = read_api_key('~/.local/share/azure/gpt_5_api_key')
-              if not azure_openai_gpt_5_key_ok then
-                vim.notify('Azure OpenAI GPT 5 API key not found', vim.log.levels.ERROR)
-              end
-              return azure_openai_gpt_5_key
-            end,
-            endpoint = 'https://eastus2.api.cognitive.microsoft.com/',
-            model = 'gpt-5',
-            deployment = 'gpt-5-2025-08-07',
-            -- Make smaller than max (128k) because token count calculation is undershooting
-            context_window = 110000,
-            extra_request_body = {
-              max_completion_tokens = 16384,
-            },
-          },
           azure_gpt_5_1 = {
             __inherited_from = 'azure',
             parse_api_key = function()
