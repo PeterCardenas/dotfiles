@@ -46,7 +46,9 @@ fish_add_path -P -m "$HOME/.local/share/bob/nvim-bin" \
     "$HOME/.fish-lsp/bin" \
     "$PNPM_HOME" \
     "$HOME/.zvm/bin" \
-    "$ZVM_INSTALL/"
+    "$ZVM_INSTALL/" \
+    # TODO: Remove when following issue is resolved: https://github.com/sst/opencode/issues/3097
+    "$HOME/.opencode/bin"
 
 if command -q ghostty
     set -gx GHOSTTY_BIN_DIR (dirname (which ghostty))

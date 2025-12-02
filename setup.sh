@@ -521,6 +521,10 @@ EOF
 	nvim --headless "+Lazy! restore" +qa
 	# Install TreeSitter parsers (Doesn't really work rn)
 	nvim --headless "+TSInstall! all" +qa
+
+	# Install opencode
+	curl -fsSL https://opencode.ai/install | bash
+
 	# TODO Install Mason dependencies
 	install_ccls_for_mac
 	# TODO: setup gpg (need bitwarden or copy over)
