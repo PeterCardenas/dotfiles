@@ -61,7 +61,7 @@ end, {
     end
     local filtered_providers = {} ---@type string[]
     for _, provider in ipairs(providers) do
-      if vim.startswith(provider, 'bedrock_') or vim.startswith(provider, 'azure_') or provider == 'claude-code' then
+      if vim.startswith(provider, 'bedrock_') or vim.startswith(provider, 'azure_') or provider == 'claude-code' or vim.startswith(provider, 'opencode-') then
         filtered_providers[#filtered_providers + 1] = provider
       end
     end
@@ -223,6 +223,20 @@ return {
               MAX_THINKING_TOKENS = 1024,
               ANTHROPIC_MODEL = 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
               ANTHROPIC_SMALL_FAST_MODEL = 'us.anthropic.claude-3-5-haiku-20241022-v1:0',
+            },
+          },
+          ['opencode-bedrock'] = {
+            command = 'opencode',
+            args = { 'acp' },
+            env = {
+              OPENCODE_CONFIG = vim.fn.expand('~/.config/opencode/opencode-bedrock.jsonc'),
+            },
+          },
+          ['opencode-azure'] = {
+            command = 'opencode',
+            args = { 'acp' },
+            env = {
+              OPENCODE_CONFIG = vim.fn.expand('~/.config/opencode/opencode-azure.jsonc'),
             },
           },
         },
