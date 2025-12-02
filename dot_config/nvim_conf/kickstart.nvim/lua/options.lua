@@ -193,7 +193,7 @@ vim.api.nvim_set_hl(0, '@markup.link.label.markdown', { fg = '#2ac3de', underdot
 local filetype_options_group = vim.api.nvim_create_augroup('FiletypeOptions', { clear = true })
 
 vim.api.nvim_create_autocmd('FileType', {
-  pattern = { 'conf', 'sh', 'javascript', 'yaml*' },
+  pattern = { 'conf', 'sh', 'javascript', 'yaml*', 'markdown' },
   group = filetype_options_group,
   callback = function()
     -- Remove prefixed '/' from includeexpr
