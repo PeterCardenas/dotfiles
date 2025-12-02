@@ -1,0 +1,12 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "azure/gpt-5.1",
+  "provider": {
+    "azure": {
+      "options": {
+        "baseURL": "https://eastus2.api.cognitive.microsoft.com",
+        "apiKey": "{file:~/.local/share/azure/gpt_5_1_api_key}"
+      }
+    }
+  }
+}
