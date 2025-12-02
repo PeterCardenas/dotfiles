@@ -256,6 +256,7 @@ return {
           },
           bedrock_opus = {
             __inherited_from = 'bedrock',
+            -- model = 'global.anthropic.claude-opus-4-5-20251101-v1:0',
             model = 'us.anthropic.claude-opus-4-1-20250805-v1:0',
             aws_region = AWS.AWS_REGION,
             parse_api_key = parse_bedrock_key,
