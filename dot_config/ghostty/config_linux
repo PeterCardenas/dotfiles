@@ -1,6 +1,11 @@
 font-size = 10
 adjust-cell-height = 19%
 
+# Make full screen
+window-height = 9999
+window-width = 9999
+
+
 font-family = "MonaspiceKr Nerd Font"
 font-family-bold-italic = "MonaspiceRn Nerd Font"
 font-style-bold-italic = "Bold"

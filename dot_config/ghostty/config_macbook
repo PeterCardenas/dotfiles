@@ -4,6 +4,9 @@ adjust-cell-height = 27%
 window-position-x = 0
 window-position-y = 0
 
+# Make full screen
+maximize = true
+
 # Enough to show btop
 quick-terminal-size = 450px
 
