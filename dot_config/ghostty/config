@@ -3,8 +3,6 @@
 config-file = ?config_macbook
 config-file = ?config_linux
 
-gtk-titlebar = false
-
 custom-shader = ./shaders/cursor-smear-fade.glsl
 # custom-shader = ./shaders/blaze-trail.glsl
 custom-shader-animation = always
