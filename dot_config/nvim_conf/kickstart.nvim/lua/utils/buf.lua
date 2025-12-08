@@ -1,5 +1,24 @@
 local M = {}
 
+local function test()
+  ---@generic T
+  ---@param thing T
+  ---@return boolean
+  ---@return_cast thing  -?
+  function is_blank(thing) end
+
+  ---@class MyClass
+  ---@field wow string
+
+  local a ---@type MyClass|nil
+
+  if not is_blank(a) then
+    _ = a
+  else
+    _ = a
+  end
+end
+
 ---@param include_current boolean
 ---@return integer[]
 function M.get_navigable_buffers(include_current)
