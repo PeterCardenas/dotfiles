@@ -364,8 +364,6 @@ local function get_buildifier_filetype(bufnr)
   end
 end
 
-local tracked_buffers = {} ---@type table<integer, boolean>
-
 vim.api.nvim_create_autocmd({ 'BufEnter', 'BufRead', 'BufNewFile' }, {
   desc = 'Setup formatting',
   callback = function(args)
@@ -387,11 +385,10 @@ vim.api.nvim_create_autocmd({ 'BufEnter', 'BufRead', 'BufNewFile' }, {
         buffer = bufnr,
       })
     end
-    if tracked_buffers[bufnr] then
-      return
+    local current_autocmds = vim.api.nvim_get_autocmds({ buffer = bufnr, group = Format.format_diagnostic_autocmd_group })
+    if #current_autocmds == 0 then
+      Format.setup_formatting_diagnostic(bufnr)
     end
-    tracked_buffers[bufnr] = true
-    Format.setup_formatting_diagnostic(bufnr)
   end,
 })
 

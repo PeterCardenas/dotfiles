@@ -655,7 +655,7 @@ end
 
 local M = {}
 
-local format_diagnostic_autocmd_group = vim.api.nvim_create_augroup('FormatChecker', { clear = true })
+M.format_diagnostic_autocmd_group = vim.api.nvim_create_augroup('FormatChecker', { clear = true })
 M.format_diagnostic_namespace = vim.api.nvim_create_namespace('FormatChecker')
 
 ---@return integer
@@ -768,14 +768,14 @@ function M.setup_formatting_diagnostic(bufnr)
         -- Check if the buffer needs formatting on text change while in normal mode, or after leaving insert mode.
         -- TODO: Ideally we would only check when changes have actually been made.
         vim.api.nvim_create_autocmd({ 'TextChanged', 'InsertLeave' }, {
-          group = format_diagnostic_autocmd_group,
+          group = M.format_diagnostic_autocmd_group,
           buffer = bufnr,
           callback = function(args)
             check_if_needs_formatting(args.buf)
           end,
         })
         vim.api.nvim_create_autocmd({ 'CursorMoved' }, {
-          group = format_diagnostic_autocmd_group,
+          group = M.format_diagnostic_autocmd_group,
           buffer = bufnr,
           callback = function(args)
             update_formatting_diagnostic_position(args.buf)
