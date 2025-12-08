@@ -407,7 +407,12 @@ return {
         },
         sources = {
           default = function()
-            local sources = { 'omni', 'lazydev', 'lsp', 'path', 'snippets' }
+            local sources = { 'omni' }
+            if not Config.USE_RUST_LUA_LS then
+              sources[#sources + 1] = 'lazydev'
+            end
+            sources = vim.list_extend(sources, { 'lsp', 'path', 'snippets' })
+
             local ft = vim.bo.filetype
             if ft == '' or ft == 'markdown' or not Treesitter.has_treesitter() or Treesitter.inside_comment_block() then
               sources[#sources + 1] = 'emoji'

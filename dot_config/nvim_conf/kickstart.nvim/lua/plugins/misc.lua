@@ -806,6 +806,9 @@ return {
   {
     'folke/lazydev.nvim',
     ft = 'lua', -- only load on lua files
+    cond = function()
+      return not Config.USE_RUST_LUA_LS
+    end,
     config = function()
       local lazy_path = vim.fn.stdpath('data') .. '/lazy'
       local library = {

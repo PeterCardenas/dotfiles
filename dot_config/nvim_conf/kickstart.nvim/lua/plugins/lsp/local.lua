@@ -1,5 +1,39 @@
 local Config = require('utils.config')
 local File = require('utils.file')
+
+--- Discover all plugins that are defined in lazy.nvim spec and aggregate their paths.
+--- Does not handle packspec/rockspec.
+---@return string[]
+function get_plugin_paths()
+  local static = {
+    -- other static paths you might want to include
+    vim.env.HOME .. '/.local/share/chezmoi/dot_config/nvim_conf/kickstart.nvim/lua',
+    vim.env.VIMRUNTIME .. '/lua',
+  }
+  ---@diagnostic disable-next-line: unnecessary-if
+  if not vim.g.lazy_did_setup then
+    return static
+  end
+  local spec = require('lazy.core.config').spec
+  local paths = {}
+  local plugins = vim.list_extend(vim.tbl_keys(spec.plugins), vim.tbl_keys(spec.disabled))
+  for _, plugin_name in ipairs(plugins) do
+    local plugin = spec.plugins[plugin_name] or spec.disabled[plugin_name]
+    local luapath = vim.fs.joinpath(plugin.dir, 'lua')
+    if vim.uv.fs_stat(luapath) then
+      paths[#paths + 1] = luapath
+    else
+      paths[#paths + 1] = plugin.dir
+    end
+  end
+  if vim.fn.isdirectory(File.get_cwd() .. '/lua') == 1 then
+    paths[#paths + 1] = File.get_cwd() .. '/lua'
+  end
+  -- VIMRUNTIME needs to be last, otherwise some random module setting _G.vim = _G.vim or {...} (seen in test files)
+  -- overrides the official implementation. This is true for emmylua_ls 0.13.0 at least.
+  return vim.list_extend(paths, static)
+end
+
 local M = {}
 
 -- Type inferred from https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
@@ -22,14 +56,21 @@ function M.add_config(current_config)
       client.server_capabilities.documentFormattingProvider = false
       client.server_capabilities.documentRangeFormattingProvider = false
     end,
+    capabilities = {
+      workspace = {
+        diagnostics = {
+          refreshSupport = false,
+        },
+      },
+    },
     settings = {
       Lua = {
         diagnostics = {
           disable = { 'unnecessary-if', 'redundant-return-value' },
         },
         workspace = {
-          ignoreGlobs = { '**/nvim-highlight-colors/**/*_spec.lua' },
-          enableReindex = true,
+          -- HACK: lazydev doesn't play well with emmylua_ls, so we need to manually add all the plugin paths.
+          library = get_plugin_paths(),
         },
         strict = {
           requirePath = true,
