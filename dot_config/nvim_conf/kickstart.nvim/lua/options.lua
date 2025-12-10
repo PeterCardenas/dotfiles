@@ -189,6 +189,7 @@ current_sessionoptions = vim
   :totable()
 vim.opt.sessionoptions = current_sessionoptions
 vim.api.nvim_set_hl(0, '@markup.link.label.markdown', { fg = '#2ac3de', underdotted = true, force = true })
+vim.api.nvim_set_hl(0, '@markup.link.label.markdown_inline', { fg = '#2ac3de', underdotted = true, force = true })
 
 local filetype_options_group = vim.api.nvim_create_augroup('FiletypeOptions', { clear = true })
 
