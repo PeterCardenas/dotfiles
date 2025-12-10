@@ -188,6 +188,7 @@ current_sessionoptions = vim
   end)
   :totable()
 vim.opt.sessionoptions = current_sessionoptions
+vim.api.nvim_set_hl(0, '@markup.link.url.markdown', { fg = '#2ac3de', underdotted = true, force = true })
 vim.api.nvim_set_hl(0, '@markup.link.label.markdown', { fg = '#2ac3de', underdotted = true, force = true })
 vim.api.nvim_set_hl(0, '@markup.link.label.markdown_inline', { fg = '#2ac3de', underdotted = true, force = true })
 
