@@ -30,9 +30,9 @@ function clone-common --description 'Clone a repository' -a ssh_alias -a git_dir
         print_error "Known git dir not found: $git_dir"
         return 1
     end
-    set -l existing_fork (gh api graphql -f query="
-query GetUserForksForRepo {
-  repository(name: \"$repo\", owner: \"$owner\") {
+    set -l existing_fork (gh api graphql -F owner="$owner" -F name="$repo" -f query='
+query GetUserForksForRepo($owner: String!, $name: String!) {
+  repository(name: $name, owner: $owner) {
     forks(first: 1, affiliations: [OWNER]) {
       nodes {
         name
@@ -43,7 +43,7 @@ query GetUserForksForRepo {
     }
   }
 }
-    " --jq ".data.repository.forks.nodes[]? | .owner.login + \"/\" + .name")
+    ' --jq ".data.repository.forks.nodes[]? | .owner.login + \"/\" + .name")
     if test $status -ne 0
         print_error "Failed to get forks for $repo"
         return 1
