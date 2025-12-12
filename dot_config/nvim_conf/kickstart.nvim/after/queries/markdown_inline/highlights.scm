@@ -20,6 +20,10 @@
     "]"
   ] @noconceal)
 
+(full_reference_link
+  (link_text) @markup.shortcut_link
+  (#set! priority 110))
+
 (shortcut_link
   (link_text) @markup.shortcut_link
   (#set! priority 110))
