@@ -191,6 +191,8 @@ vim.opt.sessionoptions = current_sessionoptions
 vim.api.nvim_set_hl(0, '@markup.link.url.markdown', { fg = '#2ac3de', underdotted = true, force = true })
 vim.api.nvim_set_hl(0, '@markup.link.label.markdown', { fg = '#2ac3de', underdotted = true, force = true })
 vim.api.nvim_set_hl(0, '@markup.link.label.markdown_inline', { fg = '#2ac3de', underdotted = true, force = true })
+-- TODO: overridding underdotted = false is not working
+vim.api.nvim_set_hl(0, '@markup.shortcut_link.markdown_inline', { fg = '#C0CAF5', underdotted = false, force = true })
 
 local filetype_options_group = vim.api.nvim_create_augroup('FiletypeOptions', { clear = true })
 
