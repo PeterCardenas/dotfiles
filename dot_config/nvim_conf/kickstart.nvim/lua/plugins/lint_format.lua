@@ -676,7 +676,7 @@ return {
         go = { 'golint' },
         proto = { 'buf_lint' },
         python = { 'dmypy', 'pylint' },
-        json = { 'jq' },
+        -- TODO: add jq as json linter
         fish = { 'fish' },
         lua = { 'stylua' },
       }
