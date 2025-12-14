@@ -45,7 +45,15 @@ local function get_async_cmd()
             handle_output(data)
           end,
           on_exit = function(_, code)
-            done(code == 0, output)
+            local ok, err = pcall(done, code == 0, output)
+            if not ok then
+              vim.schedule(function()
+                vim.notify(
+                  'Error calling done callback:' .. err .. '\ncmd: ' .. cmd .. '\nargs: ' .. vim.inspect(args) .. '\nOutput: ' .. table.concat(output, '\n'),
+                  vim.log.levels.ERROR
+                )
+              end)
+            end
           end,
           env = vim.tbl_extend('force', vim.fn.environ(), {
             GH_TOKEN = GH_TOKEN,
