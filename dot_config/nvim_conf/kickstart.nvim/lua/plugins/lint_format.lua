@@ -515,16 +515,6 @@ return {
           golines = {
             args = { '--no-reformat-tags' },
           },
-          oxfmt = {
-            stdin = false,
-            args = { '$FILENAME' },
-            command = require('conform.util').from_node_modules('oxfmt'),
-            cwd = require('conform.util').root_file({
-              -- https://oxc.rs/docs/guide/usage/formatter.html#configuration-file
-              '.oxfmtrc.json',
-              '.oxfmtrc.jsonc',
-            }),
-          },
         },
         notify_on_error = true,
       })
