@@ -45,6 +45,7 @@ local function get_async_cmd()
             handle_output(data)
           end,
           on_exit = function(_, code)
+            ---@type boolean, string
             local ok, err = pcall(done, code == 0, output)
             if not ok then
               vim.schedule(function()
