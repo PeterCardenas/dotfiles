@@ -623,7 +623,6 @@ return {
         require('leap.remote').action()
       end)
       vim.keymap.set({ 'n', 'v', 'x' }, 's', '<Plug>(leap-forward)')
-      -- TODO: Jumping backwards does not work in visual mode.
       vim.keymap.set({ 'n', 'v', 'x' }, 'S', '<Plug>(leap-backward)')
       require('leap.opts').default.substitute_chars = { ['{'] = 'b', ['}'] = 'b', ['('] = 'p', [')'] = 'p', ['['] = 'b', [']'] = 'b' }
       require('leap.opts').default.vim_opts['wo.conceallevel'] = nil
