@@ -209,6 +209,23 @@ return {
     servers.lua_ls = {
       enabled = not Config.USE_RUST_LUA_LS,
       cmd = { lua_ls_path },
+      handlers = {
+        ---@param error lsp.ResponseError
+        ---@param result lsp.PublishDiagnosticsParams
+        ---@param ctx lsp.HandlerContext
+        [LspMethod.textDocument_publishDiagnostics] = function(error, result, ctx)
+          -- shrink unused-function diagnostics to the first line
+          for _, diagnostic in ipairs(result.diagnostics) do
+            if diagnostic.code == 'unused-function' then
+              diagnostic.range['end'].line = diagnostic.range.start.line
+              local bufnr = vim.uri_to_bufnr(result.uri)
+              diagnostic.range['end'].character =
+                vim.api.nvim_buf_get_lines(bufnr, diagnostic.range['end'].line, diagnostic.range['end'].line + 1, false)[1]:len()
+            end
+          end
+          return vim.lsp.diagnostic.on_publish_diagnostics(error, result, ctx)
+        end,
+      },
       on_attach = function(client, _bufnr)
         -- Defer to stylua for formatting.
         client.server_capabilities.documentFormattingProvider = false
