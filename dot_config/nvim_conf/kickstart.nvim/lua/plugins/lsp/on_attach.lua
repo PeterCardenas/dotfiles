@@ -100,6 +100,7 @@ function M.on_attach(client, bufnr)
   pcall(vim.keymap.del, 'n', 'gri')
   pcall(vim.keymap.del, 'n', 'gra')
   pcall(vim.keymap.del, 'n', 'grr')
+  pcall(vim.keymap.del, 'n', 'grt')
 
   -- Needed to override the inlay hints toggle keymap.
   vim.keymap.set({ 'n', 'i', 's' }, '<Tab>', function()
