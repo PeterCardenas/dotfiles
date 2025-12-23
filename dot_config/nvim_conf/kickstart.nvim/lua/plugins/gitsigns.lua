@@ -517,6 +517,15 @@ return {
       require('gitsigns').setup({
         max_file_length = 60000,
         gh = true,
+        diff_opts = {
+          internal = true,
+          indent_heuristic = true,
+          linematch = 40,
+          ignore_blank_lines = false,
+          ignore_whitespace_change = false,
+          ignore_whitespace_change_at_eol = false,
+          ignore_whitespace = false,
+        },
         signs = {
           add = { text = '+' },
           change = { text = '~' },
