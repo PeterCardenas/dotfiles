@@ -136,14 +136,12 @@ return {
   config = function()
     ---@type string
     vim.env.PATH = vim.env.PATH .. ':' .. vim.fn.stdpath('data') .. '/mason/bin'
-    local project_root = File.get_git_root() or File.get_cwd()
 
     ---@type table<string, LspTogglableConfig>
     local servers = {}
 
-    ---@type fun(path: string): string?
-    local get_clangd_root = require('lspconfig.util').root_pattern('compile_commands.json')
-    local clangd_root = get_clangd_root(vim.fn.expand('%:p:h'))
+    local project_root = File.get_git_root() or File.get_cwd()
+    local clangd_root = File.get_ancestor_dir('compiled_clangd.lua', project_root)
     local home = os.getenv('HOME')
     local clangd_enabled = clangd_root ~= nil and home ~= nil
     servers.clangd = {
