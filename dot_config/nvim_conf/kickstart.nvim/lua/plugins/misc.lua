@@ -615,7 +615,7 @@ return {
 
   -- Fast motion commands
   {
-    'ggandor/leap.nvim',
+    'https://codeberg.org/andyg/leap.nvim',
     dependencies = { 'tpope/vim-repeat' },
     event = { 'BufReadPre', 'BufNewFile', 'BufEnter' },
     config = function()
