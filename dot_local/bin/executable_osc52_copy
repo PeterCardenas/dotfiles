@@ -49,5 +49,5 @@ if set -q TMUX
 else
     set osc_suffix '\x1b\\'
 end
-set -l serialized_contents (echo -e $contents | base64 | tr -d '\r\n')
+set -l serialized_contents (echo $contents | base64 | tr -d '\r\n')
 echo -ne "$osc_prefix]52;c;$serialized_contents$osc_suffix" >$pty
