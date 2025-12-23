@@ -5,7 +5,7 @@ config-file = ?config_linux
 
 custom-shader = ./shaders/cursor-smear-fade.glsl
 # custom-shader = ./shaders/blaze-trail.glsl
-custom-shader-animation = always
+custom-shader-animation = true
 
 bell-features = border
 
