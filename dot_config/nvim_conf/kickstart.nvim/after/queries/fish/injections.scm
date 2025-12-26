@@ -28,8 +28,17 @@
   (#eq? @_field_query_flag "--jq")
   .
   argument: (single_quote_string) @injection.content
-  ; remove when following issue is resolved: https://github.com/ram02z/tree-sitter-fish/issues/31
+  ; remove and merge with below when following issue is resolved: https://github.com/ram02z/tree-sitter-fish/issues/31
   (#offset! @injection.content 0 1 0 -1)
+  (#set! injection.language "jq"))
+
+(command
+  name: (word) @_cmd
+  (#eq? @_cmd "gh")
+  argument: (word) @_field_query_flag
+  (#eq? @_field_query_flag "--jq")
+  .
+  argument: (word) @injection.content
   (#set! injection.language "jq"))
 
 (command
