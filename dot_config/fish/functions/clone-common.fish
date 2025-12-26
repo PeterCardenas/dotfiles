@@ -43,7 +43,7 @@ query GetUserForksForRepo($owner: String!, $name: String!) {
     }
   }
 }
-    ' --jq ".data.repository.forks.nodes[]? | .owner.login + \"/\" + .name")
+    ' --jq '.data.repository.forks.nodes[]? | .owner.login + "/" + .name')
     if test $status -ne 0
         print_error "Failed to get forks for $repo"
         return 1
