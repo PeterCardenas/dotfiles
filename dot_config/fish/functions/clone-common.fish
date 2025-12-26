@@ -51,5 +51,11 @@ query GetUserForksForRepo($owner: String!, $name: String!) {
     if test (count $existing_fork) -eq 1
         print_info "Setting up existing fork"
         setup_fork
+    else
+        set repo_matches (string match -gr '(.*)\.git' $repo_name)
+        if test (count $repo_matches) -eq 1
+            set repo_name $repo_matches[1]
+        end
+        gh repo set-default $repo_name
     end
 end
