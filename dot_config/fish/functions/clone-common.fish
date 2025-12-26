@@ -1,4 +1,4 @@
-function clone-common --description 'Clone a repository' -a ssh_alias -a git_dir -a user -a repo_name
+function clone-common --description 'Clone a repository' -a ssh_alias -a git_dir -a repo_name
     set -l git_dir "$HOME/$git_dir/.git"
     set -l repo_matches (string match -gr '(.*)/(.*)' $repo_name)
     if test (count $repo_matches) -ne 2
