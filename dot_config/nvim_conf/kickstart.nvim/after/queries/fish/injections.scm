@@ -41,6 +41,7 @@
   argument: (word) @injection.content
   (#set! injection.language "jq"))
 
+; TODO: figure out a way to deduplicate from above
 (command
   name: (word) @_cmd
   (#eq? @_cmd "command")
