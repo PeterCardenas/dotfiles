@@ -21,8 +21,6 @@ function gh
         print_error "Failed to get gh token for user $gh_user"
         return 1
     end
-    if not status is-command-substitution
-        print_info "Running for $gh_user"
-    end
+    print_info "Running for $gh_user"
     env GH_TOKEN=$gh_token gh $argv
 end
