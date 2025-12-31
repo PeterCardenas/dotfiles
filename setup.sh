@@ -8,7 +8,7 @@ if [ "$EUID" -eq 0 ]; then
 fi
 
 function install_ghostty() {
-	zvm use v0.15.1
+	zvm use v0.15.2
 	pushd "$HOME/projects"
 	if [ ! -d "$HOME/projects/ghostty" ]; then
 		fish -c "clone ghostty-org/ghostty.git"
