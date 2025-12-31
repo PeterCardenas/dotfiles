@@ -12,6 +12,8 @@ font-family-bold-italic = "MonaspiceRn Nerd Font"
 font-style-bold-italic = "Bold"
 font-style-italic = "Medium"
 font-family-italic = "MonaspiceRn Nerd Font"
+# Underline is a bit high (especially for replace mode in fish shell).
+adjust-underline-position = 2
 
 # (worse) performance issues on macos, so only enable background shader on linux
 # custom-shader = ./shaders/cubes.glsl

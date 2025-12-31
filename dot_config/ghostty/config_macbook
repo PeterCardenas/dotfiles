@@ -12,11 +12,11 @@ maximize = true
 # Enough to show btop
 quick-terminal-size = 450px
 
-font-family = "Monaspace Krypton Var"
-font-family-bold-italic = "Monaspace Radon Var"
+font-family = "Annotation Mono"
+font-family-bold-italic = "Annotation Mono"
 font-style-bold-italic = "Bold"
 font-style-italic = "Medium"
-font-family-italic = "Monaspace Radon Var"
+font-family-italic = "Annotation Mono"
 
 # Reference: https://fontdrop.info/#/?darkmode=true
 # https://github.com/githubnext/monaspace#character-variants
