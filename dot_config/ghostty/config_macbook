@@ -4,6 +4,8 @@ adjust-cell-height = 27%
 window-position-x = 0
 window-position-y = 0
 
+window-padding-balance = true
+
 # Make full screen
 maximize = true
 
