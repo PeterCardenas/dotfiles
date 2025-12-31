@@ -640,8 +640,8 @@ return {
 
       require('statuscol').setup({
         foldfunc = 'builtin',
-        ft_ignore = { 'dashboard', 'NvimTree', 'help', 'alpha', 'Avante', 'AvanteInput', 'AvanteSelectedFiles' },
-        bt_ignore = { 'nofile' },
+        ft_ignore = { 'dashboard', 'NvimTree', 'alpha', 'Avante', 'AvanteInput', 'AvanteSelectedFiles' },
+        bt_ignore = { 'nofile', 'help' },
         segments = {
           { text = { builtin.foldfunc }, click = 'v:lua.ScFa' },
           {
