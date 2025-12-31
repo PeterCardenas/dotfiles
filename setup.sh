@@ -477,6 +477,13 @@ EOF
 	fish -c "fisher update"
 	export BOB_CONFIG=$HOME/.config/bob/config.json
 	fish -c "vswitch kickstart.nvim"
+
+	mkdir -p $HOME/thirdparty/AnnotationMono
+	pushd $HOME/thirdparty/AnnotationMono
+	gh release download --repo qwerasd205/AnnotationMono -p 'AnnotationMono_*.zip'
+	unzip AnnotationMono_*.zip
+	cp dist/variable/AnnotationMono-VF.ttf "$HOME/fonts/"
+	popd
 	if [ "$(uname)" == "Linux" ]; then
 		mkdir -p "$HOME/.fonts"
 		cp "$HOME"/fonts/* "$HOME/.fonts/"
@@ -485,6 +492,7 @@ EOF
 		cp "$HOME"/fonts/* "$HOME/Library/Fonts/"
 	fi
 	fc-cache -f -v
+
 	"$HOME/.tmux/plugins/tpm/bin/install_plugins"
 	chezmoi completion fish >"$HOME/.config/fish/completions/chezmoi.fish"
 	install_ghostty
