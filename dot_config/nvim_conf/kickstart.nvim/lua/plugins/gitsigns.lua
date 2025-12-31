@@ -454,6 +454,7 @@ return {
       end
       require('octo.utils').state_icon_map.COMMENTED = ' '
       require('octo').setup({
+        timeout = math.huge,
         debug = {
           notify_missing_timeline_items = true,
         },
