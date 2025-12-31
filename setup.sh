@@ -153,8 +153,6 @@ function setup_macos_defaults() {
 	defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
 	defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
 	defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
-	echo "Disabling Spotlight indexing"
-	sudo mdutil -a -i off
 	# TODO: menubar: battery percent show, show seconds in clock, hide spotlight, siri
 	# TODO: key repeat
 	# TODO: map caps lock to escape
