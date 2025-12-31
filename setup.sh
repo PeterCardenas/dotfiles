@@ -12,8 +12,6 @@ function install_ghostty() {
 	pushd "$HOME/projects"
 	if [ ! -d "$HOME/projects/ghostty" ]; then
 		fish -c "clone ghostty-org/ghostty.git"
-		pushd ghostty
-		fish -c "setup_fork"
 	else
 		pushd ghostty
 	fi
