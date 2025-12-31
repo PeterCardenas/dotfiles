@@ -7,11 +7,9 @@ else
     set pty (tty)
 end
 
-# TODO: Piping doesn't work when not in tmux due to the below
-# The fix would be just to print the escape sequence to stdout instead of pty
+# not too sure if this will always work, but rn it does
 if test "$pty" = "not a tty"
-    echo "Error: not a tty" >&2
-    exit 1
+    set pty /dev/tty
 end
 
 set -l piped_content
