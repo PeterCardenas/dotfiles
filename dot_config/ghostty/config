@@ -26,5 +26,6 @@ keybind = global:alt+t=toggle_quick_terminal
 keybind = super+q=quit
 
 auto-update = download
+auto-update = check
 
 theme = "TokyoNight Storm"
