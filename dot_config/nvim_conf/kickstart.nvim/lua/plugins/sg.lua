@@ -197,6 +197,7 @@ return {
         },
         provider = provider,
         auto_suggestions_provider = provider,
+        edit_provider = 'azure_gpt_4o',
         behaviour = {
           auto_suggestions = not Config.USE_SUPERMAVEN,
           -- TODO: Use this when it's fast and less buggy
