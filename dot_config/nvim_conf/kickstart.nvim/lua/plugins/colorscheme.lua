@@ -20,7 +20,7 @@ return {
     vim.api.nvim_set_hl(0, '@module.python', { link = 'Directory', force = true })
     vim.api.nvim_set_hl(0, '@module', { link = 'Special', force = true })
     -- Make comments foreground brighter.
-    vim.api.nvim_set_hl(0, 'Comment', { foreground = '#7c7c7c', italic = true })
+    vim.api.nvim_set_hl(0, 'Comment', { foreground = '#7c7c7c' })
     -- More contrast for selected tab.
     vim.api.nvim_set_hl(0, 'TabLineSel', { foreground = '#e0e0e0', background = '#26355E' })
     -- Make tab title foreground brighter.
