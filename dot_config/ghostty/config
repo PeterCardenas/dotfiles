@@ -25,9 +25,6 @@ keybind = ctrl+q=quit
 keybind = global:alt+t=toggle_quick_terminal
 keybind = super+q=quit
 
-# Underline is a bit high (especially for replace mode in fish shell).
-adjust-underline-position = 2
-
 auto-update = download
 
 theme = "TokyoNight Storm"
