@@ -529,6 +529,11 @@ EOF
 	# Install opencode
 	curl -fsSL https://opencode.ai/install | bash
 
+	vim -c "PlugInstall" -c "qall"
+	pushd "$HOME/.vim/plugged/"
+	python3.12 install.py --all
+	popd
+
 	# TODO Install Mason dependencies
 	install_ccls_for_mac
 	# TODO: setup gpg (need bitwarden or copy over)
