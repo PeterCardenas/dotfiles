@@ -5,7 +5,6 @@ local M = {}
 
 local function setup_lazygit_buffer()
   -- Ensure that the statuscolumn is removed correctly and the dropbar is rendered.
-  require('statuscol')
   require('dropbar')
   vim.api.nvim_create_autocmd('TermOpen', {
     pattern = 'term://*lazygit*',
