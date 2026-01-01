@@ -497,6 +497,7 @@ return {
           gitcommit = { 'commitmsgfmt' },
           proto = { 'clang-format' },
           typescript = { 'oxfmt' },
+          c = { 'uncrustify' },
         },
         formatters = {
           buildifier = {
