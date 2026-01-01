@@ -634,7 +634,7 @@ return {
   -- Status column
   {
     'luukvbaal/statuscol.nvim',
-    event = { 'BufReadPre', 'BufNewFile' },
+    lazy = false,
     config = function()
       local builtin = require('statuscol.builtin')
 
