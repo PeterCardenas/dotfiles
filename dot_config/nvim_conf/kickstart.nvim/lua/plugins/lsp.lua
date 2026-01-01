@@ -154,9 +154,6 @@ return {
           positionEncodings = { 'utf-16' },
         },
       },
-      on_attach = function(_client, _bufnr)
-        require('clangd_extensions.inlay_hints').setup_autocmd()
-      end,
       cmd = {
         'clangd',
         '--header-insertion=never',
