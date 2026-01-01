@@ -5,7 +5,6 @@ window-position-x = 0
 window-position-y = 0
 
 window-padding-balance = true
-window-padding-y = 0,10
 
 macos-titlebar-style = tabs
 
