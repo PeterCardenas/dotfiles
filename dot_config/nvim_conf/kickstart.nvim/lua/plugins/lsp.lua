@@ -141,7 +141,7 @@ return {
     local servers = {}
 
     local project_root = File.get_git_root() or File.get_cwd()
-    local clangd_root = File.get_ancestor_dir('compiled_clangd.lua', project_root)
+    local clangd_root = File.get_ancestor_dir('compile_commands.json', project_root)
     local home = os.getenv('HOME')
     local clangd_enabled = clangd_root ~= nil and home ~= nil
     servers.clangd = {
