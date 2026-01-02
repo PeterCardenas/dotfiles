@@ -200,8 +200,9 @@ return {
           },
         },
         provider = provider,
-        auto_suggestions_provider = provider,
+        auto_suggestions_provider = 'azure_gpt_4o',
         edit_provider = 'azure_gpt_4o',
+        title_provider = 'bedrock_sonnet',
         behaviour = {
           auto_suggestions = not Config.USE_SUPERMAVEN,
           -- TODO: Use this when it's fast and less buggy
