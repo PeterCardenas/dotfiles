@@ -1,3 +1,5 @@
 {
-  "version_sync_file_location": "$HOME/.config/nvim/nvim.version"
+  "version_sync_file_location": "$HOME/.config/nvim/nvim.version",
+  "enable_release_build": true,
+  "add_neovim_binary_to_path": false
 }
