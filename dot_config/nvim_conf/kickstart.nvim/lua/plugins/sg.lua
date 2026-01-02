@@ -69,6 +69,10 @@ end, {
   end,
 })
 
+vim.keymap.set('n', '<leader>ah', function()
+  require('avante.api').select_history()
+end, { desc = 'avante: select history' })
+
 ---@type LazyPluginSpec[]
 return {
   {
