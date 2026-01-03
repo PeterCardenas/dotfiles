@@ -430,9 +430,9 @@ vim.diagnostic.config({
   underline = true,
   severity_sort = true,
   jump = {
-    float = {
-      format = format_diagnostic,
-    },
+    on_jump = function()
+      vim.diagnostic.open_float({ scope = 'cursor' })
+    end,
   },
   float = {
     focused = false,
@@ -440,7 +440,6 @@ vim.diagnostic.config({
     border = 'rounded',
     source = true,
     header = '',
-    prefix = '',
     format = format_diagnostic,
   },
 })
