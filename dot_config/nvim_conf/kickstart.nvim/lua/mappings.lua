@@ -83,7 +83,7 @@ vim.keymap.set('n', ']d', function()
   jump_to_diagnostic(1)
 end, { desc = 'Go to next diagnostic message' })
 nmap('Show hovered diagnostic', 'lh', function()
-  vim.diagnostic.open_float()
+  vim.diagnostic.open_float({ scope = 'cursor' })
 end)
 
 -- Remap <leader>+v to trigger visual block mode because pasting from clipboard is mapped to Ctrl-V
