@@ -466,7 +466,7 @@ vim.api.nvim_create_autocmd('TermClose', {
     if filetype == 'lazy' or filetype == 'fzf' then
       return
     end
-    require('bufdelete').bufdelete(bufnr)
+    pcall(require('bufdelete').bufdelete, bufnr)
   end,
 })
 
