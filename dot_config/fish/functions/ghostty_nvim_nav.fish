@@ -1,4 +1,7 @@
 function ghostty_nvim_nav -a directions --description "Set ghostty navigation keymaps for specified directions only"
+    if not test "$TERM" = xterm-ghostty; or set -q TMUX
+        return 1
+    end
     set -l ghostty_config_dir $HOME/.config/ghostty
     set -l lock_file /tmp/ghostty_nvim_nav.lock
     set -l exit_code 0
