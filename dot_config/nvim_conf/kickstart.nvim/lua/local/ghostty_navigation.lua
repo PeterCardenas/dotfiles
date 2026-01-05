@@ -119,7 +119,6 @@ local function setup_keymaps()
   -- Insert mode navigation
   for _, dir in ipairs(directions) do
     vim.keymap.set('i', '<C-' .. dir .. '>', function()
-      vim.cmd('stopinsert')
       vim_navigate(dir)
     end, { silent = true, noremap = true, desc = 'Navigate ' .. dir .. ' from insert' })
   end
