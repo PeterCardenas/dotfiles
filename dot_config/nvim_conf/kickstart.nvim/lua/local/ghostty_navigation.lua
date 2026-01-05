@@ -215,7 +215,7 @@ end
 ---Setup ghostty navigation
 function M.setup()
   -- Only activate if we're in ghostty and not in tmux
-  if vim.env.TERM ~= 'xterm-ghostty' or vim.env.TMUX then
+  if vim.env.TERM ~= 'xterm-ghostty' or vim.env.TMUX or vim.env.SSH_CONNECTION then
     return
   end
 
