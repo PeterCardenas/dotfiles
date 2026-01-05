@@ -108,19 +108,13 @@ end
 ---Setup keymaps for navigation
 local function setup_keymaps()
   local directions = { 'h', 'j', 'k', 'l' }
+  local direction_names = { 'left', 'down', 'up', 'right' }
 
   -- Normal mode navigation
   for _, dir in ipairs(directions) do
-    vim.keymap.set('n', '<C-' .. dir .. '>', function()
+    vim.keymap.set({ 'n', 'i' }, '<C-' .. dir .. '>', function()
       vim_navigate(dir)
-    end, { silent = true, noremap = true, desc = 'Navigate ' .. dir })
-  end
-
-  -- Insert mode navigation
-  for _, dir in ipairs(directions) do
-    vim.keymap.set('i', '<C-' .. dir .. '>', function()
-      vim_navigate(dir)
-    end, { silent = true, noremap = true, desc = 'Navigate ' .. dir .. ' from insert' })
+    end, { silent = true, noremap = true, desc = 'Navigate window ' .. direction_names[dir] })
   end
 
   local term_directions = { 'h', 'l' }
