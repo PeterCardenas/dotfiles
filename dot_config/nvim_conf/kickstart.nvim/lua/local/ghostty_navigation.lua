@@ -145,6 +145,10 @@ local function setup_autocommands()
       Async.void(
         ---@async
         function()
+          -- HACK: workaround race between focus lost and focus gained
+          if args.event == 'FocusGained' then
+            Shell.sleep(250)
+          end
           local success, err = update_ghostty_navigation()
           if not success then
             Log.notify_error('[ghostty_navigation] ' .. args.event .. ': ' .. (err or 'Failed to update navigation'))
