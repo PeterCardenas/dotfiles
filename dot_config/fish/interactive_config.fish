@@ -29,7 +29,6 @@ set -gx LESS "--mouse --wheel-lines=3 -R"
 # Make null color more visible.
 set -gx JQ_COLORS "0;36:0;39:0;39:0;39:0;32:1;39:1;39"
 
-source $HOME/.config/fish/colors.fish
 source $HOME/.config/fish/completion_utils.fish
 
 # Set the SSH_AUTH_SOCK variable.
