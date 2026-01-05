@@ -229,7 +229,9 @@ return {
               CLAUDE_CODE_MAX_OUTPUT_TOKENS = 4096,
               MAX_THINKING_TOKENS = 1024,
               ANTHROPIC_MODEL = 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
+              -- ANTHROPIC_MODEL = 'global.anthropic.claude-opus-4-5-20251101-v1:0',
               ANTHROPIC_SMALL_FAST_MODEL = 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
+              -- ANTHROPIC_SMALL_FAST_MODEL = 'global.anthropic.claude-opus-4-5-20251101-v1:0',
             },
           },
           ['opencode-bedrock'] = {
@@ -303,7 +305,7 @@ return {
           provider = 'brave',
         },
         -- TODO: read_definitions is broken
-        disabled_tools = { 'python', 'bash', 'dispatch_agent', 'git_commit', 'git_diff', 'view', 'read_definitions' },
+        disabled_tools = { 'python', 'bash', 'dispatch_agent', 'git_commit', 'git_diff', 'view', 'read_definitions', 'glob' },
         custom_tools = {
           {
             name = 'run_command',
