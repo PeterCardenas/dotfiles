@@ -63,7 +63,7 @@ set -g STARSHIP_CMD_STATUS
 set -g STARSHIP_DURATION
 set -g STARSHIP_JOBS
 
-function __prompt -a prompt_name
+function __prompt -a prompt_name --description "Print partial prompt with starship"
     set -l prompt_file $HOME/.config/starship_$prompt_name.toml
     switch "$fish_key_bindings"
         case fish_hybrid_key_bindings fish_vi_key_bindings
@@ -75,10 +75,10 @@ function __prompt -a prompt_name
 end
 set -g prev_dir
 set -g prev_git_dir
-function __git_status_prompt
+function __git_status_prompt --description "Print git status part of prompt"
     __prompt git_status
 end
-function __git_status_prompt_loading_indicator -a last_prompt
+function __git_status_prompt_loading_indicator -a last_prompt --description "Print loading indicator for git status part of prompt"
     # TODO: fix bug where this is sometimes "."
     set -l current_dir (pwd)
     if test "$last_prompt" = "[J"
@@ -114,14 +114,14 @@ set -gx XDG_CONFIG_HOME $HOME/.config
 set -gx BAT_THEME tokyonight_storm
 
 if not set -q FAST_PROMPT
-    function _prompt_post_exec --on-event fish_postexec
+    function _prompt_post_exec --on-event fish_postexec --description "Update variables used by starship"
         set STARSHIP_CMD_PIPESTATUS $pipestatus
         set STARSHIP_CMD_STATUS $status
         set STARSHIP_DURATION "$CMD_DURATION"
         set STARSHIP_JOBS (count (jobs -p))
     end
     # MUST BE AT END OF FILE
-    function fish_prompt
+    function fish_prompt --description "Combine and print partial prompts with starship"
         __prompt before_git_status
         __git_status_prompt
         __prompt after_git_status
