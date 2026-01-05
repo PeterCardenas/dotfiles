@@ -160,8 +160,10 @@ function fzf-cd-widget -d "Change directory"
 end
 
 function fzf-widget -a widget_name
-    set -l pane_id (tmux display-message -p -F "#{pane_id}")
-    tmux set-option -t $pane_id -p @disable_vertical_pane_navigation yes
+    if set -q TMUX
+        set -l pane_id (tmux display-message -p -F "#{pane_id}")
+        tmux set-option -t $pane_id -p @disable_vertical_pane_navigation yes
+    end
     switch $widget_name
         case file
             fzf-file-widget
@@ -170,7 +172,9 @@ function fzf-widget -a widget_name
         case cd
             fzf-cd-widget
     end
-    tmux set-option -t $pane_id -p -u @disable_vertical_pane_navigation
+    if set -q TMUX
+        tmux set-option -t $pane_id -p -u @disable_vertical_pane_navigation
+    end
 end
 
 bind \ct "fzf-widget file"
