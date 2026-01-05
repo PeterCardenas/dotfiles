@@ -109,7 +109,7 @@ set -g async_prompt_functions __git_status_prompt
 
 set -gx XDG_CONFIG_HOME $HOME/.config
 
-export BAT_THEME="tokyonight_storm"
+set -gx BAT_THEME tokyonight_storm
 
 if not set -q FAST_PROMPT
     function _prompt_post_exec --on-event fish_postexec
