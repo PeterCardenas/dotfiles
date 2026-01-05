@@ -1,5 +1,6 @@
 local Shell = require('utils.shell')
 local Async = require('utils.async')
+local Log = require('utils.log')
 
 ---@async
 local function get_gh_user()
@@ -16,9 +17,7 @@ local function set_gh_user()
   local gh_user = get_gh_user()
   local ok, output = Shell.async_cmd('gh', { 'auth', 'token', '--user', gh_user })
   if not ok then
-    vim.schedule(function()
-      vim.notify(table.concat(output, '\n'), vim.log.levels.ERROR)
-    end)
+    Log.notify_error(table.concat(output, '\n'))
   end
   local gh_token = output[1]
   _G.GH_TOKEN = gh_token

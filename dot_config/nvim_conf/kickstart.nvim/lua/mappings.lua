@@ -2,6 +2,7 @@ local nmap = require('utils.keymap').nmap
 local Config = require('utils.config')
 local Buf = require('utils.buf')
 local Lazygit = require('local.lazygit')
+local Log = require('utils.log')
 
 -- Set <space> as the leader key
 -- See `:help mapleader`
@@ -111,9 +112,7 @@ local function request_and_set_indent()
     end
     set_indent(indent)
     local notification_msg = string.format('indent=%d %s', indent, vim.bo.expandtab and 'expandtab' or 'noexpandtab')
-    vim.schedule(function()
-      vim.notify(notification_msg)
-    end)
+    Log.notify_info(notification_msg)
   end
 end
 vim.keymap.set({ 'n', 'v' }, '<leader>ui', function()
