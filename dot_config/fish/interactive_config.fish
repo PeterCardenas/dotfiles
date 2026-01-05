@@ -36,10 +36,12 @@ if not set -q SSH_AUTH_SOCK
     eval (ssh-agent -c) >/dev/null
 end
 
-if set -q TMUX
-    ghostty_nvim_nav
-else
-    ghostty_nvim_nav h,j,k,l
+function refresh_ghostty_nav --on-event fish_preexec
+    if set -q TMUX
+        ghostty_nvim_nav
+    else
+        ghostty_nvim_nav h,j,k,l
+    end
 end
 
 # Add ghostty completions
