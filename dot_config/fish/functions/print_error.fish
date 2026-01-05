@@ -1,4 +1,4 @@
-function print_error -a error_msg
+function print_error -d "Print an error message" -a error_msg
     if status is-command-substitution; or not isatty stdout
         return
     end
