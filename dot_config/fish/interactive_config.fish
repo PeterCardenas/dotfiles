@@ -32,8 +32,10 @@ set -gx JQ_COLORS "0;36:0;39:0;39:0;39:0;32:1;39:1;39"
 source $HOME/.config/fish/completion_utils.fish
 
 # Set the SSH_AUTH_SOCK variable.
-if not set -q SSH_AUTH_SOCK
-    eval (ssh-agent -c) >/dev/null
+set -gx SSH_AUTH_SOCK $HOME/.ssh/ssh-agent.$hostname.sock
+ssh-add -l &>/dev/null
+if test $status -ge 2
+    ssh-agent -a $SSH_AUTH_SOCK &>/dev/null
 end
 
 function refresh_ghostty_nav --on-event fish_preexec
