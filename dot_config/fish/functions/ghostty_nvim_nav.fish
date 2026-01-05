@@ -1,6 +1,40 @@
 function ghostty_nvim_nav -a directions --description "Set ghostty navigation keymaps for specified directions only"
     set -l ghostty_config_dir $HOME/.config/ghostty
+    set -l lock_file /tmp/ghostty_nvim_nav.lock
     set -l exit_code 0
+    set -l max_retries 50
+    set -l retry_delay 0.1
+
+    # Acquire lock with retry logic
+    set -l lock_acquired 0
+    for i in (seq 1 $max_retries)
+        if test -f $lock_file
+            # Check if lock is stale (process no longer exists)
+            set -l lock_pid (cat $lock_file 2>/dev/null)
+            if test -n "$lock_pid" -a ! -d /proc/$lock_pid 2>/dev/null
+                # On macOS, /proc doesn't exist, use ps instead
+                if not ps -p $lock_pid >/dev/null 2>&1
+                    # Stale lock, remove it
+                    rm -f $lock_file
+                end
+            end
+        end
+
+        # Try to acquire lock atomically
+        if not test -f $lock_file
+            echo $fish_pid >$lock_file
+            set lock_acquired 1
+            break
+        end
+
+        # Wait before retry
+        sleep $retry_delay
+    end
+
+    if test $lock_acquired -eq 0
+        print_error "Failed to acquire lock after $max_retries attempts"
+        return 1
+    end
 
     # All possible directions
     set -l all_directions h j k l
@@ -43,8 +77,13 @@ function ghostty_nvim_nav -a directions --description "Set ghostty navigation ke
         if test $status -ne 0
             print_error "Failed to reload ghostty config"
             set exit_code 1
+        else
+            sleep 0.1
         end
     end
+
+    # Release lock
+    rm -f $lock_file
 
     return $exit_code
 end
