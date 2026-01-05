@@ -229,7 +229,7 @@ return {
               CLAUDE_CODE_MAX_OUTPUT_TOKENS = 4096,
               MAX_THINKING_TOKENS = 1024,
               ANTHROPIC_MODEL = 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
-              ANTHROPIC_SMALL_FAST_MODEL = 'us.anthropic.claude-3-5-haiku-20241022-v1:0',
+              ANTHROPIC_SMALL_FAST_MODEL = 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
             },
           },
           ['opencode-bedrock'] = {
