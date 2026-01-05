@@ -1,0 +1,3 @@
+# Ghostty keybind for Ctrl+k navigation (up)
+keybind = ctrl+k=goto_split:up
+

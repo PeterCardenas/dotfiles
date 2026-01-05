@@ -1,0 +1,3 @@
+# Ghostty keybind for Ctrl+l navigation (right)
+keybind = ctrl+l=goto_split:right
+

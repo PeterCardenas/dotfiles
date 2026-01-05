@@ -2,6 +2,10 @@
 # https://github.com/mitchellh/ghostty/blob/main/src/config/Config.zig
 config-file = ?config_macbook
 config-file = ?config_linux
+config-file = ?active_nvim_keymaps_h
+config-file = ?active_nvim_keymaps_j
+config-file = ?active_nvim_keymaps_k
+config-file = ?active_nvim_keymaps_l
 
 custom-shader = ./shaders/cursor-smear-fade.glsl
 # custom-shader = ./shaders/blaze-trail.glsl
