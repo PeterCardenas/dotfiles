@@ -4,6 +4,7 @@ local Format = require('plugins.lsp.format')
 local Shell = require('utils.shell')
 local Python = require('plugins.lsp.python')
 local Spinner = require('utils.spinner')
+local Log = require('utils.log')
 
 local LINT_POLL_INTERVAL_MS = 16
 ---@type uv_timer_t?
@@ -136,9 +137,7 @@ local function enqueue_next_bazel_go_lint()
   local filename, exec = next(bazel_go_lint_queue)
   if filename then
     if not exec then
-      vim.schedule(function()
-        vim.notify('Failed to lint file with bazel-go-build', vim.log.levels.ERROR)
-      end)
+      Log.notify_error('Failed to lint file with bazel-go-build')
       return
     end
     exec()
@@ -176,9 +175,7 @@ local function bazel_go_lint(abs_filepath)
   bazel_go_lint_spinner_timer.stop()
   require('fidget').notification.remove('bazel_go_lint', 'bazel_go_lint')
   if not success then
-    vim.schedule(function()
-      vim.notify('Failed to buildozer query for go: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
-    end)
+    Log.notify_error('Failed to buildozer query for go: ' .. table.concat(output, '\n'))
     return
   end
   ---@type string[]

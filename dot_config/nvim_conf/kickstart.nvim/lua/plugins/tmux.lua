@@ -3,6 +3,7 @@
 local Async = require('utils.async')
 local Colors = require('utils.colorscheme')
 local Shell = require('utils.shell')
+local Log = require('utils.log')
 
 ---@class TmuxCmdInfo
 ---@field pane_id string
@@ -40,9 +41,7 @@ end
 function TmuxCmd:set_option(subcommand)
   local success, output = Shell.async_cmd('bash', { '-c', self:with_set_option(subcommand) })
   if not success then
-    vim.schedule(function()
-      vim.notify('Failed to set tmux option: ' .. vim.inspect(output), vim.log.levels.ERROR)
-    end)
+    Log.notify_error('Failed to set tmux option: ' .. vim.inspect(output))
   end
   return success
 end
@@ -64,9 +63,7 @@ function TmuxCmd:set_is_vim()
     self:with_set_option('@disable_vertical_pane_navigation yes') .. ' && ' .. self:with_set_option('@disable_horizontal_pane_navigation yes'),
   })
   if not success then
-    vim.schedule(function()
-      vim.notify('Failed to set is_vim: ' .. vim.inspect(output), vim.log.levels.ERROR)
-    end)
+    Log.notify_error('Failed to set is_vim: ' .. vim.inspect(output))
   end
 end
 
@@ -77,9 +74,7 @@ function TmuxCmd:unset_is_vim()
     self:with_set_option('-u @disable_vertical_pane_navigation') .. ' && ' .. self:with_set_option('-u @disable_horizontal_pane_navigation'),
   })
   if not success then
-    vim.schedule(function()
-      vim.notify('Failed to unset is_vim: ' .. vim.inspect(output), vim.log.levels.ERROR)
-    end)
+    Log.notify_error('Failed to unset is_vim: ' .. vim.inspect(output))
   end
 end
 
@@ -169,9 +164,7 @@ local function update_ssh_connection_from_tmux()
     return
   end
   if #output ~= 1 then
-    vim.schedule(function()
-      vim.notify('Could not get SSH_CONNECTION from tmux env' .. vim.inspect(output), vim.log.levels.ERROR)
-    end)
+    Log.notify_error('Could not get SSH_CONNECTION from tmux env' .. vim.inspect(output))
     return
   end
   local tmux_ssh_connection = output[1]
@@ -194,9 +187,7 @@ local function update_display_from_tmux()
     return
   end
   if #output ~= 1 then
-    vim.schedule(function()
-      vim.notify('Could not get DISPLAY from tmux env' .. vim.inspect(output), vim.log.levels.ERROR)
-    end)
+    Log.notify_error('Could not get DISPLAY from tmux env' .. vim.inspect(output))
     return
   end
   local tmux_display = output[1]

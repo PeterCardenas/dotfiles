@@ -1,5 +1,6 @@
 local Async = require('utils.async')
 local Shell = require('utils.shell')
+local Log = require('utils.log')
 
 local chezmoi_augroup = vim.api.nvim_create_augroup('Chezmoi', { clear = true })
 
@@ -49,25 +50,19 @@ local function track_lazy_lock()
   local symlinked_lazy_lock_file_path = os.getenv('HOME') .. '/.config/nvim/lazy-lock.json'
   local success, output = Shell.async_cmd('realpath', { symlinked_lazy_lock_file_path })
   if not success then
-    vim.schedule(function()
-      vim.notify('realpath failed: ' .. symlinked_lazy_lock_file_path, vim.log.levels.ERROR)
-    end)
+    Log.notify_error('realpath failed: ' .. symlinked_lazy_lock_file_path)
     return
   end
   local lazy_lock_file_path_unformatted = output[1]
   if not lazy_lock_file_path_unformatted then
-    vim.schedule(function()
-      vim.notify('lazy-lock.json not found' .. symlinked_lazy_lock_file_path, vim.log.levels.ERROR)
-    end)
+    Log.notify_error('lazy-lock.json not found' .. symlinked_lazy_lock_file_path)
     return
   end
 
   local lazy_lock_file_path = lazy_lock_file_path_unformatted:gsub('\n', '')
   success, output = Shell.async_cmd('chezmoi', { 'add', lazy_lock_file_path })
   if not success then
-    vim.schedule(function()
-      vim.notify('chezmoi add failed: ' .. table.concat(output, '\n'), vim.log.levels.ERROR)
-    end)
+    Log.notify_error('chezmoi add failed: ' .. table.concat(output, '\n'))
     return
   end
 end
@@ -99,9 +94,7 @@ function M.setup(source_path)
         local errored, logs = apply_filepath(source_path, filepath)
         require('fidget').notification.remove('chezmoi_apply', 'chezmoi_apply')
         if errored then
-          vim.schedule(function()
-            vim.notify('chezmoi apply failed: ' .. table.concat(logs, '\n'), vim.log.levels.ERROR)
-          end)
+          Log.notify_error('chezmoi apply failed: ' .. table.concat(logs, '\n'))
         end
       end)
     end,

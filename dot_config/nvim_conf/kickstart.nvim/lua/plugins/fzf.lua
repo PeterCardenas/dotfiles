@@ -2,6 +2,7 @@ local Async = require('utils.async')
 local Shell = require('utils.shell')
 local PickerHelpers = require('plugins.telescope.setup')
 local Config = require('utils.config')
+local Log = require('utils.log')
 PickerHelpers.create_keymaps()
 
 ---@type LazyPluginSpec[]
@@ -68,9 +69,7 @@ return {
                   selection = selection:sub(idx)
                   local success, output = Shell.async_cmd('fre', { '--add', selection, '--store_name', PickerHelpers.get_fre_store_name('files') })
                   if not success then
-                    vim.schedule(function()
-                      vim.notify(table.concat(output, '\n'), vim.log.levels.ERROR, { title = 'Adding to fre failed' })
-                    end)
+                    Log.notify_error('Adding to fre failed\n' .. table.concat(output, '\n'))
                   end
                 end)
                 require('fzf-lua.actions').file_edit_or_qf(selected, opts)

@@ -1,4 +1,5 @@
 local M = {}
+local Log = require('utils.log')
 
 ---@param name string
 ---@return boolean
@@ -41,9 +42,7 @@ function M.get_ancestor_dir(target_filename, start_path)
     iterations = iterations + 1
   end
   if iterations == max_iterations then
-    vim.schedule(function()
-      vim.notify('Could not find ancestor directory of ' .. target_filename .. ' in ' .. current_dir .. ', starting from ' .. start_path, vim.log.levels.WARN)
-    end)
+    Log.notify_warn('Could not find ancestor directory of ' .. target_filename .. ' in ' .. current_dir .. ', starting from ' .. start_path)
   end
   return nil
 end

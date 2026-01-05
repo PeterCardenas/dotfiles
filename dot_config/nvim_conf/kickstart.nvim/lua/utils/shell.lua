@@ -1,4 +1,5 @@
 local String = require('utils.string')
+local Log = require('utils.log')
 M = {}
 
 ---Run a shell command synchronously and return the output.
@@ -48,12 +49,9 @@ local function get_async_cmd()
             ---@type boolean, string
             local ok, err = pcall(done, code == 0, output)
             if not ok then
-              vim.schedule(function()
-                vim.notify(
-                  'Error calling done callback:' .. err .. '\ncmd: ' .. cmd .. '\nargs: ' .. vim.inspect(args) .. '\nOutput: ' .. table.concat(output, '\n'),
-                  vim.log.levels.ERROR
-                )
-              end)
+              Log.notify_error(
+                'Error calling done callback:' .. err .. '\ncmd: ' .. cmd .. '\nargs: ' .. vim.inspect(args) .. '\nOutput: ' .. table.concat(output, '\n')
+              )
             end
           end,
           env = vim.tbl_extend('force', vim.fn.environ(), {
