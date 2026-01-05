@@ -36,6 +36,12 @@ if not set -q SSH_AUTH_SOCK
     eval (ssh-agent -c) >/dev/null
 end
 
+if set -q TMUX
+    ghostty_nvim_nav
+else
+    ghostty_nvim_nav h,j,k,l
+end
+
 # Add ghostty completions
 set -l GHOSTTY_COMPLETION_PATH /Applications/Ghostty.app/Contents/Resources/fish/vendor_completions.d/ghostty.fish
 if test -e $GHOSTTY_COMPLETION_PATH
