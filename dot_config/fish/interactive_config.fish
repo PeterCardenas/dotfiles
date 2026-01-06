@@ -174,7 +174,7 @@ abbr -a ca "chezmoi re-add"
 
 # VSCode shell integration
 string match -q "$TERM_PROGRAM" vscode
-and . (code --locate-shell-integration-path fish)
+and source (code --locate-shell-integration-path fish)
 
 # ROS setup
 if test -e /opt/ros/noetic/setup.bash
@@ -182,6 +182,6 @@ if test -e /opt/ros/noetic/setup.bash
 end
 
 # The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/petercardenas/google-cloud-sdk/path.fish.inc' ]
-    . '/Users/petercardenas/google-cloud-sdk/path.fish.inc'
+if test -f '/Users/petercardenas/google-cloud-sdk/path.fish.inc'
+    source '/Users/petercardenas/google-cloud-sdk/path.fish.inc'
 end
