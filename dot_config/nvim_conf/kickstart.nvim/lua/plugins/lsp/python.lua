@@ -351,7 +351,7 @@ end
 
 function M.setup()
   Async.void(function() ---@async
-    M.maybe_install_python_dependencies()
+    M.maybe_install_python_dependencies(nil, '3.11')
   end)
   vim.api.nvim_create_autocmd('LspAttach', {
     group = vim.api.nvim_create_augroup('PythonConfig', { clear = true }),
