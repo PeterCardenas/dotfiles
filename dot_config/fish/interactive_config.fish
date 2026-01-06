@@ -88,7 +88,9 @@ set -gx sponge_delay 10
 set -gx sponge_successful_exit_codes 0 127 141
 
 # Make Ctrl-H work in tmux pane navigation.
-bind -M insert \ch "tmux select-pane -L"
+if set -q TMUX
+    bind -M insert \ch "tmux select-pane -L"
+end
 
 # History search.
 bind -M insert \cp history-search-backward
