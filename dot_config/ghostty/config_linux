@@ -7,6 +7,7 @@ window-width = 9999
 
 gtk-titlebar = false
 window-padding-y = 0
+window-padding-x = 0
 window-decoration = false
 
 font-family = "MonaspiceKr Nerd Font"
