@@ -1,5 +1,5 @@
 function reload_ghostty_config --description "Reload ghostty configuration by sending USR2 signal"
-    if not test "$TERM" = xterm-ghostty; or set -q TMUX
+    if not test "$TERM" = xterm-ghostty; or set -q TMUX; or set -q SSH_CONNECTION
         return 1
     end
     # Get all ghostty process PIDs

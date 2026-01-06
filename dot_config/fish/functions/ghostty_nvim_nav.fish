@@ -1,5 +1,5 @@
 function ghostty_nvim_nav -a directions --description "Set ghostty navigation keymaps for specified directions only"
-    if not test "$TERM" = xterm-ghostty; or set -q TMUX
+    if not test "$TERM" = xterm-ghostty; or set -q TMUX; or set -q SSH_CONNECTION
         return 1
     end
     set -l ghostty_config_dir $HOME/.config/ghostty
