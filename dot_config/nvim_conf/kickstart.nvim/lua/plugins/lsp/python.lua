@@ -238,8 +238,9 @@ end
 ---@async
 ---@param override_requirements_path? string
 ---@param force_python_version? string
+---@param extra_index_url? string
 ---Installs python dependencies according to requirements.txt in the workspace.
-function M.maybe_install_python_dependencies(override_requirements_path, force_python_version)
+function M.maybe_install_python_dependencies(override_requirements_path, force_python_version, extra_index_url)
   local cwd = File.get_cwd()
   -- Find a Python file in the current directory
   local success, output = Shell.async_cmd('rg', { '--files', '-g', '*.py' })
@@ -306,7 +307,8 @@ function M.maybe_install_python_dependencies(override_requirements_path, force_p
       return
     end
   end
-  success, output = Shell.async_cmd('bash', { '-c', 'source ' .. venv_path .. '/bin/activate && uv pip sync ' .. requirements_path })
+  success, output =
+    Shell.async_cmd('bash', { '-c', 'source ' .. venv_path .. '/bin/activate && uv pip sync --index ' .. extra_index_url .. ' ' .. requirements_path })
   if not success then
     vim.schedule(function()
       vim.notify('Failed to install python dependencies:\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
