@@ -210,6 +210,19 @@ return {
     servers.lua_ls = {
       enabled = not Config.USE_RUST_LUA_LS,
       cmd = { lua_ls_path },
+      root_markers = {
+        {
+          '.emmyrc.json',
+          '.luarc.json',
+          '.luarc.jsonc',
+          '.luacheckrc',
+          '.stylua.toml',
+          'stylua.toml',
+          'selene.toml',
+          'selene.yml',
+          '.git',
+        },
+      },
       handlers = {
         ---@param error lsp.ResponseError
         ---@param result lsp.PublishDiagnosticsParams
