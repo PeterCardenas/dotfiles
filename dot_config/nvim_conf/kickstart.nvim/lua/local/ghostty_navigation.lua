@@ -8,12 +8,22 @@ local M = {}
 
 ---Set ghostty navigation for specific directions (disables all others)
 ---@async
----@param directions string Comma-separated directions (e.g., "h,j,k,l"), "all", or "" to disable all
+---@param directions string
 ---@return boolean, string|nil
 local function set_ghostty_navigation(directions)
-  local success = Shell.async_cmd('fish', { '-c', 'ghostty_nvim_nav ' .. directions })
+  local success, output = Shell.async_cmd('fish', { '-c', 'ghostty_nvim_nav ' .. directions })
   if not success then
-    return false, 'Failed to set ghostty navigation for: ' .. directions
+    return false, 'Failed to set ghostty navigation for: ' .. directions .. '\n' .. table.concat(output, '\n')
+  end
+  return true, nil
+end
+
+---@param directions string
+---@return boolean, string|nil
+local function set_ghostty_navigation_sync(directions)
+  local success, output = Shell.sync_cmd('fish -c "ghostty_nvim_nav ' .. directions .. '"')
+  if not success then
+    return false, 'Failed to set ghostty navigation for: ' .. directions .. '\n' .. table.concat(output, '\n')
   end
   return true, nil
 end
@@ -180,15 +190,10 @@ local function setup_autocommands()
     desc = 'Enable all ghostty navigation on vim leave',
     group = group,
     callback = function()
-      Async.void(
-        ---@async
-        function()
-          local success, err = set_ghostty_navigation('all')
-          if not success then
-            Log.notify_error('[ghostty_navigation] VimLeavePre: ' .. (err or 'Failed to enable all navigation'))
-          end
-        end
-      )
+      local success, err = set_ghostty_navigation_sync('all')
+      if not success then
+        Log.notify_error('[ghostty_navigation] VimLeavePre: ' .. (err or 'Failed to enable all navigation'))
+      end
       vim.cmd('sleep 10m')
     end,
   })
