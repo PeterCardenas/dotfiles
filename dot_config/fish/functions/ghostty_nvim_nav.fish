@@ -3,29 +3,28 @@ function ghostty_nvim_nav -a directions --description "Set ghostty navigation ke
         return 1
     end
     set -l ghostty_config_dir $HOME/.config/ghostty
-    set -l lock_file /tmp/ghostty_nvim_nav.lock
+    set -l lock_dir /tmp/ghostty_nvim_nav.lock
     set -l exit_code 0
     set -l max_retries 50
     set -l retry_delay 0.1
 
-    # Acquire lock with retry logic
+    # Acquire lock with retry logic using mkdir (atomic operation)
     set -l lock_acquired 0
     for i in (seq 1 $max_retries)
-        if test -f $lock_file
-            # Check if lock is stale (process no longer exists)
-            set -l lock_pid (cat $lock_file 2>/dev/null)
-            if test -n "$lock_pid" -a ! -d /proc/$lock_pid 2>/dev/null
-                # On macOS, /proc doesn't exist, use ps instead
+        if test -d $lock_dir
+            # Check if lock is stale (PID file inside lock dir)
+            set -l lock_pid (cat $lock_dir/pid 2>/dev/null)
+            if test -n "$lock_pid"
                 if not ps -p $lock_pid >/dev/null 2>&1
                     # Stale lock, remove it
-                    rm -f $lock_file
+                    rm -rf $lock_dir
                 end
             end
         end
 
-        # Try to acquire lock atomically
-        if not test -f $lock_file
-            echo $fish_pid >$lock_file
+        # Try to acquire lock atomically with mkdir
+        if mkdir $lock_dir 2>/dev/null
+            echo $fish_pid >$lock_dir/pid
             set lock_acquired 1
             break
         end
@@ -86,7 +85,7 @@ function ghostty_nvim_nav -a directions --description "Set ghostty navigation ke
     end
 
     # Release lock
-    rm -f $lock_file
+    rm -rf $lock_dir
 
     return $exit_code
 end
