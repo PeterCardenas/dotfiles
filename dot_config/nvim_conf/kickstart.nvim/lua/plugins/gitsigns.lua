@@ -29,11 +29,11 @@ local function get_pr_url(commit_sha, cwd)
     '--state',
     'merged',
     '--json',
-    'url,mergeCommit',
+    'url',
     '--search',
     commit_sha,
     '--jq',
-    '.[]| select(.mergeCommit.oid == "' .. commit_sha .. '") | .url',
+    '.[] | .url',
   }, cwd)
   if not success or #output == 0 then
     return nil
