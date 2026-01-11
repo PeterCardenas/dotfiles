@@ -38,16 +38,6 @@ if test $status -ge 2
     ssh-agent -a $SSH_AUTH_SOCK &>/dev/null
 end
 
-function refresh_ghostty_nav --on-event fish_postexec
-    if set -q TMUX
-        ghostty_nvim_nav
-    else
-        ghostty_nvim_nav h,j,k,l
-    end
-end
-
-refresh_ghostty_nav
-
 # Add ghostty completions
 set -l GHOSTTY_COMPLETION_PATH /Applications/Ghostty.app/Contents/Resources/fish/vendor_completions.d/ghostty.fish
 if test -e $GHOSTTY_COMPLETION_PATH
