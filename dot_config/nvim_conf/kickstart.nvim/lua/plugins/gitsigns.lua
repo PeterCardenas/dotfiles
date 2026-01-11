@@ -74,24 +74,13 @@ vim.api.nvim_create_user_command('GHPR', function()
   local lnum = vim.api.nvim_win_get_cursor(0)[1]
   local config = require('gitsigns.config').config
   local gitsigns_async = require('gitsigns.async')
-  -- gitsigns async and plenary async are not compatible with each other
-  -- So use gitsigns async just for getting blame info.
-  ---@type fun(cb: fun(err, blame_info: Gitsigns.BlameInfo?): nil): nil
-  local run = gitsigns_async.create(
-    0,
-    ---@async
-    ---@return Gitsigns.BlameInfo?
-    function()
-      local blame_info = cache_entry:get_blame(lnum, config.current_line_blame_opts)
-      return blame_info
-    end
-  )
-  run(function(err, result)
+  ---@diagnostic disable-next-line: param-type-mismatch
+  local get_blame_task = gitsigns_async.run(cache_entry.get_blame, cache_entry, lnum, config.current_line_blame_opts)
+  get_blame_task:await(function(err, blame_info) ---@param blame_info Gitsigns.BlameInfo?
     if err then
       vim.notify('Getting blame info failed:\n' .. tostring(err), vim.log.levels.ERROR)
       return
     end
-    local blame_info = result
     if not blame_info then
       vim.notify('Blame has not been loaded yet.', vim.log.levels.ERROR)
       return
@@ -244,25 +233,15 @@ vim.api.nvim_create_autocmd({ 'BufEnter', 'CursorMoved', 'WinScrolled' }, {
     blame_fetch_map[bufnr] = true
     local config = require('gitsigns.config').config
     local gitsigns_async = require('gitsigns.async')
-    ---@type fun(lnum: integer|[integer, integer], on_done: fun():nil): nil
-    local prefetch_blame = gitsigns_async.create(
-      2,
-      ---@async
-      ---@param lnum integer|[integer, integer]
-      ---@param on_done fun():nil
-      ---@return Gitsigns.BlameInfo?
-      function(lnum, on_done)
-        -- Defers error notification to hover keymap
-        pcall(function() ---@async
-          return cache_entry:get_blame(lnum, config.current_line_blame_opts)
-        end)
-        on_done()
-      end
-    )
     local cursor_lnum = vim.api.nvim_win_get_cursor(0)[1]
     local start_lnum = math.max(1, vim.fn.line('w0') - 10, cursor_lnum - 20)
     local end_lnum = math.min(buf_line_count, vim.fn.line('w$') + 10, cursor_lnum + 20)
-    prefetch_blame({ start_lnum, end_lnum }, function()
+    ---@diagnostic disable-next-line: param-type-mismatch
+    local prefetch_blame_task = gitsigns_async.run(cache_entry.get_blame, cache_entry, { start_lnum, end_lnum }, config.current_line_blame_opts)
+    prefetch_blame_task:await(function(err)
+      if err then
+        return
+      end
       blame_fetch_map[bufnr] = false
     end)
   end,
