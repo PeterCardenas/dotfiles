@@ -55,9 +55,7 @@ function ghostty_nvim_nav -a directions --description "Set ghostty navigation ke
     # First, disable all directions
     for dir in $all_directions
         set -l active_keymap $ghostty_config_dir/active_nvim_keymaps_$dir
-        if test -f $active_keymap
-            rm $active_keymap
-        end
+        rm -f $active_keymap
     end
 
     # Then, enable only the specified directions
