@@ -17,7 +17,8 @@ function ghostty_nvim_nav -a directions --description "Set ghostty navigation ke
             if test -n "$lock_pid"
                 if not ps -p $lock_pid >/dev/null 2>&1
                     # Stale lock, remove it
-                    rm -rf $lock_dir
+                    rm -f $lock_dir/pid 2>/dev/null
+                    rmdir $lock_dir 2>/dev/null
                 end
             end
         end
@@ -77,13 +78,12 @@ function ghostty_nvim_nav -a directions --description "Set ghostty navigation ke
         if test $status -ne 0
             print_error "Failed to reload ghostty config"
             set exit_code 1
-        else
-            sleep 0.1
         end
     end
 
     # Release lock
-    rm -rf $lock_dir
+    rm -f $lock_dir/pid 2>/dev/null
+    rmdir $lock_dir 2>/dev/null
 
     return $exit_code
 end
