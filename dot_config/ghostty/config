@@ -31,3 +31,5 @@ keybind = alt+super+k=goto_split:up
 auto-update = check
 
 theme = "TokyoNight Storm"
+
+scrollback-limit = 1000000000
