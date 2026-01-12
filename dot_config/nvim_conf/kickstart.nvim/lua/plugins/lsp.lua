@@ -47,48 +47,49 @@ vim.api.nvim_create_user_command('MasonInstallAll', function()
   require('lspconfig')
   local registry = require('mason-registry')
   local enabled_lsps = vim.lsp._enabled_configs or {}
-  local lsps_to_install = 0
+  local enabled_tools = { buf = true, gofumpt = true, golines = true, ['golangci-lint'] = true, shfmt = true, vale = true, taplo = true }
+  local num_tools_left_to_install = 0
   local should_block = true
 
   registry.refresh(function()
     ---@type Package[]
     local packages = registry.get_all_packages()
+    ---@type Package[]
+    local packages_to_install = {}
 
-    -- First pass: count how many LSPs actually need to be installed
     for _, pkg in ipairs(packages) do
       local lspconfig_name = vim.tbl_get(pkg.spec, 'neovim', 'lspconfig')
-      if type(lspconfig_name) == 'string' and enabled_lsps[lspconfig_name] and not pkg:is_installed() then
-        lsps_to_install = lsps_to_install + 1
+      if type(lspconfig_name) == 'string' and (enabled_lsps[lspconfig_name] or enabled_tools[lspconfig_name]) and not pkg:is_installed() then
+        packages_to_install[#packages_to_install + 1] = pkg
       end
     end
+    num_tools_left_to_install = #packages_to_install
 
-    if lsps_to_install == 0 then
-      Log.notify_info('[mason] All LSPs are already installed!')
+    if num_tools_left_to_install == 0 then
+      Log.notify_info('[mason] All tools are already installed!')
       should_block = false
       return
     end
 
-    local total_lsps = lsps_to_install
-    local lsps_errored = 0
-    Log.notify_info(string.format('[mason] Starting installation of %d LSPs', total_lsps))
+    local total_tools_to_install = num_tools_left_to_install
+    local num_installs_errored = 0
+    Log.notify_info(string.format('[mason] Starting installation of %d tools', total_tools_to_install))
 
-    -- Second pass: actually install the LSPs
-    for _, pkg in ipairs(packages) do
-      local lspconfig_name = vim.tbl_get(pkg.spec, 'neovim', 'lspconfig')
-      if type(lspconfig_name) == 'string' and enabled_lsps[lspconfig_name] and not pkg:is_installed() then
-        pkg:install(nil, function(success, error)
-          lsps_to_install = lsps_to_install - 1
-          if not success then
-            lsps_errored = lsps_errored + 1
-            Log.notify_error(string.format('[mason] Failed to install %s: %s (%d/%d remaining)', pkg.name, error, lsps_to_install, total_lsps))
-          else
-            Log.notify_info(string.format('[mason] Successfully installed %s (%d/%d remaining)', pkg.name, lsps_to_install, total_lsps))
-          end
-          if lsps_to_install == 0 then
-            Log.notify_info(string.format('[mason] %d/%d LSPs installed successfully', total_lsps - lsps_errored, total_lsps))
-          end
-        end)
-      end
+    for _, pkg in ipairs(packages_to_install) do
+      pkg:install(nil, function(success, error)
+        num_tools_left_to_install = num_tools_left_to_install - 1
+        if not success then
+          num_installs_errored = num_installs_errored + 1
+          Log.notify_error(
+            string.format('[mason] Failed to install %s: %s (%d/%d remaining)', pkg.name, error, num_tools_left_to_install, total_tools_to_install)
+          )
+        else
+          Log.notify_info(string.format('[mason] Successfully installed %s (%d/%d remaining)', pkg.name, num_tools_left_to_install, total_tools_to_install))
+        end
+        if num_tools_left_to_install == 0 then
+          Log.notify_info(string.format('[mason] %d/%d tools installed successfully', total_tools_to_install - num_installs_errored, total_tools_to_install))
+        end
+      end)
     end
     should_block = false
   end)
@@ -96,7 +97,7 @@ vim.api.nvim_create_user_command('MasonInstallAll', function()
   local is_headless = #vim.api.nvim_list_uis() == 0
   if is_headless then
     vim.wait(1000 * 60 * 60, function()
-      return lsps_to_install == 0 and not should_block
+      return num_tools_left_to_install == 0 and not should_block
     end)
   end
 end, {
