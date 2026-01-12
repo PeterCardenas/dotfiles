@@ -25,6 +25,22 @@ vim.api.nvim_create_user_command('TSLogToggleDebug', function()
   vim.g.__ts_debug = enabled and 0 or 1
 end, { nargs = 0 })
 
+vim.api.nvim_create_user_command('TSInstallAll', function()
+  local task = require('nvim-treesitter.install').install({ 'all' }, { summary = true })
+  local is_headless = #vim.api.nvim_list_uis() == 0
+  if is_headless then
+    task:wait(1000 * 60 * 60)
+  end
+end, { nargs = 0 })
+
+vim.api.nvim_create_user_command('TSUpdateParsers', function()
+  local task = require('nvim-treesitter.install').update({ summary = true })
+  local is_headless = #vim.api.nvim_list_uis() == 0
+  if is_headless then
+    task:wait(1000 * 60 * 20)
+  end
+end, { nargs = 0 })
+
 ---@type LazyPluginSpec[]
 return {
   -- Sticky scroll
@@ -101,7 +117,7 @@ return {
         end,
       },
     },
-    build = ':TSUpdate',
+    build = ':TSUpdateParsers',
     config = function()
       vim.treesitter.language.register('markdown', 'markdown.mdx')
       vim.treesitter.language.register('markdown', 'notify')

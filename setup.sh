@@ -523,8 +523,8 @@ EOF
 	echo "Installing Neovim plugins, and TreeSitter parsers..."
 	# Install plugins via Lazy.nvim
 	nvim --headless "+Lazy! restore" +qa
-	# Install TreeSitter parsers (Doesn't really work rn)
-	nvim --headless "+TSInstall! all" +qa
+	# Install TreeSitter parsers
+	nvim --headless "+TSInstallAll" +qa
 
 	# Install opencode
 	curl -fsSL https://opencode.ai/install | bash
