@@ -1,3 +1,5 @@
+local Log = require('utils.log')
+
 vim.api.nvim_create_autocmd({ 'FileType' }, {
   group = vim.api.nvim_create_augroup('TreesitterAttach', { clear = true }),
   callback = function(args)
@@ -13,6 +15,15 @@ vim.api.nvim_create_autocmd({ 'FileType' }, {
     pcall(vim.treesitter.start, args.buf)
   end,
 })
+
+vim.api.nvim_create_user_command('TSLogToggleDebug', function()
+  local ts_log_debug = vim.g.__ts_debug
+  local enabled = ts_log_debug and ts_log_debug > 0
+  if enabled then
+    Log.notify_info('Treesitter debug logging ' .. enabled and 'disabled' or 'enabled')
+  end
+  vim.g.__ts_debug = enabled and 0 or 1
+end, { nargs = 0 })
 
 ---@type LazyPluginSpec[]
 return {
