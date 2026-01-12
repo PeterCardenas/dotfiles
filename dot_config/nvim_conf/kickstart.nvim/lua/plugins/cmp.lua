@@ -446,7 +446,13 @@ return {
             fonts = {
               name = 'fonts',
               module = 'blink.compat.source',
-              transform_items = function(_ctx, items)
+              transform_items = function(ctx, items)
+                local ft = vim.bo[ctx.bufnr].filetype
+                local _, col = unpack(ctx.cursor)
+                local line_to_cursor = ctx.line:sub(0, col - 1)
+                if ft == 'ghostty' and not line_to_cursor:match('^%s*font%-family[a-z%-]*%s*=%s*"[^"]*$') then
+                  return {}
+                end
                 for i = 1, #items do
                   items[i].kind_name = 'Font'
                 end
@@ -519,6 +525,14 @@ return {
             omni = {
               enabled = function()
                 return vim.bo.omnifunc ~= 'v:lua.vim.lsp.omnifunc' and vim.bo.omnifunc ~= 'v:lua.octo_omnifunc'
+              end,
+              transform_items = function(ctx, items)
+                local _, col = unpack(ctx.cursor)
+                local line_to_cursor = ctx.line:sub(0, col - 1)
+                if line_to_cursor:match('^%s*[a-z%-]+%s+[^%s]+.*$') then
+                  return {}
+                end
+                return items
               end,
             },
           },
