@@ -5,6 +5,7 @@ local Lsp = require('utils.lsp')
 local Python = require('plugins.lsp.python')
 local LocalLsp = require('plugins.lsp.local')
 local Table = require('utils.table')
+local Log = require('utils.log')
 -- [[ Configure LSP ]]
 
 local LspMethod = vim.lsp.protocol.Methods
@@ -39,6 +40,68 @@ vim.api.nvim_create_autocmd('LspAttach', {
     end
     OnAttach.on_attach(client, args.buf)
   end,
+})
+
+vim.api.nvim_create_user_command('MasonInstallAll', function()
+  -- TODO: lsp configs are lazy loaded
+  require('lspconfig')
+  local registry = require('mason-registry')
+  local enabled_lsps = vim.lsp._enabled_configs or {}
+  local lsps_to_install = 0
+  local should_block = true
+
+  registry.refresh(function()
+    ---@type Package[]
+    local packages = registry.get_all_packages()
+
+    -- First pass: count how many LSPs actually need to be installed
+    for _, pkg in ipairs(packages) do
+      local lspconfig_name = vim.tbl_get(pkg.spec, 'neovim', 'lspconfig')
+      if type(lspconfig_name) == 'string' and enabled_lsps[lspconfig_name] and not pkg:is_installed() then
+        lsps_to_install = lsps_to_install + 1
+      end
+    end
+
+    if lsps_to_install == 0 then
+      Log.notify_info('[mason] All LSPs are already installed!')
+      should_block = false
+      return
+    end
+
+    local total_lsps = lsps_to_install
+    local lsps_errored = 0
+    Log.notify_info(string.format('[mason] Starting installation of %d LSPs', total_lsps))
+
+    -- Second pass: actually install the LSPs
+    for _, pkg in ipairs(packages) do
+      local lspconfig_name = vim.tbl_get(pkg.spec, 'neovim', 'lspconfig')
+      if type(lspconfig_name) == 'string' and enabled_lsps[lspconfig_name] and not pkg:is_installed() then
+        pkg:install(nil, function(success, error)
+          lsps_to_install = lsps_to_install - 1
+          if not success then
+            lsps_errored = lsps_errored + 1
+            Log.notify_error(string.format('[mason] Failed to install %s: %s (%d/%d remaining)', pkg.name, error, lsps_to_install, total_lsps))
+          else
+            Log.notify_info(string.format('[mason] Successfully installed %s (%d/%d remaining)', pkg.name, lsps_to_install, total_lsps))
+          end
+          if lsps_to_install == 0 then
+            Log.notify_info(string.format('[mason] %d/%d LSPs installed successfully', total_lsps - lsps_errored, total_lsps))
+          end
+        end)
+      end
+    end
+    should_block = false
+  end)
+
+  local is_headless = #vim.api.nvim_list_uis() == 0
+  if is_headless then
+    vim.wait(1000 * 60 * 60, function()
+      return lsps_to_install == 0 and not should_block
+    end)
+  end
+end, {
+  desc = 'Install all enabled LSPs with Mason',
+  nargs = 0,
 })
 
 ---@return LspTogglableConfig
@@ -115,6 +178,9 @@ return {
       'j-hui/fidget.nvim',
       config = function()
         require('fidget').setup({
+          logger = {
+            level = vim.log.levels.INFO,
+          },
           notification = {
             window = {
               winblend = 0,
