@@ -61,7 +61,12 @@ end, {
     end
     local filtered_providers = {} ---@type string[]
     for _, provider in ipairs(providers) do
-      if vim.startswith(provider, 'bedrock_') or vim.startswith(provider, 'azure_') or provider == 'claude-code' or vim.startswith(provider, 'opencode-') then
+      if
+        vim.startswith(provider, 'bedrock_')
+        or vim.startswith(provider, 'azure_')
+        or vim.startswith(provider, 'claude-code-')
+        or vim.startswith(provider, 'opencode-')
+      then
         filtered_providers[#filtered_providers + 1] = provider
       end
     end
@@ -181,13 +186,20 @@ return {
       end
 
       local AvanteToolsHelpers = require('avante.llm_tools.helpers')
-      -- TODO: Properly respect gitignore for repo map
-      -- TODO: building repo map should be async
-      -- TODO: diffs should join with relevant diffs next to them
-      -- TODO: allow cancelling, but keep chat history
-      -- TODO: becomes slower the longer the output is.
-      -- TODO: sidepanel duplicates
-      local provider = 'claude-code'
+      local provider = 'claude-code-sonnet'
+      local claude_code_config = vim.tbl_deep_extend('force', require('avante.config')._defaults.acp_providers['claude-code'], {
+        env = {
+          CLAUDE_CODE_USE_BEDROCK = 1,
+          AWS_REGION = AWS.AWS_REGION,
+          CLAUDE_CODE_MAX_OUTPUT_TOKENS = 4096,
+          MAX_THINKING_TOKENS = 1024,
+          ANTHROPIC_MODEL = 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
+          ANTHROPIC_SMALL_FAST_MODEL = 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
+          ANTHROPIC_DEFAULT_HAIKU_MODEL = 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
+        },
+      })
+      local claude_code_opus_config = vim.deepcopy(claude_code_config)
+      claude_code_opus_config.env.ANTHROPIC_MODEL = 'global.anthropic.claude-opus-4-5-20251101-v1:0'
       require('avante').setup({
         mode = 'agentic',
         selection = {
@@ -222,20 +234,8 @@ return {
         },
         system_prompt = 'instead of suggesting what the file would be, always make the edit yourself. DO NOT run tests, i will run tests myself',
         acp_providers = {
-          ['claude-code'] = {
-            env = {
-              CLAUDE_CODE_USE_BEDROCK = 1,
-              AWS_REGION = AWS.AWS_REGION,
-              CLAUDE_CODE_MAX_OUTPUT_TOKENS = 4096,
-              MAX_THINKING_TOKENS = 1024,
-              ANTHROPIC_MODEL = 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
-              -- ANTHROPIC_MODEL = 'global.anthropic.claude-opus-4-5-20251101-v1:0',
-              -- ANTHROPIC_SMALL_FAST_MODEL = 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
-              ANTHROPIC_SMALL_FAST_MODEL = 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
-              ANTHROPIC_DEFAULT_HAIKU_MODEL = 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
-              -- ANTHROPIC_SMALL_FAST_MODEL = 'global.anthropic.claude-opus-4-5-20251101-v1:0',
-            },
-          },
+          ['claude-code-sonnet'] = claude_code_config,
+          ['claude-code-opus'] = claude_code_opus_config,
           ['opencode-bedrock'] = {
             command = 'opencode',
             args = { 'acp' },
