@@ -525,6 +525,8 @@ EOF
 	nvim --headless "+Lazy! restore" +qa
 	# Install TreeSitter parsers
 	nvim --headless "+TSInstallAll" +qa
+	# Install Mason dependencies
+	nvim --headless "+MasonInstallAll" +qa
 
 	# Install opencode
 	curl -fsSL https://opencode.ai/install | bash
@@ -534,7 +536,6 @@ EOF
 	python3.12 install.py --all
 	popd
 
-	# TODO Install Mason dependencies
 	install_ccls_for_mac
 	# TODO: setup gpg (need bitwarden or copy over)
 	# TODO: setup gnome
