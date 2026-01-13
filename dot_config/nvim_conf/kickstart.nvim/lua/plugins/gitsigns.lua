@@ -357,13 +357,6 @@ vim.api.nvim_create_autocmd({ 'BufReadCmd' }, {
     require('octo').load_buffer({ bufnr = args.buf })
   end,
 })
-vim.api.nvim_create_autocmd({ 'BufReadPre' }, {
-  group = lazy_load_octo,
-  pattern = '*/octo.nvim/lua/octo/gh/*.lua',
-  callback = function()
-    require('octo')
-  end,
-})
 
 ---@type LazyPluginSpec[]
 return {
@@ -379,6 +372,7 @@ return {
       -- Not actual dependencies, but plugins that I want to be lazy loaded in addition to octo.nvim
       'Bekaboo/dropbar.nvim',
       'nvim-treesitter/nvim-treesitter-context',
+      'nvim-telescope/telescope.nvim',
     },
     config = function()
       vim.api.nvim_del_augroup_by_id(lazy_load_octo)
