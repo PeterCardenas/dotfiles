@@ -186,7 +186,7 @@ return {
       end
 
       local AvanteToolsHelpers = require('avante.llm_tools.helpers')
-      local provider = 'claude-code-sonnet'
+      local provider = 'claude-code-opus'
       local claude_code_config = vim.tbl_deep_extend('force', require('avante.config')._defaults.acp_providers['claude-code'], {
         env = {
           CLAUDE_CODE_USE_BEDROCK = 1,
