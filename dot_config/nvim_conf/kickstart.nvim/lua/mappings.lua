@@ -42,7 +42,23 @@ local function save_file()
 end
 vim.keymap.set({ 'v', 'n' }, '<leader>s', save_file, { desc = 'Save file' })
 vim.keymap.set({ 'v', 'n' }, '<leader>q', '<cmd>q<cr>', { desc = 'Quit split' })
-vim.keymap.set({ 'v', 'n' }, '<leader>Q', '<cmd>qa<cr>', { desc = 'Quit all' })
+vim.keymap.set({ 'v', 'n' }, '<leader>Q', function()
+  ---@type string[]
+  local modified_buffers = {}
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].modified then
+      local bufname = vim.api.nvim_buf_get_name(buf)
+      modified_buffers[#modified_buffers + 1] = bufname == '' and '[No Name]' or bufname
+    end
+  end
+
+  if #modified_buffers > 0 then
+    local msg = 'Cannot quit. Modified buffers:\n' .. table.concat(modified_buffers, '\n')
+    Log.notify_error(msg)
+  else
+    vim.cmd('qa')
+  end
+end, { desc = 'Quit all' })
 
 -- Remap for dealing with word wrap
 vim.keymap.set('n', 'k', 'g<Up>', { silent = true })
