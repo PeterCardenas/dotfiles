@@ -65,23 +65,28 @@ if not Config.USE_TABLINE then
   })
 end
 
----@param count number
-local function jump_to_diagnostic(count)
+---@param direction 'next'|'prev'
+local function jump_to_diagnostic(direction)
+  local count = direction == 'next' and 1 or -1
   local Format = require('plugins.lsp.format')
   local seen_namespace_count = 0
   local diagnostic ---@type vim.Diagnostic?
+  local success = false
   repeat
-    diagnostic = vim.diagnostic.jump({ count = count })
+    success, diagnostic = pcall(vim.diagnostic.jump, { count = count })
+    if not success then
+      break
+    end
     seen_namespace_count = seen_namespace_count + (diagnostic and diagnostic.namespace == Format.format_diagnostic_namespace and 1 or 0)
   until not diagnostic or diagnostic.namespace ~= Format.format_diagnostic_namespace or seen_namespace_count > 1
 end
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '[d', function()
-  jump_to_diagnostic(-1)
+  jump_to_diagnostic('prev')
 end, { desc = 'Go to previous diagnostic message' })
 vim.keymap.set('n', ']d', function()
-  jump_to_diagnostic(1)
+  jump_to_diagnostic('next')
 end, { desc = 'Go to next diagnostic message' })
 nmap('Show hovered diagnostic', 'lh', function()
   vim.diagnostic.open_float({ scope = 'cursor' })
