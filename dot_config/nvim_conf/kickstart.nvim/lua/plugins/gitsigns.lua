@@ -427,7 +427,7 @@ return {
       end
       require('octo.utils').state_icon_map.COMMENTED = ' '
       require('octo').setup({
-        timeout = math.huge,
+        timeout = vim.fn.has('nvim-0.12') == 1 and math.huge or 1000000,
         debug = {
           notify_missing_timeline_items = true,
         },
