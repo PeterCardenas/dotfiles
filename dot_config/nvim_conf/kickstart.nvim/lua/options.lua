@@ -9,7 +9,12 @@ vim.o.foldcolumn = '1'
 vim.o.foldlevel = 99
 vim.o.foldlevelstart = 99
 vim.o.foldenable = true
-vim.o.fillchars = 'eob: ,fold: ,foldopen:+,foldsep:│,foldclose:-,foldinner: '
+local fillchars = 'eob: ,fold: ,foldopen:+,foldsep:│,foldclose:-'
+if vim.fn.has('nvim-0.12') == 1 then
+  vim.o.fillchars = fillchars .. ',foldinner: '
+else
+  vim.o.fillchars = fillchars
+end
 
 vim.o.swapfile = false
 
