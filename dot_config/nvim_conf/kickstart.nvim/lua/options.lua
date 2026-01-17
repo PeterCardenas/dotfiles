@@ -428,25 +428,35 @@ local function format_diagnostic(diag)
 
   return message
 end
+---@type vim.diagnostic.Opts.Jump
+local jump_config = {}
+if vim.fn.has('nvim-0.12') == 1 then
+  jump_config.on_jump = function()
+    vim.diagnostic.open_float({ scope = 'cursor' })
+  end
+else
+  jump_config.float = { format = format_diagnostic }
+end
+---@type vim.diagnostic.Opts.Float
+local float_config = {
+  focused = false,
+  style = 'minimal',
+  border = 'rounded',
+  source = true,
+  header = '',
+  format = format_diagnostic,
+}
+if vim.fn.has('nvim-0.12') ~= 1 then
+  float_config.prefix = ''
+end
 vim.diagnostic.config({
   virtual_text = true,
   signs = { active = signs },
   update_in_insert = true,
   underline = true,
   severity_sort = true,
-  jump = {
-    on_jump = function()
-      vim.diagnostic.open_float({ scope = 'cursor' })
-    end,
-  },
-  float = {
-    focused = false,
-    style = 'minimal',
-    border = 'rounded',
-    source = true,
-    header = '',
-    format = format_diagnostic,
-  },
+  jump = jump_config,
+  float = float_config,
 })
 
 -- Go into insert mode when opening a terminal
