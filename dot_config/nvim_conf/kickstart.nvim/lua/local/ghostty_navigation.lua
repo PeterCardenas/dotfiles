@@ -41,10 +41,11 @@ end
 
 ---Check if current buffer is an fzf buffer
 ---@return boolean
-local function is_fzf_buffer()
+local function is_picker_buffer()
   local bufnr = vim.api.nvim_get_current_buf()
+  local mode = vim.api.nvim_get_mode().mode
   local filetype = vim.bo[bufnr].filetype
-  return filetype == 'fzf'
+  return filetype == 'fzf' or (filetype == 'TelescopePrompt' and mode == 'i')
 end
 
 ---Check which directions are at the edge (can't navigate further in vim)
@@ -59,7 +60,7 @@ local function get_edge_directions()
   }
 
   -- If blink.cmp menu is visible or in fzf buffer, never enable j/k for ghostty (keep them for vim)
-  if is_blink_menu_visible() or is_fzf_buffer() then
+  if is_blink_menu_visible() or is_picker_buffer() then
     edges.j = false
     edges.k = false
   end
