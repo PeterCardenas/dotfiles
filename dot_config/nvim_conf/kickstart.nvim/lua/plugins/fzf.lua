@@ -9,7 +9,6 @@ PickerHelpers.create_keymaps()
 return {
   {
     Config.FZF_LUA_REPO,
-    branch = 'fix-code-action-window-position',
     dependencies = {
       'echasnovski/mini.icons',
       'nvim-treesitter/nvim-treesitter',
