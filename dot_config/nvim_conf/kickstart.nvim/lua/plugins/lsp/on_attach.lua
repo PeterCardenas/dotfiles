@@ -35,7 +35,7 @@ function M.on_attach(client, bufnr)
   end, '[L]anguage [R]ename')
   nmap('<leader>la', function()
     require('fzf-lua.providers.lsp').code_actions({
-      winopts = { height = 0.33, width = 1, relative = 'cursor', backdrop = 100, preview = {
+      winopts = { height = 0.33, width = 1, relative = 'cursor', row = 1, backdrop = 100, preview = {
         layout = 'vertical',
       } },
       toggle_behavior = 'extend',
