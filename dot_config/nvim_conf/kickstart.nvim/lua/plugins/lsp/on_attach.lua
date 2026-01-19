@@ -82,7 +82,7 @@ function M.on_attach(client, bufnr)
     end
   end, '[L]anguage [S]ymbols')
   nmap('<leader>lS', function()
-    require('telescope.builtin').lsp_dynamic_workspace_symbols()
+    require('fzf-lua.providers.lsp').live_workspace_symbols()
   end, 'Workspace Symbols')
 
   vim.keymap.set({ 'n', 'i' }, '<C-s>', function()
