@@ -112,7 +112,7 @@ end)
 vim.keymap.set({ 'n', 'v' }, '<leader>v', '<C-v>', { desc = 'Visual block mode' })
 -- System clipboard keymaps.
 vim.keymap.set({ 'v', 'n' }, '<leader>y', '"+y', { desc = 'Yank selection to clipboard' })
-vim.keymap.set({ 'v', 'n' }, '<leader>Y', '"+Y', { desc = 'Yank to end of line to clipboard' })
+vim.keymap.set({ 'v', 'n' }, '<leader>Y', '"+y$', { desc = 'Yank to end of line to clipboard' })
 vim.keymap.set({ 'v', 'n', 'i' }, '<C-v>', '"+p', { desc = 'Paste from clipboard' })
 
 ---Set spaces per indent
