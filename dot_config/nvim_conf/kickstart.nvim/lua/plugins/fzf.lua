@@ -35,6 +35,10 @@ return {
             ['<C-U>'] = 'preview-page-up',
             ['<C-L>'] = 'focus-preview',
           },
+          fzf = {
+            ['ctrl-d'] = 'preview-page-down',
+            ['ctrl-u'] = 'preview-page-up',
+          },
         },
         winopts = {
           height = 0.98,
@@ -45,6 +49,9 @@ return {
             treesitter = {
               context = true,
             },
+          },
+          codeaction_native = {
+            pager = [[delta --width=$COLUMNS --hunk-header-style="omit" --file-style="omit"]],
           },
         },
         files = {

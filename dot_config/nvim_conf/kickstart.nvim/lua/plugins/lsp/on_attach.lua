@@ -36,10 +36,11 @@ function M.on_attach(client, bufnr)
   nmap('<leader>la', function()
     require('fzf-lua.providers.lsp').code_actions({
       winopts = { height = 0.33, width = 1, relative = 'cursor', row = 1, backdrop = 100, preview = {
-        layout = 'vertical',
+        layout = 'horizontal',
       } },
       toggle_behavior = 'extend',
       silent = true,
+      previewer = 'codeaction_native',
     })
   end, '[L]anguage [A]ction')
 
