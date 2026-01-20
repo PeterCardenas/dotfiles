@@ -956,7 +956,7 @@ return {
     'gbprod/yanky.nvim',
     keys = {
       {
-        '<leader>p',
+        '<leader>pp',
         mode = { 'n', 'x' },
         function()
           require('telescope').extensions.yank_history.yank_history({})
