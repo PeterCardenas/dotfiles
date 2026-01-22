@@ -36,6 +36,7 @@ return {
         local util = require('typescript-tools.utils')
         on_dir(util.get_root_dir(bufnr))
       end,
+      filetypes = { 'typescript', 'typescriptreact', 'javascript', 'javascriptreact' },
     }
     local ts_settings = {
       tsserver_max_memory = 16384,
