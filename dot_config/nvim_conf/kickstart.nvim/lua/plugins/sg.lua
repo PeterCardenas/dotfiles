@@ -177,9 +177,11 @@ return {
           ANTHROPIC_SMALL_FAST_MODEL = 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
           ANTHROPIC_DEFAULT_HAIKU_MODEL = 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
         },
+        model = 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
       })
       local claude_code_opus_config = vim.deepcopy(claude_code_config)
       claude_code_opus_config.env.ANTHROPIC_MODEL = 'global.anthropic.claude-opus-4-5-20251101-v1:0'
+      claude_code_opus_config.model = 'global.anthropic.claude-opus-4-5-20251101-v1:0'
       require('avante').setup({
         mode = 'agentic',
         selection = {
@@ -222,6 +224,9 @@ return {
             env = {
               OPENCODE_CONFIG = vim.fn.expand('~/.config/opencode/opencode-bedrock.jsonc'),
             },
+          },
+          ['codex'] = {
+            model = 'gpt-5.2-codex',
           },
           ['opencode-azure'] = {
             command = 'opencode',
