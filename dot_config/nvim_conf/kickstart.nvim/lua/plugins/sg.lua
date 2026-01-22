@@ -1,27 +1,6 @@
 local Config = require('utils.config')
 local AWS = require('utils.aws')
-
----@param filepath string
----@return boolean, string
-local function read_api_key(filepath)
-  local api_key_filepath = vim.fn.expand(filepath)
-  ---@type boolean, string[]
-  local api_key_ok, api_key_lines = pcall(vim.fn.readfile, api_key_filepath)
-  if not api_key_ok or #api_key_lines == 0 or api_key_lines[1] == '' then
-    local api_key = vim.fn.input({ prompt = 'Enter key at ' .. api_key_filepath .. ': ', cancelreturn = '' })
-    if api_key ~= '' then
-      local write_ok, error_msg = require('utils.file').write_to_file(api_key_filepath, api_key)
-      if write_ok then
-        return true, api_key
-      else
-        vim.notify('Failed to write key to ' .. api_key_filepath .. (error_msg ~= '' and ': ' .. error_msg or ''), vim.log.levels.ERROR)
-        return false, ''
-      end
-    end
-    return false, ''
-  end
-  return true, api_key_lines[1]
-end
+local Secrets = require('utils.secrets')
 
 vim.api.nvim_create_user_command('AvanteToggleAgentMode', function(opts)
   local config = require('avante.config')
@@ -66,6 +45,7 @@ end, {
         or vim.startswith(provider, 'azure_')
         or vim.startswith(provider, 'claude-code-')
         or vim.startswith(provider, 'opencode-')
+        or provider == 'codex'
       then
         filtered_providers[#filtered_providers + 1] = provider
       end
@@ -151,14 +131,14 @@ return {
       --   return
       -- end
       -- vim.env.ANTHROPIC_API_KEY = anthropic_key
-      local brave_search_key_ok, brave_search_key = read_api_key('~/.local/share/brave_search/api_key')
+      local brave_search_key_ok, brave_search_key = Secrets.read_api_key('~/.local/share/brave_search/api_key')
       if not brave_search_key_ok then
         vim.notify('Brave Search API key not found', vim.log.levels.ERROR)
       else
         vim.env.BRAVE_API_KEY = brave_search_key
       end
       local function parse_azure_openai_key()
-        local azure_openai_key_ok, azure_openai_key = read_api_key('~/.local/share/azure/api_key')
+        local azure_openai_key_ok, azure_openai_key = Secrets.read_api_key('~/.local/share/azure/api_key')
         if not azure_openai_key_ok then
           vim.notify('Azure OpenAI API key not found', vim.log.levels.ERROR)
           return nil
@@ -286,7 +266,7 @@ return {
           azure_gpt_5_1 = {
             __inherited_from = 'azure',
             parse_api_key = function()
-              local azure_openai_gpt_5_1_key_ok, azure_openai_gpt_5_1_key = read_api_key('~/.local/share/azure/gpt_5_1_api_key')
+              local azure_openai_gpt_5_1_key_ok, azure_openai_gpt_5_1_key = Secrets.read_api_key('~/.local/share/azure/gpt_5_1_api_key')
               if not azure_openai_gpt_5_1_key_ok then
                 vim.notify('Azure OpenAI GPT 5.1 API key not found', vim.log.levels.ERROR)
               end
@@ -405,7 +385,7 @@ return {
     },
     cmd = { 'CodeCompanion', 'CodeCompanionCmd', 'CodeCompanionChat', 'CodeCompanionActions' },
     config = function()
-      local azure_openai_key_ok, azure_openai_key = read_api_key('~/.local/share/azure/api_key')
+      local azure_openai_key_ok, azure_openai_key = Secrets.read_api_key('~/.local/share/azure/api_key')
       if not azure_openai_key_ok then
         vim.notify('Azure OpenAI API key not found', vim.log.levels.ERROR)
       else
