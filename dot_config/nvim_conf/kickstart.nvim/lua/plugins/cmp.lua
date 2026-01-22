@@ -426,7 +426,7 @@ return {
             ['dap-repl'] = maybe_get_dap,
             ['dapui_watches'] = maybe_get_dap,
             ['dapui_hover'] = maybe_get_dap,
-            AvanteInput = { 'avante_commands', 'avante_mentions' },
+            AvanteInput = { 'avante_commands', 'avante_mentions', 'path' },
             AvantePromptInput = { 'avante_mentions' },
             codecompanion = { 'codecompanion' },
           },
