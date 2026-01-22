@@ -119,6 +119,8 @@ function M.add_config(current_config)
       ['image'] = 'what the image should replace/represent',
       ['image.src'] = 'url/path to the image',
     }
+    config.valid_captures.highlights['markup.shortcut_link'] = 'highlight for useless links (shortcut/reference links)'
+    config.valid_captures.highlights['noconceal'] = 'remove conceal that was previously applied'
   end
   current_config['ts_query_ls'] = {
     init_options = config,
