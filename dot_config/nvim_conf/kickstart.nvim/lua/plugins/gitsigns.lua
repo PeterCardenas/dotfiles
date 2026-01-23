@@ -459,14 +459,14 @@ return {
             copy_url = { lhs = '<leader>pu', desc = 'copy url to system clipboard' },
             copy_sha = { lhs = '<leader>ph', desc = 'copy sha to system clipboard' },
             -- Remove conflict with <C-r> for for redo
-            reload = { lhs = '<leader>r', desc = 'reload' },
+            reload = { lhs = '<leader>r<C-r>', desc = 'reload' },
           },
           issue = {
             -- Remove conflict with <C-y> for scrolling
             copy_url = { lhs = '<leader>iu', desc = 'copy url to system clipboard' },
             add_assignee = { lhs = '<leader>ia', desc = 'add assignee' },
             -- Remove conflict with <C-r> for for redo
-            reload = { lhs = '<leader>r', desc = 'reload' },
+            reload = { lhs = '<leader>r<C-r>', desc = 'reload' },
           },
           review_thread = {
             add_suggestion = { lhs = '<leader>cs', desc = 'add suggestion' },
