@@ -79,3 +79,11 @@
   ; remove when following issue is resolved: https://github.com/ram02z/tree-sitter-fish/issues/31
   (#offset! @injection.content 0 1 0 -1)
   (#set! injection.language "jq"))
+
+(command
+  name: (word) @_cmd
+  (#eq? @_cmd "jq")
+  argument: (single_quote_string) @injection.content
+  ; remove when following issue is resolved: https://github.com/ram02z/tree-sitter-fish/issues/31
+  (#offset! @injection.content 0 1 0 -1)
+  (#set! injection.language "jq"))
