@@ -14,16 +14,10 @@ end
 
 set -l piped_content
 if not isatty stdin
-    while read --line --local line
-        if test -z "$piped_content"
-            set piped_content $line
-        else
-            set piped_content "$piped_content\n$line"
-        end
-    end
+    read -z piped_content
 end
 
-set -l contents "$argv"
+set -l contents (string join \n $argv | string collect)
 if test -n "$piped_content"
     set contents "$piped_content$contents"
 end
@@ -47,5 +41,5 @@ if set -q TMUX
 else
     set osc_suffix '\x1b\\'
 end
-set -l serialized_contents (echo $contents | base64 | tr -d '\r\n')
+set -l serialized_contents (printf '%s' "$contents" | base64 | tr -d '\r\n')
 echo -ne "$osc_prefix]52;c;$serialized_contents$osc_suffix" >$pty
