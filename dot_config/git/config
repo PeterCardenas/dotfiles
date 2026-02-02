@@ -4,6 +4,7 @@
 	editor = nvim-git
 	pager = delta
 	gpgpath = gpg
+	preloadIndex = true
 [maintenance]
 	auto = false
 	strategy = incremental
