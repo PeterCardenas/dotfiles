@@ -1,4 +1,5 @@
 function manage_sessions -d "Navigate to an existing session"
+    printf '\e[5 q' # Set cursor shape to blinking bar
     # Sort sessions by last activity, with most recent first.
     set session_activities (tmux list-sessions -F "#{session_name}|#{session_activity}" | sort -t "|" -k2 -r)
     # Exclude the current session.
