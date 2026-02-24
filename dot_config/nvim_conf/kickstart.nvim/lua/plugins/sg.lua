@@ -177,6 +177,8 @@ return {
           ANTHROPIC_SMALL_FAST_MODEL = 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
           ANTHROPIC_DEFAULT_HAIKU_MODEL = 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
         },
+        command = 'claude-agent-acp',
+        args = {},
         model = 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
       })
       local claude_code_opus_config = vim.deepcopy(claude_code_config)
