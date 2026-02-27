@@ -54,10 +54,6 @@ end, {
   end,
 })
 
-vim.keymap.set('n', '<leader>ah', function()
-  require('avante.api').select_history()
-end, { desc = 'avante: select history' })
-
 ---@type LazyPluginSpec[]
 return {
   {
@@ -114,6 +110,9 @@ return {
     cmd = { 'AvanteAsk', 'AvanteEdit' },
     build = 'make BUILD_FROM_SOURCE=true',
     cond = function()
+      if Config.USE_AGENTIC then
+        return false
+      end
       local api_key_filepath = vim.fn.expand('~/.local/share/anthropic/api_key')
       return vim.fn.filereadable(api_key_filepath) == 1
     end,
@@ -382,6 +381,183 @@ return {
       for _, cmd in ipairs({ 'AvanteSwitchProvider', 'AvanteChat', 'AvanteAsk', 'AvanteEdit', 'AvanteChatNew', 'AvanteClear' }) do
         vim.api.nvim_del_user_command(cmd)
       end
+    end,
+  },
+  {
+    'carlos-algms/agentic.nvim',
+    cond = function()
+      return Config.USE_AGENTIC
+    end,
+    keys = {
+      -- Use same <leader>a prefix as avante for consistency when switching
+      {
+        '<leader>at',
+        function()
+          require('agentic').toggle()
+        end,
+        mode = { 'n', 'v' },
+        desc = 'agentic: toggle',
+      },
+      {
+        '<leader>aa',
+        function()
+          require('agentic').toggle()
+          -- Focus input after toggle
+          vim.defer_fn(function()
+            require('agentic').focus_input()
+          end, 100)
+        end,
+        mode = { 'n', 'v' },
+        desc = 'agentic: ask',
+      },
+      {
+        '<leader>ac',
+        function()
+          require('agentic').add_selection_or_file_to_context()
+        end,
+        mode = { 'n', 'v' },
+        desc = 'agentic: add context',
+      },
+      {
+        '<leader>an',
+        function()
+          require('agentic').new_session()
+        end,
+        mode = { 'n', 'v' },
+        desc = 'agentic: new session',
+      },
+      {
+        '<leader>ah',
+        function()
+          require('agentic').restore_session()
+        end,
+        mode = { 'n' },
+        desc = 'agentic: restore session (history)',
+      },
+      {
+        '<leader>ax',
+        function()
+          require('agentic').switch_provider()
+        end,
+        mode = { 'n' },
+        desc = 'agentic: switch provider',
+      },
+      {
+        '<leader>al',
+        function()
+          require('agentic').rotate_layout()
+        end,
+        mode = { 'n' },
+        desc = 'agentic: rotate layout',
+      },
+      {
+        '<leader>as',
+        function()
+          require('agentic').stop_generation()
+        end,
+        mode = { 'n' },
+        desc = 'agentic: stop generation',
+      },
+    },
+    cmd = { 'Agentic' },
+    dependencies = {
+      'nvim-treesitter/nvim-treesitter',
+    },
+    config = function()
+      require('agentic').setup({
+        -- Default to claude-code with opus model
+        provider = 'claude-acp',
+
+        -- Window configuration similar to avante
+        windows = {
+          position = 'right',
+          width = '40%',
+          chat = { win_opts = {} },
+          input = { height = 10, win_opts = {} },
+          code = { max_height = 15, win_opts = {} },
+          files = { max_height = 10, win_opts = {} },
+          todos = { display = true, max_height = 10, win_opts = {} },
+        },
+
+        -- Enable session restoration
+        session_restore = {
+          storage_path = nil, -- Uses default ~/.cache/nvim/agentic/sessions/
+        },
+
+        -- Enable diff preview with split layout
+        diff_preview = {
+          enabled = true,
+          layout = 'split',
+          center_on_navigate_hunks = true,
+        },
+
+        -- Debug mode off by default
+        debug = false,
+
+        -- ACP provider configurations
+        acp_providers = {
+          -- Claude ACP with Opus model via Bedrock
+          ['claude-acp'] = {
+            command = 'claude-agent-acp',
+            args = {},
+            env = {
+              ANTHROPIC_MODEL = 'global.anthropic.claude-opus-4-5-20251101-v1:0',
+              ANTHROPIC_SMALL_FAST_MODEL = 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
+              ANTHROPIC_DEFAULT_HAIKU_MODEL = 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
+              CLAUDE_CODE_USE_BEDROCK = 1,
+            },
+            default_mode = 'bypassPermissions',
+          },
+          -- OpenCode with Bedrock config
+          ['opencode'] = {
+            command = 'opencode',
+            args = { 'acp' },
+            env = {
+              OPENCODE_CONFIG = vim.fn.expand('~/.config/opencode/opencode-bedrock.jsonc'),
+            },
+          },
+          -- Gemini ACP
+          ['gemini'] = {
+            command = 'gemini',
+            args = { '--experimental-acp' },
+            env = {},
+          },
+          -- Codex ACP
+          ['codex-acp'] = {
+            command = 'codex-acp',
+            args = {},
+            env = {},
+          },
+        },
+
+        -- Keybindings configuration
+        keymaps = {
+          widget = {
+            close = 'q',
+            change_mode = { { '<S-Tab>', mode = { 'i', 'n', 'v' } } },
+            switch_provider = '<localleader>s',
+          },
+          prompt = {
+            submit = { '<CR>', { '<C-s>', mode = { 'i', 'n', 'v' } } },
+            paste_image = { { '<localleader>p', mode = { 'n' } } },
+            accept_completion = { { '<Tab>', mode = { 'i' } } },
+          },
+          diff_preview = {
+            next_hunk = ']c',
+            prev_hunk = '[c',
+          },
+        },
+
+        -- Hooks for custom behavior
+        hooks = {
+          on_prompt_submit = function(data)
+            -- Optional: Add custom logging or behavior on prompt submission
+          end,
+          on_response_complete = function(data)
+            -- Optional: Add custom behavior when response completes
+          end,
+        },
+      })
     end,
   },
   {
