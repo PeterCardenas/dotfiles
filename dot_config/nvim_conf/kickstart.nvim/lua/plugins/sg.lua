@@ -384,7 +384,8 @@ return {
     end,
   },
   {
-    'carlos-algms/agentic.nvim',
+    'PeterCardenas/agentic.nvim',
+    branch = 'vibin',
     cond = function()
       return Config.USE_AGENTIC
     end,
