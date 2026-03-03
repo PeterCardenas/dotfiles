@@ -500,12 +500,6 @@ return {
           ['claude-acp'] = {
             command = 'claude-agent-acp',
             args = {},
-            env = {
-              ANTHROPIC_MODEL = 'global.anthropic.claude-opus-4-5-20251101-v1:0',
-              ANTHROPIC_SMALL_FAST_MODEL = 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
-              ANTHROPIC_DEFAULT_HAIKU_MODEL = 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
-              CLAUDE_CODE_USE_BEDROCK = 1,
-            },
             default_mode = 'bypassPermissions',
           },
           -- OpenCode with Bedrock config
