@@ -502,6 +502,7 @@ return {
             command = 'claude-agent-acp',
             args = {},
             default_mode = 'bypassPermissions',
+            default_model = 'opus',
           },
           -- OpenCode with Bedrock config
           ['opencode'] = {
