@@ -459,6 +459,14 @@ return {
         mode = { 'n' },
         desc = 'agentic: stop generation',
       },
+      {
+        '<leader>ad',
+        function()
+          require('agentic').add_buffer_diagnostics()
+        end,
+        mode = { 'n' },
+        desc = 'agentic: add file diagnostics',
+      },
     },
     cmd = { 'Agentic' },
     dependencies = {
