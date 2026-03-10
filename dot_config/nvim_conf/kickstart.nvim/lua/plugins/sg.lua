@@ -475,7 +475,7 @@ return {
     config = function()
       require('agentic').setup({
         -- Default to claude-code with opus model
-        provider = 'claude-acp',
+        provider = 'claude-agent-acp',
 
         -- Window configuration similar to avante
         windows = {
@@ -506,7 +506,7 @@ return {
         -- ACP provider configurations
         acp_providers = {
           -- Claude ACP with Opus model via Bedrock
-          ['claude-acp'] = {
+          ['claude-agent-acp'] = {
             command = 'claude-agent-acp',
             args = {},
             default_mode = 'bypassPermissions',
