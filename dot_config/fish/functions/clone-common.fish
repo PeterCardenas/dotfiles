@@ -25,6 +25,7 @@ function clone-common --description 'Clone a repository' -a ssh_alias -a git_dir
         set -l user_email (git --git-dir="$git_dir" config --get user.email)
         set -l signing_key (git --git-dir="$git_dir" config --get user.signingkey)
         git config --local user.email "$user_email"
+        git config --local user.name "Peter Cardenas"
         git config --local user.signingkey "$signing_key"
     else
         print_error "Known git dir not found: $git_dir"
