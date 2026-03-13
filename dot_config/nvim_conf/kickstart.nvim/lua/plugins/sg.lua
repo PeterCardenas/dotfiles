@@ -513,9 +513,10 @@ return {
             default_model = 'opus',
             mcp_servers = {
               {
-                type = 'url',
+                type = 'http',
                 name = 'figma',
                 url = 'https://figma.com/mcp',
+                headers = {},
               },
             },
           },
