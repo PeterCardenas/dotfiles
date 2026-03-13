@@ -511,6 +511,13 @@ return {
             args = {},
             default_mode = 'bypassPermissions',
             default_model = 'opus',
+            mcp_servers = {
+              {
+                type = 'url',
+                name = 'figma',
+                url = 'https://figma.com/mcp',
+              },
+            },
           },
           -- OpenCode with Bedrock config
           ['opencode'] = {
