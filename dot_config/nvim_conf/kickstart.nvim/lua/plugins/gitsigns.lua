@@ -430,6 +430,8 @@ return {
         timeout = vim.fn.has('nvim-0.12') == 1 and math.huge or 1000000,
         poll = {
           enabled = true,
+          notify_on_refresh = false,
+          notify_on_change = false,
         },
         debug = {
           notify_missing_timeline_items = true,
