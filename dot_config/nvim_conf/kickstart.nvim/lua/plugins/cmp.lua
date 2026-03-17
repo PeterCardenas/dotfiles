@@ -429,8 +429,17 @@ return {
             AvanteInput = { 'avante_commands', 'avante_mentions', 'path' },
             AvantePromptInput = { 'avante_mentions' },
             codecompanion = { 'codecompanion' },
+            AgenticInput = { 'agentic_commands', 'path' },
           },
           providers = {
+            agentic_commands = {
+              name = 'Agentic',
+              module = 'blink.cmp.sources.agentic_commands',
+              -- Only active in agentic prompt buffers (filetype: AgenticInput)
+              -- The source handles this internally via enabled(), but you can
+              -- also use score_offset to boost priority when active:
+              score_offset = 100,
+            },
             avante_commands = {
               name = 'avante_commands',
               module = 'blink.compat.source',
