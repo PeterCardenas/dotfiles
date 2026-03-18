@@ -431,7 +431,7 @@ return {
         poll = {
           enabled = true,
           notify_on_refresh = false,
-          notify_on_change = false,
+          notify_on_change = true,
         },
         debug = {
           notify_missing_timeline_items = true,
@@ -463,6 +463,7 @@ return {
             -- Remove conflict with <C-y> for scrolling
             copy_url = { lhs = '<leader>pu', desc = 'copy url to system clipboard' },
             copy_sha = { lhs = '<leader>ph', desc = 'copy sha to system clipboard' },
+            approve_pr = { lhs = '<leader>pa', desc = 'approve pr' },
             -- Remove conflict with <C-r> for for redo
             reload = { lhs = '<leader>r<C-r>', desc = 'reload' },
           },
