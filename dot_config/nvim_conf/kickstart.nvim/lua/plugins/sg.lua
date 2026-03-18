@@ -518,6 +518,13 @@ return {
                 url = 'https://figma.com/mcp',
                 headers = {},
               },
+              {
+                type = 'stdio',
+                name = 'fff',
+                command = 'fff-mcp',
+                args = {},
+                env = {},
+              },
             },
           },
           -- OpenCode with Bedrock config
