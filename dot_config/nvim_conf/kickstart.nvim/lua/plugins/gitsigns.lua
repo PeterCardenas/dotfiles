@@ -320,7 +320,7 @@ vim.api.nvim_create_user_command('ApprovePR', function()
 end, { nargs = 0, desc = 'Approve a PR' })
 
 vim.api.nvim_create_user_command('ReviewablePRs', function()
-  require('octo.pickers.fzf-lua.pickers.search')({ prompt = 'is:pr sort:updated-desc user-review-requested:@me is:open' })
+  require('octo.pickers.fzf-lua.pickers.search')({ prompt = 'is:pr sort:updated-desc user-review-requested:@me is:open draft:false' })
 end, { nargs = 0, desc = 'List all PRs that can be reviewed' })
 vim.api.nvim_create_user_command('ReviewedPRs', function()
   require('octo.pickers.fzf-lua.pickers.search')({ prompt = 'is:pr sort:updated-desc reviewed-by:@me is:open' })
