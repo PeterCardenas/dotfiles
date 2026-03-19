@@ -178,25 +178,25 @@ local function update_ssh_connection_from_tmux()
 end
 
 ---@async
-local function update_display_from_tmux()
-  local success, output = Shell.async_cmd('fish', { '-c', "tmux showenv | string match -rg '^DISPLAY=(.*?)$'" })
+local function update_wayland_display_from_tmux()
+  local success, output = Shell.async_cmd('fish', { '-c', "tmux showenv | string match -rg '^WAYLAND_DISPLAY=(.*?)$'" })
   if not success then
     vim.schedule(function()
-      vim.env.DISPLAY = nil
+      vim.env.WAYLAND_DISPLAY = nil
     end)
     return
   end
   if #output ~= 1 then
-    Log.notify_error('Could not get DISPLAY from tmux env' .. vim.inspect(output))
+    Log.notify_error('Could not get WAYLAND_DISPLAY from tmux env' .. vim.inspect(output))
     return
   end
   local tmux_display = output[1]
   vim.schedule(function()
     if tmux_display == '' then
-      vim.env.DISPLAY = nil
+      vim.env.WAYLAND_DISPLAY = nil
       return
     end
-    vim.env.DISPLAY = tmux_display
+    vim.env.WAYLAND_DISPLAY = tmux_display
   end)
 end
 
@@ -206,7 +206,7 @@ local function poll_update_tmux_env()
     ---@async
     function()
       update_ssh_connection_from_tmux()
-      update_display_from_tmux()
+      update_wayland_display_from_tmux()
       if nvim_is_open then
         tmux_cmd:set_is_vim()
       end

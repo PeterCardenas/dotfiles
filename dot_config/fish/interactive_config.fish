@@ -48,11 +48,10 @@ end
 # Add tmux variables to fish shell before a command is executed.
 function refresh_tmux_vars --on-event fish_preexec
     if set -q TMUX
-        set -e XAUTHORITY
         set -e SSH_CONNECTION
         set -e SSH_TTY
         set -e SSH_AUTH_SOCK
-        tmux showenv | string replace -rf '^((?:DISPLAY|SSH_CONNECTION|SSH_TTY|XAUTHORITY|SSH_AUTH_SOCK).*?)=(.*?)$' 'set -gx $1 "$2"' | source
+        tmux showenv | string replace -rf '^((?:WAYLAND_DISPLAY|SSH_CONNECTION|SSH_TTY|SSH_AUTH_SOCK).*?)=(.*?)$' 'set -gx $1 "$2"' | source
         # Update the GPG_TTY variable.
         set -gx GPG_TTY (tty)
     end
