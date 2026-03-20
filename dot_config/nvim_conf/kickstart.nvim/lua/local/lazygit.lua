@@ -13,6 +13,19 @@ local function setup_lazygit_buffer()
       local dirty_buf_enter = false
       local bufnr = args.buf
       local function correct_size()
+        local agentic_was_open = false
+        local agentic = package.loaded['agentic']
+        if agentic then
+          local SessionRegistry = require('agentic.session_registry')
+          if SessionRegistry then
+            local tab_page_id = vim.api.nvim_get_current_tabpage()
+            local session = SessionRegistry.sessions[tab_page_id]
+            if session and session.widget:is_open() then
+              agentic_was_open = true
+              agentic.close()
+            end
+          end
+        end
         local temp_bufnr = vim.api.nvim_create_buf(false, true)
         vim.cmd('resize 0 0')
         local cur_dirty_buf_enter = dirty_buf_enter
@@ -24,6 +37,9 @@ local function setup_lazygit_buffer()
             vim.api.nvim_set_current_buf(bufnr)
             vim.api.nvim_buf_delete(temp_bufnr, { force = true })
             vim.cmd('startinsert')
+          end
+          if agentic_was_open then
+            require('agentic').open({ auto_add_to_context = false })
           end
         end, 10)
         if dirty_buf_enter then
