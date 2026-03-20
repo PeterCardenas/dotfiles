@@ -570,13 +570,46 @@ return {
           },
         },
 
+        -- Custom headers: show provider | model | mode
+        headers = {
+          chat = function(parts)
+            local ok, SessionRegistry = pcall(require, 'agentic.session_registry')
+            if not ok then
+              return parts.title
+            end
+            local session = SessionRegistry.sessions and SessionRegistry.sessions[vim.api.nvim_get_current_tabpage()]
+            if not session then
+              return parts.title
+            end
+            local provider = session.agent and session.agent.provider_config and session.agent.provider_config.name or '?'
+            local config_opts = session.config_options
+            local model_id = config_opts and config_opts.model and config_opts.model.currentValue or '?'
+            local mode_id = config_opts and config_opts.mode and config_opts.mode.currentValue or '?'
+            local mode_name = config_opts and config_opts.get_mode_name and config_opts:get_mode_name(mode_id) or mode_id
+            local usage = vim.t[vim.api.nvim_get_current_tabpage()].agentic_usage
+            local usage_str = ''
+            if usage and usage.used then
+              local used_k = math.floor(usage.used / 1000)
+              local size_k = usage.size and math.floor(usage.size / 1000) or 0
+              usage_str = size_k > 0 and string.format(' | %dk/%dk', used_k, size_k) or string.format(' | %dk', used_k)
+            end
+            return string.format('%s | %s | %s%s', provider, model_id, mode_name, usage_str)
+          end,
+        },
+
         -- Hooks for custom behavior
         hooks = {
-          on_prompt_submit = function(data)
-            -- Optional: Add custom logging or behavior on prompt submission
-          end,
-          on_response_complete = function(data)
-            -- Optional: Add custom behavior when response completes
+          on_prompt_submit = function(data) end,
+          on_response_complete = function(data) end,
+          on_session_update = function(data)
+            if data.update and data.update.sessionUpdate == 'usage_update' then
+              if vim.api.nvim_tabpage_is_valid(data.tab_page_id) then
+                vim.t[data.tab_page_id].agentic_usage = {
+                  used = data.update.used,
+                  size = data.update.size,
+                }
+              end
+            end
           end,
         },
       })
