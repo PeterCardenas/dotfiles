@@ -19,7 +19,7 @@ end
 vim.o.swapfile = false
 
 -- Ignore whitespace in diffs by default
-vim.o.diffopt = vim.o.diffopt .. ',iwhiteall'
+vim.o.diffopt = vim.o.diffopt .. ',iwhiteall,followwrap'
 
 -- Default cursor + bar for terminal (for fzf-lua in particular) and always blinking
 vim.o.guicursor =
