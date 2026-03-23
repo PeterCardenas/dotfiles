@@ -591,7 +591,8 @@ return {
             if usage and usage.used then
               local used_k = math.floor(usage.used / 1000)
               local size_k = usage.size and math.floor(usage.size / 1000) or 0
-              usage_str = size_k > 0 and string.format(' | %dk/%dk', used_k, size_k) or string.format(' | %dk', used_k)
+              local cost_str = usage.cost and string.format(' $%.2f', usage.cost) or ''
+              usage_str = size_k > 0 and string.format(' | %dk/%dk%s', used_k, size_k, cost_str) or string.format(' | %dk%s', used_k, cost_str)
             end
             return string.format('%s | %s | %s%s', provider, model_id, mode_name, usage_str)
           end,
@@ -599,16 +600,22 @@ return {
 
         -- Hooks for custom behavior
         hooks = {
-          on_prompt_submit = function(data) end,
-          on_response_complete = function(data) end,
           on_session_update = function(data)
+            if not vim.api.nvim_tabpage_is_valid(data.tab_page_id) then
+              return
+            end
+            local prev = vim.t[data.tab_page_id].agentic_usage
+            if not prev or prev.session_id ~= data.session_id then
+              vim.t[data.tab_page_id].agentic_usage = { session_id = data.session_id }
+            end
             if data.update and data.update.sessionUpdate == 'usage_update' then
-              if vim.api.nvim_tabpage_is_valid(data.tab_page_id) then
-                vim.t[data.tab_page_id].agentic_usage = {
-                  used = data.update.used,
-                  size = data.update.size,
-                }
-              end
+              local cost = data.update.cost and data.update.cost.amount or nil
+              vim.t[data.tab_page_id].agentic_usage = {
+                session_id = data.session_id,
+                used = data.update.used,
+                size = data.update.size,
+                cost = cost,
+              }
             end
           end,
         },
