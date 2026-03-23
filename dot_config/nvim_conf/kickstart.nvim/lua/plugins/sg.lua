@@ -529,6 +529,7 @@ return {
           },
           ['cursor-acp'] = {
             default_model = 'composer-2[fast=true]',
+            default_mode = 'Agent',
           },
           -- OpenCode with Bedrock config
           ['opencode'] = {
