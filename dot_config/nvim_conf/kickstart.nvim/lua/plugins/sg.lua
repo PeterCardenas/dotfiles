@@ -470,6 +470,7 @@ return {
     },
     cmd = { 'Agentic' },
     dependencies = {
+      { 'PeterCardenas/img-clip.nvim', branch = 'dev' },
       'nvim-treesitter/nvim-treesitter',
     },
     config = function()
