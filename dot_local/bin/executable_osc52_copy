@@ -21,6 +21,8 @@ set -l contents (string join \n $argv | string collect)
 if test -n "$piped_content"
     set contents "$piped_content$contents"
 end
+# Unescape backticks that callers (e.g. lazygit via sh -c) may have escaped
+set contents (string replace -a "\\`" "`" "$contents" | string collect)
 set -l osc_prefix
 if set -q TMUX
     if set -q SSH_CONNECTION
