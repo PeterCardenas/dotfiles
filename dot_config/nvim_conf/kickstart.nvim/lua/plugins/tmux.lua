@@ -216,6 +216,22 @@ local function poll_update_tmux_env()
   )
 end
 
+local function is_floating_non_fzf()
+  local cfg = vim.api.nvim_win_get_config(0)
+  if cfg.relative == '' then
+    return false
+  end
+  return vim.bo.filetype ~= 'fzf'
+end
+
+local function navigate(direction_key, direction_name)
+  if is_floating_non_fzf() then
+    require('nvim-tmux-navigation.tmux_util').tmux_change_pane(direction_key)
+  else
+    require('nvim-tmux-navigation')['NvimTmuxNavigate' .. direction_name]()
+  end
+end
+
 ---@type LazyPluginSpec
 return {
   -- Easy navigation between splits.
@@ -237,11 +253,11 @@ return {
         next = '<C-Space>',
       },
     })
-    local insert_tmux_directions = { 'h', 'j', 'k', 'l' }
-    local directions = { 'Left', 'Down', 'Up', 'Right' }
-    for index, direction in ipairs(insert_tmux_directions) do
-      vim.keymap.set('i', '<C-' .. direction .. '>', function()
-        require('nvim-tmux-navigation')['NvimTmuxNavigate' .. directions[index]]()
+    local direction_keys = { 'h', 'j', 'k', 'l' }
+    local direction_names = { 'Left', 'Down', 'Up', 'Right' }
+    for index, key in ipairs(direction_keys) do
+      vim.keymap.set({ 'n', 'i' }, '<C-' .. key .. '>', function()
+        navigate(key, direction_names[index])
       end, { silent = true, noremap = true })
     end
     local terminal_tmux_directions = { 'h', 'l' }
