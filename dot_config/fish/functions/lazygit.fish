@@ -3,13 +3,11 @@ function lazygit --wraps lazygit
     set -l git_status $pipestatus[1]
 
     if test $git_status -ne 0
-        print_warn "Not a git repository, launching lazygit anyway"
         command lazygit $argv
         return
     end
 
     if test "$inside_worktree" = true
-        print_info "Inside a work tree, launching lazygit directly"
         command lazygit $argv
         return
     end
@@ -46,15 +44,27 @@ function lazygit --wraps lazygit
         tmux set-option -t $pane_id -p @disable_vertical_pane_navigation yes
     end
     set -l branches
-    for wt in $choices
+    set -l dirs
+    set -l max_len 0
+    for i in (seq (count $choices))
+        set -l wt $choices[$i]
         set -l branch (git -C $wt rev-parse --abbrev-ref HEAD 2>/dev/null; or echo "detached")
+        set -l dir (basename $wt)
         set branches $branches $branch
+        set dirs $dirs $dir
+        if test (string length $branch) -gt $max_len
+            set max_len (string length $branch)
+        end
+    end
+    set -l entries
+    for i in (seq (count $choices))
+        set entries $entries (printf "%-"$max_len"s  %s" $branches[$i] $dirs[$i])
     end
     set -lx FZF_DEFAULT_OPTS "--height 40% --reverse --bind=ctrl-z:ignore $FZF_DEFAULT_OPTS"
-    set -l selected (printf '%s\n' $branches | fzf --prompt="Select worktree> ")
+    set -l selected (printf '%s\n' $entries | fzf --prompt="Select worktree> ")
     if test -n "$selected"
-        # Find the matching worktree path
-        set -l idx (contains -i -- $selected $branches)
+        # Extract branch from selection, find matching index
+        set -l idx (contains -i -- $selected $entries)
         set -l worktree_path $choices[$idx]
         print_info "Selected worktree: $worktree_path"
         cd $worktree_path; and command lazygit $argv
