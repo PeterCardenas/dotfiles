@@ -9,7 +9,7 @@ local Config = require('utils.config')
 ---@param cwd string
 ---@return boolean, string
 local function get_repo_url(cwd)
-  local success, output = Shell.async_cmd('gh', { 'repo', 'view', '--json=url', '-q=.url' }, cwd)
+  local success, output = Shell.async_cmd('gh', { 'repo', 'view', '--json=url', '-q=.url' }, { cwd = cwd })
   if not success then
     return false, table.concat(output, '\n')
   end
@@ -34,7 +34,7 @@ local function get_pr_url(commit_sha, cwd)
     commit_sha,
     '--jq',
     '.[] | .url',
-  }, cwd)
+  }, { cwd = cwd })
   if not success or #output == 0 then
     return nil
   end

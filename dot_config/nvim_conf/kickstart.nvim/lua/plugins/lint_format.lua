@@ -200,7 +200,7 @@ local function bazel_go_lint(abs_filepath)
       ttl = math.huge,
     })
   end)
-  success, output = Shell.async_cmd('bazel', { output_base_flag, 'build', '--color=no', table.concat(matched_targets, ' ') }, workspace_root)
+  success, output = Shell.async_cmd('bazel', { output_base_flag, 'build', '--color=no', table.concat(matched_targets, ' ') }, { cwd = workspace_root })
   bazel_go_lint_spinner_timer.stop()
   require('fidget').notification.remove('bazel_go_lint', 'bazel_go_lint')
   ---@type table<string, vim.Diagnostic[]>
