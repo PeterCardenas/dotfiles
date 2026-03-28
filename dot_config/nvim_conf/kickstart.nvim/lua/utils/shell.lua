@@ -11,7 +11,11 @@ function M.sync_cmd(cmd)
   return vim.v.shell_error == 0, output
 end
 
----@type (async fun(cmd: string, args: string[], cwd: string | nil): (boolean, string[])) | nil
+---@class ShellAsyncOpts
+---@field cwd? string
+---@field stdin? string
+
+---@type (async fun(cmd: string, args: string[], opts: ShellAsyncOpts | nil): (boolean, string[])) | nil
 local cached_async_cmd = nil
 
 local function get_async_cmd()
@@ -20,10 +24,11 @@ local function get_async_cmd()
     cached_async_cmd = async.wrap(
       ---@param cmd string
       ---@param args string[]
-      ---@param cwd string | nil
+      ---@param opts ShellAsyncOpts | nil
       ---@param done fun(success: boolean, output: string[])
       ---@return nil
-      function(cmd, args, cwd, done)
+      function(cmd, args, opts, done)
+        opts = opts or {}
         local Job = require('plenary.job')
 
         ---@type string[]
@@ -39,6 +44,7 @@ local function get_async_cmd()
         local job = Job:new({
           command = cmd,
           args = args,
+          writer = opts.stdin,
           on_stdout = function(_, data)
             handle_output(data)
           end,
@@ -57,7 +63,7 @@ local function get_async_cmd()
           env = vim.tbl_extend('force', vim.fn.environ(), {
             GH_TOKEN = GH_TOKEN,
           }),
-          cwd = cwd,
+          cwd = opts.cwd,
         })
         job:start()
       end,
@@ -71,11 +77,11 @@ end
 ---@async
 ---@param cmd string
 ---@param args string[]
----@param cwd? string
+---@param opts? ShellAsyncOpts
 ---@return boolean, string[]
-function M.async_cmd(cmd, args, cwd)
+function M.async_cmd(cmd, args, opts)
   local async_cmd = get_async_cmd()
-  return async_cmd(cmd, args, cwd)
+  return async_cmd(cmd, args, opts)
 end
 
 ---@type async fun(ms: number)

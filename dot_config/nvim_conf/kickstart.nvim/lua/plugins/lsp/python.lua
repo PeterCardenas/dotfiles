@@ -298,7 +298,7 @@ function M.maybe_install_python_dependencies(override_requirements_path, force_p
       venv_args[#venv_args + 1] = force_python_version
     end
     venv_args[#venv_args + 1] = venv_path
-    success, output = Shell.async_cmd('uv', venv_args, nil)
+    success, output = Shell.async_cmd('uv', venv_args)
     if not success then
       vim.schedule(function()
         vim.notify('Failed to start virtualenv:\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
