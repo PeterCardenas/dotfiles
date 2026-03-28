@@ -1,6 +1,7 @@
 local Config = require('utils.config')
 local AWS = require('utils.aws')
 local Secrets = require('utils.secrets')
+local Log = require('utils.log')
 
 vim.api.nvim_create_user_command('AvanteToggleAgentMode', function(opts)
   local config = require('avante.config')
@@ -601,6 +602,66 @@ return {
 
         -- Hooks for custom behavior
         hooks = {
+          on_response_complete = function(data)
+            if not data.success then
+              return
+            end
+            local SessionRegistry = require('agentic.session_registry')
+            local session = SessionRegistry.sessions and SessionRegistry.sessions[data.tab_page_id]
+            if not session or not session.chat_history then
+              return
+            end
+            local messages = session.chat_history.messages
+            if not messages or #messages == 0 then
+              return
+            end
+
+            -- Build a condensed chat transcript for summarization (prefer recent messages)
+            local parts = {}
+            for _, msg in ipairs(messages) do
+              if msg.type == 'user' then
+                table.insert(parts, '<user>' .. (msg.text or '') .. '</user>')
+              elseif msg.type == 'agent' then
+                table.insert(parts, '<assistant>' .. (msg.text or '') .. '</assistant>')
+              end
+            end
+            local transcript = table.concat(parts, '\n')
+
+            local prompt = 'Summarize this chat conversation in 5-8 words for use as a short title. '
+              .. 'Reply with ONLY the title, no quotes, no punctuation at the end.\n\n'
+              .. transcript
+
+            local Async = require('utils.async')
+            local Spinner = require('utils.spinner')
+            Async.void(function() ---@async
+              local Shell = require('utils.shell')
+              local timer = Spinner.create_timer()
+              local spinner = Spinner.create_spinner('moon')
+              timer.start(function()
+                require('fidget').notify(spinner() .. ' Generating title...', vim.log.levels.INFO, {
+                  group = 'agentic_title',
+                  key = 'agentic_title',
+                  annote = '',
+                  ttl = math.huge,
+                })
+              end)
+              local ok, output = Shell.async_cmd('agent', { '-pf', '--mode', 'ask', '--model', 'composer-2-fast' }, { stdin = prompt })
+              timer.stop()
+              require('fidget').notification.remove('agentic_title', 'agentic_title')
+              if not ok or not output or #output == 0 then
+                Log.notify_error(table.concat(output, '\n'), { title = 'Title generation failed' })
+                return
+              end
+              local title = vim.trim(table.concat(output, ' '))
+              if title ~= '' then
+                Log.notify_info(title, { title = 'New Chat Title' })
+                vim.schedule(function()
+                  session.chat_history.title = title
+                  session.chat_history:save()
+                end)
+              end
+            end)
+          end,
           on_session_update = function(data)
             if not vim.api.nvim_tabpage_is_valid(data.tab_page_id) then
               return
