@@ -623,6 +623,15 @@ return {
                 table.insert(parts, '<user>' .. (msg.text or '') .. '</user>')
               elseif msg.type == 'agent' then
                 table.insert(parts, '<assistant>' .. (msg.text or '') .. '</assistant>')
+              elseif msg.type == 'tool_call' and msg.argument then
+                local arg = msg.argument
+                -- Skip generic tool names that don't add context (e.g., "Edit", "Write", "Terminal")
+                local is_generic = arg and arg:match('^%a+$') and #arg < 20
+                if not is_generic then
+                  local kind_labels = { edit = 'edited', read = 'read', execute = 'ran', search = 'searched' }
+                  local action = kind_labels[msg.kind] or msg.kind or 'used'
+                  table.insert(parts, '<tool>' .. action .. ' ' .. arg .. '</tool>')
+                end
               end
             end
             local transcript = table.concat(parts, '\n')
