@@ -35,6 +35,7 @@ source $HOME/.config/fish/completion_utils.fish
 set -gx SSH_AUTH_SOCK $HOME/.ssh/ssh-agent.$hostname.sock
 ssh-add -l &>/dev/null
 if test $status -ge 2
+    rm -f $SSH_AUTH_SOCK
     ssh-agent -a $SSH_AUTH_SOCK &>/dev/null
 end
 
