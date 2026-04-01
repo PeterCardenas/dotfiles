@@ -1131,6 +1131,9 @@ return {
               },
             },
           },
+          ignore = function(src)
+            return vim.startswith(src, 'https://cursor.com')
+          end,
           async_resolve = function(file, src, on_complete)
             if resolved_url_cache[src] then
               return on_complete(resolved_url_cache[src])
