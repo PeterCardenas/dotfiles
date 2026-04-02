@@ -15,7 +15,24 @@ local function apply_filepath(source_path, filepath)
   end
   local relative_filepath = filepath:sub(#source_path + 2)
   -- Ignore files that should never be applied
-  if relative_filepath:match('^%.git') or relative_filepath:match('^%.chezmoi') then
+  if relative_filepath:match('^%.git') then
+    return false, {}
+  end
+  -- Template files can't be applied directly — find and apply their dependents
+  local template_name = relative_filepath:match('^%.chezmoitemplates/(.+)$')
+  if template_name then
+    local found, dependents = Shell.async_cmd('rg', { '-l', '(include|template) "' .. template_name .. '"', source_path })
+    if found then
+      for _, dependent in ipairs(dependents) do
+        local apply_ok, apply_output = Shell.async_cmd('chezmoi', { '--source', source_path, 'apply', '--source-path', dependent })
+        if not apply_ok or #apply_output > 0 then
+          return true, apply_output
+        end
+      end
+    end
+    return false, {}
+  end
+  if relative_filepath:match('^%.chezmoi') then
     return false, {}
   end
   -- Do not apply ignored files.

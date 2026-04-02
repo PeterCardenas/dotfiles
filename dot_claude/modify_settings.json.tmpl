@@ -1,0 +1,5 @@
+#!/bin/bash
+jq -s '.[0] * .[1]' /dev/stdin <(cat <<'OVERLAY'
+{{ template "claude-settings.json" . }}
+OVERLAY
+)
