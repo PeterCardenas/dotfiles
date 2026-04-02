@@ -77,28 +77,48 @@ vim.api.nvim_create_autocmd('User', {
 
 local M = {}
 
+---@async
+---@param source_path string
+---@param filepath string
+local function apply_and_notify(source_path, filepath)
+  require('fidget').notify(' ', vim.log.levels.WARN, {
+    group = 'chezmoi_apply',
+    key = 'chezmoi_apply',
+    annote = 'Applying changes with chezmoi...',
+    ttl = math.huge,
+  })
+  local errored, logs = apply_filepath(source_path, filepath)
+  require('fidget').notification.remove('chezmoi_apply', 'chezmoi_apply')
+  if errored then
+    Log.notify_error('chezmoi apply failed: ' .. table.concat(logs, '\n'))
+  end
+end
+
 ---@param source_path string
 function M.setup(source_path)
   vim.api.nvim_create_autocmd('BufWritePost', {
     callback = function(args)
-      ---@type integer
-      local bufnr = args.buf
-      local filepath = vim.api.nvim_buf_get_name(bufnr)
+      local filepath = vim.api.nvim_buf_get_name(args.buf)
       Async.void(function() ---@async
-        require('fidget').notify(' ', vim.log.levels.WARN, {
-          group = 'chezmoi_apply',
-          key = 'chezmoi_apply',
-          annote = 'Applying changes with chezmoi...',
-          ttl = math.huge,
-        })
-        local errored, logs = apply_filepath(source_path, filepath)
-        require('fidget').notification.remove('chezmoi_apply', 'chezmoi_apply')
-        if errored then
-          Log.notify_error('chezmoi apply failed: ' .. table.concat(logs, '\n'))
-        end
+        apply_and_notify(source_path, filepath)
       end)
     end,
+    group = chezmoi_augroup,
     pattern = '*',
+  })
+
+  vim.api.nvim_create_autocmd('User', {
+    callback = function(args)
+      local filepath = args.data and args.data.file_path
+      if not filepath then
+        return
+      end
+      Async.void(function() ---@async
+        apply_and_notify(source_path, filepath)
+      end)
+    end,
+    group = chezmoi_augroup,
+    pattern = 'ChezmoiApplyFile',
   })
 end
 
