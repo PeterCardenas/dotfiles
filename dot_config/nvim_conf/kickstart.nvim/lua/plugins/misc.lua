@@ -1132,7 +1132,7 @@ return {
             },
           },
           ignore = function(src)
-            return vim.startswith(src, 'https://cursor.com')
+            return vim.startswith(src, 'https://cursor.com') or vim.startswith(src, 'https://static.graphite.dev')
           end,
           async_resolve = function(file, src, on_complete)
             if resolved_url_cache[src] then
