@@ -469,12 +469,21 @@ return {
         desc = 'agentic: add file diagnostics',
       },
     },
-    cmd = { 'Agentic' },
+    cmd = { 'Agentic', 'AgenticFullscreen' },
     dependencies = {
       { 'PeterCardenas/img-clip.nvim', branch = 'dev' },
       'nvim-treesitter/nvim-treesitter',
     },
     config = function()
+      vim.api.nvim_create_user_command('AgenticFullscreen', function()
+        require('agentic').toggle()
+        vim.defer_fn(function()
+          require('agentic.session_registry').get_session_for_tab_page(nil, function(s)
+            s.widget:_toggle_full_width()
+          end)
+        end, 200)
+      end, {})
+
       require('agentic').setup({
         -- Default to claude-code with opus model
         provider = 'claude-agent-acp',
