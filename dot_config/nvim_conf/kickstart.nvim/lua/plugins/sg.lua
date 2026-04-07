@@ -531,6 +531,7 @@ return {
           },
           ['cursor-acp'] = {
             default_model = 'composer-2[fast=true]',
+            auto_approve = true,
           },
           -- OpenCode with Bedrock config
           ['opencode'] = {
@@ -688,6 +689,12 @@ return {
                 cost = cost,
               }
             end
+          end,
+          on_file_edit = function(data)
+            vim.api.nvim_exec_autocmds('User', {
+              pattern = 'ChezmoiApplyFile',
+              data = { file_path = data.file_path },
+            })
           end,
         },
       })
