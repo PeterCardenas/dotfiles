@@ -469,7 +469,7 @@ return {
         desc = 'agentic: add file diagnostics',
       },
     },
-    cmd = { 'Agentic', 'AgenticFullscreen' },
+    cmd = { 'AgenticFullscreen' },
     dependencies = {
       { 'PeterCardenas/img-clip.nvim', branch = 'dev' },
       'nvim-treesitter/nvim-treesitter',
