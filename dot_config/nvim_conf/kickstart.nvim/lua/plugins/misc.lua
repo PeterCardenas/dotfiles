@@ -598,6 +598,9 @@ return {
       require('ufo').setup({
         provider_selector = function(bufnr)
           local filename = vim.api.nvim_buf_get_name(bufnr)
+          if filename:match('^octo:/') then
+            return ''
+          end
           if vim.endswith(filename, 'template.yaml') then
             return { 'indent' }
           end
