@@ -127,7 +127,8 @@ function M.setup(source_path)
   vim.api.nvim_create_autocmd('User', {
     callback = function(args)
       local filepath = args.data and args.data.file_path
-      if not filepath then
+      if not filepath or type(filepath) ~= 'string' or not vim.startswith(filepath, '/') then
+        Log.notify_error('Invalid params for ChezmoiApplyFile: ' .. vim.inspect(args.data))
         return
       end
       Async.void(function() ---@async
