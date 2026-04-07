@@ -260,10 +260,10 @@ return {
         navigate(key, direction_names[index])
       end, { silent = true, noremap = true })
     end
-    local terminal_tmux_directions = { 'h', 'l' }
-    for _, direction in ipairs(terminal_tmux_directions) do
-      vim.keymap.set('t', '<C-' .. direction .. '>', function()
-        require('nvim-tmux-navigation.tmux_util').tmux_change_pane(direction)
+    local terminal_directions = { h = 'Left', l = 'Right' }
+    for key, name in pairs(terminal_directions) do
+      vim.keymap.set('t', '<C-' .. key .. '>', function()
+        navigate(key, name)
       end, { silent = true, noremap = true })
     end
   end,
