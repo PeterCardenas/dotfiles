@@ -151,6 +151,7 @@ set -gx STARSHIP_LOG error
 abbr -a vim nvim
 abbr -a vi nvim
 abbr -a v nvim
+abbr -a va "nvim -c AgenticFullscreen"
 
 # Got into a broken state once when didn't detach client. Keeping this here in case it happens again.
 # abbr -a t "tmux detach-client; and tmux attach; or tmux"
