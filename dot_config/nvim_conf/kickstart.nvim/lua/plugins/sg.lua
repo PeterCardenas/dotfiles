@@ -569,7 +569,7 @@ return {
         keymaps = {
           widget = {
             close = 'q',
-            change_mode = { { '<leader>ao', mode = { 'i', 'n', 'v' } } },
+            change_mode = { { '<leader>ao', mode = { 'n', 'v' } } },
             switch_provider = '<localleader>s',
           },
           prompt = {
