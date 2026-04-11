@@ -530,13 +530,13 @@ return {
                 url = 'https://figma.com/mcp',
                 headers = {},
               },
-              {
-                type = 'stdio',
-                name = 'fff',
-                command = 'fff-mcp',
-                args = {},
-                env = {},
-              },
+              -- {
+              --   type = 'stdio',
+              --   name = 'fff',
+              --   command = 'fff-mcp',
+              --   args = {},
+              --   env = {},
+              -- },
             },
           },
           ['cursor-acp'] = {
