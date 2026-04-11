@@ -120,6 +120,7 @@ return {
     build = ':TSUpdateParsers',
     config = function()
       vim.treesitter.language.register('markdown', 'markdown.mdx')
+      vim.treesitter.language.register('markdown', 'md')
       vim.treesitter.language.register('markdown', 'notify')
       vim.treesitter.language.register('markdown', 'octo')
     end,
