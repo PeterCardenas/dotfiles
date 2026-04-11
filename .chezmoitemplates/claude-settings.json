@@ -27,6 +27,17 @@
     "pr": ""
   },
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"export CHEZMOI_SOURCE_DIR=\\${CHEZMOI_SOURCE_DIR:+\\$CHEZMOI_SOURCE_DIR:}~/.local/share/chezmoi\" >> \"$CLAUDE_ENV_FILE\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Edit|Write|Read|Glob|Grep",
@@ -36,6 +47,19 @@
             "if": "Edit(~/.config/**)|Write(~/.config/**)|Read(~/.config/**)|Glob(~/.config/**)|Grep(~/.config/**)",
             "command": "~/.claude/hooks/pretooluse_chezmoi_path_rewrite.py",
             "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/posttooluse_chezmoi_apply.py",
+            "timeout": 30,
+            "async": true
           }
         ]
       }
