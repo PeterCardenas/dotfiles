@@ -277,6 +277,9 @@ end, { desc = 'Jump to next hunk' })
 vim.keymap.set({ 'n', 'v' }, '<leader>gk', function()
   require('gitsigns.actions').nav_hunk('prev')
 end, { desc = 'Jump to previous hunk' })
+vim.keymap.set({ 'o', 'x' }, 'ih', function()
+  require('gitsigns.actions').select_hunk()
+end, { desc = 'Select git hunk' })
 
 vim.api.nvim_create_autocmd({ 'BufEnter' }, {
   pattern = 'octo://*',
