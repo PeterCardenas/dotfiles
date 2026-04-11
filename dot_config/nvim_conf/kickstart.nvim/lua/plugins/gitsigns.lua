@@ -437,7 +437,7 @@ return {
           notify_on_change = true,
         },
         debug = {
-          notify_missing_timeline_items = true,
+          notify_missing_timeline_items = false,
         },
         ssh_aliases = {
           ['personal-github.com'] = 'github.com',
