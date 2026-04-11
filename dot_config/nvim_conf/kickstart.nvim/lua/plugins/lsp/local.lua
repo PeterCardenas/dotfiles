@@ -137,6 +137,9 @@ function M.add_config(current_config)
       '--experimental_infer_ctx_attributes',
       '--experimental_use_code_flow_analysis',
       '--experimental_goto_definition_skip_re_exports',
+      -- TODO: enable faster label completions
+      -- '--experimental_enable_label_completions',
+      -- '--use_buildozer',
     },
     cmd_env = {
       RUST_BACKTRACE = 'full',
