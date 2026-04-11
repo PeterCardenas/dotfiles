@@ -493,7 +493,8 @@ return {
           sh = { 'shfmt' },
           gitcommit = { 'commitmsgfmt' },
           proto = { 'clang-format' },
-          typescript = { 'oxfmt' },
+          -- TODO: only enable when oxfmt is in node_modules
+          -- typescript = { 'oxfmt' },
           c = { 'uncrustify' },
         },
         formatters = {
