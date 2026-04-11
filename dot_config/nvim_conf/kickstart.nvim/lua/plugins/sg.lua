@@ -521,6 +521,7 @@ return {
           ['claude-agent-acp'] = {
             command = 'claude-agent-acp',
             args = {},
+            env = { ENABLE_LSP_TOOL = '1' },
             default_mode = 'bypassPermissions',
             default_model = 'opus',
             mcp_servers = {
