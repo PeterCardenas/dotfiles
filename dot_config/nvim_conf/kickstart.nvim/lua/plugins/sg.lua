@@ -703,6 +703,7 @@ return {
           on_file_edit = function(data)
             ---@type string
             local file_path = data.file_path
+            file_path = vim.fn.expand(file_path)
             if not vim.startswith(file_path, '/') then
               file_path = File.get_cwd() .. '/' .. file_path
             end
