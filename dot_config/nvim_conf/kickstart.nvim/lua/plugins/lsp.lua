@@ -427,15 +427,15 @@ return {
 
     servers.taplo = {}
 
-    servers.vale_ls = {
-      filetypes = { 'markdown', 'text', 'dosini', 'yaml', 'markdown.mdx' },
-      root_dir = function(bufnr, cb)
-        local filename = vim.api.nvim_buf_get_name(bufnr)
-        local root_path = File.get_ancestor_dir('.vale.ini', filename)
-        cb(root_path)
-      end,
-      single_file_support = false,
-    }
+    -- servers.vale_ls = {
+    --   filetypes = { 'markdown', 'text', 'dosini', 'yaml', 'markdown.mdx' },
+    --   root_dir = function(bufnr, cb)
+    --     local filename = vim.api.nvim_buf_get_name(bufnr)
+    --     local root_path = File.get_ancestor_dir('.vale.ini', filename)
+    --     cb(root_path)
+    --   end,
+    --   single_file_support = false,
+    -- }
 
     servers.zls = {
       handlers = {
