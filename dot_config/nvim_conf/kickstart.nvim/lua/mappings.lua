@@ -219,6 +219,11 @@ end)
 nmap('Toggle line wrap', 'ur', function()
   vim.o.wrap = not vim.o.wrap
 end)
+if vim.fn.has('nvim-0.12') == 1 then
+  nmap('Toggle undo tree', 'ut', function()
+    vim.cmd('Undotree')
+  end)
+end
 
 nmap('Load current[.] directory [s]ession', 'S.', function()
   require('session_manager').load_current_dir_session()
