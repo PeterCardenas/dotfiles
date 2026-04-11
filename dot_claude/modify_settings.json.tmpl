@@ -1,5 +1,7 @@
 #!/bin/bash
-jq -s '.[0] * .[1]' /dev/stdin <(cat <<'OVERLAY'
+cat > /dev/null
+mkdir -p "$HOME/.claude/settings.d"
+cat > "$HOME/.claude/settings.d/{{ base .chezmoi.sourceDir }}.json" <<'FRAGMENT'
 {{ template "claude-settings.json" . }}
-OVERLAY
-)
+FRAGMENT
+exec "$HOME/.claude/hooks/merge_settings_d.py"
