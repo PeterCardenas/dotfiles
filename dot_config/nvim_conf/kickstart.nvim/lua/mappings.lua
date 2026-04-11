@@ -60,9 +60,59 @@ vim.keymap.set({ 'v', 'n' }, '<leader>Q', function()
   end
 end, { desc = 'Quit all' })
 
--- Remap for dealing with word wrap
-vim.keymap.set('n', 'k', 'g<Up>', { silent = true })
-vim.keymap.set('n', 'j', 'g<Down>', { silent = true })
+-- Remap for dealing with word wrap and concealed lines.
+-- When conceallevel > 0, j/k skip over lines hidden by conceal_lines extmarks.
+local function is_line_concealed(bufnr, lnum)
+  local marks = vim.api.nvim_buf_get_extmarks(bufnr, -1, { lnum, 0 }, { lnum, 0 }, { details = true, overlap = true })
+  for _, mark in ipairs(marks) do
+    if mark[4] and mark[4].conceal_lines then
+      return true
+    end
+  end
+  return false
+end
+
+local function move_skip_concealed(direction)
+  local motion = direction == 'j' and 'gj' or 'gk'
+  local count = vim.v.count1
+  vim.cmd('normal! ' .. count .. motion)
+
+  -- Only skip concealed lines when they are actually hidden.
+  if vim.wo.conceallevel == 0 then
+    return
+  end
+
+  local step = direction == 'j' and 1 or -1
+  local bufnr = vim.api.nvim_get_current_buf()
+  local total = vim.api.nvim_buf_line_count(bufnr)
+  local cur = vim.api.nvim_win_get_cursor(0)
+  local lnum = cur[1]
+  local col = cur[2]
+
+  while is_line_concealed(bufnr, lnum - 1) do
+    local next_lnum = lnum + step
+    if next_lnum < 1 or next_lnum > total then
+      break
+    end
+    lnum = next_lnum
+  end
+
+  if lnum ~= cur[1] then
+    -- Clamp column to new line length to retain position like default nvim.
+    local line_len = #(vim.api.nvim_buf_get_lines(bufnr, lnum - 1, lnum, true)[1] or '')
+    if col >= line_len then
+      col = math.max(0, line_len - 1)
+    end
+    vim.api.nvim_win_set_cursor(0, { lnum, col })
+  end
+end
+
+vim.keymap.set('n', 'j', function()
+  move_skip_concealed('j')
+end, { silent = true })
+vim.keymap.set('n', 'k', function()
+  move_skip_concealed('k')
+end, { silent = true })
 vim.keymap.set({ 'v', 'n' }, 'gj', '<C-i>', { desc = 'Go to next location' })
 vim.keymap.set({ 'v', 'n' }, 'gk', '<C-o>', { desc = 'Go to previous location' })
 
