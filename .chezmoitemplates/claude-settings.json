@@ -25,5 +25,20 @@
   "attribution": {
     "commit": "",
     "pr": ""
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|Read|Glob|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Edit(~/.config/**)|Write(~/.config/**)|Read(~/.config/**)|Glob(~/.config/**)|Grep(~/.config/**)",
+            "command": "~/.claude/hooks/pretooluse_chezmoi_path_rewrite.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
   }
 }
