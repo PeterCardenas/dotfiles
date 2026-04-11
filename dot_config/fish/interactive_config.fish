@@ -79,8 +79,16 @@ set -gx SUDO_EDITOR nvim
 set -gx sponge_delay 10
 set -gx sponge_successful_exit_codes 0 127 141
 
-# Make Ctrl-H work in tmux pane navigation.
+# Reset tmux pane navigation vars left over from interrupted commands (e.g. fzf, lazygit).
+# Neovim re-sets these immediately via VimEnter + polling, so this is safe.
 if set -q TMUX
+    function _reset_tmux_nav_vars --on-event fish_prompt
+        set -l pane_id (tmux display-message -p -F "#{pane_id}")
+        tmux set-option -t $pane_id -p -u @disable_vertical_pane_navigation 2>/dev/null
+        tmux set-option -t $pane_id -p -u @disable_horizontal_pane_navigation 2>/dev/null
+    end
+
+    # Make Ctrl-H work in tmux pane navigation.
     bind -M insert \ch "tmux select-pane -L"
 end
 
