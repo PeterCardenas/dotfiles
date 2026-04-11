@@ -311,7 +311,10 @@ function M.maybe_install_python_dependencies(override_requirements_path, force_p
   if extra_index_url then
     index_flag = '--index ' .. extra_index_url .. ' '
   end
-  success, output = Shell.async_cmd('bash', { '-c', 'source ' .. venv_path .. '/bin/activate && uv pip sync ' .. index_flag .. requirements_path })
+  success, output = Shell.async_cmd(
+    'bash',
+    { '-c', 'source ' .. venv_path .. '/bin/activate && uv pip sync --index-strategy unsafe-best-match ' .. index_flag .. requirements_path }
+  )
   if not success then
     vim.schedule(function()
       vim.notify('Failed to install python dependencies:\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
