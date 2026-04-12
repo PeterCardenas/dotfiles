@@ -52,7 +52,8 @@ end)
 return {
   -- Smooth scrolling
   {
-    'karb94/neoscroll.nvim',
+    'PeterCardenas/neoscroll.nvim',
+    branch = 'skip-over-concealed-lines',
     lazy = true,
     config = function()
       require('neoscroll').setup({
