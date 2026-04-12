@@ -262,7 +262,8 @@ return {
 
     servers.stylelint_lsp = {
       filetypes = { 'css', 'scss' },
-      settings = {
+      settings = { ---@type lspconfig.settings.stylelint_lsp
+        -- TODO: fix settings
         stylelintplus = {
           autoFixOnFormat = true,
         },
@@ -312,7 +313,7 @@ return {
         client.server_capabilities.documentFormattingProvider = false
         client.server_capabilities.documentRangeFormattingProvider = false
       end,
-      settings = {
+      settings = { ---@type lspconfig.settings.lua_ls
         Lua = {
           workspace = {
             checkThirdParty = false,
@@ -354,7 +355,7 @@ return {
         client.server_capabilities.documentFormattingProvider = false
         client.server_capabilities.documentRangeFormattingProvider = false
       end,
-      settings = {
+      settings = { ---@type lspconfig.settings.jsonls
         json = {
           validate = { enable = true },
           schemas = {
@@ -409,7 +410,7 @@ return {
 
     servers.yamlls = {
       filetypes = { 'yaml' },
-      settings = {
+      settings = { ---@type lspconfig.settings.yamlls
         yaml = {
           ['schemaStore.enable'] = true,
         },
@@ -486,7 +487,7 @@ return {
           return vim.lsp.diagnostic.on_publish_diagnostics(error, result, ctx)
         end,
       },
-      settings = {
+      settings = { ---@type lspconfig.settings.zls
         zls = {
           enable_build_on_save = true,
           build_on_save_args = { '-Doptimize=ReleaseFast', '-j4' },
@@ -517,7 +518,7 @@ return {
     servers.marksman = {}
 
     servers.terraformls = {
-      settings = {
+      settings = { ---@type lspconfig.settings.terraformls
         terraform = {
           experimentalFeatures = {
             validateOnSave = true,
