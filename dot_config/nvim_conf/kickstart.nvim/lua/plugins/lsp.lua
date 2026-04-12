@@ -8,15 +8,6 @@ local Table = require('utils.table')
 local Log = require('utils.log')
 -- [[ Configure LSP ]]
 
-local LspMethod = vim.lsp.protocol.Methods
-
-if vim.fn.has('nvim-0.12') == 1 then
-  vim.lsp.log.set_level('error')
-  vim.lsp.linked_editing_range.enable(true)
-else
-  vim.lsp.set_log_level('error')
-end
-
 -- Removes default behavior of autoformatting on save for zig
 vim.api.nvim_create_autocmd('BufEnter', {
   pattern = '*.zig',
@@ -201,6 +192,15 @@ return {
   },
   ft = Lsp.FT_WITH_LSP,
   config = function()
+    local LspMethod = vim.lsp.protocol.Methods
+
+    if vim.fn.has('nvim-0.12') == 1 then
+      vim.lsp.log.set_level('error')
+      vim.lsp.linked_editing_range.enable(true)
+    else
+      vim.lsp.set_log_level('error')
+    end
+
     ---@type string
     vim.env.PATH = vim.env.PATH .. ':' .. vim.fn.stdpath('data') .. '/mason/bin'
 

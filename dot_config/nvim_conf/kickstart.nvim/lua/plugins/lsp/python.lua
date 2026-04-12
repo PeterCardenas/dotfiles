@@ -4,7 +4,6 @@ local Shell = require('utils.shell')
 local File = require('utils.file')
 local Async = require('utils.async')
 local M = {}
-local LspMethod = vim.lsp.protocol.Methods
 
 local enable_pyright = not Config.USE_JEDI
 M.GEN_FILES_PATH = 'bazel-out/k8-fastbuild/bin'
@@ -32,7 +31,7 @@ local function pyright_config()
       ---@param result lsp.PublishDiagnosticsParams
       ---@param ctx lsp.HandlerContext
       ---@param _config table
-      [LspMethod.textDocument_publishDiagnostics] = function(_, result, ctx, _config)
+      [vim.lsp.protocol.Methods.textDocument_publishDiagnostics] = function(_, result, ctx, _config)
         local diagnostics = result.diagnostics
         ---@type lsp.Diagnostic[]
         local filtered_diagnostics = {}
@@ -181,7 +180,7 @@ local function get_ruff_lsp_config()
       ---@param result lsp.PublishDiagnosticsParams
       ---@param ctx lsp.HandlerContext
       ---@param _config table
-      [LspMethod.textDocument_publishDiagnostics] = function(_, result, ctx, _config)
+      [vim.lsp.protocol.Methods.textDocument_publishDiagnostics] = function(_, result, ctx, _config)
         -- Change severity of ruff warnings to errors.
         for _, diagnostic in ipairs(result.diagnostics) do
           diagnostic.severity = vim.lsp.protocol.DiagnosticSeverity.Error

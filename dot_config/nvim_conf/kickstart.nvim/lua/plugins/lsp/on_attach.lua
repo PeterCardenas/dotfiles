@@ -1,7 +1,5 @@
 local File = require('utils.file')
 local Config = require('utils.config')
-local LspMethod = vim.lsp.protocol.Methods
-
 local M = {}
 
 local semantic_tokens_group = vim.api.nvim_create_augroup('vim_lsp_semantic_tokens_rewriter', { clear = true })
@@ -111,7 +109,7 @@ function M.on_attach(client, bufnr)
     end
   end, { buffer = bufnr })
 
-  if client:supports_method(LspMethod.textDocument_documentLink) then
+  if client:supports_method(vim.lsp.protocol.Methods.textDocument_documentLink) then
     -- Trigger setup
     require('lsplinks')
     nmap('gx', function()
