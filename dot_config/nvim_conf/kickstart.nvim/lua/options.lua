@@ -1,7 +1,4 @@
-local Table = require('utils.table')
-local File = require('utils.file')
 local Config = require('utils.config')
-local OSC = require('utils.osc')
 
 -- [[ Setting options ]]
 -- Folding setup for nvim-ufo
@@ -33,48 +30,55 @@ vim.o.tabstop = 2
 -- Don't show concealed text while in normal mode or when entering a command.
 vim.o.concealcursor = 'nc'
 
-vim.treesitter.query.add_directive('maybe-conceal-whole-line!', function(match, _, source, predicate, metadata)
-  if type(source) == 'string' or #predicate ~= 2 then
-    return
-  end
-  local capture_id = predicate[2]
-  ---@param key 'conceal'|'conceal_lines'
-  local function set_metadata(key)
-    if not metadata[capture_id] then
-      metadata[capture_id] = {}
-    end
-    metadata[capture_id][key] = '' ---@type string
-  end
-  for _, nodes in pairs(match) do
-    local node = type(nodes) == 'table' and nodes[1] or nodes
-    local _, start_col, end_row, end_col = node:range()
-    if start_col ~= 0 then
-      set_metadata('conceal')
-      return
-    end
-    local end_line_text = vim.api.nvim_buf_get_lines(source, end_row, end_row + 1, true)[1]
-    if end_col ~= #end_line_text then
-      set_metadata('conceal')
-      return
-    end
-  end
-  set_metadata('conceal_lines')
-end, {})
+-- Defer treesitter directive registration to avoid loading vim.treesitter at startup (~4.3ms).
+-- Directives are only used by after/queries/ which run when treesitter highlighting starts on a buffer.
+vim.api.nvim_create_autocmd('FileType', {
+  once = true,
+  callback = function()
+    vim.treesitter.query.add_directive('maybe-conceal-whole-line!', function(match, _, source, predicate, metadata)
+      if type(source) == 'string' or #predicate ~= 2 then
+        return
+      end
+      local capture_id = predicate[2]
+      ---@param key 'conceal'|'conceal_lines'
+      local function set_metadata(key)
+        if not metadata[capture_id] then
+          metadata[capture_id] = {}
+        end
+        metadata[capture_id][key] = '' ---@type string
+      end
+      for _, nodes in pairs(match) do
+        local node = type(nodes) == 'table' and nodes[1] or nodes
+        local _, start_col, end_row, end_col = node:range()
+        if start_col ~= 0 then
+          set_metadata('conceal')
+          return
+        end
+        local end_line_text = vim.api.nvim_buf_get_lines(source, end_row, end_row + 1, true)[1]
+        if end_col ~= #end_line_text then
+          set_metadata('conceal')
+          return
+        end
+      end
+      set_metadata('conceal_lines')
+    end, {})
 
--- TODO: doesn't work rn
-vim.treesitter.query.add_directive('unset!', function(_, _, _, predicate, metadata)
-  if #predicate == 3 then
-    -- (#unset! capture key)
-    local capture_id, key = predicate[2], predicate[3]
-    if metadata[capture_id] then
-      metadata[capture_id][key] = nil
-    end
-    return
-  end
-  -- (#unset! key)
-  local key = predicate[2]
-  metadata[key] = nil
-end, {})
+    -- TODO: doesn't work rn
+    vim.treesitter.query.add_directive('unset!', function(_, _, _, predicate, metadata)
+      if #predicate == 3 then
+        -- (#unset! capture key)
+        local capture_id, key = predicate[2], predicate[3]
+        if metadata[capture_id] then
+          metadata[capture_id][key] = nil
+        end
+        return
+      end
+      -- (#unset! key)
+      local key = predicate[2]
+      metadata[key] = nil
+    end, {})
+  end,
+})
 
 function vim.brint(...)
   local output = {} --- @type string[]
@@ -113,23 +117,30 @@ local function get_current_word()
   return current_word
 end
 ---Workaround https://github.com/hrsh7th/cmp-omni/pull/10
----@diagnostic disable-next-line: duplicate-set-field
-vim.treesitter.query.omnifunc = function(...)
-  local ret = require('vim.treesitter._query_linter').omnifunc(...)
-  if type(ret) ~= 'table' or type(ret.words) ~= 'table' then
-    return ret
-  end
-  ---@type string[]
-  local words = Table.remove_duplicates(ret.words)
-  local current_word = get_current_word()
-  if not current_word:match('#') then
-    words = vim.tbl_filter(function(word) ---@param word string
-      return not word:match('#')
-    end, words)
-  else
-  end
-  return words
-end
+-- Deferred to avoid loading vim.treesitter at startup; only needed for query file omnifunc.
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'query',
+  once = true,
+  callback = function()
+    ---@diagnostic disable-next-line: duplicate-set-field
+    vim.treesitter.query.omnifunc = function(...)
+      local ret = require('vim.treesitter._query_linter').omnifunc(...)
+      if type(ret) ~= 'table' or type(ret.words) ~= 'table' then
+        return ret
+      end
+      ---@type string[]
+      local words = require('utils.table').remove_duplicates(ret.words)
+      local current_word = get_current_word()
+      if not current_word:match('#') then
+        words = vim.tbl_filter(function(word) ---@param word string
+          return not word:match('#')
+        end, words)
+      else
+      end
+      return words
+    end
+  end,
+})
 
 -- Fish startup can be slow, which results in things like lazygit and fzf-lua being slow
 vim.o.shell = 'bash'
@@ -140,7 +151,7 @@ vim.o.showtabline = Config.USE_TABLINE and 2 or 0
 --- @param clipboard string The clipboard to read from or write to
 --- @param content string The Base64 encoded contents to write to the clipboard, or '?' to read
 local function osc52(clipboard, content)
-  return OSC.osc(string.format(']52;%s;%s', clipboard, content))
+  return require('utils.osc').osc(string.format(']52;%s;%s', clipboard, content))
 end
 
 ---@param reg '+'|'*'
@@ -214,7 +225,7 @@ vim.api.nvim_create_autocmd('FileType', {
   pattern = { 'typescript', 'typescriptreact', 'scss' },
   group = filetype_options_group,
   callback = function()
-    local ancestor_dir = File.get_ancestor_dir('package.json', vim.fn.expand('%:p'))
+    local ancestor_dir = require('utils.file').get_ancestor_dir('package.json', vim.fn.expand('%:p'))
     if ancestor_dir == nil then
       return
     end

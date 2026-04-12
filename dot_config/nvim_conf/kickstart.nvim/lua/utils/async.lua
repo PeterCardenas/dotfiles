@@ -1,20 +1,31 @@
 local M = {}
 
----Safely load plenary.async
+---@type table|nil
+local cached_async = nil
+local load_attempted = false
+
+---Safely load plenary.async (cached after first call)
 local function load_async()
+  if load_attempted then
+    return cached_async
+  end
+  load_attempted = true
+
   -- Ensure plenary is in the rtp before requiring
   local plenary_path = vim.fn.stdpath('data') .. '/lazy/plenary.nvim'
   if vim.fn.isdirectory(plenary_path) == 1 then
-    local rtp = vim.opt.rtp:get()
-    local already_in_rtp = false
-    for _, path in ipairs(rtp) do
-      if path == plenary_path then
-        already_in_rtp = true
-        break
+    if not package.loaded['plenary.async'] then
+      local rtp = vim.opt.rtp:get()
+      local already_in_rtp = false
+      for _, path in ipairs(rtp) do
+        if path == plenary_path then
+          already_in_rtp = true
+          break
+        end
       end
-    end
-    if not already_in_rtp then
-      vim.opt.rtp:append(plenary_path)
+      if not already_in_rtp then
+        vim.opt.rtp:append(plenary_path)
+      end
     end
   end
 
@@ -23,7 +34,8 @@ local function load_async()
     vim.notify('Failed to load plenary.async\n' .. async, vim.log.levels.ERROR)
     return nil
   end
-  return async
+  cached_async = async
+  return cached_async
 end
 
 ---Immediately executes an async function inside of a sync context.
