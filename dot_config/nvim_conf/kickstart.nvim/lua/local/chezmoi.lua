@@ -98,14 +98,17 @@ local M = {}
 ---@param source_path string
 ---@param filepath string
 local function apply_and_notify(source_path, filepath)
+  local notify_key = 'chezmoi_apply_' .. source_path
   require('fidget').notify(' ', vim.log.levels.WARN, {
-    group = 'chezmoi_apply',
-    key = 'chezmoi_apply',
+    group = notify_key,
+    key = notify_key,
     annote = 'Applying changes with chezmoi...',
     ttl = math.huge,
   })
   local errored, logs = apply_filepath(source_path, filepath)
-  require('fidget').notification.remove('chezmoi_apply', 'chezmoi_apply')
+  -- HACK: Fidget does not handle immediate removal of notifications, so sleep for a bit
+  Shell.sleep(100)
+  require('fidget').notification.remove(notify_key, notify_key)
   if errored then
     Log.notify_error('chezmoi apply failed: ' .. table.concat(logs, '\n'))
   end
