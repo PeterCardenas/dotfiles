@@ -26,13 +26,5 @@ local function set_gh_user()
   end)
 end
 
--- Set on LazyDone so that plugins are loaded
-vim.api.nvim_create_autocmd('User', {
-  pattern = 'LazyDone',
-  once = true,
-  desc = 'Set up user for gh cli',
-  group = vim.api.nvim_create_augroup('set_gh_user', { clear = true }),
-  callback = function()
-    Async.void(set_gh_user)
-  end,
-})
+-- Run immediately — only needs async shell commands, no plugin dependencies.
+Async.void(set_gh_user)
