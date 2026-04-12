@@ -56,7 +56,8 @@ vim.api.nvim_create_autocmd('FileType', {
 
 ---@type LazyPluginSpec
 return {
-  'goolord/alpha-nvim',
+  'PeterCardenas/alpha-nvim',
+  branch = 'fix-invalid-win',
   lazy = false,
   priority = 1001,
   config = function()
