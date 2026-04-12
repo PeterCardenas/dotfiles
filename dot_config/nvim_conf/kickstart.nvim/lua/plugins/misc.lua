@@ -885,12 +885,11 @@ return {
   -- Easily surround characters
   {
     'kylechui/nvim-surround',
-    event = 'VeryLazy',
-    config = function()
-      require('nvim-surround').setup({
-        keymaps = {
-          visual = 'ys',
-        },
+    lazy = false,
+    init = function()
+      vim.g.nvim_surround_no_visual_mappings = true
+      vim.keymap.set('x', 'ys', '<Plug>(nvim-surround-visual)', {
+        desc = 'Add a surrounding pair around a visual selection',
       })
     end,
   },
