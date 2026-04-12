@@ -1,4 +1,3 @@
-local LspMethod = vim.lsp.protocol.Methods
 local Shell = require('utils.shell')
 local Async = require('utils.async')
 local File = require('utils.file')
@@ -126,7 +125,7 @@ local function fix_from_code_action(bufnr, ls_name, action_type, dry_run, on_com
   local clients = vim.lsp.get_clients({
     bufnr = bufnr,
     name = ls_name,
-    method = LspMethod.textDocument_codeAction,
+    method = vim.lsp.protocol.Methods.textDocument_codeAction,
   })
   if #clients == 0 then
     if on_complete then
@@ -140,7 +139,7 @@ local function fix_from_code_action(bufnr, ls_name, action_type, dry_run, on_com
     local params = vim.lsp.util.make_range_params(0, client.offset_encoding)
     params.context = { only = { action_type }, diagnostics = {} }
     ---@param ls_results lsp.CodeAction[]
-    client:request(LspMethod.textDocument_codeAction, params, function(err, ls_results, _ctx, _config)
+    client:request(vim.lsp.protocol.Methods.textDocument_codeAction, params, function(err, ls_results, _ctx, _config)
       -- TODO: ruff is pretty noisy about errors
       if
         err
@@ -256,7 +255,7 @@ local function auto_import_pyright(bufnr, dry_run, on_complete)
     end
     local diag_info = diag_infos[current_index]
     ---@param result vim.lsp.CompletionResult
-    pyright_client:request(LspMethod.textDocument_completion, diag_info.completion_params, function(err, result, _context, _config)
+    pyright_client:request(vim.lsp.protocol.Methods.textDocument_completion, diag_info.completion_params, function(err, result, _context, _config)
       current_index = current_index + 1
       if err then
         auto_import_next()
@@ -517,7 +516,7 @@ end
 local function lsp_format(bufnr, dry_run, on_complete)
   local formatting_clients = vim.lsp.get_clients({
     bufnr = bufnr,
-    method = LspMethod.textDocument_formatting,
+    method = vim.lsp.protocol.Methods.textDocument_formatting,
   })
   local formatting_params = vim.lsp.util.make_formatting_params()
   ---@type string[]
@@ -541,7 +540,7 @@ local function lsp_format(bufnr, dry_run, on_complete)
     else
       ---@param err any
       ---@param results lsp.TextEdit[]
-      client:request(LspMethod.textDocument_formatting, formatting_params, function(err, results, _, _)
+      client:request(vim.lsp.protocol.Methods.textDocument_formatting, formatting_params, function(err, results, _, _)
         if err then
           if
             client.name ~= 'gopls'
