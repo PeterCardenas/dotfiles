@@ -4,20 +4,37 @@ local Log = require('utils.log')
 
 local chezmoi_augroup = vim.api.nvim_create_augroup('Chezmoi', { clear = true })
 
+---Returns true if the file at `filepath` might need to be synced with chezmoi.
+---@param source_path string
+---@param filepath string
+---@return boolean
+local function maybe_should_sync(source_path, filepath)
+  if not vim.startswith(filepath, source_path) then
+    return false
+  end
+  local relative_filepath = filepath:sub(#source_path + 2)
+  if relative_filepath:match('^%.git') then
+    return false
+  end
+  if relative_filepath:match('^%.chezmoitemplates/') then
+    return true
+  end
+  if relative_filepath:match('^%.chezmoi') then
+    return false
+  end
+  return true
+end
+
 ---@async
 ---Returns whether the apply errored and the error logs if errored.
 ---@param source_path string
 ---@param filepath string
 ---@return boolean, string[]
 local function apply_filepath(source_path, filepath)
-  if not vim.startswith(filepath, source_path) then
+  if not maybe_should_sync(source_path, filepath) then
     return false, {}
   end
   local relative_filepath = filepath:sub(#source_path + 2)
-  -- Ignore files that should never be applied
-  if relative_filepath:match('^%.git') then
-    return false, {}
-  end
   -- Template files can't be applied directly — find and apply their dependents
   local template_name = relative_filepath:match('^%.chezmoitemplates/(.+)$')
   if template_name then
@@ -30,9 +47,6 @@ local function apply_filepath(source_path, filepath)
         end
       end
     end
-    return false, {}
-  end
-  if relative_filepath:match('^%.chezmoi') then
     return false, {}
   end
   -- Do not apply ignored files.
@@ -98,6 +112,9 @@ local M = {}
 ---@param source_path string
 ---@param filepath string
 local function apply_and_notify(source_path, filepath)
+  if not maybe_should_sync(source_path, filepath) then
+    return
+  end
   local notify_key = 'chezmoi_apply_' .. source_path
   require('fidget').notify(' ', vim.log.levels.WARN, {
     group = notify_key,
@@ -106,8 +123,6 @@ local function apply_and_notify(source_path, filepath)
     ttl = math.huge,
   })
   local errored, logs = apply_filepath(source_path, filepath)
-  -- HACK: Fidget does not handle immediate removal of notifications, so sleep for a bit
-  Shell.sleep(100)
   require('fidget').notification.remove(notify_key, notify_key)
   if errored then
     Log.notify_error('chezmoi apply failed: ' .. table.concat(logs, '\n'))
