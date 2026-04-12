@@ -3,6 +3,12 @@ local Spinner = require('utils.spinner')
 
 local M = {}
 
+--- Switch to a buffer without adding to the jumplist or modifying alternate file.
+---@param bufnr integer
+local function set_secret_buf(bufnr)
+  vim.cmd('keepjumps keepalt buffer ' .. bufnr)
+end
+
 local function setup_lazygit_buffer()
   -- Ensure that the statuscolumn is removed correctly and the dropbar is rendered.
   require('dropbar')
@@ -14,6 +20,7 @@ local function setup_lazygit_buffer()
       local bufnr = args.buf
       local function correct_size()
         local agentic_was_open = false
+        ---@module 'agentic'
         local agentic = package.loaded['agentic']
         if agentic then
           local SessionRegistry = require('agentic.session_registry')
@@ -33,8 +40,8 @@ local function setup_lazygit_buffer()
           vim.cmd('resize 100 100')
           if not cur_dirty_buf_enter then
             dirty_buf_enter = true
-            vim.api.nvim_set_current_buf(temp_bufnr)
-            vim.api.nvim_set_current_buf(bufnr)
+            set_secret_buf(temp_bufnr)
+            set_secret_buf(bufnr)
             vim.api.nvim_buf_delete(temp_bufnr, { force = true })
             vim.cmd('startinsert')
           end
@@ -69,7 +76,7 @@ local function setup_lazygit_buffer()
           alpha.start(false, alpha.default_config)
           return
         end
-        vim.api.nvim_set_current_buf(bufnrs[1])
+        set_secret_buf(bufnrs[1])
       end, { buffer = bufnr })
       vim.bo[bufnr].buflisted = false
       vim.api.nvim_create_autocmd('VimResized', {
@@ -191,11 +198,11 @@ function M.open_lazygit()
     if bufinfo.loaded == 0 then
       setup_lazygit_buffer()
     end
-    vim.api.nvim_set_current_buf(lazygit_bufnr)
+    set_secret_buf(lazygit_bufnr)
     return
   end
   setup_lazygit_buffer()
-  vim.cmd('term lazygit --path ' .. File.get_git_root())
+  vim.cmd('keepjumps keepalt term lazygit --path ' .. File.get_git_root())
 end
 
 function M.set_keymap()
@@ -220,7 +227,7 @@ function M.set_keymap()
         vim.keymap.set('n', '<leader>q', function()
           local lazygit_bufnr = get_lazygit_bufnr()
           if lazygit_bufnr ~= nil then
-            vim.api.nvim_set_current_buf(lazygit_bufnr)
+            set_secret_buf(lazygit_bufnr)
           end
           require('bufdelete').bufdelete(commit_bufnr)
         end, { buffer = commit_bufnr })
