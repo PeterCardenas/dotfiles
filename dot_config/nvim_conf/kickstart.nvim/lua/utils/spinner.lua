@@ -19,6 +19,9 @@ end
 ---@return SpinnerTimer
 function M.create_timer()
   local timer = vim.uv.new_timer()
+  if not timer then
+    error('Failed to create timer')
+  end
   local is_cleared = false
   return {
     ---@param cb fun(): nil
