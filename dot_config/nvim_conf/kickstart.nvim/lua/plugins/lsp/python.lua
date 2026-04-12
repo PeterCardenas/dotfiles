@@ -64,7 +64,7 @@ local function pyright_config()
         return vim.lsp.diagnostic.on_publish_diagnostics(_, result, ctx)
       end,
     },
-    settings = {
+    settings = { ---@type lspconfig.settings.pyright
       python = {
         analysis = {
           autoImportCompletions = true,
@@ -86,7 +86,7 @@ local function pylsp_config()
   ---@type LspTogglableConfig
   local config = {
     enabled = not Config.USE_ZUBAN,
-    settings = {
+    settings = { ---@type lspconfig.settings.pylsp
       pylsp = {
         plugins = {
           jedi = {
