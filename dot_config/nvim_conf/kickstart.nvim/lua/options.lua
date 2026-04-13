@@ -63,6 +63,76 @@ vim.api.nvim_create_autocmd('FileType', {
       set_metadata('conceal_lines')
     end, {})
 
+    -- Agentic chat injection directive: injects bash into inline nodes,
+    -- but only in AgenticChat buffers and not for bare "Terminal" content.
+    vim.treesitter.query.add_directive('agentic-inject!', function(match, _, bufnr, predicate, metadata)
+      if vim.bo[bufnr].filetype ~= 'AgenticChat' then
+        return
+      end
+
+      local capture_id = predicate[2]
+      local nodes = match[capture_id]
+      local node = type(nodes) == 'table' and nodes[1] or nodes
+      if not node then
+        return
+      end
+
+      local text = vim.treesitter.get_node_text(node, bufnr)
+
+      -- Helper: extract content inside balanced parens after a pattern match.
+      -- Returns the content string and start/end byte positions (1-indexed), or nil.
+      local function extract_paren_content(pattern)
+        local _, fn_end = text:find(pattern)
+        if not fn_end then
+          return nil
+        end
+        local content_start = fn_end + 1
+        local depth = 1
+        for i = content_start, #text do
+          local c = text:byte(i)
+          if c == 40 then -- '('
+            depth = depth + 1
+          elseif c == 41 then -- ')'
+            depth = depth - 1
+            if depth == 0 then
+              if content_start <= i - 1 then
+                return text:sub(content_start, i - 1), content_start, i - 1
+              end
+              return nil
+            end
+          end
+        end
+        return nil
+      end
+
+      -- Helper: set injection language and range metadata for paren content
+      local function set_paren_inject(lang, content_start, content_end)
+        metadata['injection.language'] = lang
+        metadata[capture_id] = metadata[capture_id] or {}
+        local start_row, start_col = node:range()
+        metadata[capture_id].range = {
+          start_row,
+          start_col + content_start - 1,
+          start_row,
+          start_col + content_end,
+        }
+      end
+
+      local content, cs, ce = extract_paren_content('execute%(')
+      if content then
+        if content:match('^%s*Terminal%s*$') then
+          return
+        end
+        set_paren_inject('bash', cs, ce)
+        return
+      end
+      -- search(...) → bash, but only if content starts with "grep "
+      local search_content, scs, sce = extract_paren_content('search%(')
+      if search_content and search_content:match('^grep ') then
+        set_paren_inject('bash', scs, sce)
+      end
+    end, {})
+
     -- TODO: doesn't work rn
     vim.treesitter.query.add_directive('unset!', function(_, _, _, predicate, metadata)
       if #predicate == 3 then

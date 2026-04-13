@@ -104,6 +104,8 @@ function M.add_config(current_config)
     filetypes = { 'yaml.github' },
   }
 
+  ---@module 'lspconfig'
+
   local nvim_treesitter_config_path = vim.fs.joinpath(vim.fn.stdpath('data') --[[@as string]], '/lazy/nvim-treesitter/.tsqueryrc.json')
   local nvim_treesitter_config_str = File.read_file(nvim_treesitter_config_path)
   local success, config = pcall(vim.json.decode, nvim_treesitter_config_str)
@@ -113,6 +115,10 @@ function M.add_config(current_config)
   else
     config.valid_directives['maybe-conceal-whole-line'] = {
       description = 'Conceal the whole line if the match covers entire lines.',
+      parameters = { { type = 'capture', arity = 'required' } },
+    }
+    config.valid_directives['agentic-inject'] = {
+      description = 'Highlights execute tool call content as bash for AgenticChat buffers',
       parameters = { { type = 'capture', arity = 'required' } },
     }
     config.valid_captures.images = {
