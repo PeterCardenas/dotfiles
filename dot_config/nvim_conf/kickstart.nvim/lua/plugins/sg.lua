@@ -739,10 +739,8 @@ return {
               for _ = 1, max_retries do
                 local ok, output = Shell.async_cmd('agent', { '-pf', '--mode', 'ask', '--model', 'composer-2-fast' }, { stdin = prompt })
                 if not ok or not output or #output == 0 then
-                  timer.stop()
-                  require('fidget').notification.remove(fidget_group, fidget_key)
-                  Log.notify_error(table.concat(output or {}, '\n'), { title = 'Title generation failed' })
-                  return
+                  Log.notify_error(table.concat(output or {}, '\n'), { title = 'Title generation failed, retrying...' })
+                  goto continue
                 end
                 title = vim.trim(table.concat(output, ' '))
                 local word_count = select(2, title:gsub('%S+', ''))
@@ -750,6 +748,7 @@ return {
                   break
                 end
                 Log.notify_warn(string.format('Title too long (%d words), retrying...\n%s', word_count, title), { title = 'Title Generation' })
+                ::continue::
               end
               timer.stop()
               require('fidget').notification.remove(fidget_group, fidget_key)
