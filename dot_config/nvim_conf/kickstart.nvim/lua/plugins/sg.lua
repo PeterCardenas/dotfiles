@@ -717,14 +717,16 @@ return {
 
             local Async = require('utils.async')
             local Spinner = require('utils.spinner')
+            local fidget_group = 'agentic_title_' .. data.tab_page_id
+            local fidget_key = fidget_group
             Async.void(function() ---@async
               local Shell = require('utils.shell')
               local timer = Spinner.create_timer()
               local spinner = Spinner.create_spinner('moon')
               timer.start(function()
                 require('fidget').notify(spinner() .. ' Generating title...', vim.log.levels.INFO, {
-                  group = 'agentic_title',
-                  key = 'agentic_title',
+                  group = fidget_group,
+                  key = fidget_key,
                   annote = '',
                   ttl = math.huge,
                 })
@@ -735,7 +737,7 @@ return {
                 local ok, output = Shell.async_cmd('agent', { '-pf', '--mode', 'ask', '--model', 'composer-2-fast' }, { stdin = prompt })
                 if not ok or not output or #output == 0 then
                   timer.stop()
-                  require('fidget').notification.remove('agentic_title', 'agentic_title')
+                  require('fidget').notification.remove(fidget_group, fidget_key)
                   Log.notify_error(table.concat(output or {}, '\n'), { title = 'Title generation failed' })
                   return
                 end
@@ -747,7 +749,7 @@ return {
                 Log.notify_warn(string.format('Title too long (%d words), retrying...\n%s', word_count, title), { title = 'Title Generation' })
               end
               timer.stop()
-              require('fidget').notification.remove('agentic_title', 'agentic_title')
+              require('fidget').notification.remove(fidget_group, fidget_key)
               if title and title ~= '' then
                 Log.notify_info(title, { title = 'New Chat Title' })
                 vim.schedule(function()
