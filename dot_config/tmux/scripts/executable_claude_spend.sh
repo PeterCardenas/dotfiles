@@ -99,7 +99,7 @@ fi
 
 # Fetch fresh remote value if cache is stale
 if [ -n "$remote_host" ] && { [ ! -f "$remote_cache" ] || [ "$remote_age" -ge "$remote_ttl" ]; }; then
-  remote_val=$(ssh -o ConnectTimeout=2 -o BatchMode=yes -o StrictHostKeyChecking=no \
+  remote_val=$(ssh -o ConnectTimeout=0.5 -o BatchMode=yes -o StrictHostKeyChecking=no \
     "$remote_host" '~/.config/tmux/scripts/claude_spend.sh --local' 2>/dev/null)
   if [ $? -eq 0 ] && [ -n "$remote_val" ]; then
     remote_total="$remote_val"
