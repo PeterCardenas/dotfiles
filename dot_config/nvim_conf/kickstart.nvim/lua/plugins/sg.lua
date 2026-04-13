@@ -500,6 +500,31 @@ return {
           center_on_navigate_hunks = true,
         },
 
+        folding = {
+          ---@param info agentic.UserConfig.FoldtextInfo
+          ---@return [string, string][]
+          foldtext = function(info)
+            local suffix = (' 󰁂 %d '):format(info.line_count)
+            local suffix_width = vim.fn.strdisplaywidth(suffix)
+            local target_width = info.width - suffix_width
+
+            local cur_width = 0
+            local new_virt_text = {}
+            for _, chunk in ipairs(info.virt_text) do
+              local chunk_width = vim.fn.strdisplaywidth(chunk[1])
+              if cur_width + chunk_width > target_width then
+                table.insert(new_virt_text, { info.truncate(chunk[1], target_width - cur_width), chunk[2] })
+                break
+              end
+              table.insert(new_virt_text, chunk)
+              cur_width = cur_width + chunk_width
+            end
+
+            table.insert(new_virt_text, { suffix, 'MoreMsg' })
+            return new_virt_text
+          end,
+        },
+
         -- Debug mode off by default
         debug = false,
 
