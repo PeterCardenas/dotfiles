@@ -133,6 +133,61 @@ vim.api.nvim_create_autocmd('FileType', {
       end
     end, {})
 
+    -- Diff language injection: resolves language from the filename in the diff header.
+    vim.treesitter.query.add_directive('diff-lang-inject!', function(match, _, source, predicate, metadata)
+      local capture_id = predicate[2]
+      local nodes = match[capture_id]
+      local node = type(nodes) == 'table' and nodes[1] or nodes
+      if not node then
+        return
+      end
+
+      -- Walk up to find the containing block
+      local block = node:parent()
+      while block and block:type() ~= 'block' do
+        block = block:parent()
+      end
+      if not block then
+        return
+      end
+
+      -- Find new_file -> filename (prefer new_file, fall back to old_file)
+      local filename_text
+      for child in block:iter_children() do
+        if child:type() == 'new_file' or child:type() == 'old_file' then
+          for sub in child:iter_children() do
+            if sub:type() == 'filename' then
+              filename_text = vim.treesitter.get_node_text(sub, source)
+              break
+            end
+          end
+          if filename_text then
+            break
+          end
+        end
+      end
+
+      if not filename_text then
+        return
+      end
+
+      -- Strip leading a/ or b/ prefix
+      filename_text = filename_text:gsub('^[ab]/', '')
+
+      -- Resolve filetype, then treesitter language
+      local ft = vim.filetype.match({ filename = filename_text })
+      if not ft then
+        return
+      end
+
+      local lang = vim.treesitter.language.get_lang(ft)
+      if not lang or not pcall(vim.treesitter.language.inspect, lang) then
+        return
+      end
+
+      metadata['injection.language'] = lang
+    end, {})
+
     -- TODO: doesn't work rn
     vim.treesitter.query.add_directive('unset!', function(_, _, _, predicate, metadata)
       if #predicate == 3 then
