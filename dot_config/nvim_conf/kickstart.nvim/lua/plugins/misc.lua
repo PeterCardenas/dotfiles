@@ -456,7 +456,52 @@ return {
             },
           },
           lualine_c = {
-            'filename',
+            {
+              function()
+                local bufnr = vim.api.nvim_get_current_buf()
+                local bufname = vim.api.nvim_buf_get_name(bufnr)
+
+                -- Agentic buffers: use header text directly without path splitting
+                local ft = vim.bo[bufnr].filetype
+                if ft and ft:find('^Agentic') then
+                  -- Buffer name is cwd-prefixed header text; strip the cwd prefix
+                  local cwd = vim.fn.getcwd() .. '/'
+                  if vim.startswith(bufname, cwd) then
+                    return bufname:sub(#cwd + 1)
+                  end
+                  return bufname
+                end
+
+                -- Octo buffers: show title from octo_buffers global
+                ---@module 'octo'
+                if vim.startswith(bufname, 'octo://') then
+                  local octo_buf = _G.octo_buffers and _G.octo_buffers[bufnr]
+                  if octo_buf then
+                    local kind_icons = { pull = '', issue = '', discussion = '󰍡', release = '' }
+                    local icon = kind_icons[octo_buf.kind] or octo_buf.kind or ''
+                    local title = octo_buf.titleMetadata.body
+                    local id = octo_buf.number and ('#' .. octo_buf.number) or ''
+                    return string.format('%s %s%s %s', octo_buf.repo or '', icon, id, title)
+                  end
+                  -- Fallback: strip octo:// prefix
+                  return bufname:sub(8)
+                end
+
+                -- Default: use standard filename component behavior
+                local name = vim.fn.expand('%:t')
+                if name == '' then
+                  return '[No Name]'
+                end
+                name = name:gsub('%%', '%%%%') -- escape % for statusline
+                if vim.bo[bufnr].modified then
+                  name = name .. ' [+]'
+                end
+                if vim.bo[bufnr].readonly or not vim.bo[bufnr].modifiable then
+                  name = name .. ' [-]'
+                end
+                return name
+              end,
+            },
           },
           lualine_x = {
             {
