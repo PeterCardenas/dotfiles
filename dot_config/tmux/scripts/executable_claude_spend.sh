@@ -19,7 +19,7 @@ now=$(date +%s)
 if [ "$local_only" = false ]; then
   cache="/tmp/tmux-claude-spend-${uid}"
   if [ -f "$cache" ]; then
-    age=$(( now - $(head -1 "$cache") ))
+    age=$((now - $(head -1 "$cache")))
     if [ "$age" -lt 10 ]; then
       sed -n '2p' "$cache"
       exit 0
@@ -65,7 +65,7 @@ fi
 # Persist stale spend into daily file
 if [ "$stale_total" != "0" ] && [ "$stale_total" != "0.0000" ]; then
   daily_total=$(awk "BEGIN{printf \"%.4f\", $daily_total + $stale_total}")
-  printf '%s' "$daily_total" > "$daily_file"
+  printf '%s' "$daily_total" >"$daily_file"
 fi
 
 local_total=$(awk "BEGIN{printf \"%.4f\", $daily_total + $live_total}")
@@ -81,8 +81,8 @@ fi
 # macbook → desktop, desktop → macbook (both via tailscale)
 remote_host=""
 case "$(hostname)" in
-  *MacBook*|*macbook*) remote_host="desktop" ;;
-  *)                    remote_host="macbook" ;;
+*MacBook* | *macbook*) remote_host="desktop" ;;
+*) remote_host="macbook" ;;
 esac
 
 remote_total=0
@@ -90,7 +90,7 @@ remote_cache="/tmp/tmux-claude-spend-remote-${uid}"
 remote_ttl=30
 
 if [ -n "$remote_host" ] && [ -f "$remote_cache" ]; then
-  remote_age=$(( now - $(head -1 "$remote_cache") ))
+  remote_age=$((now - $(head -1 "$remote_cache")))
   if [ "$remote_age" -lt "$remote_ttl" ]; then
     remote_total=$(sed -n '2p' "$remote_cache")
     remote_total=${remote_total:-0}
@@ -105,7 +105,7 @@ if [ -n "$remote_host" ] && { [ ! -f "$remote_cache" ] || [ "$remote_age" -ge "$
     remote_total="$remote_val"
   fi
   # Cache even on failure (avoids retrying every 10s)
-  printf '%s\n%s' "$now" "$remote_total" > "$remote_cache"
+  printf '%s\n%s' "$now" "$remote_total" >"$remote_cache"
 fi
 
 total=$(awk "BEGIN{printf \"%.2f\", $local_total + $remote_total}")
@@ -116,5 +116,5 @@ else
   result="󱜙 \$${total}"
 fi
 
-printf '%s\n%s' "$now" "$result" > "$cache"
+printf '%s\n%s' "$now" "$result" >"$cache"
 printf '%s' "$result"
