@@ -109,7 +109,8 @@ nmap('Toggle mini file explorer', 'oo', function()
     filename = vim.fn.fnamemodify(filename, ':h')
     attempts = attempts + 1
   end
-  vim.notify('Failed to open file explorer for file: ' .. current_buf_filename, vim.log.levels.ERROR)
+  vim.notify('Failed to open file explorer for file: ' .. current_buf_filename .. ', opening cwd', vim.log.levels.ERROR)
+  require('mini.files').open(File.get_cwd())
 end)
 
 ---@type LazyPluginSpec[]
