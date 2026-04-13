@@ -73,8 +73,9 @@ function __prompt -a prompt_name --description "Print partial prompt with starsh
     end
     env STARSHIP_CONFIG=$prompt_file starship prompt --status=$STARSHIP_CMD_STATUS --pipestatus="$STARSHIP_CMD_PIPESTATUS" --keymap=$STARSHIP_KEYMAP --cmd-duration=$STARSHIP_DURATION --jobs=$STARSHIP_JOBS
 end
-set -g prev_dir
+set -g prev_git_status_dir
 set -g prev_git_dir
+set -g prev_env_dir
 function __git_status_prompt --description "Print git status part of prompt"
     __prompt git_status
 end
@@ -82,34 +83,36 @@ function __env_info_prompt --description "Print environment info part of prompt 
     __prompt env_info
 end
 function __env_info_prompt_loading_indicator -a last_prompt --description "Print loading indicator for env info part of prompt"
-    echo -n $last_prompt
-end
-function __git_status_prompt_loading_indicator -a last_prompt --description "Print loading indicator for git status part of prompt"
-    # TODO: fix bug where this is sometimes "."
     set -l current_dir (pwd)
-    if test "$last_prompt" = "[J"
-        set last_prompt "… "
-    end
-    if test "$current_dir" = "$prev_dir"
+    if test "$current_dir" = "$prev_env_dir"
         echo -n $last_prompt
         return
     end
-    set -l current_git_dir current_dir
-    # check if the current directory is a git repository by traversing parent directories until $HOME or .git is found
-    while test "$current_git_dir" != "$HOME" -a "$current_git_dir" != "$HOME/.git" -a "$current_git_dir" != "."
+    set prev_env_dir $current_dir
+    echo -n "… "
+end
+function __git_status_prompt_loading_indicator -a last_prompt --description "Print loading indicator for git status part of prompt"
+    set -l current_dir (pwd)
+    if test "$current_dir" = "$prev_git_status_dir"
+        echo -n $last_prompt
+        return
+    end
+    set -l current_git_dir $current_dir
+    # walk up to find git root
+    while test "$current_git_dir" != "$HOME" -a "$current_git_dir" != "/" -a "$current_git_dir" != "."
         if test -d $current_git_dir/.git
             if test "$current_git_dir" != "$prev_git_dir"
                 echo -n "… "
             else
                 echo -n $last_prompt
             end
-            set prev_dir $current_dir
+            set prev_git_status_dir $current_dir
             set prev_git_dir $current_git_dir
             return
         end
         set current_git_dir (dirname $current_git_dir)
     end
-    set prev_dir $current_dir
+    set prev_git_status_dir $current_dir
     set prev_git_dir
 end
 set -g async_prompt_inherit_variables all
