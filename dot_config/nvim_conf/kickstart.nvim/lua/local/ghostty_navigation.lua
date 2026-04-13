@@ -148,24 +148,42 @@ end
 local function setup_autocommands()
   local group = vim.api.nvim_create_augroup('ghostty_navigator', { clear = true })
 
+  local function do_update(event_name)
+    Async.void(
+      ---@async
+      function()
+        -- HACK: workaround race between focus lost and focus gained
+        if event_name == 'FocusGained' then
+          Shell.sleep(250)
+        end
+        local success, err = update_ghostty_navigation()
+        if not success then
+          Log.notify_error('[ghostty_navigation] ' .. event_name .. ': ' .. (err or 'Failed to update navigation'))
+        end
+      end
+    )
+  end
+
   -- Events that should update ghostty navigation (no pattern)
   vim.api.nvim_create_autocmd({ 'VimEnter', 'WinEnter', 'VimResized', 'VimResume', 'FocusGained', 'TermEnter', 'TermLeave' }, {
     desc = 'Update ghostty navigation',
     group = group,
     callback = function(args)
-      Async.void(
-        ---@async
-        function()
-          -- HACK: workaround race between focus lost and focus gained
-          if args.event == 'FocusGained' then
-            Shell.sleep(250)
-          end
-          local success, err = update_ghostty_navigation()
-          if not success then
-            Log.notify_error('[ghostty_navigation] ' .. args.event .. ': ' .. (err or 'Failed to update navigation'))
-          end
-        end
-      )
+      do_update(args.event)
+    end,
+  })
+
+  -- Layout changes where the current window stays the same
+  -- WinClosed/WinNew don't trigger WinEnter for the current window,
+  -- so edge directions become stale without this.
+  vim.api.nvim_create_autocmd({ 'WinClosed', 'WinNew' }, {
+    desc = 'Update ghostty navigation after layout change',
+    group = group,
+    callback = function(args)
+      -- Defer so the layout is fully settled before recalculating edges
+      vim.schedule(function()
+        do_update(args.event)
+      end)
     end,
   })
 
