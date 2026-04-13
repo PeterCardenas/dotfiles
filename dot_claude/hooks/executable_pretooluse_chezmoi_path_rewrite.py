@@ -79,6 +79,7 @@ def _main() -> None:
                 "updatedInput": updated_input,
                 "additionalContext": (
                     f"Path rewritten: {file_path} -> {source_path} (chezmoi source). "
+                    "No need to run `chezmoi apply` — changes are automatically applied to the target."
                 ),
             }
         },
