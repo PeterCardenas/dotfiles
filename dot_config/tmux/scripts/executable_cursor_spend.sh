@@ -8,7 +8,7 @@ uid=$(id -u)
 cache="/tmp/tmux-cursor-spend-${uid}"
 now=$(date +%s)
 if [ -f "$cache" ]; then
-  age=$(( now - $(head -1 "$cache") ))
+  age=$((now - $(head -1 "$cache")))
   if [ "$age" -lt 120 ]; then
     sed -n '2p' "$cache"
     exit 0
@@ -26,7 +26,7 @@ else
 fi
 
 if [ -z "$token" ]; then
-  printf '%s\n' "$now" > "$cache"
+  printf '%s\n' "$now" >"$cache"
   exit 0
 fi
 
@@ -46,5 +46,5 @@ else
   result=$(awk "BEGIN{printf \"󰬁 \$%.2f\", $cents / 100}")
 fi
 
-printf '%s\n%s' "$now" "$result" > "$cache"
+printf '%s\n%s' "$now" "$result" >"$cache"
 printf '%s' "$result"
