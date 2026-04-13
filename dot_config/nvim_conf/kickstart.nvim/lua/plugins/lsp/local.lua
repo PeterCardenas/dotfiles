@@ -121,6 +121,10 @@ function M.add_config(current_config)
       description = 'Highlights execute tool call content as bash for AgenticChat buffers',
       parameters = { { type = 'capture', arity = 'required' } },
     }
+    config.valid_directives['diff-lang-inject'] = {
+      description = 'Injects language into diff hunks based on the filename in the diff header',
+      parameters = { { type = 'capture', arity = 'required' } },
+    }
     config.valid_captures.images = {
       ['image'] = 'what the image should replace/represent',
       ['image.src'] = 'url/path to the image',
