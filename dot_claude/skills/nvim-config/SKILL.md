@@ -7,7 +7,7 @@ description: Use when editing, debugging, or testing Neovim configuration or plu
 
 ## Editing
 
-- `chezmoi apply` is not necessary after editing config files — and changes are automatically applied to the target after edits.
+- DO NOT run `chezmoi apply`. It is not necessary after editing config files — and changes are automatically applied to the target after edits.
 - Always read the plugin source in `~/.local/share/nvim/lazy/<plugin>/` before editing config that touches that plugin. Never guess at field names, APIs, or behavior.
 - When adding functionality, `grep` across the existing config to find how similar things are done. Follow existing patterns.
 - Prefer early returns over nested conditionals in Lua.
