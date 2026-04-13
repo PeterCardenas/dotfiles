@@ -659,7 +659,7 @@ return {
                 end
               end
             end
-            local transcript = table.concat(parts, '\n')
+            local transcript = '<conversation>\n' .. table.concat(parts, '\n') .. '\n</conversation>'
 
             local prompt = 'Summarize this chat conversation in 5-8 words for use as a short title. '
               .. 'Reply with ONLY the title, no quotes, no punctuation at the end.\n\n'
