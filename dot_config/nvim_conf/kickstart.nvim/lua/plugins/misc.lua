@@ -1205,8 +1205,7 @@ return {
             if not vim.startswith(src, 'https://github.com') or not vim.startswith(file, 'octo:/') then
               return on_complete(nil)
             end
-            -- TODO: resolve images in comments
-            local owner, repo, kind, id = string.match(file, 'octo:/(.+)/(.+)/(.+)/([0-9a-z.]+)')
+            local owner, repo, kind, id = string.match(file, 'octo:/([^/]+)/([^/]+)/([^/]+)/([0-9a-z.]+)')
             if not owner or (kind ~= 'pull' and kind ~= 'issue') then
               return on_complete(nil)
             end
@@ -1216,6 +1215,17 @@ return {
                 return on_complete(nil)
               end
               local type = kind == 'pull' and 'pullRequest' or 'issue'
+              local reviewsFragment = type == 'pullRequest'
+                  and [[
+                reviews(first: 100) {
+                  nodes {
+                    comments(first: 100) {
+                      nodes { bodyHTML body }
+                    }
+                  }
+                }
+                ]]
+                or ''
               success, output = Shell.async_cmd('gh', {
                 'api',
                 'graphql',
@@ -1232,6 +1242,10 @@ return {
                     ]] .. type .. [[(number: $number) {
                       bodyHTML
                       body
+                      comments(first: 100) {
+                        nodes { bodyHTML body }
+                      }
+                      ]] .. reviewsFragment .. [[
                     }
                   }
                 }
@@ -1241,55 +1255,66 @@ return {
                 return on_complete(nil)
               end
               local response = vim.json.decode(table.concat(output, ''))
-              local bodyHTML = response.data.repository[type].bodyHTML ---@type string
-              local bodyMd = response.data.repository[type].body ---@type string
+              local data = response.data.repository[type]
+              local bodies = { { md = data.body, html = data.bodyHTML } }
+              if data.comments and data.comments.nodes then
+                for _, c in ipairs(data.comments.nodes) do
+                  bodies[#bodies + 1] = { md = c.body, html = c.bodyHTML }
+                end
+              end
+              if data.reviews and data.reviews.nodes then
+                for _, r in ipairs(data.reviews.nodes) do
+                  if r.comments and r.comments.nodes then
+                    for _, c in ipairs(r.comments.nodes) do
+                      bodies[#bodies + 1] = { md = c.body, html = c.bodyHTML }
+                    end
+                  end
+                end
+              end
               -- TODO: Automatically parse injected languages
               -- TODO: Remove vim.schedule once https://github.com/neovim/neovim/issues/36306 is resolved
               -- Necessary on nightly (nvim-0.12)
               vim.schedule(function()
                 local languages = { 'markdown', 'markdown_inline', 'html' }
-                local urls_with_range = {} ---@type [string, number, number][]
-                for _, language in ipairs(languages) do
-                  local parser = vim.treesitter.get_string_parser(bodyMd, language)
-                  parser:parse()
-                  parser:for_each_tree(function(tstree, tree)
-                    local query = vim.treesitter.query.get(tree:lang(), 'images')
-                    if not query then
-                      goto continue
-                    end
-                    for _, match, _ in query:iter_matches(tstree:root(), bodyMd, 0, -1) do
-                      for capture_id, nodes in pairs(match) do
-                        local name = query.captures[capture_id]
-                        if name == 'image.src' then
-                          local url = vim.treesitter.get_node_text(nodes[1], bodyMd)
-                          local row, col = nodes[1]:range()
-                          urls_with_range[#urls_with_range + 1] = { url, row, col }
+                for _, body in ipairs(bodies) do
+                  local urls_with_range = {} ---@type [string, number, number][]
+                  for _, language in ipairs(languages) do
+                    local parser = vim.treesitter.get_string_parser(body.md, language)
+                    parser:parse()
+                    parser:for_each_tree(function(tstree, tree)
+                      local query = vim.treesitter.query.get(tree:lang(), 'images')
+                      if not query then
+                        goto continue
+                      end
+                      for _, match, _ in query:iter_matches(tstree:root(), body.md, 0, -1) do
+                        for capture_id, nodes in pairs(match) do
+                          local name = query.captures[capture_id]
+                          if name == 'image.src' then
+                            local url = vim.treesitter.get_node_text(nodes[1], body.md)
+                            local row, col = nodes[1]:range()
+                            urls_with_range[#urls_with_range + 1] = { url, row, col }
+                          end
                         end
                       end
-                    end
-                    ::continue::
-                  end)
-                end
-                Async.void(function()
+                      ::continue::
+                    end)
+                  end
                   table.sort(urls_with_range, function(a, b)
                     return a[2] < b[2] and a[3] < b[3]
                   end)
-                  local imageURLsFromBodyMd = {} ---@type string[]
-                  for _, url_with_range in ipairs(urls_with_range) do
-                    local url = url_with_range[1]
-                    imageURLsFromBodyMd[#imageURLsFromBodyMd + 1] = url
+                  local imageURLsFromMd = {} ---@type string[]
+                  for _, u in ipairs(urls_with_range) do
+                    imageURLsFromMd[#imageURLsFromMd + 1] = u[1]
                   end
-
-                  local imageURLsFromBodyHTML = {} ---@type string[]
-                  for imageURL in bodyHTML:gmatch(' src="([^"]+)"') do
-                    imageURLsFromBodyHTML[#imageURLsFromBodyHTML + 1] = imageURL
+                  local imageURLsFromHTML = {} ---@type string[]
+                  for imageURL in body.html:gmatch(' src="([^"]+)"') do
+                    imageURLsFromHTML[#imageURLsFromHTML + 1] = imageURL
                   end
-                  for idx, imageURL in ipairs(imageURLsFromBodyMd) do
-                    local resolved_url = imageURLsFromBodyHTML[idx]
-                    resolved_url_cache[imageURL] = resolved_url
+                  for idx, imageURL in ipairs(imageURLsFromMd) do
+                    resolved_url_cache[imageURL] = imageURLsFromHTML[idx]
                   end
-                  on_complete(resolved_url_cache[src])
-                end)
+                end
+                on_complete(resolved_url_cache[src])
               end)
             end)
           end,
@@ -1299,6 +1324,14 @@ return {
         -- TODO: Re-enable when dashboard is equal or better than alpha.nvim
         -- dashboard = { enabled = true },
       })
+      if Config.USE_SNACKS_IMAGE then
+        vim.api.nvim_create_autocmd('FileType', {
+          pattern = 'octo',
+          callback = function(e)
+            require('snacks.image.doc').attach(e.buf)
+          end,
+        })
+      end
     end,
   },
 }
