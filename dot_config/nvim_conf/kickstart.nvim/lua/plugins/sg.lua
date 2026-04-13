@@ -679,15 +679,26 @@ return {
                   ttl = math.huge,
                 })
               end)
-              local ok, output = Shell.async_cmd('agent', { '-pf', '--mode', 'ask', '--model', 'composer-2-fast' }, { stdin = prompt })
+              local max_retries = 3
+              local title = nil
+              for _ = 1, max_retries do
+                local ok, output = Shell.async_cmd('agent', { '-pf', '--mode', 'ask', '--model', 'composer-2-fast' }, { stdin = prompt })
+                if not ok or not output or #output == 0 then
+                  timer.stop()
+                  require('fidget').notification.remove('agentic_title', 'agentic_title')
+                  Log.notify_error(table.concat(output or {}, '\n'), { title = 'Title generation failed' })
+                  return
+                end
+                title = vim.trim(table.concat(output, ' '))
+                local word_count = select(2, title:gsub('%S+', ''))
+                if word_count <= 10 then
+                  break
+                end
+                Log.notify_warn(string.format('Title too long (%d words), retrying...\n%s', word_count, title), { title = 'Title Generation' })
+              end
               timer.stop()
               require('fidget').notification.remove('agentic_title', 'agentic_title')
-              if not ok or not output or #output == 0 then
-                Log.notify_error(table.concat(output, '\n'), { title = 'Title generation failed' })
-                return
-              end
-              local title = vim.trim(table.concat(output, ' '))
-              if title ~= '' then
+              if title and title ~= '' then
                 Log.notify_info(title, { title = 'New Chat Title' })
                 vim.schedule(function()
                   session.chat_history.title = title
