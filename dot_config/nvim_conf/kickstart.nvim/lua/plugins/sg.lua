@@ -467,6 +467,7 @@ return {
       -- Track cost per session for tmux status bar aggregation.
       -- Each nvim writes its own PID file keyed by UTC date so sessions
       -- spanning midnight split correctly. Format: "YYYY-MM-DD <cost>\n" per line.
+      ---@type table<string, table<string, number>>
       local _spend_by_session = {} -- session_id -> { date -> cost }
       local _spend_dir = '/tmp/claude-spend-nvim-' .. vim.uv.getuid()
       local _spend_file = _spend_dir .. '/' .. vim.fn.getpid()
@@ -478,12 +479,14 @@ return {
 
       local function _flush_spend()
         -- Aggregate by date across all sessions
+        ---@type table<string, number>
         local by_date = {} -- date -> cost
         for _, dates in pairs(_spend_by_session) do
           for date, cost in pairs(dates) do
             by_date[date] = (by_date[date] or 0) + cost
           end
         end
+        ---@type string[]
         local lines = {}
         for date, cost in pairs(by_date) do
           lines[#lines + 1] = string.format('%s %.4f', date, cost)
@@ -498,7 +501,6 @@ return {
           end)
         end)
       end
-
 
       vim.api.nvim_create_user_command('AgenticFullscreen', function()
         require('agentic').toggle()
@@ -677,6 +679,7 @@ return {
 
         -- Hooks for custom behavior
         hooks = {
+          ---@param data agentic.UserConfig.ResponseCompleteData
           on_response_complete = function(data)
             if not data.success then
               return
@@ -759,6 +762,7 @@ return {
               end
             end)
           end,
+          ---@param data agentic.UserConfig.SessionUpdateData
           on_session_update = function(data)
             if not vim.api.nvim_tabpage_is_valid(data.tab_page_id) then
               return
