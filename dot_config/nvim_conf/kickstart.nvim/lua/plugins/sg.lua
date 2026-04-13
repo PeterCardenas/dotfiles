@@ -402,18 +402,6 @@ return {
         desc = 'agentic: toggle',
       },
       {
-        '<leader>aa',
-        function()
-          require('agentic').toggle()
-          -- Focus input after toggle
-          vim.defer_fn(function()
-            require('agentic').focus_input()
-          end, 100)
-        end,
-        mode = { 'n', 'v' },
-        desc = 'agentic: ask',
-      },
-      {
         '<leader>ac',
         function()
           require('agentic').add_selection_or_file_to_context()
