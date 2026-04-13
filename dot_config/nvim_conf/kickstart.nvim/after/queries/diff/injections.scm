@@ -1,10 +1,17 @@
 ; extends
 
-; Inject language into diff hunks based on the filename in the diff header
+; "New" version: context + addition lines combined
 ([
   (context)
-  (deletion)
   (addition)
 ] @injection.content
   (#diff-lang-inject! @injection.content)
-  (#offset! @injection.content 0 1 0 0))
+  (#set! injection.combined))
+
+; "Old" version: context + deletion lines combined separately
+([
+  (context)
+  (deletion)
+] @injection.content
+  (#diff-lang-inject! @injection.content)
+  (#set! injection.combined))
