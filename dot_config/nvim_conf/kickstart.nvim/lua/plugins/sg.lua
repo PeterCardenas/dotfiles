@@ -501,6 +501,11 @@ return {
         },
 
         folding = {
+          tool_calls = {
+            enabled = true,
+            closed_by_default = false,
+            min_lines = 5,
+          },
           ---@param info agentic.UserConfig.FoldtextInfo
           ---@return [string, string][]
           foldtext = function(info)
