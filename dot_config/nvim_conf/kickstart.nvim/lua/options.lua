@@ -120,7 +120,7 @@ vim.api.nvim_create_autocmd('FileType', {
 
       local content, cs, ce = extract_paren_content('execute%(')
       if content then
-        if content:match('^%s*Terminal%s*$') then
+        if content:match('^%s*Terminal%s*$') or content:match('^#') then
           return
         end
         set_paren_inject('bash', cs, ce)
