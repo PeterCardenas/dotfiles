@@ -186,6 +186,20 @@ vim.api.nvim_create_autocmd('FileType', {
       end
 
       metadata['injection.language'] = lang
+
+      -- Adjust range to skip the diff marker character (+/-/space) at column 0.
+      -- Also include the trailing newline so single-line comments terminate properly
+      -- in combined injections.
+      local start_row, start_col, end_row, end_col = node:range()
+      -- Skip the diff marker (1 char)
+      start_col = start_col + 1
+      if start_col > end_col and start_row == end_row then
+        -- Line only has the diff marker (blank context/addition/deletion), skip it
+        return
+      end
+      -- Extend end by 1 to include trailing newline for comment termination
+      metadata[capture_id] = metadata[capture_id] or {}
+      metadata[capture_id].range = { start_row, start_col, end_row, end_col + 1 }
     end, {})
 
     -- TODO: doesn't work rn
