@@ -72,12 +72,22 @@ vim.api.nvim_create_user_command('DiffviewCurrentFileHistory', function(opts)
 end, { nargs = 0, range = true })
 
 local nmap = require('utils.keymap').nmap
+local function close_agentic()
+  ---@module 'agentic'
+  local agentic = package.loaded['agentic']
+  if agentic then
+    agentic.close()
+  end
+end
+
 nmap('Resume trouble', 'tr', function()
+  close_agentic()
   local last_mode = require('trouble').last_mode
   require('trouble').open({ mode = last_mode })
 end)
 
 nmap('[L]anguage [D]iagnostic', 'ld', function()
+  close_agentic()
   require('trouble').open({ mode = 'diagnostics', auto_jump = false })
 end)
 
