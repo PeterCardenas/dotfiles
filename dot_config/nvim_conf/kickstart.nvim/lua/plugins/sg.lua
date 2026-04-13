@@ -464,6 +464,42 @@ return {
       'nvim-treesitter/nvim-treesitter',
     },
     config = function()
+      -- Track cost per session for tmux status bar aggregation.
+      -- Each nvim writes its own PID file keyed by UTC date so sessions
+      -- spanning midnight split correctly. Format: "YYYY-MM-DD <cost>\n" per line.
+      local _spend_by_session = {} -- session_id -> { date -> cost }
+      local _spend_dir = '/tmp/claude-spend-nvim-' .. vim.uv.getuid()
+      local _spend_file = _spend_dir .. '/' .. vim.fn.getpid()
+      vim.fn.mkdir(_spend_dir, 'p')
+
+      local function _utc_date()
+        return os.date('!%Y-%m-%d')
+      end
+
+      local function _flush_spend()
+        -- Aggregate by date across all sessions
+        local by_date = {} -- date -> cost
+        for _, dates in pairs(_spend_by_session) do
+          for date, cost in pairs(dates) do
+            by_date[date] = (by_date[date] or 0) + cost
+          end
+        end
+        local lines = {}
+        for date, cost in pairs(by_date) do
+          lines[#lines + 1] = string.format('%s %.4f', date, cost)
+        end
+        local content = table.concat(lines, '\n')
+        vim.uv.fs_open(_spend_file, 'w', tonumber('644', 8), function(err, fd)
+          if err or not fd then
+            return
+          end
+          vim.uv.fs_write(fd, content, -1, function()
+            vim.uv.fs_close(fd)
+          end)
+        end)
+      end
+
+
       vim.api.nvim_create_user_command('AgenticFullscreen', function()
         require('agentic').toggle()
         vim.defer_fn(function()
@@ -737,6 +773,22 @@ return {
                 size = data.update.size,
                 cost = cost,
               }
+              if cost then
+                local sid = data.session_id
+                local entry = _spend_by_session[sid]
+                if not entry then
+                  entry = { _prev = 0 }
+                  _spend_by_session[sid] = entry
+                end
+                -- Assign the delta since last update to the current UTC date
+                local delta = cost - entry._prev
+                if delta > 0 then
+                  local today = _utc_date()
+                  entry[today] = (entry[today] or 0) + delta
+                  entry._prev = cost
+                  _flush_spend()
+                end
+              end
             end
             local SessionRegistry = require('agentic.session_registry')
             local session = SessionRegistry.sessions and SessionRegistry.sessions[data.tab_page_id]
