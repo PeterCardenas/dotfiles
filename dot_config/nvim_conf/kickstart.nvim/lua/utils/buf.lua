@@ -40,4 +40,16 @@ function M.close_current_buffer()
   end
 end
 
+---@param cb fun(): nil
+function M.close_agentic(cb)
+  ---@module 'agentic'
+  local agentic = package.loaded['agentic']
+  if agentic then
+    agentic.close()
+    vim.schedule(cb)
+  else
+    cb()
+  end
+end
+
 return M

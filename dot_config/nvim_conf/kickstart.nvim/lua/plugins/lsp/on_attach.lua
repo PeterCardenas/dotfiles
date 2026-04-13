@@ -1,5 +1,6 @@
 local File = require('utils.file')
 local Config = require('utils.config')
+local Buf = require('utils.buf')
 local M = {}
 
 local semantic_tokens_group = vim.api.nvim_create_augroup('vim_lsp_semantic_tokens_rewriter', { clear = true })
@@ -43,7 +44,9 @@ function M.on_attach(client, bufnr)
   end, '[L]anguage [A]ction')
 
   nmap('gd', function()
-    require('trouble').open('lsp_definitions')
+    Buf.close_agentic(function()
+      require('trouble').open('lsp_definitions')
+    end)
     -- require('fzf-lua.providers.lsp').definitions({
     --   winopts = { height = 0.5, width = 1, relative = 'cursor', backdrop = 100, preview = {
     --     layout = 'vertical',
@@ -52,7 +55,9 @@ function M.on_attach(client, bufnr)
     -- })
   end, '[G]oto [D]efinition')
   nmap('gr', function()
-    require('trouble').open('lsp_references')
+    Buf.close_agentic(function()
+      require('trouble').open('lsp_references')
+    end)
     -- TODO: width 1 doesn't take up the whole screen width
 
     -- require('fzf-lua.providers.lsp').references({
