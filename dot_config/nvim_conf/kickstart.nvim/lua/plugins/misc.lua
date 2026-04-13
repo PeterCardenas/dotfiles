@@ -604,7 +604,6 @@ return {
     },
     event = 'VeryLazy',
     config = function()
-      ---@diagnostic disable-next-line: missing-fields
       require('ufo').setup({
         provider_selector = function(bufnr)
           local filename = vim.api.nvim_buf_get_name(bufnr)
