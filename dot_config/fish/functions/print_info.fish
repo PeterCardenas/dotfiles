@@ -1,9 +1,9 @@
 function print_info -a info_msg
-    if status is-command-substitution; or not isatty stdout
+    if not isatty stderr
         return
     end
-    set_color green
-    echo -n "[INFO]"
-    set_color normal
-    echo ": $info_msg"
+    set_color green >&2
+    echo -n "[INFO]" >&2
+    set_color normal >&2
+    echo ": $info_msg" >&2
 end
