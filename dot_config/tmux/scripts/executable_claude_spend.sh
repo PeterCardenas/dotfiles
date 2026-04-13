@@ -63,7 +63,7 @@ total=$(awk "BEGIN{printf \"%.2f\", $daily_total + $live_total}")
 if [ "$total" = "0.00" ]; then
   result=""
 else
-  result="\$${total}"
+  result="󱜙 \$${total}"
 fi
 
 printf '%s\n%s' "$now" "$result" > "$cache"
