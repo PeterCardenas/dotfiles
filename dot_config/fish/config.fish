@@ -78,6 +78,12 @@ set -g prev_git_dir
 function __git_status_prompt --description "Print git status part of prompt"
     __prompt git_status
 end
+function __env_info_prompt --description "Print environment info part of prompt (languages, tools, cloud)"
+    __prompt env_info
+end
+function __env_info_prompt_loading_indicator -a last_prompt --description "Print loading indicator for env info part of prompt"
+    echo -n $last_prompt
+end
 function __git_status_prompt_loading_indicator -a last_prompt --description "Print loading indicator for git status part of prompt"
     # TODO: fix bug where this is sometimes "."
     set -l current_dir (pwd)
@@ -107,7 +113,7 @@ function __git_status_prompt_loading_indicator -a last_prompt --description "Pri
     set prev_git_dir
 end
 set -g async_prompt_inherit_variables all
-set -g async_prompt_functions __git_status_prompt
+set -g async_prompt_functions __git_status_prompt __env_info_prompt
 
 set -gx XDG_CONFIG_HOME $HOME/.config
 
@@ -125,6 +131,8 @@ if not set -q FAST_PROMPT
         __prompt before_git_status
         __git_status_prompt
         __prompt after_git_status
+        __env_info_prompt
+        __prompt prompt_line
     end
 
     # Disable virtualenv prompt, it breaks starship
