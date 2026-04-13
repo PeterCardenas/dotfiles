@@ -34,6 +34,7 @@ description: Use when editing, debugging, or testing Neovim configuration or plu
 tmux new-session -d -s <session-name> -x 200 -y 50 "<command>"
 ```
 - Always detach (`-d`) — never attach interactively.
+- Make the session name unique to avoid conflicts with other agents.
 - Always set dimensions (`-x 200 -y 50`) so capture-pane output is consistent and wide enough to avoid wrapping.
 - The command string runs inside the session. Append `; sleep 5` to keep the session alive after nvim exits for output capture.
 
