@@ -294,6 +294,8 @@ EOF
 		libevent libutf8proc
 		# Generate compile_commands.json for ccls
 		bear
+		# Needed by img-clip.nvim but generally useful
+		pngpaste
 	)
 	# TODO: figure out how to actually skip interactive questions
 	sudo -B port -N install "${ports[@]}"
