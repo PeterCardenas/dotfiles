@@ -700,6 +700,11 @@ return {
                 cost = cost,
               }
             end
+            local SessionRegistry = require('agentic.session_registry')
+            local session = SessionRegistry.sessions and SessionRegistry.sessions[data.tab_page_id]
+            if session then
+              session:schedule_header_refresh()
+            end
           end,
           on_file_edit = function(data)
             ---@type string
