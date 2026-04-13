@@ -504,7 +504,16 @@ return {
           tool_calls = {
             enabled = true,
             closed_by_default = false,
+            preview = true,
             min_lines = 5,
+            kinds = {
+              edit = {
+                preview = false,
+              },
+              execute = {
+                min_lines = 5,
+              },
+            },
           },
           ---@param info agentic.UserConfig.FoldtextInfo
           ---@return [string, string][]
