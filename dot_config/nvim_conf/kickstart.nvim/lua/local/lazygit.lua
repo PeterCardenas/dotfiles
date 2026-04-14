@@ -188,10 +188,15 @@ local function setup_lazygit_buffer()
 end
 
 function M.open_lazygit()
+  local git_root = File.get_git_root(vim.fn.getcwd())
+  if not git_root then
+    vim.notify('Not in a git repository', vim.log.levels.ERROR)
+    return
+  end
   local bufnrs = vim.api.nvim_list_bufs()
   local lazygit_bufnr = vim.tbl_filter(function(bufnr) ---@param bufnr integer
     local bufname = vim.api.nvim_buf_get_name(bufnr)
-    return bufname:match('term://.*lazygit %-%-path ' .. File.get_git_root():gsub('%-', '%%-'))
+    return bufname:match('term://.*lazygit %-%-path ' .. git_root:gsub('%-', '%%-'))
   end, bufnrs)[1]
   if lazygit_bufnr ~= nil then
     local bufinfo = vim.fn.getbufinfo(lazygit_bufnr)[1]
@@ -202,7 +207,7 @@ function M.open_lazygit()
     return
   end
   setup_lazygit_buffer()
-  vim.cmd('keepjumps keepalt term lazygit --path ' .. File.get_git_root())
+  vim.cmd('keepjumps keepalt term lazygit --path ' .. git_root)
 end
 
 function M.set_keymap()
