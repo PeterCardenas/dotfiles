@@ -608,7 +608,7 @@ return {
             },
           },
           ['cursor-acp'] = {
-            default_model = 'composer-2[fast=true]',
+            default_model = 'gpt-5.3-codex[reasoning=medium,fast=false]',
             auto_approve = true,
           },
           -- OpenCode with Bedrock config
