@@ -12,12 +12,14 @@ if [ "$1" = "--local" ]; then
   local_only=true
 fi
 
-uid=$(id -u)
 now=$(date +%s)
+spend_dir="${XDG_DATA_HOME:-$HOME/.local/share}/claude-spend"
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/claude-spend"
+mkdir -p "$spend_dir" "$cache_dir"
 
 # Check main cache (only when producing formatted output)
 if [ "$local_only" = false ]; then
-  cache="/tmp/tmux-claude-spend-${uid}"
+  cache="${cache_dir}/tmux-spend"
   if [ -f "$cache" ]; then
     age=$((now - $(head -1 "$cache")))
     if [ "$age" -lt 10 ]; then
@@ -26,8 +28,6 @@ if [ "$local_only" = false ]; then
     fi
   fi
 fi
-
-spend_dir="/tmp/claude-spend-nvim-${uid}"
 today=$(date -u +%Y-%m-%d)
 daily_file="${spend_dir}/daily-${today}"
 
@@ -54,6 +54,12 @@ if [ -d "$spend_dir" ]; then
     val=$(pid_today "$f")
     val=${val:-0}
     if kill -0 "$base" 2>/dev/null; then
+      # No spend today + file only has old entries → PID was reused; clean up
+      if ([ "$val" = "0" ] || [ "$val" = "0.0000" ]) &&
+        [ -s "$f" ] && ! grep -q "^${today} " "$f"; then
+        rm -f "$f"
+        continue
+      fi
       live_total=$(awk "BEGIN{printf \"%.4f\", $live_total + $val}")
     else
       stale_total=$(awk "BEGIN{printf \"%.4f\", $stale_total + $val}")
@@ -86,7 +92,7 @@ case "$(hostname)" in
 esac
 
 remote_total=0
-remote_cache="/tmp/tmux-claude-spend-remote-${uid}"
+remote_cache="${cache_dir}/tmux-spend-remote"
 remote_ttl=30
 
 if [ -n "$remote_host" ] && [ -f "$remote_cache" ]; then
