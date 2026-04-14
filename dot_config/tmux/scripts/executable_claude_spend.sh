@@ -31,21 +31,29 @@ fi
 today=$(date -u +%Y-%m-%d)
 daily_file="${spend_dir}/daily-${today}"
 
-# Read current daily aggregate
-daily_total=0
-if [ -f "$daily_file" ]; then
-  daily_total=$(cat "$daily_file" 2>/dev/null)
-  daily_total=${daily_total:-0}
-fi
-
 # Extract today's cost from a PID file (lines: "YYYY-MM-DD <cost>")
 pid_today() {
   awk -v d="$today" '$1 == d { sum += $2 } END { printf "%.4f", sum }' "$1" 2>/dev/null
 }
 
-# Sum live PID files; roll dead ones into daily aggregate
+# Roll all entries from a PID file into their respective daily files
+roll_pid_file() {
+  awk '{ sums[$1] += $2 } END { for (d in sums) printf "%s %.4f\n", d, sums[d] }' "$1" 2>/dev/null |
+    while read -r day cost; do
+      [ -z "$day" ] && continue
+      df="${spend_dir}/daily-${day}"
+      prev=0
+      if [ -f "$df" ]; then
+        prev=$(cat "$df" 2>/dev/null)
+        prev=${prev:-0}
+      fi
+      new=$(awk "BEGIN{printf \"%.4f\", $prev + $cost}")
+      printf '%s' "$new" >"$df"
+    done
+}
+
+# Sum live PID files; roll dead ones into their respective daily files
 live_total=0
-stale_total=0
 if [ -d "$spend_dir" ]; then
   for f in "$spend_dir"/*; do
     [ -f "$f" ] || continue
@@ -57,21 +65,23 @@ if [ -d "$spend_dir" ]; then
       # No spend today + file only has old entries → PID was reused; clean up
       if ([ "$val" = "0" ] || [ "$val" = "0.0000" ]) &&
         [ -s "$f" ] && ! grep -q "^${today} " "$f"; then
+        roll_pid_file "$f"
         rm -f "$f"
         continue
       fi
       live_total=$(awk "BEGIN{printf \"%.4f\", $live_total + $val}")
     else
-      stale_total=$(awk "BEGIN{printf \"%.4f\", $stale_total + $val}")
+      roll_pid_file "$f"
       rm -f "$f"
     fi
   done
 fi
 
-# Persist stale spend into daily file
-if [ "$stale_total" != "0" ] && [ "$stale_total" != "0.0000" ]; then
-  daily_total=$(awk "BEGIN{printf \"%.4f\", $daily_total + $stale_total}")
-  printf '%s' "$daily_total" >"$daily_file"
+# Re-read today's daily aggregate (may have been updated by roll_pid_file)
+daily_total=0
+if [ -f "$daily_file" ]; then
+  daily_total=$(cat "$daily_file" 2>/dev/null)
+  daily_total=${daily_total:-0}
 fi
 
 local_total=$(awk "BEGIN{printf \"%.4f\", $daily_total + $live_total}")

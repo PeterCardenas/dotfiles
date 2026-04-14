@@ -483,7 +483,9 @@ return {
         local by_date = {} -- date -> cost
         for _, dates in pairs(_spend_by_session) do
           for date, cost in pairs(dates) do
-            by_date[date] = (by_date[date] or 0) + cost
+            if date ~= '_prev' then
+              by_date[date] = (by_date[date] or 0) + cost
+            end
           end
         end
         ---@type string[]
@@ -791,14 +793,20 @@ return {
                   entry = { _prev = 0 }
                   _spend_by_session[sid] = entry
                 end
-                -- Assign the delta since last update to the current UTC date
-                local delta = cost - entry._prev
-                if delta > 0 then
-                  local today = _utc_date()
+                local prev = entry._prev or 0
+                local delta = cost - prev
+                local today = _utc_date()
+                if delta > 1e-9 then
                   entry[today] = (entry[today] or 0) + delta
-                  entry._prev = cost
-                  _flush_spend()
+                elseif delta < -1e-9 then
+                  -- Cost dropped (likely compaction/reset): count the new baseline once.
+                  entry[today] = (entry[today] or 0) + cost
                 end
+                -- Always advance baseline so decreases/resets do not stall accrual.
+                -- TODO: Handle rare upward-reset jumps (e.g. provider-side reindexing)
+                -- by capping implausible single-update deltas.
+                entry._prev = cost
+                _flush_spend()
               end
             end
             local SessionRegistry = require('agentic.session_registry')
