@@ -57,6 +57,10 @@ require('lazy').setup({
   install = { colorscheme = { 'tokyonight' } },
   git = {
     url_format = 'personal-github.com:%s.git',
+    -- Sometimes needed for ssh
+    -- throttle = {
+    --   enabled = true,
+    -- },
   },
   performance = {
     cache = {
