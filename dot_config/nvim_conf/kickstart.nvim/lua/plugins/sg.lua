@@ -469,7 +469,7 @@ return {
       -- spanning midnight split correctly. Format: "YYYY-MM-DD <cost>\n" per line.
       ---@type table<string, table<string, number>>
       local _spend_by_session = {} -- session_id -> { date -> cost }
-      local _spend_dir = '/tmp/claude-spend-nvim-' .. vim.uv.getuid()
+      local _spend_dir = (os.getenv('XDG_DATA_HOME') or (os.getenv('HOME') .. '/.local/share')) .. '/claude-spend'
       local _spend_file = _spend_dir .. '/' .. vim.fn.getpid()
       vim.fn.mkdir(_spend_dir, 'p')
 
