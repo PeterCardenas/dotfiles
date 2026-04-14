@@ -3,7 +3,7 @@
   "CopilotChat.nvim": { "branch": "canary", "commit": "451d365928a994cda3505a84905303f790e28df8" },
   "LuaSnip": { "branch": "master", "commit": "a62e1083a3cfe8b6b206e7d3d33a51091df25357" },
   "actions-preview.nvim": { "branch": "master", "commit": "2b604b2e8e662c03b716436f6ffebcb19663e66a" },
-  "agentic.nvim": { "branch": "vibin", "commit": "119d29e1c58181f7f3a459dbca2c5e5c749f043b" },
+  "agentic.nvim": { "branch": "vibin", "commit": "7002c8d62377c8c3bcfad6ba9fcd806966707ddf" },
   "alpha-nvim": { "branch": "fix-invalid-win", "commit": "feff000309bbac2e2907de5bd5ce154454de064a" },
   "avante.nvim": { "branch": "dev", "commit": "87e13b01469433485a8be16a53c77c8c29466cb1" },
   "blink-emoji.nvim": { "branch": "master", "commit": "dff709139ad5389fb55ebab026e75278a12b325a" },
