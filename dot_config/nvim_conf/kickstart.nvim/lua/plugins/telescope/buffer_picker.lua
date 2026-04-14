@@ -1,4 +1,3 @@
-local File = require('utils.file')
 local EntryDisplay = require('plugins.telescope.entry_display')
 local Buf = require('utils.buf')
 
@@ -17,7 +16,7 @@ local function make_buffer_entry()
     },
   })
 
-  local cwd = require('telescope.utils').path_expand(File.get_cwd())
+  local cwd = vim.loop.cwd()
 
   ---@class BufferPickerEntry
   ---@field bufnr number
