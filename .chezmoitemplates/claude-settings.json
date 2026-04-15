@@ -39,6 +39,16 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/stop_check_links.py"
+          }
+        ]
+      }
     ]
   }
 }
