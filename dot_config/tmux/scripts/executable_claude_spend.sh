@@ -63,7 +63,7 @@ if [ -d "$spend_dir" ]; then
     val=${val:-0}
     if kill -0 "$base" 2>/dev/null; then
       # No spend today + file only has old entries → PID was reused; clean up
-      if ([ "$val" = "0" ] || [ "$val" = "0.0000" ]) &&
+      if { [ "$val" = "0" ] || [ "$val" = "0.0000" ]; } &&
         [ -s "$f" ] && ! grep -q "^${today} " "$f"; then
         roll_pid_file "$f"
         rm -f "$f"
@@ -115,9 +115,8 @@ fi
 
 # Fetch fresh remote value if cache is stale
 if [ -n "$remote_host" ] && { [ ! -f "$remote_cache" ] || [ "$remote_age" -ge "$remote_ttl" ]; }; then
-  remote_val=$(ssh -o ConnectTimeout=1 -o BatchMode=yes -o StrictHostKeyChecking=no \
-    "$remote_host" '~/.config/tmux/scripts/claude_spend.sh --local' 2>/dev/null)
-  if [ $? -eq 0 ] && [ -n "$remote_val" ]; then
+  if remote_val=$(ssh -o ConnectTimeout=1 -o BatchMode=yes -o StrictHostKeyChecking=no \
+    "$remote_host" '$HOME/.config/tmux/scripts/claude_spend.sh --local' 2>/dev/null) && [ -n "$remote_val" ]; then
     remote_total="$remote_val"
   fi
   # Cache even on failure (avoids retrying every 10s)
