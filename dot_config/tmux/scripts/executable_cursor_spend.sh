@@ -4,6 +4,10 @@
 # Caches result for 120s to avoid hammering the API.
 export LC_ALL=C
 
+log_error() {
+  printf 'cursor_spend: %s\n' "$1" >&2
+}
+
 uid=$(id -u)
 cache="/tmp/tmux-cursor-spend-${uid}"
 now=$(date +%s)
@@ -33,12 +37,18 @@ fi
 # UTC midnight today in epoch millis
 start_ms=$(date -u -d "today 00:00:00" +%s000 2>/dev/null || date -u -j -f "%H:%M:%S" "00:00:00" +%s000 2>/dev/null)
 
-resp=$(curl -s --max-time 5 -X POST "https://api2.cursor.sh/aiserver.v1.DashboardService/GetAggregatedUsageEvents" \
+resp=$(curl -sS --max-time 5 -X POST "https://api2.cursor.sh/aiserver.v1.DashboardService/GetAggregatedUsageEvents" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $token" \
-  -d "{\"startDate\":\"$start_ms\"}" 2>/dev/null)
+  -d "{\"startDate\":\"$start_ms\"}") || {
+  log_error "failed to fetch usage events"
+  resp=""
+}
 
-cents=$(printf '%s' "$resp" | jq '.totalCostCents // 0' 2>/dev/null)
+cents=$(printf '%s' "$resp" | jq -r '.totalCostCents // 0') || {
+  log_error "failed to parse totalCostCents from API response"
+  cents="0"
+}
 
 if [ -z "$cents" ] || [ "$cents" = "0" ]; then
   result=""
