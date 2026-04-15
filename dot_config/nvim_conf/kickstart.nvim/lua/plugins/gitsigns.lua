@@ -418,7 +418,7 @@ return {
       -- TODO: add UNSTABLE reason: e.g. baseRef.branchProtectionRule.requiresConversationResolution
       --       Reference: https://docs.github.com/en/graphql/reference/objects#branchprotectionrule
       --       Reference: https://docs.github.com/en/graphql/reference/enums#mergestatestatus
-      if not vim.env.GH_TOKEN then
+      if not _G.GH_TOKEN then
         vim.wait(1000, function()
           return _G.GH_TOKEN ~= nil
         end, 100)
