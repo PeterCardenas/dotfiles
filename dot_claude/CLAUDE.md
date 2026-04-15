@@ -7,3 +7,5 @@ Always include links as reference in responses, especially in plans. Prefer spec
 When fetching documentation from a website, first check if `{origin}/llms.txt` exists and prefer URLs listed there. Also try `{url}.md` or `{path}.md` variants of the page — many documentation sites serve LLM-optimized markdown versions at these paths.
 
 Prefer WebFetch tool over curl or wget.
+
+NEVER reply to other people's GitHub comments
