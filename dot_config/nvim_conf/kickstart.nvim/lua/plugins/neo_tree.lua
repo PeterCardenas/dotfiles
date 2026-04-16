@@ -23,6 +23,51 @@ vim.api.nvim_create_autocmd('BufEnter', {
   end,
 })
 
+---@param path string?
+---@return string?
+local function get_path_for_chezmoi_apply(path)
+  if type(path) ~= 'string' or path == '' then
+    return nil
+  end
+  local file_path = vim.fn.expand(path)
+  if not vim.startswith(file_path, '/') then
+    file_path = File.get_cwd() .. '/' .. file_path
+  end
+  if File.file_exists(file_path) or vim.fn.isdirectory(file_path) == 1 then
+    return file_path
+  end
+  return nil
+end
+
+---@param path string?
+local function apply_with_chezmoi(path)
+  local file_path = get_path_for_chezmoi_apply(path)
+  if not file_path then
+    return
+  end
+  vim.api.nvim_exec_autocmds('User', {
+    pattern = 'ChezmoiApplyFile',
+    data = { file_path = file_path },
+  })
+end
+
+vim.api.nvim_create_autocmd('User', {
+  desc = 'Apply mini.files edits with chezmoi',
+  group = vim.api.nvim_create_augroup('mini_files_chezmoi_apply', { clear = true }),
+  pattern = {
+    'MiniFilesActionCreate',
+    'MiniFilesActionDelete',
+    'MiniFilesActionRename',
+    'MiniFilesActionCopy',
+    'MiniFilesActionMove',
+  },
+  callback = function(args)
+    local action_data = args.data or {}
+    apply_with_chezmoi(action_data.from)
+    apply_with_chezmoi(action_data.to)
+  end,
+})
+
 ---@param id string
 ---@param path string|fun(): string
 ---@param desc string
