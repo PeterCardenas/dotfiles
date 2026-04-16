@@ -127,7 +127,7 @@ function M.add_config(current_config)
     }
     config.valid_directives['diff-lang-inject'] = {
       description = 'Injects language into diff hunks based on the filename in the diff header',
-      parameters = { { type = 'capture', arity = 'required' } },
+      parameters = { { type = 'capture', arity = 'required' }, { type = 'capture', arity = 'required' }, { type = 'capture', arity = 'required' } },
     }
     config.valid_captures.images = {
       ['image'] = 'what the image should replace/represent',

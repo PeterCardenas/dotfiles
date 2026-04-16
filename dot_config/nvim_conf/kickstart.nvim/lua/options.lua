@@ -179,83 +179,84 @@ vim.api.nvim_create_autocmd('FileType', {
       metadata['injection.language'] = lang
     end, {})
 
-    -- Diff language injection: resolves language from the filename in the diff header.
-    vim.treesitter.query.add_directive('diff-lang-inject!', function(match, _, source, predicate, metadata)
-      local capture_id = predicate[2]
-      local nodes = match[capture_id]
-      local node = type(nodes) == 'table' and nodes[1] or nodes
-      if not node then
-        return
-      end
+    -- Diff language injection: resolves language from old/new filename captures.
+    local diff_path_lang_cache = {} ---@type table<string, string|false>
 
-      -- Walk up to find the containing block
-      local block = node:parent()
-      while block and block:type() ~= 'block' do
-        block = block:parent()
-      end
-      if not block then
-        return
-      end
-
-      -- Find old/new filenames and choose whichever is not /dev/null.
-      ---@type string?
-      local old_filename_text
-      ---@type string?
-      local new_filename_text
-      for child in block:iter_children() do
-        local child_type = child:type()
-        if child_type == 'new_file' then
-          for sub in child:iter_children() do
-            if sub:type() == 'filename' then
-              new_filename_text = vim.treesitter.get_node_text(sub, source)
-              break
-            end
-          end
-        elseif child_type == 'old_file' then
-          for sub in child:iter_children() do
-            if sub:type() == 'filename' then
-              old_filename_text = vim.treesitter.get_node_text(sub, source)
-              break
-            end
-          end
-        end
-      end
-
-      ---@param filename_text string?
-      ---@return string?
-      local function normalize_diff_filename(filename_text)
-        if not filename_text then
-          return nil
-        end
-        local normalized = filename_text:gsub('^[ab]/', '')
-        if normalized == '/dev/null' then
-          return nil
-        end
-        return normalized
-      end
-
-      local filename_text = normalize_diff_filename(new_filename_text) or normalize_diff_filename(old_filename_text)
+    ---@param filename_text string?
+    ---@return string?
+    local function normalize_diff_filename(filename_text)
       if not filename_text then
-        return
+        return nil
+      end
+      local normalized = filename_text:gsub('^[ab]/', '')
+      if normalized == '/dev/null' then
+        return nil
+      end
+      return normalized
+    end
+
+    ---@param filename_text string?
+    ---@return string?
+    local function resolve_diff_injection_language(filename_text)
+      local normalized = normalize_diff_filename(filename_text)
+      if not normalized then
+        return nil
       end
 
-      -- Resolve filetype, then treesitter language
-      local ft = vim.filetype.match({ filename = filename_text })
+      local cached = diff_path_lang_cache[normalized]
+      if cached ~= nil then
+        return cached or nil
+      end
+
+      local ft = vim.filetype.match({ filename = normalized })
       if not ft then
-        return
+        diff_path_lang_cache[normalized] = false
+        return nil
       end
 
       local lang = vim.treesitter.language.get_lang(ft)
       if not lang or not pcall(vim.treesitter.language.inspect, lang) then
+        diff_path_lang_cache[normalized] = false
+        return nil
+      end
+
+      diff_path_lang_cache[normalized] = lang
+      return lang
+    end
+
+    vim.treesitter.query.add_directive('diff-lang-inject!', function(match, _, source, predicate, metadata)
+      if #predicate < 4 then
         return
       end
 
+      local content_capture_id = predicate[2]
+      local new_filename_capture_id = predicate[3]
+      local old_filename_capture_id = predicate[4]
+
+      local content_nodes = match[content_capture_id]
+      local content_node = type(content_nodes) == 'table' and content_nodes[1] or content_nodes
+      if not content_node then
+        return
+      end
+
+      local new_filename_nodes = match[new_filename_capture_id]
+      local new_filename_node = type(new_filename_nodes) == 'table' and new_filename_nodes[1] or new_filename_nodes
+      local old_filename_nodes = match[old_filename_capture_id]
+      local old_filename_node = type(old_filename_nodes) == 'table' and old_filename_nodes[1] or old_filename_nodes
+
+      local new_filename_text = new_filename_node and vim.treesitter.get_node_text(new_filename_node, source) or nil
+      local old_filename_text = old_filename_node and vim.treesitter.get_node_text(old_filename_node, source) or nil
+
+      local lang = resolve_diff_injection_language(new_filename_text) or resolve_diff_injection_language(old_filename_text)
+      if not lang then
+        return
+      end
       metadata['injection.language'] = lang
 
       -- Adjust range to skip the diff marker character (+/-/space) at column 0.
       -- Also include the trailing newline so single-line comments terminate properly
       -- in combined injections.
-      local start_row, start_col, end_row, end_col = node:range()
+      local start_row, start_col, end_row, end_col = content_node:range()
       -- Skip the diff marker (1 char)
       start_col = start_col + 1
       if start_col > end_col and start_row == end_row then
@@ -263,8 +264,8 @@ vim.api.nvim_create_autocmd('FileType', {
         return
       end
       -- Extend end by 1 to include trailing newline for comment termination
-      metadata[capture_id] = metadata[capture_id] or {}
-      metadata[capture_id].range = { start_row, start_col, end_row, end_col + 1 }
+      metadata[content_capture_id] = metadata[content_capture_id] or {}
+      metadata[content_capture_id].range = { start_row, start_col, end_row, end_col + 1 }
     end, {})
 
     -- TODO: doesn't work rn
