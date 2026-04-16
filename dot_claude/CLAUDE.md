@@ -9,3 +9,7 @@ When fetching documentation from a website, first check if `{origin}/llms.txt` e
 Prefer WebFetch tool over curl or wget.
 
 NEVER reply to other people's GitHub comments
+
+When using Bash or terminal tools:
+- use `;` instead of newlines to separate commands
+- do not put comments
