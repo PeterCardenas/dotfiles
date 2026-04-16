@@ -133,6 +133,52 @@ vim.api.nvim_create_autocmd('FileType', {
       end
     end, {})
 
+    -- Agentic fenced path injection: resolve language from fenced code labels.
+    -- Supports:
+    --   26:31:path/to/file.lua
+    --   path/to/file.lua:26:31
+    --   path/to/file.lua
+    vim.treesitter.query.add_directive('agentic-fence-path-inject!', function(match, _, bufnr, predicate, metadata)
+      if vim.bo[bufnr].filetype ~= 'AgenticChat' then
+        return
+      end
+
+      local capture_id = predicate[2]
+      local nodes = match[capture_id]
+      local node = type(nodes) == 'table' and nodes[1] or nodes
+      if not node then
+        return
+      end
+
+      local candidate = vim.trim(vim.treesitter.get_node_text(node, bufnr))
+      if candidate == '' then
+        return
+      end
+
+      -- Keep direct language labels working for AgenticChat fenced blocks.
+      local direct_lang = vim.treesitter.language.get_lang(candidate)
+      if direct_lang and pcall(vim.treesitter.language.inspect, direct_lang) then
+        metadata['injection.language'] = direct_lang
+        return
+      end
+
+      local path = candidate:match('^%d+:%d+:(.+)$') or candidate:match('^(.+):%d+:%d+$') or candidate
+      if not path or vim.trim(path) == '' then
+        return
+      end
+
+      local filetype = vim.filetype.match({ filename = path })
+      if not filetype then
+        return
+      end
+
+      local lang = vim.treesitter.language.get_lang(filetype)
+      if not lang or not pcall(vim.treesitter.language.inspect, lang) then
+        return
+      end
+      metadata['injection.language'] = lang
+    end, {})
+
     -- Diff language injection: resolves language from the filename in the diff header.
     vim.treesitter.query.add_directive('diff-lang-inject!', function(match, _, source, predicate, metadata)
       local capture_id = predicate[2]
