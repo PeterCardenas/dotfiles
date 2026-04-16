@@ -143,7 +143,7 @@ abbr -a gcp "git cherry-pick -S"
 abbr -a nuke 'git rm --cached -r .; and GIT_LFS_SKIP_SMUDGE=1 git reset --hard'
 abbr -a gcn --set-cursor --function __cmp_gcn
 abbr -a gpu --function __cmp_gpu
-abbr -a gaa --function __cmp_gaa
+abbr -a gaa "git add (git rev-parse --show-toplevel)"
 abbr -a gpl --function __cmp_gpl
 abbr -a gcnm --set-cursor --function __cmp_gcnm
 abbr -a gpm --function __cmp_gpm
