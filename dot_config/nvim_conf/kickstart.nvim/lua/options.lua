@@ -65,7 +65,7 @@ vim.api.nvim_create_autocmd('FileType', {
 
     -- Agentic chat injection directive: injects bash into inline nodes,
     -- but only in AgenticChat buffers and not for bare "Terminal" content.
-    vim.treesitter.query.add_directive('agentic-inject!', function(match, _, bufnr, predicate, metadata)
+    vim.treesitter.query.add_directive('agentic-bash-tool-call-inject!', function(match, _, bufnr, predicate, metadata)
       if vim.bo[bufnr].filetype ~= 'AgenticChat' then
         return
       end
