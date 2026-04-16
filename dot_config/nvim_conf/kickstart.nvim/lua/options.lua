@@ -151,28 +151,47 @@ vim.api.nvim_create_autocmd('FileType', {
         return
       end
 
-      -- Find new_file -> filename (prefer new_file, fall back to old_file)
-      local filename_text
+      -- Find old/new filenames and choose whichever is not /dev/null.
+      ---@type string?
+      local old_filename_text
+      ---@type string?
+      local new_filename_text
       for child in block:iter_children() do
-        if child:type() == 'new_file' or child:type() == 'old_file' then
+        local child_type = child:type()
+        if child_type == 'new_file' then
           for sub in child:iter_children() do
             if sub:type() == 'filename' then
-              filename_text = vim.treesitter.get_node_text(sub, source)
+              new_filename_text = vim.treesitter.get_node_text(sub, source)
               break
             end
           end
-          if filename_text then
-            break
+        elseif child_type == 'old_file' then
+          for sub in child:iter_children() do
+            if sub:type() == 'filename' then
+              old_filename_text = vim.treesitter.get_node_text(sub, source)
+              break
+            end
           end
         end
       end
 
+      ---@param filename_text string?
+      ---@return string?
+      local function normalize_diff_filename(filename_text)
+        if not filename_text then
+          return nil
+        end
+        local normalized = filename_text:gsub('^[ab]/', '')
+        if normalized == '/dev/null' then
+          return nil
+        end
+        return normalized
+      end
+
+      local filename_text = normalize_diff_filename(new_filename_text) or normalize_diff_filename(old_filename_text)
       if not filename_text then
         return
       end
-
-      -- Strip leading a/ or b/ prefix
-      filename_text = filename_text:gsub('^[ab]/', '')
 
       -- Resolve filetype, then treesitter language
       local ft = vim.filetype.match({ filename = filename_text })
