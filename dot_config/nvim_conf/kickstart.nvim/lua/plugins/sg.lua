@@ -513,8 +513,7 @@ return {
       end, {})
 
       require('agentic').setup({
-        -- Default to claude-code with opus model
-        provider = 'claude-agent-acp',
+        provider = 'cursor-acp',
 
         -- Window configuration similar to avante
         windows = {
@@ -607,7 +606,11 @@ return {
             },
           },
           ['cursor-acp'] = {
-            default_model = 'gpt-5.3-codex[reasoning=medium,fast=false]',
+            default_config_options = {
+              model = 'gpt-5.3-codex',
+              reasoning = 'high',
+              fast = 'false',
+            },
             auto_approve = true,
           },
           -- OpenCode with Bedrock config
@@ -636,7 +639,6 @@ return {
         keymaps = {
           widget = {
             close = 'q',
-            change_mode = { { '<leader>ao', mode = { 'n', 'v' } } },
             switch_provider = '<localleader>s',
           },
           prompt = {
