@@ -1,5 +1,17 @@
-function ghostty_nvim_nav -a directions --description "Set ghostty navigation keymaps for specified directions only"
-    if not test "$TERM" = xterm-ghostty; or set -q TMUX; or set -q SSH_CONNECTION
+function ghostty_nvim_nav -a directions start_pid --description "Set ghostty navigation keymaps for specified directions only"
+    set -l has_start_pid 0
+    if test -n "$start_pid"
+        if string match -rq '^[0-9]+$' -- $start_pid
+            set has_start_pid 1
+        else
+            print_error "Invalid start PID: $start_pid"
+            return 1
+        end
+    end
+
+    if test $has_start_pid -eq 0; and begin
+            not test "$TERM" = xterm-ghostty; or set -q TMUX; or set -q SSH_CONNECTION
+        end
         print_error "Navigation is only available in ghostty terminals without tmux or SSH"
         return 1
     end
@@ -75,7 +87,7 @@ function ghostty_nvim_nav -a directions --description "Set ghostty navigation ke
 
     # Reload ghostty config
     if test $exit_code -eq 0
-        reload_ghostty_config
+        reload_ghostty_config $start_pid
         if test $status -ne 0
             print_error "Failed to reload ghostty config"
             set exit_code 1
