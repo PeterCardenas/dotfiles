@@ -44,14 +44,9 @@ tmux kill-session -t <name> 2>/dev/null
 tmux new-session -d -s <name> -x 200 -y 50 "nvim 2>&1; sleep 5"
 ```
 
-**Two launch styles:**
+**Launching**
 
-1. **Inline command** — nvim runs as the session command (simpler, preferred for quick checks):
-   ```bash
-   tmux new-session -d -s nvim_test -x 200 -y 50 "nvim 2>&1; sleep 5"
-   ```
-
-2. **Send-keys** — create the session first, then send commands (needed when you must send multiple interactive keystrokes):
+Send-keys — create the session first, then send commands:
    ```bash
    tmux new-session -d -s nvim_test -x 200 -y 50
    tmux send-keys -t nvim_test "nvim /tmp/test.lua" Enter
@@ -76,11 +71,6 @@ tmux send-keys -t <name> ':autocmd Chezmoi BufWritePost' Enter
 tmux new-session -d -s nvim_prof -x 200 -y 50 "NVIM_PROFILE=start nvim 2>&1; sleep 5"
 ```
 
-**Headless testing (no UI needed):**
-```bash
-tmux new-session -d -s test -x 200 -y 50 "nvim --headless -u tests/init.lua -c 'luafile /tmp/test_script.lua' 2>&1"
-```
-
 **Always clean up when done:**
 ```bash
 tmux kill-session -t <name> 2>/dev/null
@@ -98,14 +88,6 @@ tmux new-session -d -s test ... 2>/dev/null || tmux kill-session -t test && tmux
 
 # RIGHT — always kill first, then create
 tmux kill-session -t test 2>/dev/null; tmux new-session -d -s test -x 200 -y 50
-```
-
-**Inline commands die silently if nvim crashes.**
-If nvim exits immediately (bad command, crash), the session disappears before `capture-pane` runs → `can't find pane: <name>`. When testing something that might crash, use the send-keys style so the session shell survives:
-```bash
-tmux new-session -d -s test -x 200 -y 50
-tmux send-keys -t test 'nvim -c SomeCommand' Enter
-sleep 5 && tmux capture-pane -t test -p
 ```
 
 **If `capture-pane` returns stale content** (e.g. splash screen after sending commands), sleep longer. LSP, Octo, and plugin-heavy operations need 8–15s, not 3.
