@@ -1,5 +1,17 @@
-function reload_ghostty_config --description "Reload ghostty configuration by sending USR2 signal"
-    if not test "$TERM" = xterm-ghostty; or set -q TMUX; or set -q SSH_CONNECTION
+function reload_ghostty_config -a start_pid --description "Reload ghostty configuration by sending USR2 signal"
+    set -l has_start_pid 0
+    if test -n "$start_pid"
+        if string match -rq '^[0-9]+$' -- $start_pid
+            set has_start_pid 1
+        else
+            print_error "Invalid start PID: $start_pid"
+            return 1
+        end
+    end
+
+    if test $has_start_pid -eq 0; and begin
+            not test "$TERM" = xterm-ghostty; or set -q TMUX; or set -q SSH_CONNECTION
+        end
         print_error "This function is only intended to be used in ghostty sessions"
         return 1
     end
@@ -13,6 +25,9 @@ function reload_ghostty_config --description "Reload ghostty configuration by se
 
     # Walk up the parent process chain to find which ghostty instance we're running in
     set -l current_pid $fish_pid
+    if test $has_start_pid -eq 1
+        set current_pid $start_pid
+    end
     while test $current_pid -gt 1
         # Check if current_pid matches any ghostty PID
         for gpid in $ghostty_pids
