@@ -5,6 +5,7 @@ setup.sh
 # Ignore config files specific to linux
 {{- if ne .chezmoi.os "linux" }}
 .local/bin/fishify
+.local/bin/wl-paste
 .config/ghostty/config_linux
 .local/bin/xdg-open
 {{- end }}
