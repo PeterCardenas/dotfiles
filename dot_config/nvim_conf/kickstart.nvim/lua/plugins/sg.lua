@@ -2,7 +2,6 @@ local Config = require('utils.config')
 local AWS = require('utils.aws')
 local Secrets = require('utils.secrets')
 local Log = require('utils.log')
-local File = require('utils.file')
 
 vim.api.nvim_create_user_command('AvanteToggleAgentMode', function(opts)
   local config = require('avante.config')
@@ -816,15 +815,9 @@ return {
             end
           end,
           on_file_edit = function(data)
-            ---@type string
-            local file_path = data.file_path
-            file_path = vim.fn.expand(file_path)
-            if not vim.startswith(file_path, '/') then
-              file_path = File.get_cwd() .. '/' .. file_path
-            end
             vim.api.nvim_exec_autocmds('User', {
-              pattern = 'ChezmoiApplyFile',
-              data = { file_path = file_path },
+              pattern = 'ChezmoiApplyPath',
+              data = { path = data.file_path },
             })
           end,
         },
