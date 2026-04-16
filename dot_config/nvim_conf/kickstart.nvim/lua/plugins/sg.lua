@@ -655,6 +655,29 @@ return {
         -- Custom headers: show provider | model | mode
         headers = {
           chat = function(parts)
+            ---@param value string?
+            ---@return boolean
+            local function is_enabled(value)
+              if not value then
+                return false
+              end
+              local normalized = value:lower()
+              return normalized == '1' or normalized == 'true' or normalized == 'on' or normalized == 'yes' or normalized == 'enabled'
+            end
+            ---@param value string?
+            local function has_meaningful_value(value)
+              if not value then
+                return false
+              end
+              local normalized = value:lower()
+              return normalized ~= ''
+                and normalized ~= '0'
+                and normalized ~= 'false'
+                and normalized ~= 'off'
+                and normalized ~= 'no'
+                and normalized ~= 'disabled'
+                and normalized ~= 'none'
+            end
             local ok, SessionRegistry = pcall(require, 'agentic.session_registry')
             if not ok then
               return parts.title
@@ -666,6 +689,19 @@ return {
             local provider = session.agent and session.agent.provider_config and session.agent.provider_config.name or '?'
             local config_opts = session.config_options
             local model_id = config_opts and config_opts.model and config_opts.model.currentValue or '?'
+            local model_suffix = ''
+            local all_options = config_opts and config_opts.all_options or nil
+            local reasoning_value = all_options and all_options.reasoning and all_options.reasoning.currentValue or nil
+            if has_meaningful_value(reasoning_value) then
+              if reasoning_value == 'extra-high' then
+                reasoning_value = 'xhigh'
+              end
+              model_suffix = model_suffix .. '-' .. reasoning_value
+            end
+            local fast_value = all_options and all_options.fast and all_options.fast.currentValue or nil
+            if is_enabled(fast_value) then
+              model_suffix = model_suffix .. '-fast'
+            end
             local mode_id = config_opts and config_opts.mode and config_opts.mode.currentValue or '?'
             local mode_name = config_opts and config_opts.get_mode_name and config_opts:get_mode_name(mode_id) or mode_id
             local usage = vim.t[vim.api.nvim_get_current_tabpage()].agentic_usage
@@ -676,7 +712,7 @@ return {
               local cost_str = usage.cost and string.format(' $%.2f', usage.cost) or ''
               usage_str = size_k > 0 and string.format(' | %dk/%dk%s', used_k, size_k, cost_str) or string.format(' | %dk%s', used_k, cost_str)
             end
-            return string.format('%s | %s | %s%s', provider, model_id, mode_name, usage_str)
+            return string.format('%s | %s%s | %s%s', provider, model_id, model_suffix, mode_name, usage_str)
           end,
         },
 
