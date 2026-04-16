@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PATCH_FILE="$HOME/.local/share/cursor-agent-patch/acp-rawinput-hotfix-loader.cjs"
+BASE_AGENT_BIN="${CURSOR_AGENT_BIN:-$HOME/.local/bin/cursor-agent}"
+
+resolve_path() {
+  local target="$1"
+  if command -v realpath >/dev/null 2>&1; then
+    realpath "$target"
+  else
+    readlink -f "$target"
+  fi
+}
+
+if [[ ! -x "$BASE_AGENT_BIN" ]]; then
+  echo "agent-patched: base agent binary not found at $BASE_AGENT_BIN" >&2
+  exit 1
+fi
+
+RESOLVED_AGENT="$(resolve_path "$BASE_AGENT_BIN")"
+AGENT_DIR="$(dirname "$RESOLVED_AGENT")"
+NODE_BIN="$AGENT_DIR/node"
+INDEX_JS="$AGENT_DIR/index.js"
+
+if [[ ! -f "$PATCH_FILE" ]]; then
+  echo "agent-patched: patch file missing at $PATCH_FILE" >&2
+  exit 1
+fi
+
+if [[ ! -x "$NODE_BIN" || ! -f "$INDEX_JS" ]]; then
+  echo "agent-patched: cannot enforce patch; expected node/index.js next to $RESOLVED_AGENT" >&2
+  echo "agent-patched: missing executable node at $NODE_BIN or script at $INDEX_JS" >&2
+  exit 1
+fi
+
+exec -a "$RESOLVED_AGENT" "$NODE_BIN" --require "$PATCH_FILE" --use-system-ca "$INDEX_JS" "$@"
