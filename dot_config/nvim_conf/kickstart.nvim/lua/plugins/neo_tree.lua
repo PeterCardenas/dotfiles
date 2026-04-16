@@ -10,7 +10,7 @@ vim.api.nvim_create_autocmd('BufEnter', {
       local num_bufs = #vim.api.nvim_list_bufs()
       if num_bufs == 1 then
         -- Open NvimTree with the current file's directory
-        require('nvim-tree.actions.tree').open.fn({
+        require('nvim-tree.api').tree.open({
           path = vim.fn.expand('%:p:h'),
         })
       else
@@ -118,7 +118,7 @@ vim.api.nvim_create_autocmd('BufEnter', {
 local nmap = require('utils.keymap').nmap
 
 nmap('Toggle file explorer tree', 'ot', function()
-  require('nvim-tree.actions').tree.toggle.fn({ find_file = true })
+  require('nvim-tree.api').tree.toggle({ find_file = true })
 end)
 
 nmap('Toggle mini file explorer', 'oo', function()
