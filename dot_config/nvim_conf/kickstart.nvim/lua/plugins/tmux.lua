@@ -260,9 +260,13 @@ return {
         navigate(key, direction_names[index])
       end, { silent = true, noremap = true })
     end
-    local terminal_directions = { h = 'Left', l = 'Right' }
+    local terminal_directions = { h = 'Left', j = 'Down', k = 'Up', l = 'Right' }
     for key, name in pairs(terminal_directions) do
       vim.keymap.set('t', '<C-' .. key .. '>', function()
+        if (key == 'j' or key == 'k') and vim.bo.filetype == 'fzf' then
+          vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<C-' .. key .. '>', true, false, true), 'nt', false)
+          return
+        end
         navigate(key, name)
       end, { silent = true, noremap = true })
     end
