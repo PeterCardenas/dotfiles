@@ -1,8 +1,25 @@
 local Async = require('utils.async')
 local Shell = require('utils.shell')
 local Log = require('utils.log')
+local File = require('utils.file')
 
 local chezmoi_augroup = vim.api.nvim_create_augroup('Chezmoi', { clear = true })
+
+---@param path any
+---@return string?
+local function parse_file_path(path)
+  if type(path) ~= 'string' or path == '' then
+    return nil
+  end
+  local file_path = vim.fn.expand(path)
+  if not vim.startswith(file_path, '/') then
+    file_path = File.get_cwd() .. '/' .. file_path
+  end
+  if File.file_exists(file_path) or vim.fn.isdirectory(file_path) == 1 then
+    return file_path
+  end
+  return nil
+end
 
 ---Returns true if the file at `filepath` might need to be synced with chezmoi.
 ---@param source_path string
@@ -144,17 +161,17 @@ function M.setup(source_path)
 
   vim.api.nvim_create_autocmd('User', {
     callback = function(args)
-      local filepath = args.data and args.data.file_path
-      if not filepath or type(filepath) ~= 'string' or not vim.startswith(filepath, '/') then
-        Log.notify_error('Invalid params for ChezmoiApplyFile: ' .. vim.inspect(args.data))
+      local file_path = args.data and args.data.path
+      file_path = parse_file_path(file_path)
+      if not file_path then
         return
       end
       Async.void(function() ---@async
-        apply_and_notify(source_path, filepath)
+        apply_and_notify(source_path, file_path)
       end)
     end,
     group = chezmoi_augroup,
-    pattern = 'ChezmoiApplyFile',
+    pattern = 'ChezmoiApplyPath',
   })
 end
 
