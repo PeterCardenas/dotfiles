@@ -36,10 +36,15 @@ return {
             ['<C-L>'] = 'focus-preview',
           },
           fzf = {
+            ['ctrl-j'] = 'down',
+            ['ctrl-k'] = 'up',
             ['ctrl-d'] = 'preview-page-down',
             ['ctrl-u'] = 'preview-page-up',
             ['change'] = 'first',
           },
+        },
+        fzf_opts = {
+          ['--cycle'] = true,
         },
         winopts = {
           height = 0.98,
