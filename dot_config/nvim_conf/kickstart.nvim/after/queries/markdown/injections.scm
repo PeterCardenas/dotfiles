@@ -9,4 +9,4 @@
   (#set! injection.language "typescript"))
 
 ((inline) @injection.content
-  (#agentic-inject! @injection.content))
+  (#agentic-bash-tool-call-inject! @injection.content))

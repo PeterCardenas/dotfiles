@@ -117,7 +117,7 @@ function M.add_config(current_config)
       description = 'Conceal the whole line if the match covers entire lines.',
       parameters = { { type = 'capture', arity = 'required' } },
     }
-    config.valid_directives['agentic-inject'] = {
+    config.valid_directives['agentic-bash-tool-call-inject'] = {
       description = 'Highlights execute tool call content as bash for AgenticChat buffers',
       parameters = { { type = 'capture', arity = 'required' } },
     }
