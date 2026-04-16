@@ -8,9 +8,13 @@
 export LC_ALL=C
 
 local_only=false
-if [ "$1" = "--local" ]; then
-  local_only=true
-fi
+with_month=false
+for arg in "$@"; do
+  case "$arg" in
+  --local) local_only=true ;;
+  --with-month) with_month=true ;;
+  esac
+done
 
 now=$(date +%s)
 spend_dir="${XDG_DATA_HOME:-$HOME/.local/share}/claude-spend"
@@ -29,11 +33,17 @@ if [ "$local_only" = false ]; then
   fi
 fi
 today=$(date -u +%Y-%m-%d)
+month_prefix=$(date -u +%Y-%m)
 daily_file="${spend_dir}/daily-${today}"
 
 # Extract today's cost from a PID file (lines: "YYYY-MM-DD <cost>")
 pid_today() {
   awk -v d="$today" '$1 == d { sum += $2 } END { printf "%.4f", sum }' "$1" 2>/dev/null
+}
+
+# Extract UTC month-to-date cost from a PID file
+pid_month() {
+  awk -v m="$month_prefix" 'index($1, m "-") == 1 { sum += $2 } END { printf "%.4f", sum }' "$1" 2>/dev/null
 }
 
 # Roll all entries from a PID file into their respective daily files
@@ -53,23 +63,27 @@ roll_pid_file() {
 }
 
 # Sum live PID files; roll dead ones into their respective daily files
-live_total=0
+live_today_total=0
+live_month_total=0
 if [ -d "$spend_dir" ]; then
   for f in "$spend_dir"/*; do
     [ -f "$f" ] || continue
     base=$(basename "$f")
     case "$base" in daily-*) continue ;; esac
-    val=$(pid_today "$f")
-    val=${val:-0}
+    today_val=$(pid_today "$f")
+    month_val=$(pid_month "$f")
+    today_val=${today_val:-0}
+    month_val=${month_val:-0}
     if kill -0 "$base" 2>/dev/null; then
       # No spend today + file only has old entries → PID was reused; clean up
-      if { [ "$val" = "0" ] || [ "$val" = "0.0000" ]; } &&
+      if { [ "$today_val" = "0" ] || [ "$today_val" = "0.0000" ]; } &&
         [ -s "$f" ] && ! grep -q "^${today} " "$f"; then
         roll_pid_file "$f"
         rm -f "$f"
         continue
       fi
-      live_total=$(awk "BEGIN{printf \"%.4f\", $live_total + $val}")
+      live_today_total=$(awk "BEGIN{printf \"%.4f\", $live_today_total + $today_val}")
+      live_month_total=$(awk "BEGIN{printf \"%.4f\", $live_month_total + $month_val}")
     else
       roll_pid_file "$f"
       rm -f "$f"
@@ -77,18 +91,33 @@ if [ -d "$spend_dir" ]; then
   done
 fi
 
-# Re-read today's daily aggregate (may have been updated by roll_pid_file)
-daily_total=0
+# Re-read daily aggregates (may have been updated by roll_pid_file)
+daily_today_total=0
 if [ -f "$daily_file" ]; then
-  daily_total=$(cat "$daily_file" 2>/dev/null)
-  daily_total=${daily_total:-0}
+  daily_today_total=$(cat "$daily_file" 2>/dev/null)
+  daily_today_total=${daily_today_total:-0}
 fi
 
-local_total=$(awk "BEGIN{printf \"%.4f\", $daily_total + $live_total}")
+daily_month_total=0
+if [ -d "$spend_dir" ]; then
+  for df in "$spend_dir"/daily-"${month_prefix}"-*; do
+    [ -f "$df" ] || continue
+    day_total=$(cat "$df" 2>/dev/null)
+    day_total=${day_total:-0}
+    daily_month_total=$(awk "BEGIN{printf \"%.4f\", $daily_month_total + $day_total}")
+  done
+fi
+
+local_today_total=$(awk "BEGIN{printf \"%.4f\", $daily_today_total + $live_today_total}")
+local_month_total=$(awk "BEGIN{printf \"%.4f\", $daily_month_total + $live_month_total}")
 
 # --local: output raw number for remote aggregation, skip formatting/remote
 if [ "$local_only" = true ]; then
-  printf '%s' "$local_total"
+  if [ "$with_month" = true ]; then
+    printf '%s %s' "$local_today_total" "$local_month_total"
+  else
+    printf '%s' "$local_today_total"
+  fi
   exit 0
 fi
 
@@ -101,34 +130,42 @@ case "$(hostname)" in
 *) remote_host="macbook" ;;
 esac
 
-remote_total=0
+remote_today_total=0
+remote_month_total=0
 remote_cache="${cache_dir}/tmux-spend-remote"
 remote_ttl=30
 
 if [ -n "$remote_host" ] && [ -f "$remote_cache" ]; then
   remote_age=$((now - $(head -1 "$remote_cache")))
   if [ "$remote_age" -lt "$remote_ttl" ]; then
-    remote_total=$(sed -n '2p' "$remote_cache")
-    remote_total=${remote_total:-0}
+    remote_cached=$(sed -n '2p' "$remote_cache")
+    remote_today_total=$(awk '{ print $1 }' <<<"$remote_cached")
+    remote_month_total=$(awk '{ print ($2 == "" ? $1 : $2) }' <<<"$remote_cached")
+    remote_today_total=${remote_today_total:-0}
+    remote_month_total=${remote_month_total:-0}
   fi
 fi
 
 # Fetch fresh remote value if cache is stale
 if [ -n "$remote_host" ] && { [ ! -f "$remote_cache" ] || [ "$remote_age" -ge "$remote_ttl" ]; }; then
   if remote_val=$(ssh -o ConnectTimeout=1 -o BatchMode=yes -o StrictHostKeyChecking=no \
-    "$remote_host" '$HOME/.config/tmux/scripts/claude_spend.sh --local' 2>/dev/null) && [ -n "$remote_val" ]; then
-    remote_total="$remote_val"
+    "$remote_host" '$HOME/.config/tmux/scripts/claude_spend.sh --local --with-month' 2>/dev/null) && [ -n "$remote_val" ]; then
+    remote_today_total=$(awk '{ print $1 }' <<<"$remote_val")
+    remote_month_total=$(awk '{ print ($2 == "" ? $1 : $2) }' <<<"$remote_val")
+    remote_today_total=${remote_today_total:-0}
+    remote_month_total=${remote_month_total:-0}
   fi
   # Cache even on failure (avoids retrying every 10s)
-  printf '%s\n%s' "$now" "$remote_total" >"$remote_cache"
+  printf '%s\n%s %s' "$now" "$remote_today_total" "$remote_month_total" >"$remote_cache"
 fi
 
-total=$(awk "BEGIN{printf \"%.2f\", $local_total + $remote_total}")
+today_total=$(awk "BEGIN{printf \"%.2f\", $local_today_total + $remote_today_total}")
+month_total=$(awk "BEGIN{printf \"%.2f\", $local_month_total + $remote_month_total}")
 
-if [ "$total" = "0.00" ]; then
+if [ "$today_total" = "0.00" ] && [ "$month_total" = "0.00" ]; then
   result=""
 else
-  result="󱜙 \$${total}"
+  result="󱜙 \$${today_total} | \$${month_total}"
 fi
 
 printf '%s\n%s' "$now" "$result" >"$cache"
