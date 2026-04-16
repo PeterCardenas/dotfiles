@@ -15,6 +15,7 @@ import re
 import sys
 
 URL_RE = re.compile(r"https?://\S+")
+KEY_REFERENCES_MARKER = "Key references:"
 
 # Responses shorter than this (in chars) are considered trivial and skipped.
 MIN_RESPONSE_LENGTH = 120
@@ -81,18 +82,20 @@ def _main() -> None:
     if len(last_text.strip()) < MIN_RESPONSE_LENGTH:
         return _output()
 
+    # If the response already includes the references section marker, skip.
+    if KEY_REFERENCES_MARKER in last_text:
+        return _output()
+
     # Check for URLs
     if URL_RE.search(last_text):
         return _output()
 
     _output(
-        "Your response has no reference links. Per instructions, you should "
-        "include links as references in responses. Consider whether any URLs "
-        "(documentation, source, issue trackers, etc.) would be helpful here. "
-        "If links genuinely weren't used, immediately finish with no extra response."
-        "Do NOT acknowledge saying that there's no links, simply just stop."
-        "Additionally, if you think you should add links, do NOT acknowledge"
-        "that you are adding links, simply just add the links as \n\nKey references:"
+        "Your response has no reference links. If relevant sources exist, revise the "
+        "response to include helpful URLs (docs, source code, issue trackers, etc.) "
+        "under:\n\nKey references:\n"
+        "If links are truly unnecessary, end immediately with no additional text. "
+        "Do not mention missing links or that you are adding them."
     )
 
 
