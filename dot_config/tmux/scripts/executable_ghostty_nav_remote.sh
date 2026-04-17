@@ -7,10 +7,24 @@ log_error() {
     printf '%s [ghostty_nav_remote] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >&2
 }
 
-ssh_connection="${SSH_CONNECTION:-}"
+tmux_client_pid="${1:-}"
+ssh_connection=""
+
+case "$tmux_client_pid" in
+'' | *[!0-9]*)
+    log_error "missing or non-numeric tmux client pid: $tmux_client_pid"
+    exit 1
+    ;;
+esac
+
+if [ -r "/proc/$tmux_client_pid/environ" ]; then
+    ssh_connection="$(tr '\0' '\n' < "/proc/$tmux_client_pid/environ" | awk -F= '
+        $1 == "SSH_CONNECTION" { print $2; exit }
+    ')"
+fi
 
 [ -n "$ssh_connection" ] || {
-    log_error "SSH_CONNECTION is not set"
+    log_error "SSH_CONNECTION is not set for tmux client pid: $tmux_client_pid"
     exit 1
 }
 
@@ -54,15 +68,27 @@ fi
 # if exactly one ET connection exists, use it.
 if [ -z "$et_external_port" ]; then
     et_external_port_candidates="$(ss -tn | awk '
-    $1 == "ESTAB" && $5 ~ /:2022$/ {
-        split($4, parts, ":")
-        print parts[length(parts)]
+    $1 == "ESTAB" {
+        local_addr = $4
+        peer_addr = $5
+        if (local_addr ~ /:2022$/) {
+            split(peer_addr, parts, ":")
+            port = parts[length(parts)]
+        } else if (peer_addr ~ /:2022$/) {
+            split(local_addr, parts, ":")
+            port = parts[length(parts)]
+        } else {
+            next
+        }
+        if (port != "" && port != "2022") {
+            print port
+        }
     }
-    ')"
+    ' | sort -u)"
     et_external_count="$(printf '%s\n' "$et_external_port_candidates" | awk 'NF { c += 1 } END { print c + 0 }')"
     [ "$et_external_count" -eq 1 ] || {
         log_error "fallback found $et_external_count ET candidates (expected 1)"
-        exit 0
+        exit 1
     }
     et_external_port="$(printf '%s\n' "$et_external_port_candidates" | awk 'NF { print; exit }')"
 fi
