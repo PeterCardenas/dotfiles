@@ -85,11 +85,24 @@ def _get_last_assistant_text(transcript_path: str) -> str | None:
                 except json.JSONDecodeError:
                     continue
 
-                msg = entry.get("message", {})
-                if msg.get("role") != "assistant":
-                    continue
+                msg_text = None
 
+                # Claude-style transcript shape:
+                # {"message": {"role": "assistant", "content": ...}}
+                msg = entry.get("message", {})
                 msg_text = _extract_text_from_message(msg, require_assistant_role=True)
+
+                # Cursor transcript shape:
+                # {"role": "assistant", "message": {"content": ...}}
+                if not msg_text and entry.get("role") == "assistant":
+                    msg_text = _extract_text_from_message(
+                        entry.get("message", {}), require_assistant_role=False
+                    )
+
+                # Additional compatibility: top-level content payload.
+                if not msg_text and entry.get("role") == "assistant":
+                    msg_text = _extract_text_from_content(entry.get("content"))
+
                 if msg_text:
                     last_text = msg_text
     except (OSError, KeyError):
