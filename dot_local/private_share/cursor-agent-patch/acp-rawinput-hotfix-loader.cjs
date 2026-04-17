@@ -30,6 +30,10 @@ const CLAUDE_BRIDGE_BEFORE =
   "return this.dedupeClaudeHooksAgainstCursorHooks(t),t";
 const CLAUDE_BRIDGE_AFTER =
   'return this.dedupeClaudeHooksAgainstCursorHooks(t),function(e){const o=["stop","beforeSubmitPrompt"],t=(e,t)=>{var o,n;const a=null===(n=null===(o=e)||void 0===o?void 0:o.hooks)||void 0===n?void 0:n[t];return Array.isArray(a)?a:[]},r=(e,o)=>{e.hooks||(e.hooks={});const t=e.hooks[o];return Array.isArray(t)?t:(e.hooks[o]=[],e.hooks[o])},n=e=>e&&"object"==typeof e?e:{hooks:{}};e.userHooks=n(e.userHooks),e.projectHooks=n(e.projectHooks);for(const n of o){r(e.userHooks,n).push(...t(e.claudeUserHooks,n));const o=r(e.projectHooks,n);o.push(...t(e.claudeProjectHooks,n),...t(e.claudeProjectLocalHooks,n))}}(t),t';
+const MODEL_REQUEST_FORMAT_BEFORE =
+  "function s(e){return o()&&void 0!==e.requestedModel?{modelDetails:void 0,requestedModel:e.requestedModel}:{modelDetails:e.modelDetails,requestedModel:void 0}}";
+const MODEL_REQUEST_FORMAT_AFTER =
+  "function s(e){return void 0!==e.requestedModel?{modelDetails:void 0,requestedModel:e.requestedModel}:{modelDetails:e.modelDetails,requestedModel:void 0}}";
 const originalLoader = Module._extensions[".js"];
 const seenChunkFiles = new Set();
 const DEBUG_LOG_FILE = "/tmp/agent-patched-loader.log";
@@ -90,6 +94,7 @@ Module._extensions[".js"] = function patchedJsLoader(module, filename) {
   let stopGatePatchCount = 0;
   let beforeSubmitPatchCount = 0;
   let claudeBridgePatched = false;
+  let modelRequestFormatPatched = false;
 
   const matchesAcpBundle =
     source.includes(REQUIRED_MARKER) && source.includes("sentToolCalls");
@@ -135,13 +140,25 @@ Module._extensions[".js"] = function patchedJsLoader(module, filename) {
     claudeBridgePatched = true;
   }
 
+  if (
+    patched.includes("./src/model-request-format.ts") &&
+    patched.includes(MODEL_REQUEST_FORMAT_BEFORE)
+  ) {
+    patched = patched.replace(
+      MODEL_REQUEST_FORMAT_BEFORE,
+      MODEL_REQUEST_FORMAT_AFTER,
+    );
+    changed = true;
+    modelRequestFormatPatched = true;
+  }
+
   if (!changed) {
     return originalLoader(module, filename);
   }
   debugLog(
     "[agent-patched] applied ACP patches to " +
       filename +
-      ` (rawInput=${rawInputPatched ? "yes" : "no"}, stopGate=${stopGatePatchCount}, beforeSubmit=${beforeSubmitPatchCount}, claudeBridge=${claudeBridgePatched ? "yes" : "no"})`,
+      ` (rawInput=${rawInputPatched ? "yes" : "no"}, stopGate=${stopGatePatchCount}, beforeSubmit=${beforeSubmitPatchCount}, claudeBridge=${claudeBridgePatched ? "yes" : "no"}, modelRequestFormat=${modelRequestFormatPatched ? "yes" : "no"})`,
   );
   module._compile(patched, filename);
 };
