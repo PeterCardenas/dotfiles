@@ -29,7 +29,7 @@ ssh_connection="${SSH_CONNECTION:-}"
 if [ -n "$ssh_connection" ]; then
     [ "$(uname)" = "Linux" ] || exit 0
     remote_start_pid=""
-    if ! remote_start_pid="$("$remote_pid_script")"; then
+    if ! remote_start_pid="$("$remote_pid_script" "$tmux_client_pid")"; then
         log_error "failed to resolve remote start pid via $remote_pid_script"
     fi
     case "$remote_start_pid" in
