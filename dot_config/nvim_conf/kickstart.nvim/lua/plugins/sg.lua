@@ -607,7 +607,7 @@ return {
           },
           ['cursor-acp'] = {
             default_config_options = {
-              model = 'gpt-5.3-codex',
+              model = 'gpt-5.4',
               reasoning = 'high',
               fast = 'false',
             },
