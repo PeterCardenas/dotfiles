@@ -466,7 +466,8 @@ return {
                     local title = session and session.chat_history and session.chat_history.title
                     if type(title) == 'string' then
                       title = vim.trim(title:gsub('\n+', ' '))
-                      if title ~= '' then
+                      local title_num_words = #vim.split(title, ' ', { plain = true })
+                      if title ~= '' and title_num_words <= 10 then
                         return 'Session: ' .. title
                       end
                     end
