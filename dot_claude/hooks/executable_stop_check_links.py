@@ -153,7 +153,7 @@ def _main() -> None:
         "response to include helpful URLs (docs, source code, issue trackers, etc.) "
         "under:\n\nKey references:\n"
         "If links are truly unnecessary, end immediately with no additional text. "
-        "Do not mention missing links or that you are adding them."
+        "Do not mention or add thought content about missing links or that you are adding them."
     )
 
 
