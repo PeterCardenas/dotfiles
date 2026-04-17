@@ -13,40 +13,46 @@ import sys
 LOG_FILE = Path("/tmp/claude-posttooluse.log")
 MADE_WITH_RE = re.compile(r"(?im)^Made-with:\s*Cursor\s*$\n?")
 COAUTHORED_RE = re.compile(r"(?im)^Co-authored-by:\s*Cursor <[^>]+>\s*$\n?")
+COMMIT_CMD_RE = re.compile(r"(^|[;&|])\s*git\s+commit(\s|$)")
 
 
-def _run(*args: str, check: bool = False) -> subprocess.CompletedProcess[str]:
+def _run(*args: str, check: bool = False, cwd: str | None = None) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         args,
         text=True,
         capture_output=True,
         check=check,
+        cwd=cwd,
     )
 
 
-def _strip_cursor_attribution() -> bool:
-    in_repo = _run("git", "rev-parse", "--is-inside-work-tree")
+def _strip_cursor_attribution(cwd: str | None = None) -> tuple[bool, str | None]:
+    in_repo = _run("git", "rev-parse", "--is-inside-work-tree", cwd=cwd)
     if in_repo.returncode != 0:
-        return False
+        return False, "not_in_git_repo"
 
-    msg_proc = _run("git", "show", "-s", "--format=%B", "HEAD")
+    msg_proc = _run("git", "show", "-s", "--format=%B", "HEAD", cwd=cwd)
     if msg_proc.returncode != 0:
-        return False
+        return False, "head_message_unavailable"
 
     original = msg_proc.stdout
     cleaned = MADE_WITH_RE.sub("", original)
     cleaned = COAUTHORED_RE.sub("", cleaned)
     cleaned = re.sub(r"\n{3,}", "\n\n", cleaned).rstrip() + "\n"
     if cleaned == original:
-        return False
+        return False, "no_cursor_attribution_found"
 
     amend = subprocess.run(
-        ("git", "commit", "--amend", "-F", "-"),
+        ("git", "commit", "--amend", "--allow-empty", "-F", "-"),
         text=True,
         input=cleaned,
         capture_output=True,
+        cwd=cwd,
     )
-    return amend.returncode == 0
+    if amend.returncode != 0:
+        detail = amend.stderr.strip() or amend.stdout.strip() or "unknown_error"
+        return False, f"amend_failed: {detail}"
+    return True, None
 
 
 def _main() -> None:
@@ -58,10 +64,18 @@ def _main() -> None:
     tool_name = payload.get("tool_name")
     tool_input = payload.get("tool_input") or {}
     command = tool_input.get("command") if isinstance(tool_input, dict) else None
+    cwd = tool_input.get("cwd") if isinstance(tool_input, dict) and isinstance(tool_input.get("cwd"), str) else None
+    if cwd == "":
+        cwd = None
 
     stripped = False
-    if tool_name == "Bash" and isinstance(command, str) and "git commit" in command:
-        stripped = _strip_cursor_attribution()
+    strip_error = None
+    if (
+        tool_name in {"Bash", "Shell"}
+        and isinstance(command, str)
+        and COMMIT_CMD_RE.search(command)
+    ):
+        stripped, strip_error = _strip_cursor_attribution(cwd=cwd)
 
     event = {
         "ts": datetime.now(timezone.utc).isoformat(),
@@ -69,6 +83,7 @@ def _main() -> None:
         "tool_name": tool_name,
         "tool_input": tool_input,
         "stripped_attribution": stripped,
+        "strip_error": strip_error,
     }
 
     try:
