@@ -148,7 +148,7 @@ fi
 
 # Fetch fresh remote value if cache is stale
 if [ -n "$remote_host" ] && { [ ! -f "$remote_cache" ] || [ "$remote_age" -ge "$remote_ttl" ]; }; then
-  if remote_val=$(ssh -o ConnectTimeout=1 -o BatchMode=yes -o StrictHostKeyChecking=no \
+  if remote_val=$(ssh -o ConnectTimeout=1 -o BatchMode=yes \
     "$remote_host" '$HOME/.config/tmux/scripts/claude_spend.sh --local --with-month' 2>/dev/null) && [ -n "$remote_val" ]; then
     remote_today_total=$(awk '{ print $1 }' <<<"$remote_val")
     remote_month_total=$(awk '{ print ($2 == "" ? $1 : $2) }' <<<"$remote_val")
