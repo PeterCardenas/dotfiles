@@ -456,15 +456,23 @@ return {
                 local bufnr = vim.api.nvim_get_current_buf()
                 local bufname = vim.api.nvim_buf_get_name(bufnr)
 
-                -- Agentic buffers: use header text directly without path splitting
+                -- Agentic buffers: show active chat title when available
                 local ft = vim.bo[bufnr].filetype
                 if ft and ft:find('^Agentic') then
-                  -- Buffer name is cwd-prefixed header text; strip the cwd prefix
-                  local cwd = vim.fn.getcwd() .. '/'
-                  if vim.startswith(bufname, cwd) then
-                    return bufname:sub(#cwd + 1)
+                  local current_tab = vim.api.nvim_get_current_tabpage()
+                  local ok, SessionRegistry = pcall(require, 'agentic.session_registry')
+                  if ok and SessionRegistry and SessionRegistry.sessions then
+                    local session = SessionRegistry.sessions[current_tab]
+                    local title = session and session.chat_history and session.chat_history.title
+                    if type(title) == 'string' then
+                      title = vim.trim(title:gsub('\n+', ' '))
+                      if title ~= '' then
+                        return 'Session: ' .. title
+                      end
+                    end
                   end
-                  return bufname
+
+                  return '<no session title>'
                 end
 
                 -- Octo buffers: show title from octo_buffers global
