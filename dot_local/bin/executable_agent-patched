@@ -2,7 +2,9 @@
 set -euo pipefail
 
 PATCH_FILE="$HOME/.local/share/cursor-agent-patch/acp-rawinput-hotfix-loader.cjs"
-BASE_AGENT_BIN="${CURSOR_AGENT_BIN:-$HOME/.local/bin/cursor-agent}"
+PINNED_VERSION="${CURSOR_AGENT_PATCH_PINNED_VERSION:-2026.04.16-2d20146}"
+PINNED_AGENT_BIN="$HOME/.local/share/cursor-agent/versions/$PINNED_VERSION/cursor-agent"
+BASE_AGENT_BIN="${CURSOR_AGENT_BIN:-$PINNED_AGENT_BIN}"
 
 resolve_path() {
   local target="$1"
@@ -22,6 +24,15 @@ RESOLVED_AGENT="$(resolve_path "$BASE_AGENT_BIN")"
 AGENT_DIR="$(dirname "$RESOLVED_AGENT")"
 NODE_BIN="$AGENT_DIR/node"
 INDEX_JS="$AGENT_DIR/index.js"
+EXPECTED_SUFFIX="/cursor-agent/versions/$PINNED_VERSION/cursor-agent"
+
+if [[ "$RESOLVED_AGENT" != *"$EXPECTED_SUFFIX" ]]; then
+  echo "agent-patched: pinned version mismatch" >&2
+  echo "agent-patched: expected suffix $EXPECTED_SUFFIX" >&2
+  echo "agent-patched: resolved base agent $RESOLVED_AGENT" >&2
+  echo "agent-patched: override with CURSOR_AGENT_PATCH_PINNED_VERSION or CURSOR_AGENT_BIN" >&2
+  exit 1
+fi
 
 if [[ ! -f "$PATCH_FILE" ]]; then
   echo "agent-patched: patch file missing at $PATCH_FILE" >&2
@@ -34,4 +45,6 @@ if [[ ! -x "$NODE_BIN" || ! -f "$INDEX_JS" ]]; then
   exit 1
 fi
 
-exec -a "$RESOLVED_AGENT" "$NODE_BIN" --require "$PATCH_FILE" --use-system-ca "$INDEX_JS" "$@"
+exec -a "$RESOLVED_AGENT" \
+  env CURSOR_AGENT_PATCH_SESSION_VERSION="$PINNED_VERSION" \
+  "$NODE_BIN" --require "$PATCH_FILE" --use-system-ca "$INDEX_JS" "$@"
