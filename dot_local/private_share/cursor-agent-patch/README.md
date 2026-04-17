@@ -21,6 +21,11 @@ The preload module patches ACP bundles at load time:
 - `7414.index.js` (`./src/acp/agent-session.ts`)
   - adjust the `partialToolCall` send path
   - only send/add when extracted input has a defined value OR locations exist
+  - wire `hookExecutor` into ACP session instances
+  - capture assistant output chunks per prompt and pass
+    `last_assistant_message` to stop checks
+  - run `~/.claude/hooks/stop_check_links.py` directly as an ACP fallback when
+    hook-exec stop payloads omit assistant text
 - `1357.index.js` (`../hooks-exec/dist/index.js`)
   - bridge Claude `stop` / `beforeSubmitPrompt` hooks into Cursor `userHooks` and
     `projectHooks` at load time so ACP paths that only inspect Cursor hook sets
@@ -31,11 +36,13 @@ The preload module patches ACP bundles at load time:
 This keeps `toolCallStarted` free to emit the first real tool card with richer
 `rawInput`.
 
-### Current limitation
+### Root cause found
 
-In this Cursor Agent build, ACP server mode (`agent acp`, used by `agentic.nvim`)
-does not appear to emit `stop` hook requests over the hook-exec bridge, so Claude
-`Stop` hooks still do not fire end-to-end even with the bridge patch.
+In ACP server mode (`agent acp`, used by `agentic.nvim`), stop hooks were loaded
+but received payloads with `transcript_path: null` and no `last_assistant_message`.
+`stop_check_links.py` therefore returned `{}` and could not block/rewrite.
+The loader now captures assistant chunks and provides `last_assistant_message`
+to stop enforcement in ACP.
 
 ## Files
 
@@ -73,8 +80,8 @@ verify runtime version consistency at module load.
 - **Chunk load set changed**: on this build an additional chunk (`2556.index.js`)
   appears in agentic runs. This does not currently break the patch, but confirms
   startup graph churn between versions.
-- **Stop hook limitation remains**: even with Claude bridge patching, this ACP
-  server path still does not emit `stop` hook requests over hook-exec.
+- **Stop payload gap in ACP**: hook-exec stop payloads may omit assistant text
+  (`transcript_path` null). The loader fallback in `7414` now covers this.
 
 ## Validate after updates
 

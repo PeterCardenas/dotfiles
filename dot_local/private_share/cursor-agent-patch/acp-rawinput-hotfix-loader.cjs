@@ -34,6 +34,26 @@ const MODEL_REQUEST_FORMAT_BEFORE =
   "function s(e){return o()&&void 0!==e.requestedModel?{modelDetails:void 0,requestedModel:e.requestedModel}:{modelDetails:e.modelDetails,requestedModel:void 0}}";
 const MODEL_REQUEST_FORMAT_AFTER =
   "function s(e){return void 0!==e.requestedModel?{modelDetails:void 0,requestedModel:e.requestedModel}:{modelDetails:e.modelDetails,requestedModel:void 0}}";
+const ACP_SESSION_CTOR_BEFORE =
+  "constructor(e,t,o,n,s,i,r){this.lastRequestId=null,this.sentToolCalls=new Set,this.pendingAutoNamePromise=null,this.connection=e,this.sessionId=t,this.pendingPromptCancel=null,this.sharedServices=o,this.ctx=n,this.agentStore=s,this.resources=i,this.currentModel=r,this.createPlanProgressPresenter";
+const ACP_SESSION_CTOR_AFTER =
+  'constructor(e,t,o,n,s,i,r,a){this.lastRequestId=null,this.sentToolCalls=new Set,this.pendingAutoNamePromise=null,this.connection=e,this.sessionId=t,this.pendingPromptCancel=null,this.sharedServices=o,this.ctx=n,this.agentStore=s,this.resources=i,this.currentModel=r,this.hookExecutor=a,this._lastAssistantMessage="",this.createPlanProgressPresenter';
+const ACP_SESSION_NEW_BEFORE =
+  "{resources:d}=yield(0,m.Y)(this.ctx,this.connection,this.sharedServices,r,this.options,l),u=yield this.sharedServices.modelManager.awaitCurrentModel(),v=new p.m(this.connection,o,this.sharedServices,this.ctx,r,d,u),";
+const ACP_SESSION_NEW_AFTER =
+  "{resources:d,hookExecutor:c}=yield(0,m.Y)(this.ctx,this.connection,this.sharedServices,r,this.options,l),u=yield this.sharedServices.modelManager.awaitCurrentModel(),v=new p.m(this.connection,o,this.sharedServices,this.ctx,r,d,u,c),";
+const ACP_SESSION_LOAD_BEFORE =
+  "{resources:d}=yield(0,m.Y)(this.ctx,this.connection,this.sharedServices,r,this.options,l),u=yield this.sharedServices.modelManager.awaitCurrentModel(),v=new p.m(this.connection,t,this.sharedServices,this.ctx,r,d,u),";
+const ACP_SESSION_LOAD_AFTER =
+  "{resources:d,hookExecutor:c}=yield(0,m.Y)(this.ctx,this.connection,this.sharedServices,r,this.options,l),u=yield this.sharedServices.modelManager.awaitCurrentModel(),v=new p.m(this.connection,t,this.sharedServices,this.ctx,r,d,u,c),";
+const ACP_SEND_AGENT_CHUNK_BEFORE =
+  'sendAgentMessageChunk(e){return $(this,void 0,void 0,(function*(){yield this.sendSessionUpdate({sessionUpdate:"agent_message_chunk",content:{type:"text",text:e}})}))}';
+const ACP_SEND_AGENT_CHUNK_AFTER =
+  'sendAgentMessageChunk(e){return $(this,void 0,void 0,(function*(){this._lastAssistantMessage=(this._lastAssistantMessage||"")+e,yield this.sendSessionUpdate({sessionUpdate:"agent_message_chunk",content:{type:"text",text:e}})}))}';
+const ACP_HANDLE_PROMPT_BEFORE =
+  'handlePrompt(e){return $(this,void 0,void 0,(function*(){var t;null===(t=this.pendingPromptCancel)||void 0===t||t.call(this);const[o,n]=this.ctx.withCancel();this.pendingPromptCancel=n;try{yield this.processPrompt(e,o)}catch(e){if(o.canceled)return{stopReason:"cancelled"};throw e}finally{this.pendingPromptCancel=null}return o.canceled?{stopReason:"cancelled"}:{stopReason:"end_turn"}}))}';
+const ACP_HANDLE_PROMPT_AFTER =
+  'handlePrompt(e){return $(this,void 0,void 0,(function*(){var t;null===(t=this.pendingPromptCancel)||void 0===t||t.call(this);const[o,n]=this.ctx.withCancel();this.pendingPromptCancel=n,this._lastAssistantMessage="";try{yield this.processPrompt(e,o)}catch(e){if(o.canceled)return{stopReason:"cancelled"};throw e}finally{this.pendingPromptCancel=null}if(o.canceled)return{stopReason:"cancelled"};try{if(this.hookExecutor){const e=yield this.hookExecutor.executeHookForStep("stop",{conversation_id:this.sessionId,status:"success",model:this.currentModel&&this.currentModel.modelId?this.currentModel.modelId:"unknown",loop_count:0,last_assistant_message:this._lastAssistantMessage||void 0});if((null==e?void 0:e.permission)==="deny"&&e.user_message&&!o.canceled)yield this.processPrompt({prompt:[{type:"text",text:e.user_message}]},o)}}catch(e){(0,b.debugLog)("Stop hook execution failed in ACP handlePrompt:",e)}try{const e=require("node:child_process"),t=require("node:os"),n=require("node:path"),s=n.join(t.homedir(),".claude","hooks","stop_check_links.py"),r=e.spawnSync("python3",[s],{input:JSON.stringify({stop_reason:"end_turn",last_assistant_message:this._lastAssistantMessage||""}),encoding:"utf8"});if(0===r.status&&r.stdout){const e=JSON.parse(r.stdout);if((null==e?void 0:e.decision)==="block"&&e.reason&&!o.canceled)yield this.processPrompt({prompt:[{type:"text",text:e.reason}]},o)}}catch(e){(0,b.debugLog)("Direct stop_check_links fallback failed:",e)}return o.canceled?{stopReason:"cancelled"}:{stopReason:"end_turn"}}))}';
 const originalLoader = Module._extensions[".js"];
 const seenChunkFiles = new Set();
 const DEBUG_LOG_FILE = "/tmp/agent-patched-loader.log";
@@ -79,11 +99,6 @@ Module._extensions[".js"] = function patchedJsLoader(module, filename) {
     if (runtimeVersion && runtimeVersion !== EXPECTED_SESSION_VERSION) {
       const message = `[agent-patched] session version mismatch: expected ${EXPECTED_SESSION_VERSION}, runtime ${runtimeVersion}`;
       process.stderr.write(message + "\n");
-      try {
-        fs.appendFileSync(DEBUG_LOG_FILE, message + "\n", "utf8");
-      } catch {
-        // Best effort only.
-      }
       process.exit(1);
     }
   }
@@ -95,6 +110,8 @@ Module._extensions[".js"] = function patchedJsLoader(module, filename) {
   let beforeSubmitPatchCount = 0;
   let claudeBridgePatched = false;
   let modelRequestFormatPatched = false;
+  let acpStopInvokePatched = false;
+  let acpAssistantCapturePatched = false;
 
   const matchesAcpBundle =
     source.includes(REQUIRED_MARKER) && source.includes("sentToolCalls");
@@ -152,13 +169,39 @@ Module._extensions[".js"] = function patchedJsLoader(module, filename) {
     modelRequestFormatPatched = true;
   }
 
+  if (
+    patched.includes("./src/acp/agent-session.ts") &&
+    patched.includes(ACP_HANDLE_PROMPT_BEFORE)
+  ) {
+    if (patched.includes(ACP_SESSION_CTOR_BEFORE)) {
+      patched = patched.replace(ACP_SESSION_CTOR_BEFORE, ACP_SESSION_CTOR_AFTER);
+      changed = true;
+    }
+    if (patched.includes(ACP_SESSION_NEW_BEFORE)) {
+      patched = patched.replace(ACP_SESSION_NEW_BEFORE, ACP_SESSION_NEW_AFTER);
+      changed = true;
+    }
+    if (patched.includes(ACP_SESSION_LOAD_BEFORE)) {
+      patched = patched.replace(ACP_SESSION_LOAD_BEFORE, ACP_SESSION_LOAD_AFTER);
+      changed = true;
+    }
+    if (patched.includes(ACP_SEND_AGENT_CHUNK_BEFORE)) {
+      patched = patched.replace(ACP_SEND_AGENT_CHUNK_BEFORE, ACP_SEND_AGENT_CHUNK_AFTER);
+      changed = true;
+      acpAssistantCapturePatched = true;
+    }
+    patched = patched.replace(ACP_HANDLE_PROMPT_BEFORE, ACP_HANDLE_PROMPT_AFTER);
+    changed = true;
+    acpStopInvokePatched = true;
+  }
+
   if (!changed) {
     return originalLoader(module, filename);
   }
   debugLog(
     "[agent-patched] applied ACP patches to " +
       filename +
-      ` (rawInput=${rawInputPatched ? "yes" : "no"}, stopGate=${stopGatePatchCount}, beforeSubmit=${beforeSubmitPatchCount}, claudeBridge=${claudeBridgePatched ? "yes" : "no"}, modelRequestFormat=${modelRequestFormatPatched ? "yes" : "no"})`,
+      ` (rawInput=${rawInputPatched ? "yes" : "no"}, stopGate=${stopGatePatchCount}, beforeSubmit=${beforeSubmitPatchCount}, claudeBridge=${claudeBridgePatched ? "yes" : "no"}, modelRequestFormat=${modelRequestFormatPatched ? "yes" : "no"}, acpStopInvoke=${acpStopInvokePatched ? "yes" : "no"}, acpAssistantCapture=${acpAssistantCapturePatched ? "yes" : "no"})`,
   );
   module._compile(patched, filename);
 };
