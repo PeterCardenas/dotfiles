@@ -8,6 +8,7 @@ import re
 import sys
 
 COMMIT_CMD_RE = re.compile(r"(^|[;&|])\s*git\s+commit(\s|$)")
+PR_CREATE_CMD_RE = re.compile(r"(^|[;&|])\s*gh\s+pr\s+create(\s|$)")
 TRAILER_PATTERNS = (
     r"Made-with:\s*Cursor",
     r"Co-authored-by:\s*Cursor <[^>]+>",
@@ -20,6 +21,15 @@ ESCAPED_TRAILER_RES = tuple(
 )
 LITERAL_EMPTY_LINES_BEFORE_CLOSER_RE = re.compile(r"\n{2,}(?=['\"])")
 ESCAPED_EMPTY_LINES_BEFORE_CLOSER_RE = re.compile(r"(?:\\n){2,}(?=['\"])")
+PR_ATTRIBUTION_PATTERNS = (
+    r"Made with \[Cursor\]\(https://cursor\.com\)",
+)
+LITERAL_PR_ATTRIBUTION_RES = tuple(
+    re.compile(rf"(?i){pattern}(?=(?:\r?\n|$|['\"]))") for pattern in PR_ATTRIBUTION_PATTERNS
+)
+ESCAPED_PR_ATTRIBUTION_RES = tuple(
+    re.compile(rf"(?i){pattern}(?=(?:\\n|$|['\"]))") for pattern in PR_ATTRIBUTION_PATTERNS
+)
 
 
 def sanitize_command(command: str) -> str:
@@ -28,6 +38,10 @@ def sanitize_command(command: str) -> str:
         cleaned = trailer_re.sub("", cleaned)
     for trailer_re in ESCAPED_TRAILER_RES:
         cleaned = trailer_re.sub("", cleaned)
+    for attribution_re in LITERAL_PR_ATTRIBUTION_RES:
+        cleaned = attribution_re.sub("", cleaned)
+    for attribution_re in ESCAPED_PR_ATTRIBUTION_RES:
+        cleaned = attribution_re.sub("", cleaned)
     cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
     cleaned = re.sub(r"(?:\\n){3,}", lambda _: "\\n\\n", cleaned)
     cleaned = re.sub(r"[ \t]+\n", "\n", cleaned)
@@ -48,7 +62,9 @@ def _main() -> None:
         return
 
     command = tool_input.get("command")
-    if not isinstance(command, str) or not COMMIT_CMD_RE.search(command):
+    if not isinstance(command, str) or not (
+        COMMIT_CMD_RE.search(command) or PR_CREATE_CMD_RE.search(command)
+    ):
         json.dump({}, sys.stdout)
         return
 
@@ -66,8 +82,7 @@ def _main() -> None:
                 "permissionDecision": "allow",
                 "updatedInput": updated_input,
                 "additionalContext": (
-                    "Removed Cursor attribution trailers from the git commit command "
-                    "before execution."
+                    "Removed Cursor attribution from the git command before execution."
                 ),
             }
         },
