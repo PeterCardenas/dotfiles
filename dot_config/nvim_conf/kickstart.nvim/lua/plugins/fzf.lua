@@ -14,7 +14,7 @@ return {
       'nvim-treesitter/nvim-treesitter',
       'nvim-treesitter/nvim-treesitter-context',
     },
-    cmd = { 'FzfLua' },
+    lazy = false,
     config = function()
       local fzf_history_dir = vim.fn.stdpath('data') .. '/fzf-history'
       local cwd = vim.fn.getcwd()
@@ -26,9 +26,18 @@ return {
         end
         return parent_dir .. '/' .. cwd:gsub('/', '_')
       end
-      -- TODO: Make regex match case insensitive
       require('fzf-lua').setup({
         'hide',
+        ui_select = function(ui_opts, items)
+          local prompt = (ui_opts.prompt or 'Select one of:'):gsub(':%s*$', '') .. '> '
+          return {
+            prompt = prompt,
+            winopts = {
+              height = math.min(math.max(#items + 4, 5), 15),
+              width = 0.5,
+            },
+          }
+        end,
         keymap = {
           builtin = {
             ['<C-D>'] = 'preview-page-down',
