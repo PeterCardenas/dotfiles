@@ -36,10 +36,15 @@ end
 
 -- Add plugins for lazy.nvim.
 require('lazy').setup({
-  -- Detect tabstop and shiftwidth automatically
+  -- Detect tabstop and shiftwidth automatically without touching eol/fixeol
   {
-    'tpope/vim-sleuth',
+    'NMAC427/guess-indent.nvim',
     event = { 'BufReadPre', 'BufNewFile' },
+    config = function()
+      require('guess-indent').setup({
+        override_editorconfig = false,
+      })
+    end,
   },
 
   -- TODO: Unsure if this is causing delays in startup rather than requiring the plugin configs manually.
