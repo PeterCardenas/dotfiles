@@ -98,7 +98,7 @@ return {
         -- TODO: Change upstream to work for more complex ansi colors.
         enable_ansi = true,
         -- TODO: Exclude higlighting in comments for github issue/pr numbers
-        exclude_filetypes = { 'lazy', 'Avante', 'octo', 'DiffviewFileHistory', '', 'markdown', 'blink-cmp-menu' },
+        exclude_filetypes = { 'lazy', 'octo', 'DiffviewFileHistory', '', 'markdown', 'blink-cmp-menu' },
         exclude_pattern = function(bufnr, row, col)
           return Treesitter.inside_comment_block(bufnr, row, col)
         end,
@@ -179,26 +179,6 @@ return {
     cmd = { 'Bdelete' },
   },
 
-  -- Copilot AI autocompletion
-  {
-    'zbirenbaum/copilot.lua',
-    event = 'InsertEnter',
-    cond = function()
-      return false
-    end,
-    config = function()
-      require('copilot').setup({
-        suggestion = {
-          auto_trigger = true,
-          keymap = {
-            accept = '<C-Y>',
-            accept_word = '<C-S-Y>',
-          },
-        },
-      })
-    end,
-  },
-
   -- Super fast AI autocompletion
   {
     'supermaven-inc/supermaven-nvim',
@@ -240,7 +220,7 @@ return {
         },
       })
       require('which-key').add({
-        { '<leader>a', group = 'Avante AI' },
+        { '<leader>a', group = 'Agentic AI' },
         { '<leader>f', group = 'Find' },
         { '<leader>d', group = 'Debug' },
         { '<leader>g', group = 'Git' },
@@ -701,7 +681,7 @@ return {
 
       require('statuscol').setup({
         foldfunc = 'builtin',
-        ft_ignore = { 'dashboard', 'NvimTree', 'alpha', 'Avante', 'AvanteInput', 'AvanteSelectedFiles' },
+        ft_ignore = { 'dashboard', 'NvimTree', 'alpha' },
         bt_ignore = { 'nofile', 'help' },
         segments = {
           { text = { builtin.foldfunc }, click = 'v:lua.ScFa' },

@@ -426,8 +426,6 @@ return {
             ['dap-repl'] = maybe_get_dap,
             ['dapui_watches'] = maybe_get_dap,
             ['dapui_hover'] = maybe_get_dap,
-            AvanteInput = { 'avante_commands', 'avante_mentions', 'path' },
-            AvantePromptInput = { 'avante_mentions' },
             codecompanion = { 'codecompanion' },
             AgenticInput = { 'agentic_commands', 'path' },
           },
@@ -439,18 +437,6 @@ return {
               -- The source handles this internally via enabled(), but you can
               -- also use score_offset to boost priority when active:
               score_offset = 100,
-            },
-            avante_commands = {
-              name = 'avante_commands',
-              module = 'blink.compat.source',
-            },
-            avante_files = {
-              name = 'avante_files',
-              module = 'blink.compat.source',
-            },
-            avante_mentions = {
-              name = 'avante_mentions',
-              module = 'blink.compat.source',
             },
             fonts = {
               name = 'fonts',
