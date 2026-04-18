@@ -52,6 +52,10 @@ return {
       vim.api.nvim_set_hl(0, 'TreesitterContext', { link = 'Normal' })
       vim.api.nvim_set_hl(0, 'TreesitterContextSeparator', { foreground = '#3b4261', background = '#24283b' })
       require('treesitter-context').setup({
+        on_attach = function(bufnr)
+          local ft = vim.bo[bufnr].filetype
+          return ft ~= 'AgenticChat'
+        end,
         mode = 'topline',
         line_numbers = true,
         max_lines = 10,
