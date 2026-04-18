@@ -235,11 +235,14 @@ def _main() -> None:
         return _output()
 
     _output(
-        "Your response has no reference links. If relevant sources exist, revise the "
-        "response to include helpful URLs (docs, source code, issue trackers, etc.) "
-        "under:\n\nKey references:\n"
-        "If links are truly unnecessary, end immediately with no additional text. "
-        "Do not mention or add thought content about missing links or that you are adding them."
+        "Your response has no reference links. Output ONLY the additional suffix to "
+        "append to the existing response, not a rewrite of the full response. If "
+        "relevant sources exist, output only:\n\nKey references:\n- [Short title]"
+        "(https://example.com)\n- [Short title](https://example.com)\n\nUse "
+        "well-formatted Markdown links. Do not repeat any prior response text. Do "
+        "not add preamble, thought content, explanations, or commentary about "
+        "adding links. If links are truly unnecessary, end immediately with no "
+        "additional text."
     )
 
 
