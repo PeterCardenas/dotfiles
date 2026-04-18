@@ -38,15 +38,13 @@
             "timeout": 10
           }
         ]
-      }
-    ],
-    "PostToolUse": [
+      },
       {
         "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/posttooluse_log.py",
+            "command": "~/.claude/hooks/pretooluse_strip_commit_trailers.py",
             "timeout": 10
           }
         ]
