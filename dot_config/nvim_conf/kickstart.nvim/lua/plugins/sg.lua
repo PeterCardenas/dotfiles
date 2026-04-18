@@ -734,7 +734,9 @@ return {
             if not session or not session.chat_history then
               return
             end
-            local messages = session.chat_history.messages
+            -- Snapshot the history object before any later /new destroys and replaces the session.
+            local chat_history = session.chat_history
+            local messages = chat_history.messages
             if not messages or #messages == 0 then
               return
             end
@@ -766,7 +768,7 @@ return {
             local Async = require('utils.async')
             local Spinner = require('utils.spinner')
             local fidget_group = 'agentic_title_' .. data.tab_page_id
-            local fidget_key = fidget_group
+            local fidget_key = string.format('%s:%d', data.session_id, vim.uv.hrtime())
             Async.void(function() ---@async
               local Shell = require('utils.shell')
               local timer = Spinner.create_timer()
@@ -798,10 +800,9 @@ return {
               timer.stop()
               require('fidget').notification.remove(fidget_group, fidget_key)
               if title and title ~= '' then
-                Log.notify_info(title, { title = 'New Chat Title' })
                 vim.schedule(function()
-                  session.chat_history.title = title
-                  session.chat_history:save()
+                  chat_history.title = title
+                  chat_history:save()
                 end)
               end
             end)
