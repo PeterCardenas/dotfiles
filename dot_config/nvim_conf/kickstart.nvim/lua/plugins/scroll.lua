@@ -54,6 +54,8 @@ return {
   {
     'PeterCardenas/neoscroll.nvim',
     branch = 'skip-over-concealed-lines',
+    upstream = 'karb94/neoscroll.nvim',
+    upstream_branch = 'master',
     lazy = true,
     config = function()
       require('neoscroll').setup({
