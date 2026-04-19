@@ -7,11 +7,7 @@ vim.o.foldlevel = 99
 vim.o.foldlevelstart = 99
 vim.o.foldenable = true
 local fillchars = 'eob: ,fold: ,foldopen:+,foldsep:│,foldclose:-'
-if vim.fn.has('nvim-0.12') == 1 then
-  vim.o.fillchars = fillchars .. ',foldinner: '
-else
-  vim.o.fillchars = fillchars
-end
+vim.o.fillchars = fillchars .. ',foldinner: '
 
 vim.o.swapfile = false
 
@@ -600,50 +596,12 @@ for _, sign in ipairs(dap_signs) do
   vim.fn.sign_define(sign.name, sign)
 end
 
--- TODO: When the following issue is resolved, remove this hack: https://github.com/neovim/neovim/issues/19649
--- Adds relatedInformation to the diagnostic message
----@param diag vim.Diagnostic
-local function format_diagnostic(diag)
-  if vim.fn.has('nvim-0.12') == 1 then
-    return diag.message
-  end
-  local message = diag.message
-  ---@class lsp.DiagnosticInfo
-  ---@field client_name? string
-  ---@field relatedInformation? lsp.RelatedInformation[]
-  local diag_lsp_info = diag and diag.user_data and diag.user_data.lsp or {}
-  local client = vim.lsp.get_clients({ name = diag_lsp_info.client_name })[1]
-  if not client then
-    return diag.message
-  end
-
-  ---@class lsp.RelatedInformation
-  ---@field message string
-  ---@field location lsp.Location | lsp.LocationLink
-
-  ---@type {messages: string[], locations: (lsp.Location | lsp.LocationLink)[]}
-  local relatedInfo = { messages = {}, locations = {} }
-  local lsp_related_info = diag_lsp_info.relatedInformation or {}
-  for _, info in ipairs(lsp_related_info) do
-    relatedInfo.messages[#relatedInfo.messages + 1] = info.message
-    relatedInfo.locations[#relatedInfo.locations + 1] = info.location
-  end
-
-  for i, loc in ipairs(vim.lsp.util.locations_to_items(relatedInfo.locations, client.offset_encoding)) do
-    message = string.format('%s\n\t%s (%s:%d)', message, relatedInfo.messages[i], vim.fn.fnamemodify(loc.filename, ':.'), loc.lnum)
-  end
-
-  return message
-end
 ---@type vim.diagnostic.Opts.Jump
-local jump_config = {}
-if vim.fn.has('nvim-0.12') == 1 then
-  jump_config.on_jump = function()
+local jump_config = {
+  on_jump = function()
     vim.diagnostic.open_float({ scope = 'cursor' })
-  end
-else
-  jump_config.float = { format = format_diagnostic }
-end
+  end,
+}
 ---@type vim.diagnostic.Opts.Float
 local float_config = {
   focused = false,
@@ -651,11 +609,7 @@ local float_config = {
   border = 'rounded',
   source = true,
   header = '',
-  format = format_diagnostic,
 }
-if vim.fn.has('nvim-0.12') ~= 1 then
-  float_config.prefix = ''
-end
 vim.diagnostic.config({
   virtual_text = true,
   signs = { text = diagnostic_signs },

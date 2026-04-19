@@ -1253,7 +1253,6 @@ return {
               end
               -- TODO: Automatically parse injected languages
               -- TODO: Remove vim.schedule once https://github.com/neovim/neovim/issues/36306 is resolved
-              -- Necessary on nightly (nvim-0.12)
               vim.schedule(function()
                 local languages = { 'markdown', 'markdown_inline', 'html' }
                 for _, body in ipairs(bodies) do
