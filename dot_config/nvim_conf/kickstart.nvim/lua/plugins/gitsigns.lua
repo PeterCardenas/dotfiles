@@ -368,6 +368,9 @@ return {
     'PeterCardenas/octo.nvim',
     branch = 'dev',
     cmd = { 'Octo' },
+    -- TODO: This is reasonably late so not blocking, but would be preferred
+    -- for octo to lazy load itself more properly.
+    event = 'CursorHold',
     dependencies = {
       'nvim-lua/plenary.nvim',
       Config.FZF_LUA_REPO,
