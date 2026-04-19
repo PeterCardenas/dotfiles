@@ -6,12 +6,22 @@ local Log = require('utils.log')
 
 local M = {}
 
+local function get_tui_client_pid()
+  for _, ui in ipairs(vim.api.nvim_list_uis()) do
+    local info = vim.api.nvim_get_chan_info(ui.chan)
+    if info.client and info.client.name == 'nvim-tui' then
+      return info.client.attributes.pid
+    end
+  end
+end
+
 ---Set ghostty navigation for specific directions (disables all others)
 ---@async
 ---@param directions string
 ---@return boolean, string|nil
 local function set_ghostty_navigation(directions)
-  local success, output = Shell.async_cmd('fish', { '-c', 'ghostty_nvim_nav ' .. directions })
+  local tui_pid = get_tui_client_pid()
+  local success, output = Shell.async_cmd('fish', { '-c', 'ghostty_nvim_nav ' .. directions .. ' ' .. tui_pid })
   if not success then
     return false, 'Failed to set ghostty navigation for: ' .. directions .. '\n' .. table.concat(output, '\n')
   end
@@ -21,7 +31,8 @@ end
 ---@param directions string
 ---@return boolean, string|nil
 local function set_ghostty_navigation_sync(directions)
-  local success, output = Shell.sync_cmd('fish -c "ghostty_nvim_nav ' .. directions .. '"')
+  local tui_pid = get_tui_client_pid()
+  local success, output = Shell.sync_cmd('fish -c "ghostty_nvim_nav ' .. directions .. ' ' .. tui_pid .. '"')
   if not success then
     return false, 'Failed to set ghostty navigation for: ' .. directions .. '\n' .. table.concat(output, '\n')
   end
