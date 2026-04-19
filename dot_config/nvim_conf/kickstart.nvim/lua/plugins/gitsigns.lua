@@ -367,6 +367,8 @@ return {
     -- Adds GitHub integration
     'PeterCardenas/octo.nvim',
     branch = 'dev',
+    upstream = 'pwntester/octo.nvim',
+    upstream_branch = 'master',
     cmd = { 'Octo' },
     -- TODO: This is reasonably late so not blocking, but would be preferred
     -- for octo to lazy load itself more properly.

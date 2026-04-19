@@ -76,6 +76,8 @@ return {
     -- Git/GitHub completion
     'PeterCardenas/cmp-git',
     branch = 'working-state',
+    upstream = 'petertriho/cmp-git',
+    upstream_branch = 'main',
     event = { 'InsertEnter', 'CmdlineEnter' },
     config = function()
       local ssh_aliases = {

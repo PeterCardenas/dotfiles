@@ -58,6 +58,8 @@ vim.api.nvim_create_autocmd('FileType', {
 return {
   'PeterCardenas/alpha-nvim',
   branch = 'fix-invalid-win',
+  upstream = 'goolord/alpha-nvim',
+  upstream_branch = 'main',
   lazy = false,
   priority = 1001,
   config = function()
