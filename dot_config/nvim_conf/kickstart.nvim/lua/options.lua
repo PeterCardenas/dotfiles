@@ -576,29 +576,28 @@ vim.o.timeoutlen = 300
 -- Set completeopt to have a better completion experience
 vim.o.completeopt = 'menuone,noselect'
 
+-- Style diagnostics
+---@type table<vim.diagnostic.Severity, string>
+local diagnostic_signs = {
+  [vim.diagnostic.severity.ERROR] = '',
+  [vim.diagnostic.severity.WARN] = '',
+  [vim.diagnostic.severity.INFO] = '',
+  [vim.diagnostic.severity.HINT] = '󰛩',
+}
+
 ---@class SignDefinition: vim.fn.sign_define.dict
 ---@field name string
 
--- Style diagnostics
 ---@type SignDefinition[]
-local signs = {
-  { name = 'DiagnosticSignError', text = '' },
-  { name = 'DiagnosticSignWarn', text = '' },
-  { name = 'DiagnosticSignInfo', text = '' },
-  { name = 'DiagnosticSignHint', text = '󰛩' },
+local dap_signs = {
   { name = 'DapStopped', text = '', texthl = 'DiagnosticWarn' },
   { name = 'DapBreakpoint', text = '', texthl = 'DapUILineNumber' },
   { name = 'DapBreakpointRejected', text = '', texthl = 'DiagnosticError' },
   { name = 'DapBreakpointCondition', text = '', texthl = 'DiagnosticInfo' },
   { name = 'DapLogPoint', text = '>', texthl = 'DiagnosticInfo' },
 }
-for _, sign in ipairs(signs) do
-  if not sign.texthl then
-    sign.texthl = sign.name
-  end
-  if sign.name:match('^Dap') then
-    vim.fn.sign_define(sign.name, sign)
-  end
+for _, sign in ipairs(dap_signs) do
+  vim.fn.sign_define(sign.name, sign)
 end
 
 -- TODO: When the following issue is resolved, remove this hack: https://github.com/neovim/neovim/issues/19649
@@ -659,7 +658,7 @@ if vim.fn.has('nvim-0.12') ~= 1 then
 end
 vim.diagnostic.config({
   virtual_text = true,
-  signs = { active = signs },
+  signs = { text = diagnostic_signs },
   update_in_insert = true,
   underline = true,
   severity_sort = true,
