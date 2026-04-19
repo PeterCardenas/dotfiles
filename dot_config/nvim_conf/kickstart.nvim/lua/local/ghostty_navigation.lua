@@ -59,8 +59,14 @@ local function is_picker_buffer()
   return filetype == 'fzf' or (filetype == 'TelescopePrompt' and mode == 'i')
 end
 
+---@class ghostty_nav.EdgeDirections
+---@field h boolean
+---@field j boolean
+---@field k boolean
+---@field l boolean
+
 ---Check which directions are at the edge (can't navigate further in vim)
----@return table<string, boolean> Map of direction to whether it's at edge
+---@return ghostty_nav.EdgeDirections Map of direction to whether it's at edge
 local function get_edge_directions()
   local current_winnr = vim.fn.winnr()
   local edges = {
@@ -70,10 +76,22 @@ local function get_edge_directions()
     k = vim.fn.winnr('k') == current_winnr,
   }
 
+  local cur_win = vim.api.nvim_get_current_win()
+  local cfg = vim.api.nvim_win_get_config(cur_win)
+  if cfg.relative ~= '' then
+    edges.h = true
+    edges.l = true
+    edges.j = true
+    edges.k = true
+  end
+
   -- If blink.cmp menu is visible or in fzf buffer, never enable j/k for ghostty (keep them for vim)
   if is_blink_menu_visible() or is_picker_buffer() then
     edges.j = false
     edges.k = false
+    if vim.bo.filetype == 'fzf' then
+      edges.l = false
+    end
   end
 
   return edges
