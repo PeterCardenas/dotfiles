@@ -177,6 +177,8 @@ return {
   {
     'PeterCardenas/mini.files',
     branch = 'dev',
+    upstream = 'nvim-mini/mini.files',
+    upstream_branch = 'main',
     version = false,
     lazy = true,
     config = function()

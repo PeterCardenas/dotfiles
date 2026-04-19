@@ -52,6 +52,8 @@ require('lazy').setup({
   {
     'PeterCardenas/lazy.nvim',
     branch = 'dev',
+    upstream = 'folke/lazy.nvim',
+    upstream_branch = 'main',
   },
 }, {
   change_detection = {

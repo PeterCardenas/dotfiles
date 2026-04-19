@@ -92,6 +92,8 @@ return {
   {
     'PeterCardenas/nvim-highlight-colors',
     branch = 'exclude-pattern-config',
+    upstream = 'brenoprata10/nvim-highlight-colors',
+    upstream_branch = 'main',
     event = { 'BufReadPre', 'BufNewFile' },
     config = function()
       require('nvim-highlight-colors').setup({
@@ -238,6 +240,8 @@ return {
   {
     'PeterCardenas/noice.nvim',
     branch = 'fix-blink-cmp-cmdline-completion',
+    upstream = 'folke/noice.nvim',
+    upstream_branch = 'main',
     priority = 999,
     dependencies = {
       'MunifTanjim/nui.nvim',
@@ -1031,6 +1035,8 @@ return {
     -- https://github.com/folke/snacks.nvim/pull/1744
     'PeterCardenas/snacks.nvim',
     branch = 'dev',
+    upstream = 'folke/snacks.nvim',
+    upstream_branch = 'main',
     priority = 1009,
     lazy = false,
     config = function()

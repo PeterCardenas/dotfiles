@@ -17,6 +17,8 @@ return {
   {
     'PeterCardenas/agentic.nvim',
     branch = 'vibin',
+    upstream = 'carlos-algms/agentic.nvim',
+    upstream_branch = 'main',
     cond = function()
       return Config.USE_AGENTIC
     end,
@@ -89,7 +91,12 @@ return {
     },
     cmd = { 'AgenticFullscreen' },
     dependencies = {
-      { 'PeterCardenas/img-clip.nvim', branch = 'dev' },
+      {
+        'PeterCardenas/img-clip.nvim',
+        branch = 'dev',
+        upstream = 'hakonharnes/img-clip.nvim',
+        upstream_branch = 'main',
+      },
       'nvim-treesitter/nvim-treesitter',
     },
     config = function()
