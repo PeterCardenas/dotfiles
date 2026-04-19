@@ -851,7 +851,6 @@ return {
       local library = {
         'lazy.nvim',
         { path = lazy_path .. '/nvim-cmp', mods = { 'cmp' } },
-        { path = 'luvit-meta/library', words = { 'vim%.uv', 'vim%.loop' } },
       }
       local cwd = File.get_cwd()
       -- Do not add snacks.nvim twice to library
@@ -882,9 +881,6 @@ return {
       })
     end,
   },
-
-  --- Optional types for vim.uv
-  { 'Bilal2453/luvit-meta', lazy = true },
 
   -- Adds additional extensions for clangd.
   {
