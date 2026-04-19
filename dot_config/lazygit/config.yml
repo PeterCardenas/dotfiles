@@ -54,7 +54,6 @@ keybinding:
 git:
   parseEmoji: true
   overrideGpg: true
-  # TODO: set --verbose when running commit editor
   # TODO: use branchPrefix but specific to repos
   # TODO: commitPrefix but specific to repos
   pagers:
@@ -67,7 +66,6 @@ promptToReturnFromSubprocess: false
 disableStartupPopups: true
 quitOnTopLevelReturn: true
 # TODO: rebase continue freezes the gui
-# TODO: discard changes freezes the gui
 os:
   editPreset: 'nvim-remote'
   edit: 'lazygit_nvim {{filename}}'
