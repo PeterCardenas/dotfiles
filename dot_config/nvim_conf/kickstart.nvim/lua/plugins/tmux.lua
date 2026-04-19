@@ -217,7 +217,8 @@ local function poll_update_tmux_env()
 end
 
 local function is_floating_non_fzf()
-  local cfg = vim.api.nvim_win_get_config(0)
+  local cur_win = vim.api.nvim_get_current_win()
+  local cfg = vim.api.nvim_win_get_config(cur_win)
   if cfg.relative == '' then
     return false
   end
