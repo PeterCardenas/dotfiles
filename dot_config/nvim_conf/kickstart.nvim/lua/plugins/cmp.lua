@@ -425,6 +425,7 @@ return {
             gitcommit = { 'git', 'emoji', 'path' },
             ghostty = { 'omni', 'path', 'fonts', 'emoji' },
             query = { 'omni' },
+            help = { 'omni' },
             ['dap-repl'] = maybe_get_dap,
             ['dapui_watches'] = maybe_get_dap,
             ['dapui_hover'] = maybe_get_dap,
@@ -524,8 +525,11 @@ return {
                 return vim.bo.omnifunc ~= 'v:lua.vim.lsp.omnifunc' and vim.bo.omnifunc ~= 'v:lua.octo_omnifunc'
               end,
               transform_items = function(ctx, items)
+                if vim.bo[ctx.bufnr].filetype ~= 'ghostty' then
+                  return items
+                end
                 local _, col = unpack(ctx.cursor)
-                local line_to_cursor = ctx.line:sub(0, col - 1)
+                local line_to_cursor = ctx.line:sub(1, col - 1)
                 if line_to_cursor:match('^%s*[a-z%-]+%s+[^%s]+.*$') then
                   return {}
                 end
