@@ -6,6 +6,7 @@ local Log = require('utils.log')
 
 local M = {}
 
+---@return string?
 local function get_tui_client_pid()
   for _, ui in ipairs(vim.api.nvim_list_uis()) do
     local info = vim.api.nvim_get_chan_info(ui.chan)
@@ -13,6 +14,7 @@ local function get_tui_client_pid()
       return info.client.attributes.pid
     end
   end
+  error('Failed to find nvim-tui client')
 end
 
 ---Set ghostty navigation for specific directions (disables all others)
