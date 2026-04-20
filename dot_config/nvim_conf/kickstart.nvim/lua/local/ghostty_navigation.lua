@@ -50,6 +50,17 @@ local function is_blink_menu_visible()
   return blink.is_menu_visible()
 end
 
+---Check if we are in cmdline or cmdwin mode.
+---@return boolean
+local function is_cmdline_mode()
+  local mode = vim.api.nvim_get_mode().mode
+  if mode == 'c' then
+    return true
+  end
+
+  return vim.fn.getcmdwintype() ~= ''
+end
+
 ---Check if current buffer is an fzf buffer
 ---@return boolean
 local function is_picker_buffer()
@@ -83,6 +94,11 @@ local function get_edge_directions()
     edges.l = true
     edges.j = true
     edges.k = true
+  end
+
+  if is_cmdline_mode() then
+    edges.j = false
+    edges.k = false
   end
 
   -- If blink.cmp menu is visible or in fzf buffer, never enable j/k for ghostty (keep them for vim)
@@ -194,7 +210,7 @@ local function setup_autocommands()
   end
 
   -- Events that should update ghostty navigation (no pattern)
-  vim.api.nvim_create_autocmd({ 'VimEnter', 'WinEnter', 'VimResized', 'VimResume', 'FocusGained', 'TermEnter', 'TermLeave' }, {
+  vim.api.nvim_create_autocmd({ 'VimEnter', 'WinEnter', 'VimResized', 'VimResume', 'FocusGained', 'TermEnter', 'TermLeave', 'CmdlineEnter', 'CmdlineLeave' }, {
     desc = 'Update ghostty navigation',
     group = group,
     callback = function(args)
@@ -209,6 +225,9 @@ local function setup_autocommands()
     desc = 'Update ghostty navigation after layout change',
     group = group,
     callback = function(args)
+      if is_cmdline_mode() then
+        return
+      end
       -- Defer so the layout is fully settled before recalculating edges
       vim.schedule(function()
         do_update(args.event)
@@ -252,6 +271,9 @@ local function setup_autocommands()
     desc = 'Update ghostty navigation on blink menu change',
     group = group,
     callback = function(args)
+      if is_cmdline_mode() then
+        return
+      end
       Async.void(
         ---@async
         function()
