@@ -58,6 +58,9 @@ return {
         winopts = {
           height = 0.98,
           width = 0.98,
+          preview = {
+            wrap = true,
+          },
         },
         previewers = {
           builtin = {
