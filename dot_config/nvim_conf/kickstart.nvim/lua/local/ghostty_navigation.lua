@@ -5,6 +5,43 @@ local Shell = require('utils.shell')
 local Log = require('utils.log')
 
 local M = {}
+local UPDATE_DEBOUNCE_MS = 50
+local FOCUS_GAINED_DELAY_MS = 250
+
+---@type uv.uv_timer_t?
+local update_timer = nil
+---@type string?
+local pending_update_event = nil
+local pending_focus_delay = false
+local is_navigation_update_in_flight = false
+---@type string?
+local pending_directions = nil
+---@type string?
+local pending_context = nil
+---@type string?
+local last_applied_directions = nil
+
+---@return uv.uv_timer_t
+local function get_update_timer()
+  if update_timer then
+    return update_timer
+  end
+
+  update_timer = vim.uv.new_timer()
+  if not update_timer then
+    error('Failed to create ghostty navigation update timer')
+  end
+
+  return update_timer
+end
+
+local function clear_scheduled_update()
+  pending_update_event = nil
+  pending_focus_delay = false
+  if update_timer then
+    update_timer:stop()
+  end
+end
 
 ---@return string?
 local function get_tui_client_pid()
@@ -22,7 +59,10 @@ end
 ---@param directions string
 ---@return boolean, string|nil
 local function set_ghostty_navigation(directions)
-  local tui_pid = get_tui_client_pid()
+  local ok, tui_pid = pcall(get_tui_client_pid)
+  if not ok then
+    return false, tostring(tui_pid)
+  end
   local success, output = Shell.async_cmd('fish', { '-c', 'ghostty_nvim_nav ' .. directions .. ' ' .. tui_pid })
   if not success then
     return false, 'Failed to set ghostty navigation for: ' .. directions .. '\n' .. table.concat(output, '\n')
@@ -33,7 +73,10 @@ end
 ---@param directions string
 ---@return boolean, string|nil
 local function set_ghostty_navigation_sync(directions)
-  local tui_pid = get_tui_client_pid()
+  local ok, tui_pid = pcall(get_tui_client_pid)
+  if not ok then
+    return false, tostring(tui_pid)
+  end
   local success, output = Shell.sync_cmd('fish -c "ghostty_nvim_nav ' .. directions .. ' ' .. tui_pid .. '"')
   if not success then
     return false, 'Failed to set ghostty navigation for: ' .. directions .. '\n' .. table.concat(output, '\n')
@@ -70,6 +113,42 @@ local function is_picker_buffer()
   local mode = vim.api.nvim_get_mode().mode
   local filetype = vim.bo[bufnr].filetype
   return filetype == 'fzf' or (filetype == 'TelescopePrompt' and mode == 'i')
+end
+
+---@param directions string
+---@param context string
+local function queue_ghostty_navigation(directions, context)
+  pending_directions = directions
+  pending_context = context
+
+  if is_navigation_update_in_flight then
+    return
+  end
+
+  Async.void(
+    ---@async
+    function()
+      while pending_directions ~= nil do
+        local next_directions = pending_directions
+        local next_context = pending_context or 'ghostty_navigation'
+        pending_directions = nil
+        pending_context = nil
+
+        if next_directions ~= last_applied_directions then
+          is_navigation_update_in_flight = true
+          local success, err = set_ghostty_navigation(next_directions)
+          is_navigation_update_in_flight = false
+
+          if not success then
+            Log.notify_error('[ghostty_navigation] ' .. next_context .. ': ' .. (err or 'Failed to update navigation'))
+            return
+          end
+
+          last_applied_directions = next_directions
+        end
+      end
+    end
+  )
 end
 
 ---@class ghostty_nav.EdgeDirections
@@ -115,10 +194,9 @@ local function get_edge_directions()
   return edges
 end
 
----Update ghostty navigation based on current window position
----@async
----@return boolean, string|nil
-local function update_ghostty_navigation()
+---Build the directions that ghostty should handle right now.
+---@return string
+local function get_ghostty_navigation_directions()
   local edges = get_edge_directions()
 
   -- Build list of directions that are at edge
@@ -132,13 +210,32 @@ local function update_ghostty_navigation()
   end
 
   -- Set ghostty navigation for only the directions at edge (disables all others)
-  local dirs_str = table.concat(to_enable, ',')
-  local ok, err = set_ghostty_navigation(dirs_str)
-  if not ok then
-    return false, err
-  end
+  return table.concat(to_enable, ',')
+end
 
-  return true, nil
+---@param context string
+local function update_ghostty_navigation(context)
+  queue_ghostty_navigation(get_ghostty_navigation_directions(), context)
+end
+
+---@param event_name string
+local function schedule_ghostty_navigation_update(event_name)
+  pending_update_event = event_name
+  pending_focus_delay = pending_focus_delay or event_name == 'FocusGained'
+
+  local delay_ms = pending_focus_delay and FOCUS_GAINED_DELAY_MS or UPDATE_DEBOUNCE_MS
+  local timer = get_update_timer()
+  timer:stop()
+  timer:start(
+    delay_ms,
+    0,
+    vim.schedule_wrap(function()
+      local current_event = pending_update_event or event_name
+      pending_update_event = nil
+      pending_focus_delay = false
+      update_ghostty_navigation(current_event)
+    end)
+  )
 end
 
 ---Navigate in direction
@@ -152,15 +249,7 @@ local function vim_navigate(direction)
   end
 
   -- Update ghostty navigation after window change
-  Async.void(
-    ---@async
-    function()
-      local success, error_msg = update_ghostty_navigation()
-      if not success then
-        Log.notify_error('[ghostty_navigation] ' .. (error_msg or 'Failed to update navigation'))
-      end
-    end
-  )
+  update_ghostty_navigation('Navigate')
 end
 
 ---Setup keymaps for navigation
@@ -195,28 +284,12 @@ end
 local function setup_autocommands()
   local group = vim.api.nvim_create_augroup('ghostty_navigator', { clear = true })
 
-  local function do_update(event_name)
-    Async.void(
-      ---@async
-      function()
-        -- HACK: workaround race between focus lost and focus gained
-        if event_name == 'FocusGained' then
-          Shell.sleep(250)
-        end
-        local success, err = update_ghostty_navigation()
-        if not success then
-          Log.notify_error('[ghostty_navigation] ' .. event_name .. ': ' .. (err or 'Failed to update navigation'))
-        end
-      end
-    )
-  end
-
   -- Events that should update ghostty navigation (no pattern)
   vim.api.nvim_create_autocmd({ 'VimEnter', 'WinEnter', 'VimResized', 'VimResume', 'FocusGained', 'TermEnter', 'TermLeave', 'CmdlineEnter', 'CmdlineLeave' }, {
     desc = 'Update ghostty navigation',
     group = group,
     callback = function(args)
-      do_update(args.event)
+      schedule_ghostty_navigation_update(args.event)
     end,
   })
 
@@ -232,7 +305,7 @@ local function setup_autocommands()
       end
       -- Defer so the layout is fully settled before recalculating edges
       vim.schedule(function()
-        do_update(args.event)
+        schedule_ghostty_navigation_update(args.event)
       end)
     end,
   })
@@ -242,15 +315,8 @@ local function setup_autocommands()
     desc = 'Enable all ghostty navigation',
     group = group,
     callback = function(args)
-      Async.void(
-        ---@async
-        function()
-          local success, err = set_ghostty_navigation('all')
-          if not success then
-            Log.notify_error('[ghostty_navigation] ' .. args.event .. ': ' .. (err or 'Failed to enable all navigation'))
-          end
-        end
-      )
+      clear_scheduled_update()
+      queue_ghostty_navigation('all', args.event)
     end,
   })
 
@@ -259,9 +325,12 @@ local function setup_autocommands()
     desc = 'Enable all ghostty navigation on vim leave',
     group = group,
     callback = function()
+      clear_scheduled_update()
       local success, err = set_ghostty_navigation_sync('all')
       if not success then
         Log.notify_error('[ghostty_navigation] VimLeavePre: ' .. (err or 'Failed to enable all navigation'))
+      else
+        last_applied_directions = 'all'
       end
       vim.cmd('sleep 10m')
     end,
@@ -276,15 +345,7 @@ local function setup_autocommands()
       if is_cmdline_mode() then
         return
       end
-      Async.void(
-        ---@async
-        function()
-          local success, err = update_ghostty_navigation()
-          if not success then
-            Log.notify_error('[ghostty_navigation] ' .. args.match .. ': ' .. (err or 'Failed to update navigation'))
-          end
-        end
-      )
+      schedule_ghostty_navigation_update(args.match)
     end,
   })
 end
@@ -300,15 +361,7 @@ function M.setup()
   setup_keymaps()
 
   -- Initialize by updating ghostty navigation based on current window
-  Async.void(
-    ---@async
-    function()
-      local success, err = update_ghostty_navigation()
-      if not success then
-        Log.notify_error('[ghostty_navigation] Setup: ' .. (err or 'Failed to initialize navigation'))
-      end
-    end
-  )
+  update_ghostty_navigation('Setup')
 end
 
 return M
