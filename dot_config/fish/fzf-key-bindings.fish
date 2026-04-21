@@ -163,6 +163,8 @@ function fzf-widget -a widget_name
     if set -q TMUX
         set -l pane_id (tmux display-message -p -F "#{pane_id}")
         tmux set-option -t $pane_id -p @disable_vertical_pane_navigation yes
+    else
+        ghostty_nvim_nav h,l 2>/dev/null
     end
     switch $widget_name
         case file
@@ -174,6 +176,8 @@ function fzf-widget -a widget_name
     end
     if set -q TMUX
         tmux set-option -t $pane_id -p -u @disable_vertical_pane_navigation
+    else
+        ghostty_nvim_nav all 2>/dev/null
     end
 end
 
