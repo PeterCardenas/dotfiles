@@ -38,6 +38,26 @@ local function load_async()
   return cached_async
 end
 
+---Create an async leaf function while deferring `async.wrap()` until first use.
+---@param func function
+---@param argc integer
+---@return function
+function M.wrap(func, argc)
+  local wrapped = nil
+
+  return function(...)
+    if wrapped == nil then
+      local async = load_async()
+      if not async then
+        return
+      end
+      wrapped = async.wrap(func, argc)
+    end
+
+    return wrapped(...)
+  end
+end
+
 ---Immediately executes an async function inside of a sync context.
 ---@param async_func async fun(): nil
 ---@return nil
