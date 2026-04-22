@@ -57,6 +57,13 @@ query GetUserForksForRepo($owner: String!, $name: String!) {
         if test (count $repo_matches) -eq 1
             set repo_name $repo_matches[1]
         end
+        if status is-interactive; and isatty stdin
+            read --local --prompt-str "No existing fork found for $repo_name. Set one up now? [y/N] " should_setup_fork
+            if string match -rqi '^(y|yes)$' -- "$should_setup_fork"
+                setup_fork
+                return $status
+            end
+        end
         gh repo set-default $repo_name
     end
 end
