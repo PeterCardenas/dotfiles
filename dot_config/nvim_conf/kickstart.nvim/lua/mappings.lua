@@ -62,6 +62,8 @@ end, { desc = 'Quit all' })
 
 -- Remap for dealing with word wrap and concealed lines.
 -- When conceallevel > 0, j/k skip over lines hidden by conceal_lines extmarks.
+---@param bufnr integer
+---@param lnum integer
 local function is_line_concealed(bufnr, lnum)
   local marks = vim.api.nvim_buf_get_extmarks(bufnr, -1, { lnum, 0 }, { lnum, 0 }, { details = true, overlap = true })
   for _, mark in ipairs(marks) do
@@ -72,7 +74,9 @@ local function is_line_concealed(bufnr, lnum)
   return false
 end
 
+---@param direction 'j'|'k'
 local function move_skip_concealed(direction)
+  -- TODO: handle smoothscroll, potentiall need to change scrolloff dynamically to accomodate
   local motion = direction == 'j' and 'gj' or 'gk'
   local count = vim.v.count1
   vim.cmd('normal! ' .. count .. motion)
