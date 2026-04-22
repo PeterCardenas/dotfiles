@@ -99,7 +99,7 @@ function __git_status_prompt_loading_indicator -a last_prompt --description "Pri
     end
     set -l current_git_dir $current_dir
     # walk up to find git root
-    while test "$current_git_dir" != "$HOME" -a "$current_git_dir" != "/" -a "$current_git_dir" != "."
+    while test "$current_git_dir" != "$HOME" -a "$current_git_dir" != / -a "$current_git_dir" != "."
         if test -d $current_git_dir/.git
             if test "$current_git_dir" != "$prev_git_dir"
                 echo -n "… "
