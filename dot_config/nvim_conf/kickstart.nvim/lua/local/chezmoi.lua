@@ -2,6 +2,7 @@ local Async = require('utils.async')
 local Shell = require('utils.shell')
 local Log = require('utils.log')
 local File = require('utils.file')
+local Spinner = require('utils.spinner')
 
 local chezmoi_augroup = vim.api.nvim_create_augroup('Chezmoi', { clear = true })
 
@@ -132,18 +133,17 @@ local function apply_and_notify(source_path, filepath)
   if not maybe_should_sync(source_path, filepath) then
     return
   end
-  local notify_key = 'chezmoi_apply_' .. source_path
-  require('fidget').notify(' ', vim.log.levels.WARN, {
-    group = notify_key,
-    key = notify_key,
-    annote = 'Applying changes with chezmoi...',
-    ttl = math.huge,
+  local progress_handle = Spinner.create_progress_handle({
+    group = 'Chezmoi',
+    message = 'Applying changes with chezmoi...',
   })
   local errored, logs = apply_filepath(source_path, filepath)
-  require('fidget').notification.remove(notify_key, notify_key)
   if errored then
+    progress_handle:finish('chezmoi apply failed')
     Log.notify_error('chezmoi apply failed: ' .. table.concat(logs, '\n'))
+    return
   end
+  progress_handle:finish('Applied changes with chezmoi')
 end
 
 ---@param source_path string

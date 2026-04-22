@@ -3,42 +3,75 @@ local File = require('utils.file')
 local Format = require('plugins.lsp.format')
 local Shell = require('utils.shell')
 local Python = require('plugins.lsp.python')
-local Spinner = require('utils.spinner')
 local Log = require('utils.log')
+local Spinner = require('utils.spinner')
+
+---@module 'fidget'
 
 local LINT_POLL_INTERVAL_MS = 16
----@type uv_timer_t?
+---@type uv.uv_timer_t?
 local lint_poll_timer = nil
-local spinner = Spinner.create_spinner('moon')
----@type uv_timer_t?
+---@type SpinnerProgressHandle?
+local lint_progress_handle = nil
+---@type uv.uv_timer_t?
 local finish_timer = nil
+
+---@param timer uv.uv_timer_t?
+---@return nil
+local function close_timer(timer)
+  if not timer then
+    return
+  end
+  timer:stop()
+  timer:close()
+end
+
+---@return SpinnerProgressHandle
+local function ensure_lint_progress_handle()
+  if lint_progress_handle and not lint_progress_handle.handle.done then
+    return lint_progress_handle
+  end
+  lint_progress_handle = Spinner.create_progress_handle({
+    group = 'Lint',
+    message = 'Running linters...',
+    pattern = 'moon',
+  })
+  return lint_progress_handle
+end
+
+---@param message string
+local function finish_lint_notification(message)
+  if not lint_progress_handle or lint_progress_handle.handle.done then
+    return
+  end
+  lint_progress_handle:finish(message)
+end
 
 local function update_lint_notification()
   local running_linters = require('lint').get_running()
   if #running_linters > 0 then
-    require('fidget').notify(spinner() .. ' Running ' .. table.concat(running_linters, ', ') .. '...', vim.log.levels.INFO, {
-      group = 'lint_status',
-      key = 'lint_status',
-      annote = '',
-      ttl = math.huge,
-    })
+    close_timer(finish_timer)
+    finish_timer = nil
+    ensure_lint_progress_handle():report('Running ' .. table.concat(running_linters, ', ') .. '...')
   else
-    if finish_timer then
-      finish_timer:stop()
+    if not lint_progress_handle or lint_progress_handle.handle.done then
+      return
     end
-    require('fidget').notify('✅ Linting complete', vim.log.levels.INFO, {
-      group = 'lint_status',
-      key = 'lint_status',
-      annote = '',
-      ttl = math.huge,
-    })
+    close_timer(finish_timer)
     finish_timer = vim.uv.new_timer()
-    finish_timer:start(500, 0, function()
-      running_linters = require('lint').get_running()
-      if #running_linters == 0 then
-        require('fidget').notification.remove('lint_status', 'lint_status')
-      end
-    end)
+    assert(finish_timer)
+    finish_timer:start(
+      500,
+      0,
+      vim.schedule_wrap(function()
+        local active_linters = require('lint').get_running()
+        if #active_linters == 0 then
+          finish_lint_notification('Linting complete')
+        end
+        close_timer(finish_timer)
+        finish_timer = nil
+      end)
+    )
   end
 end
 
@@ -103,6 +136,7 @@ vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter', 'BufNewFile' }, {
     -- Start polling timer if not already running
     if not lint_poll_timer then
       lint_poll_timer = vim.uv.new_timer()
+      assert(lint_poll_timer)
       lint_poll_timer:start(
         0,
         LINT_POLL_INTERVAL_MS,
@@ -127,10 +161,6 @@ local nogo_diagnostic_ns = vim.api.nvim_create_namespace('GoBazelLint')
 ---Map of filenames to functions that will lint the file.
 ---@type table<string, async fun(): nil>
 local bazel_go_lint_queue = {}
-
----@type SpinnerTimer?
-local bazel_go_lint_spinner_timer = nil
-local bazel_go_lint_spinner = Spinner.create_spinner('moon')
 
 ---@async
 local function enqueue_next_bazel_go_lint()
@@ -162,19 +192,14 @@ local function bazel_go_lint(abs_filepath)
   if vim.startswith(relative_parent_dir, 'bazel-') then
     return
   end
-  bazel_go_lint_spinner_timer = Spinner.create_timer()
-  bazel_go_lint_spinner_timer.start(function()
-    require('fidget').notify(bazel_go_lint_spinner() .. ' Querying for go targets...', vim.log.levels.INFO, {
-      group = 'bazel_go_lint',
-      key = 'bazel_go_lint',
-      annote = '',
-      ttl = math.huge,
-    })
-  end)
+  local progress_handle = Spinner.create_progress_handle({
+    group = 'Bazel',
+    message = 'Querying for go targets...',
+    pattern = 'moon',
+  })
   local success, output = Shell.async_cmd('buildozer', { '-types', 'go_library,go_test', 'print label srcs', '//' .. relative_parent_dir .. ':*' })
-  bazel_go_lint_spinner_timer.stop()
-  require('fidget').notification.remove('bazel_go_lint', 'bazel_go_lint')
   if not success then
+    progress_handle:finish('Failed to query go targets')
     Log.notify_error('Failed to buildozer query for go: ' .. table.concat(output, '\n'))
     return
   end
@@ -191,18 +216,8 @@ local function bazel_go_lint(abs_filepath)
     end
   end
 
-  bazel_go_lint_spinner_timer = Spinner.create_timer()
-  bazel_go_lint_spinner_timer.start(function()
-    require('fidget').notify(bazel_go_lint_spinner() .. ' Building go target...', vim.log.levels.INFO, {
-      group = 'bazel_go_lint',
-      key = 'bazel_go_lint',
-      annote = '',
-      ttl = math.huge,
-    })
-  end)
+  progress_handle:report('Building go target...')
   success, output = Shell.async_cmd('bazel', { output_base_flag, 'build', '--color=no', table.concat(matched_targets, ' ') }, { cwd = workspace_root })
-  bazel_go_lint_spinner_timer.stop()
-  require('fidget').notification.remove('bazel_go_lint', 'bazel_go_lint')
   ---@type table<string, vim.Diagnostic[]>
   local file_diagnostics = {}
   ---@param line string
@@ -264,6 +279,11 @@ local function bazel_go_lint(abs_filepath)
       parse_diagnostic_with_lnum(line)
     end
   end
+  if not success then
+    progress_handle:finish('Go build failed')
+    Log.notify_error('Failed to build go target: ' .. table.concat(output, '\n'))
+    return
+  end
   local function filename_to_bufnr(filename)
     local file_uri = vim.uri_from_fname(workspace_root .. '/' .. filename)
     local bufnr = vim.uri_to_bufnr(file_uri)
@@ -313,6 +333,7 @@ local function bazel_go_lint(abs_filepath)
     end
   end
   vim.schedule(set_diagnostics)
+  progress_handle:finish('Updated go diagnostics')
 end
 
 vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter' }, {

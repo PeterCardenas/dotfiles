@@ -1,5 +1,6 @@
 local Config = require('utils.config')
 local Log = require('utils.log')
+local Spinner = require('utils.spinner')
 
 ---@type LazyPluginSpec[]
 return {
@@ -406,21 +407,13 @@ return {
               .. transcript
 
             local Async = require('utils.async')
-            local Spinner = require('utils.spinner')
-            local fidget_group = 'agentic_title_' .. data.tab_page_id
-            local fidget_key = string.format('%s:%d', data.session_id, vim.uv.hrtime())
             Async.void(function() ---@async
               local Shell = require('utils.shell')
-              local timer = Spinner.create_timer()
-              local spinner = Spinner.create_spinner('moon')
-              timer.start(function()
-                require('fidget').notify(spinner() .. ' Generating title...', vim.log.levels.INFO, {
-                  group = fidget_group,
-                  key = fidget_key,
-                  annote = '',
-                  ttl = math.huge,
-                })
-              end)
+              local title_progress = Spinner.create_progress_handle({
+                group = 'Agentic',
+                message = 'Generating title...',
+                pattern = 'moon',
+              })
               local max_retries = 3
               local title = nil
               for _ = 1, max_retries do
@@ -437,8 +430,11 @@ return {
                 Log.notify_warn(string.format('Title too long (%d words), retrying...\n%s', word_count, title), { title = 'Title Generation' })
                 ::continue::
               end
-              timer.stop()
-              require('fidget').notification.remove(fidget_group, fidget_key)
+              if title and title ~= '' then
+                title_progress:finish('Generated title')
+              else
+                title_progress:finish('Failed to generate title')
+              end
               if title and title ~= '' then
                 vim.schedule(function()
                   chat_history.title = title

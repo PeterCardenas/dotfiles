@@ -177,6 +177,9 @@ return {
             window = {
               winblend = 0,
             },
+            view = {
+              group_separator = false,
+            },
           },
           integration = {
             ['nvim-tree'] = {
