@@ -82,7 +82,7 @@ function M.rg_files_cmd(show_ignore)
     stdbuf_cmd = stdbuf_cmd .. ' '
   end
 
-  local cmd = '{ ' .. fre_cmd .. '; ' .. rg_cmd .. '; }' .. ' | ' .. stdbuf_cmd .. "awk '!seen[$0]++'"
+  local cmd = '{ { ' .. fre_cmd .. '; } & { ' .. rg_cmd .. '; } & wait; }' .. ' | ' .. stdbuf_cmd .. "awk '!seen[$0]++'"
   return cmd
 end
 
