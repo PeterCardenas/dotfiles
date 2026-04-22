@@ -3,6 +3,7 @@ local Async = require('utils.async')
 local File = require('utils.file')
 local TypeScript = require('utils.typescript')
 local Lsp = require('utils.lsp')
+local Log = require('utils.log')
 
 ---Lock for buffers to hold while formatting.
 ---@type table<integer, boolean>
@@ -198,6 +199,37 @@ end
 ---@param on_complete? FormatCallback
 local function fix_rust_analyzer_errors(bufnr, dry_run, on_complete)
   fix_from_code_action(bufnr, 'rust-analyzer', 'source.organizeImports', dry_run, on_complete)
+end
+
+---Fix all auto-fixable stylelint errors.
+---@param bufnr integer
+---@param dry_run boolean
+---@param on_complete? FormatCallback
+local function fix_stylelint_errors(bufnr, dry_run, on_complete)
+  local client = vim.lsp.get_clients({
+    bufnr = bufnr,
+    name = 'stylelint_lsp',
+    method = vim.lsp.protocol.Methods.workspace_executeCommand,
+  })[1]
+  on_complete = on_complete or function() end
+  if not client or dry_run then
+    return on_complete(false)
+  end
+  client:request('workspace/executeCommand', {
+    command = 'stylelint.applyAutoFix',
+    arguments = {
+      {
+        uri = vim.uri_from_bufnr(bufnr),
+        version = vim.lsp.util.buf_versions[bufnr],
+      },
+    },
+  }, function(err)
+    if err then
+      Log.notify_error(err.message, { title = 'Error running stylelint autofix' })
+      return on_complete(false)
+    end
+    return on_complete(true)
+  end, bufnr)
 end
 
 ---@param bufnr integer
@@ -593,6 +625,7 @@ local function format_with_check(bufnr, dry_run, on_complete)
     { 'ruff_lsp', fix_ruff_errors },
     { 'typescript-tools', fix_typescript_errors },
     { 'rust-analyzer', fix_rust_analyzer_errors },
+    { 'stylelint_lsp', fix_stylelint_errors },
   }
 
   local possible_formatter_names = require('conform').list_formatters_for_buffer(bufnr)
