@@ -71,7 +71,7 @@ month_cents=$(fetch_total_cents "$month_start_ms")
 
 day_result=$(awk "BEGIN{printf \"\$%.2f\", $day_cents / 100}")
 month_result=$(awk "BEGIN{printf \"\$%.2f\", $month_cents / 100}")
-result="󰬁 ${day_result} | ${month_result}"
+result="󰆦 ${day_result} | ${month_result}"
 
 printf '%s\n%s' "$now" "$result" >"$cache"
 printf '%s' "$result"
