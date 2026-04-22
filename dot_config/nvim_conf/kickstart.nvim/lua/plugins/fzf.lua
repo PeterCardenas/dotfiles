@@ -28,16 +28,6 @@ return {
       end
       require('fzf-lua').setup({
         'hide',
-        ui_select = function(ui_opts, items)
-          local prompt = (ui_opts.prompt or 'Select one of:'):gsub(':%s*$', '') .. '> '
-          return {
-            prompt = prompt,
-            winopts = {
-              height = math.min(math.max(#items + 4, 5), 15),
-              width = 0.5,
-            },
-          }
-        end,
         keymap = {
           builtin = {
             ['<C-D>'] = 'preview-page-down',

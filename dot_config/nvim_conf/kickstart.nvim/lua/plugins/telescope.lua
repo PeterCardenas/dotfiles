@@ -6,6 +6,7 @@ return {
   dependencies = {
     'nvim-lua/plenary.nvim',
     'nvim-treesitter/nvim-treesitter',
+    'nvim-telescope/telescope-ui-select.nvim',
     -- Fuzzy Finder Algorithm which requires local dependencies to be built.
     -- Only load if `make` is available. Make sure you have the system
     -- requirements installed.
@@ -19,9 +20,11 @@ return {
   },
   config = function()
     -- [[ Configure Telescope ]]
+    local telescope = require('telescope')
     local telescope_actions = require('telescope.actions')
     local lga_actions = require('telescope-live-grep-args.actions')
-    require('telescope').setup({
+    local telescope_themes = require('telescope.themes')
+    telescope.setup({
       defaults = {
         layout_config = {
           horizontal = {
@@ -51,10 +54,18 @@ return {
             },
           },
         },
+        ['ui-select'] = telescope_themes.get_dropdown({
+          previewer = false,
+          layout_config = {
+            height = 15,
+            width = 0.5,
+          },
+        }),
       },
     })
 
     -- Enable telescope fzf native, if installed
-    require('telescope').load_extension('fzf')
+    telescope.load_extension('fzf')
+    telescope.load_extension('ui-select')
   end,
 }
