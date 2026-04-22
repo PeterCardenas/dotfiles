@@ -32,7 +32,7 @@ ESCAPED_PR_ATTRIBUTION_RES = tuple(
 )
 
 
-def sanitize_command(command: str) -> str:
+def _sanitize_command(command: str) -> str:
     cleaned = command
     for trailer_re in LITERAL_TRAILER_RES:
         cleaned = trailer_re.sub("", cleaned)
@@ -68,7 +68,7 @@ def _main() -> None:
         json.dump({}, sys.stdout)
         return
 
-    cleaned = sanitize_command(command)
+    cleaned = _sanitize_command(command)
     if cleaned == command:
         json.dump({}, sys.stdout)
         return
