@@ -8,6 +8,8 @@ local M = {}
 local enable_pyright = not Config.USE_JEDI
 M.GEN_FILES_PATH = 'bazel-out/k8-fastbuild/bin'
 
+---@module 'lspconfig'
+
 ---@return LspTogglableConfig
 local function pyright_config()
   ---@type LspTogglableConfig
@@ -265,31 +267,17 @@ function M.maybe_install_python_dependencies(override_requirements_path, force_p
   else
     return
   end
-  local timer = Spinner.create_timer()
-  local spinner = Spinner.create_spinner({
-    '▰▱▱▱',
-    '▰▰▱▱',
-    '▰▰▰▱',
-    '▰▰▰▰',
-    '▰▱▱▱',
+  local progress_handle = Spinner.create_progress_handle({
+    group = 'Python',
+    message = 'Installing python dependencies...',
+    pattern = {
+      '▰▱▱▱',
+      '▰▰▱▱',
+      '▰▰▰▱',
+      '▰▰▰▰',
+      '▰▱▱▱',
+    },
   })
-  local cleared = false
-  timer.start(function()
-    if cleared then
-      return
-    end
-    require('fidget').notify(' ', vim.log.levels.WARN, {
-      group = 'install_python_deps',
-      key = 'install_python_deps',
-      annote = spinner() .. ' Installing python dependencies...',
-      ttl = math.huge,
-    })
-  end)
-  local function clear_fidget()
-    cleared = true
-    timer.stop()
-    require('fidget').notification.remove('install_python_deps', 'install_python_deps')
-  end
   if not File.file_exists(venv_path) or (force_python_version and not File.file_exists(venv_path .. '/lib/python' .. force_python_version)) then
     local venv_args = { 'venv', '--allow-python-downloads', '--managed-python' }
     if force_python_version then
@@ -297,11 +285,12 @@ function M.maybe_install_python_dependencies(override_requirements_path, force_p
       venv_args[#venv_args + 1] = force_python_version
     end
     venv_args[#venv_args + 1] = venv_path
+    progress_handle:report('Creating python virtualenv...')
     success, output = Shell.async_cmd('uv', venv_args)
     if not success then
+      progress_handle:finish('Failed to create python virtualenv')
       vim.schedule(function()
         vim.notify('Failed to start virtualenv:\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
-        clear_fidget()
       end)
       return
     end
@@ -310,33 +299,29 @@ function M.maybe_install_python_dependencies(override_requirements_path, force_p
   if extra_index_url then
     index_flag = '--index ' .. extra_index_url .. ' '
   end
+  progress_handle:report('Syncing python dependencies...')
   success, output = Shell.async_cmd(
     'bash',
     { '-c', 'source ' .. venv_path .. '/bin/activate && uv pip sync --index-strategy unsafe-best-match ' .. index_flag .. requirements_path }
   )
   if not success then
+    progress_handle:finish('Failed to install python dependencies')
     vim.schedule(function()
       vim.notify('Failed to install python dependencies:\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
-      clear_fidget()
     end)
     return
   end
+  progress_handle:report('Installing python tooling...')
   success, output = Shell.async_cmd('bash', { '-c', 'source ' .. venv_path .. '/bin/activate && uv pip install python-lsp-server==1.13.0 mypy pylint' })
   if not success then
+    progress_handle:finish('Failed to install python tooling')
     vim.schedule(function()
       vim.notify('Failed to install python tooling:\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
-      clear_fidget()
     end)
     return
   end
   vim.schedule(function()
-    clear_fidget()
-    require('fidget').notify(' ', vim.log.levels.INFO, {
-      group = 'install_python_deps',
-      key = 'install_python_deps',
-      annote = '✅ Installed python dependencies',
-      ttl = 3,
-    })
+    progress_handle:finish('Installed python dependencies')
     local config = pylsp_config()
     if config.enabled == false then
       return
