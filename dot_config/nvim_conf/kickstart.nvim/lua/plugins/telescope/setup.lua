@@ -1,8 +1,12 @@
 local Config = require('utils.config')
 local FilePicker = require('plugins.telescope.files_picker')
 local BufferPicker = require('plugins.telescope.buffer_picker')
+local Async = require('utils.async')
+local Shell = require('utils.shell')
 
 local M = {}
+---@type table<string, true|nil>
+local fre_prune_in_progress = {}
 
 function M.find_recent_files()
   if Config.USE_TELESCOPE then
@@ -30,6 +34,29 @@ local function get_global_gitignore_flag()
   local home = os.getenv('HOME')
   local global_gitignore = home .. '/.config/git/ignore'
   return '--ignore-file=' .. global_gitignore
+end
+
+local function prune_missing_fre_entries(type)
+  local store_name = M.get_fre_store_name(type)
+  if fre_prune_in_progress[store_name] then
+    return
+  end
+
+  fre_prune_in_progress[store_name] = true
+  Async.void(function() ---@async
+    local success, output = Shell.async_cmd('fre', { '--sorted', '--store_name', store_name })
+    if not success then
+      fre_prune_in_progress[store_name] = nil
+      return
+    end
+
+    for _, path in ipairs(output) do
+      if vim.uv.fs_stat(path) == nil then
+        Shell.async_cmd('fre', { '--delete', '--store_name', store_name, path }, { detach = true })
+      end
+    end
+    fre_prune_in_progress[store_name] = nil
+  end)
 end
 
 ---@param show_ignore boolean
@@ -64,6 +91,7 @@ function M.find_files(show_ignore)
   if Config.USE_TELESCOPE then
     FilePicker.find_files({ show_ignore = show_ignore })
   else
+    prune_missing_fre_entries('files')
     require('fzf-lua.providers.files').files({
       ---@type string
       cmd = M.rg_files_cmd(show_ignore),
