@@ -2,6 +2,7 @@ local M = {}
 
 ---@type table|nil
 local cached_async = nil
+local cached_scheduler = nil
 local load_attempted = false
 
 ---Safely load plenary.async (cached after first call)
@@ -56,6 +57,25 @@ function M.wrap(func, argc)
 
     return wrapped(...)
   end
+end
+
+---Yield to the main loop when running in a fast event.
+---@return nil
+function M.scheduler()
+  if not vim.in_fast_event() then
+    return
+  end
+
+  local async = load_async()
+  if not async then
+    return
+  end
+
+  if cached_scheduler == nil then
+    cached_scheduler = async.wrap(vim.schedule, 1)
+  end
+
+  cached_scheduler()
 end
 
 ---Immediately executes an async function inside of a sync context.
