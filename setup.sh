@@ -123,9 +123,9 @@ function setup_ubuntu() {
 	sudo -B nala install -y "${dpkg_third_party[@]}"
 
 	# Setup golang
-	wget https://go.dev/dl/go1.22.4.linux-amd64.tar.gz
-	tar -C /usr/local -xzf go1.22.4.linux-amd64.tar.gz
-	rm go1.22.4.linux-amd64.tar.gz
+	wget https://go.dev/dl/go1.26.2.linux-amd64.tar.gz
+	tar -C "$HOME/.local" -xzf go1.26.2.linux-amd64.tar.gz
+	rm go1.26.2.linux-amd64.tar.gz
 
 	# Install commitmsgfmt
 	pushd "$HOME/thirdparty"
