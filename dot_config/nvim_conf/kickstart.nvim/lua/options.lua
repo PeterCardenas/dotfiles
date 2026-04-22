@@ -9,6 +9,8 @@ vim.o.foldenable = true
 local fillchars = 'eob: ,fold: ,foldopen:+,foldsep:│,foldclose:-'
 vim.o.fillchars = fillchars .. ',foldinner: '
 
+vim.o.smoothscroll = true
+
 vim.o.swapfile = false
 
 -- Ignore whitespace in diffs by default
