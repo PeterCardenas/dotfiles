@@ -53,7 +53,7 @@ return {
   -- Smooth scrolling
   {
     'PeterCardenas/neoscroll.nvim',
-    branch = 'skip-over-concealed-lines',
+    branch = 'dev',
     upstream = 'karb94/neoscroll.nvim',
     upstream_branch = 'master',
     lazy = true,
