@@ -10,13 +10,12 @@ window-padding-y = 0
 window-padding-x = 1
 window-decoration = false
 
-font-family = "MonaspiceKr Nerd Font"
-font-family-bold-italic = "MonaspiceRn Nerd Font"
-font-style-bold-italic = "Bold"
-font-style-italic = "Medium"
-font-family-italic = "MonaspiceRn Nerd Font"
-# Underline is a bit high (especially for replace mode in fish shell).
-adjust-underline-position = 2
+font-family = "Annotation Mono"
+alpha-blending = linear
+font-variation = wght=320
+font-variation-italic = wght=320
+font-variation-bold = wght=400
+font-variation-bold-italic = wght=400
 
 # (worse) performance issues on macos, so only enable background shader on linux
 # custom-shader = ./shaders/cubes.glsl
