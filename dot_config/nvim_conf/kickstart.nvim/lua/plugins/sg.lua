@@ -466,7 +466,7 @@ return {
               local SessionRegistry = require('agentic.session_registry')
               local session = SessionRegistry.sessions[data.tab_page_id]
               local provider_name = session and session.agent and session.agent.provider_config and session.agent.provider_config.name or nil
-              if cost and provider_name == 'claude-agent-acp' then
+              if cost and provider_name == 'Claude Agent ACP' then
                 local sid = data.session_id
                 local entry = _spend_by_session[sid]
                 if not entry then
