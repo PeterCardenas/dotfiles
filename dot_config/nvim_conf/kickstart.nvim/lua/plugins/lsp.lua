@@ -258,12 +258,6 @@ return {
 
     servers.stylelint_lsp = {
       filetypes = { 'css', 'scss' },
-      settings = { ---@type lspconfig.settings.stylelint_lsp
-        -- TODO: fix settings
-        stylelintplus = {
-          autoFixOnFormat = true,
-        },
-      },
     }
 
     local lua_ls_path = 'lua-language-server'
