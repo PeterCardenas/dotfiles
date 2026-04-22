@@ -248,9 +248,9 @@ return {
       'rcarriga/nvim-notify',
     },
     config = function()
-      ---@diagnostic disable-next-line: missing-fields
       require('notify').setup({
         top_down = false,
+        merge_duplicates = true,
       })
       ---@diagnostic disable-next-line: missing-fields
       require('noice').setup({
