@@ -14,6 +14,7 @@ end
 ---@class ShellAsyncOpts
 ---@field cwd? string
 ---@field stdin? string
+---@field detach? boolean
 
 ---@type (async fun(cmd: string, args: string[], opts: ShellAsyncOpts | nil): (boolean, string[])) | nil
 local cached_async_cmd = nil
@@ -45,6 +46,7 @@ local function get_async_cmd()
           command = cmd,
           args = args,
           writer = opts.stdin,
+          detached = opts.detach,
           on_stdout = function(_, data)
             handle_output(data)
           end,
