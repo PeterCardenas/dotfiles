@@ -165,7 +165,7 @@ month_total=$(awk "BEGIN{printf \"%.2f\", $local_month_total + $remote_month_tot
 if [ "$today_total" = "0.00" ] && [ "$month_total" = "0.00" ]; then
   result=""
 else
-  result="󱜙 \$${today_total} | \$${month_total}"
+  result="  \$${today_total} | \$${month_total}"
 fi
 
 printf '%s\n%s' "$now" "$result" >"$cache"
