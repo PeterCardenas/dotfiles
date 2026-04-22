@@ -59,6 +59,7 @@ end
 ---@param directions string
 ---@return boolean, string|nil
 local function set_ghostty_navigation(directions)
+  Async.scheduler()
   local ok, tui_pid = pcall(get_tui_client_pid)
   if not ok then
     return false, tostring(tui_pid)
