@@ -19,16 +19,17 @@ LITERAL_TRAILER_RES = tuple(
 ESCAPED_TRAILER_RES = tuple(
     re.compile(rf"(?i){pattern}(?=(?:\\n|$|['\"]))") for pattern in TRAILER_PATTERNS
 )
+EMPTY_TRAILER_ARG_RE = re.compile(r"""\s+--trailer(?:\s+|=)(['"])\s*\1""")
 LITERAL_EMPTY_LINES_BEFORE_CLOSER_RE = re.compile(r"\n{2,}(?=['\"])")
 ESCAPED_EMPTY_LINES_BEFORE_CLOSER_RE = re.compile(r"(?:\\n){2,}(?=['\"])")
-PR_ATTRIBUTION_PATTERNS = (
-    r"Made with \[Cursor\]\(https://cursor\.com\)",
-)
+PR_ATTRIBUTION_PATTERNS = (r"Made with \[Cursor\]\(https://cursor\.com\)",)
 LITERAL_PR_ATTRIBUTION_RES = tuple(
-    re.compile(rf"(?i){pattern}(?=(?:\r?\n|$|['\"]))") for pattern in PR_ATTRIBUTION_PATTERNS
+    re.compile(rf"(?i){pattern}(?=(?:\r?\n|$|['\"]))")
+    for pattern in PR_ATTRIBUTION_PATTERNS
 )
 ESCAPED_PR_ATTRIBUTION_RES = tuple(
-    re.compile(rf"(?i){pattern}(?=(?:\\n|$|['\"]))") for pattern in PR_ATTRIBUTION_PATTERNS
+    re.compile(rf"(?i){pattern}(?=(?:\\n|$|['\"]))")
+    for pattern in PR_ATTRIBUTION_PATTERNS
 )
 
 
@@ -38,6 +39,7 @@ def _sanitize_command(command: str) -> str:
         cleaned = trailer_re.sub("", cleaned)
     for trailer_re in ESCAPED_TRAILER_RES:
         cleaned = trailer_re.sub("", cleaned)
+    cleaned = EMPTY_TRAILER_ARG_RE.sub("", cleaned)
     for attribution_re in LITERAL_PR_ATTRIBUTION_RES:
         cleaned = attribution_re.sub("", cleaned)
     for attribution_re in ESCAPED_PR_ATTRIBUTION_RES:
