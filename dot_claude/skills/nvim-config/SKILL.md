@@ -26,8 +26,26 @@ description: Use when editing, debugging, or testing Neovim configuration or plu
 - Verify changes by opening a new tmux session and launching nvim with the actual config. Never just read code and propose changes as done.
 - Test both the broken state (without the fix) and the fixed state to confirm the fix actually addresses the issue.
 - For experimental features, implement behind an env var config flag, test thoroughly, then remove the flag once verified.
+- Treat every tmux test session as disposable. Clean it before create, clean it again when done, and verify the cleanup succeeded before you move on.
 
 ### Launching tmux for testing
+
+**Prefer a disposable session lifecycle over ad hoc commands:**
+```bash
+session="agentic-nvim-$$"
+cleanup() { tmux kill-session -t "$session" 2>/dev/null || true; }
+cleanup
+trap cleanup EXIT INT TERM
+
+tmux new-session -d -s "$session" -x 200 -y 50 "nvim 2>&1; sleep 5"
+# ... tmux send-keys / capture-pane against "$session" ...
+
+cleanup
+trap - EXIT INT TERM
+tmux has-session -t "$session" 2>/dev/null && exit 1
+```
+- Pair session creation and cleanup in the same shell snippet whenever possible. Do not rely on remembering to kill the session later.
+- Use a unique name every time. Avoid reusable names like `nvim_test` or stable prefixes like `agentic-tool-*` that tend to linger and collide.
 
 **Create a detached session with fixed dimensions:**
 ```bash
@@ -40,7 +58,7 @@ tmux new-session -d -s <session-name> -x 200 -y 50 "<command>"
 
 **Clean up stale sessions before creating:**
 ```bash
-tmux kill-session -t <name> 2>/dev/null
+tmux kill-session -t <name> 2>/dev/null || true
 tmux new-session -d -s <name> -x 200 -y 50 "nvim 2>&1; sleep 5"
 ```
 
@@ -48,8 +66,10 @@ tmux new-session -d -s <name> -x 200 -y 50 "nvim 2>&1; sleep 5"
 
 Send-keys — create the session first, then send commands:
    ```bash
-   tmux new-session -d -s nvim_test -x 200 -y 50
-   tmux send-keys -t nvim_test "nvim /tmp/test.lua" Enter
+   session="agentic-nvim-$$"
+   tmux kill-session -t "$session" 2>/dev/null || true
+   tmux new-session -d -s "$session" -x 200 -y 50
+   tmux send-keys -t "$session" "nvim /tmp/test.lua" Enter
    ```
 
 **Capturing output:**
@@ -73,7 +93,8 @@ tmux new-session -d -s nvim_prof -x 200 -y 50 "NVIM_PROFILE=start nvim 2>&1; sle
 
 **Always clean up when done:**
 ```bash
-tmux kill-session -t <name> 2>/dev/null
+tmux kill-session -t <name> 2>/dev/null || true
+tmux has-session -t <name> 2>/dev/null && exit 1
 ```
 
 ### Common tmux pitfalls
@@ -89,6 +110,9 @@ tmux new-session -d -s test ... 2>/dev/null || tmux kill-session -t test && tmux
 # RIGHT — always kill first, then create
 tmux kill-session -t test 2>/dev/null; tmux new-session -d -s test -x 200 -y 50
 ```
+
+**Do not leave cleanup to memory.**
+If a repro needs multiple tmux variants, give each one its own disposable session name and kill it before starting the next variant. Before finishing, verify there are no leftover test sessions from your run.
 
 **If `capture-pane` returns stale content** (e.g. splash screen after sending commands), sleep longer. LSP, Octo, and plugin-heavy operations need 8–15s, not 3.
 
