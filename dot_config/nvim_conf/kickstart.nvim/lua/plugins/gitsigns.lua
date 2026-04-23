@@ -4,6 +4,7 @@ local Shell = require('utils.shell')
 local Git = require('utils.git')
 local Buf = require('utils.buf')
 local Config = require('utils.config')
+local Log = require('utils.log')
 
 ---@async
 ---@param cwd string
@@ -212,6 +213,41 @@ vim.api.nvim_create_user_command('EditPR', function()
     end
   )
 end, { nargs = 0, desc = 'Edit the PR for the current branch' })
+
+---@param s string
+---@return string
+local function html_escape(s)
+  local match = (s:gsub('&', '&amp;'):gsub('<', '&lt;'):gsub('>', '&gt;'):gsub('"', '&quot;'):gsub("'", '&#39;')):gsub('%[', '&#91;'):gsub('%]', '&#93;')
+  return match
+end
+
+vim.api.nvim_create_user_command('CopyPR', function()
+  local buffer = require('octo.utils').get_current_buffer()
+  if not buffer or not buffer:isPullRequest() then
+    Log.notify_error('Not in a PR buffer', { title = 'Octo' })
+    return
+  end
+  -- TODO: Use osc 5522 once ghostty has support
+  -- Reference: https://github.com/ghostty-org/ghostty/issues/10549
+  if vim.fn.executable('wl-copy') == 0 then
+    Log.notify_error('wl-copy not found', { title = 'Octo' })
+    return
+  end
+  local pr = buffer:pullRequest()
+  local html = string.format('<a href="%s">%s</a> (+%d/-%d)', pr.url, html_escape(pr.title), pr.additions, pr.deletions)
+  local markdown = string.format('[%s](%s) (+%d/-%d)', pr.title, pr.url, pr.additions, pr.deletions)
+  Async.void(
+    ---@async
+    function()
+      local success, output = Shell.async_cmd('wl-copy', { '--type', 'text/html' }, { stdin = html })
+      if not success then
+        Log.notify_error('wl-copy failed:\n' .. table.concat(output, '\n'), { title = 'Octo' })
+        return
+      end
+      Log.notify_info('Copied PR as markdown:\n' .. markdown, { title = 'Octo' })
+    end
+  )
+end, { nargs = 0, desc = 'Copy PR title as rich text with link and +/- diff counts' })
 
 local nmap = require('utils.keymap').nmap
 
