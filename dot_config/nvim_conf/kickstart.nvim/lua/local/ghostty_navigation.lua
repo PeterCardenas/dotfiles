@@ -45,6 +45,10 @@ end
 
 ---@return string?
 local function get_tui_client_pid()
+  local is_headless = #vim.api.nvim_list_uis() == 0
+  if is_headless then
+    return nil
+  end
   for _, ui in ipairs(vim.api.nvim_list_uis()) do
     local info = vim.api.nvim_get_chan_info(ui.chan)
     if info.client and info.client.name == 'nvim-tui' then
@@ -64,6 +68,10 @@ local function set_ghostty_navigation(directions)
   if not ok then
     return false, tostring(tui_pid)
   end
+  -- If we're headless, don't try to set ghostty navigation
+  if not tui_pid then
+    return true, nil
+  end
   local success, output = Shell.async_cmd('fish', { '-c', 'ghostty_nvim_nav ' .. directions .. ' ' .. tui_pid })
   if not success then
     return false, 'Failed to set ghostty navigation for: ' .. directions .. '\n' .. table.concat(output, '\n')
@@ -77,6 +85,9 @@ local function set_ghostty_navigation_sync(directions)
   local ok, tui_pid = pcall(get_tui_client_pid)
   if not ok then
     return false, tostring(tui_pid)
+  end
+  if not tui_pid then
+    return true, nil
   end
   local success, output = Shell.sync_cmd('fish -c "ghostty_nvim_nav ' .. directions .. ' ' .. tui_pid .. '"')
   if not success then
