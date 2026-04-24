@@ -232,8 +232,8 @@ return {
             mcp_servers = {
               {
                 type = 'http',
-                name = 'figma',
-                url = 'https://figma.com/mcp',
+                name = 'figma-remote-mcp',
+                url = 'https://mcp.figma.com/mcp',
                 headers = {},
               },
               -- {
@@ -251,6 +251,14 @@ return {
               model = 'gpt-5.4',
               reasoning = 'high',
               fast = 'false',
+            },
+            mcp_servers = {
+              {
+                type = 'http',
+                name = 'figma-remote-mcp',
+                url = 'https://mcp.figma.com/mcp',
+                headers = {},
+              },
             },
             auto_approve = true,
           },
