@@ -14,8 +14,8 @@ font-family = "Annotation Mono"
 alpha-blending = linear
 font-variation = wght=320
 font-variation-italic = wght=320
-font-variation-bold = wght=400
-font-variation-bold-italic = wght=400
+font-variation-bold = wght=500
+font-variation-bold-italic = wght=500
 
 # (worse) performance issues on macos, so only enable background shader on linux
 # custom-shader = ./shaders/cubes.glsl
