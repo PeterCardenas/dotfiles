@@ -14,6 +14,20 @@ if [ -f "$cache" ]; then
   fi
 fi
 
+usage_color() {
+  local usage="$1"
+
+  if [ "$usage" -ge 80 ]; then
+    printf '#f7768e'
+  elif [ "$usage" -ge 65 ]; then
+    printf '#ff9e64'
+  elif [ "$usage" -ge 40 ]; then
+    printf '#e0af68'
+  else
+    printf '#9ece6a'
+  fi
+}
+
 case "$(uname -s)" in
 Darwin)
   # macOS: iostat reports cpu as us/sy/id columns; idle is column 6
@@ -33,6 +47,12 @@ FreeBSD | OpenBSD)
   ;;
 esac
 
-result="${val:-0}%"
+case "${val:-0}" in
+'' | *[!0-9]*)
+  val=0
+  ;;
+esac
+
+result="#[fg=$(usage_color "$val")]${val}%"
 printf '%s\n%s' "$now" "$result" >"$cache"
 printf '%s' "$result"
