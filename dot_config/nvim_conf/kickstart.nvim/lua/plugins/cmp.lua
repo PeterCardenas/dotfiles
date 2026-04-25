@@ -526,7 +526,9 @@ return {
               end,
               transform_items = function(ctx, items)
                 if vim.bo[ctx.bufnr].filetype ~= 'ghostty' then
-                  return items
+                  return Table.remove_duplicates(items, function(item)
+                    return item.label
+                  end)
                 end
                 local _, col = unpack(ctx.cursor)
                 local line_to_cursor = ctx.line:sub(1, col - 1)
