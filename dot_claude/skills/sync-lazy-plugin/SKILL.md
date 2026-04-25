@@ -22,6 +22,7 @@ Use it for the full plugin workflow, not just a quick git check:
 - Make commits only in the real source repo.
 - Do not invent ad hoc clone or fork commands; use the real fish helpers in this environment.
 - Do not edit `lazy-lock.json` by hand when Lazy can update it.
+- When moving edits from the lazy checkout to the source repo, use git patch commands, not manual copy or vague "recreate the changes" steps.
 - Do not stage unrelated chezmoi changes.
 - If another git client has a repo locked, stop and ask.
 
@@ -154,9 +155,11 @@ How would you like me to proceed?
 
 ## 5. Move Changes Into The Real Source Repo
 
-- Read the changed files from the lazy.nvim checkout.
-- Recreate those edits in the real source repo.
-- If the lazy checkout already has committed work on another branch, base the new source-repo branch on that commit first, then apply the remaining working-tree delta on top.
+- Do not hand-copy edits from the lazy.nvim checkout into the source repo. Export a patch with git in the lazy checkout and apply it with git in the source repo.
+- If the lazy checkout already has committed work that needs to move over, export that commit range from the lazy checkout with `git format-patch --stdout <base>..HEAD > /tmp/<plugin>-commits.patch`, then apply it in the source repo with `git am -3 /tmp/<plugin>-commits.patch`.
+- If there is remaining uncommitted working-tree state in the lazy checkout, export it from the lazy checkout with `git diff --binary --relative > /tmp/<plugin>-worktree.patch`, then apply it in the source repo with `git apply --3way --index /tmp/<plugin>-worktree.patch`.
+- If only part of the lazy checkout should move over, scope the export explicitly with `git diff --binary --relative -- <paths...> > /tmp/<plugin>-worktree.patch` instead of applying the whole working tree.
+- If either `git am` or `git apply` fails, stop and ask instead of reconstructing the change manually.
 - Split the work into logical commits only when the user asked for multiple commits.
 - Follow the target repo's validation instructions before pushing.
 
