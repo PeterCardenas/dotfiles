@@ -33,7 +33,7 @@ const CLAUDE_BRIDGE_AFTER =
 const MODEL_REQUEST_FORMAT_BEFORE =
   "function s(e){return o()&&void 0!==e.requestedModel?{modelDetails:void 0,requestedModel:e.requestedModel}:{modelDetails:e.modelDetails,requestedModel:void 0}}";
 const MODEL_REQUEST_FORMAT_AFTER =
-  "function s(e){return void 0!==e.requestedModel?{modelDetails:void 0,requestedModel:e.requestedModel}:{modelDetails:e.modelDetails,requestedModel:void 0}}";
+  'function s(e){const t=e.requestedModel,n=t&&t.modelId;return void 0!==t&&("gpt-5.4"===n||"gpt-5.5"===n)?{modelDetails:void 0,requestedModel:t}:{modelDetails:e.modelDetails,requestedModel:void 0}}';
 const ACP_SESSION_CTOR_BEFORE =
   "constructor(e,t,o,n,s,i,r){this.lastRequestId=null,this.sentToolCalls=new Set,this.pendingAutoNamePromise=null,this.connection=e,this.sessionId=t,this.pendingPromptCancel=null,this.sharedServices=o,this.ctx=n,this.agentStore=s,this.resources=i,this.currentModel=r,this.createPlanProgressPresenter";
 const ACP_SESSION_CTOR_AFTER =
