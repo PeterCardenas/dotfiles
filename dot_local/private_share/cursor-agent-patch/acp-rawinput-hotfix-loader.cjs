@@ -17,6 +17,14 @@ const BEFORE =
   "this.sentToolCalls.add(t.message.value.callId),yield this.sendToolCall({toolCallId:t.message.value.callId,title:n,kind:s,rawInput:this.extractToolCallInput(o),locations:this.extractToolCallLocations(o)})";
 const AFTER =
   "const i=this.extractToolCallInput(o),r=this.extractToolCallLocations(o),a=!!i&&Object.values(i).some((e=>void 0!==e));(a||r)&&(this.sentToolCalls.add(t.message.value.callId),yield this.sendToolCall({toolCallId:t.message.value.callId,title:n,kind:s,rawInput:i,locations:r}))";
+const TASK_OUTPUT_BEFORE =
+  'case"taskToolCall":{const e=null===(w=b.value.result)||void 0===w?void 0:w.result;return"success"===(null==e?void 0:e.case)?{durationMs:void 0!==e.value.durationMs?Number(e.value.durationMs):void 0,isBackground:e.value.isBackground}:"error"===(null==e?void 0:e.case)?{error:e.value.error}:void 0}';
+const TASK_OUTPUT_AFTER =
+  'case"taskToolCall":{const e=null===(w=b.value.result)||void 0===w?void 0:w.result;return"success"===(null==e?void 0:e.case)?{durationMs:void 0!==e.value.durationMs?Number(e.value.durationMs):void 0,isBackground:e.value.isBackground,agentId:e.value.agentId,finalMessage:void 0!==e.value.finalMessage?e.value.finalMessage:function(e){try{const t=JSON.parse(JSON.stringify(e)),n=null==t?void 0:t.conversationSteps;if(!Array.isArray(n))return;for(let e=n.length-1;e>=0;e--){const t=n[e],o=null==t?void 0:t.assistantMessage,s=null==o?void 0:o.text;if("string"==typeof s&&s.length>0)return s}}catch(e){}}(e.value),toolCallCount:void 0!==e.value.toolCallCount?Number(e.value.toolCallCount):void 0,backgroundReason:e.value.backgroundReason,transcriptPath:e.value.transcriptPath,debugTaskResult:"1"===process.env.CURSOR_AGENT_PATCH_DEBUG?e.value:void 0}:"error"===(null==e?void 0:e.case)?{error:e.value.error,agentId:e.value.agentId,debugTaskResult:"1"===process.env.CURSOR_AGENT_PATCH_DEBUG?e.value:void 0}:void 0}';
+const TASK_NOTIFICATION_BEFORE =
+  'case"taskToolCall":{const t=l.value.args,o=null===(n=l.value.result)||void 0===n?void 0:n.result,r="success"===(null==o?void 0:o.case)?o.value.durationMs:void 0,a=void 0!==r?Number(r):void 0,d={toolCallId:e,description:null!==(s=null==t?void 0:t.description)&&void 0!==s?s:"",prompt:null!==(i=null==t?void 0:t.prompt)&&void 0!==i?i:"",subagentType:this.mapSubagentType(null==t?void 0:t.subagentType),model:null==t?void 0:t.model,agentId:null==t?void 0:t.agentId,durationMs:a};this.sendNonBlockingExtensionNotification(F.b8,d);break}';
+const TASK_NOTIFICATION_AFTER =
+  'case"taskToolCall":{const t=l.value.args,o=null===(n=l.value.result)||void 0===n?void 0:n.result,r="success"===(null==o?void 0:o.case)?o.value.durationMs:void 0,a=void 0!==r?Number(r):void 0,d="success"===(null==o?void 0:o.case)?o.value:void 0,c={toolCallId:e,description:null!==(s=null==t?void 0:t.description)&&void 0!==s?s:"",prompt:null!==(i=null==t?void 0:t.prompt)&&void 0!==i?i:"",subagentType:this.mapSubagentType(null==t?void 0:t.subagentType),model:null==t?void 0:t.model,agentId:null==t?void 0:t.agentId,durationMs:a,finalMessage:void 0!==(null==d?void 0:d.finalMessage)?d.finalMessage:function(e){try{const t=JSON.parse(JSON.stringify(e)),n=null==t?void 0:t.conversationSteps;if(!Array.isArray(n))return;for(let e=n.length-1;e>=0;e--){const t=n[e],o=null==t?void 0:t.assistantMessage,s=null==o?void 0:o.text;if("string"==typeof s&&s.length>0)return s}}catch(e){}}(d),toolCallCount:void 0!==(null==d?void 0:d.toolCallCount)?Number(d.toolCallCount):void 0,backgroundReason:null==d?void 0:d.backgroundReason,transcriptPath:null==d?void 0:d.transcriptPath,debugTaskResult:"1"===process.env.CURSOR_AGENT_PATCH_DEBUG?d:void 0};this.sendNonBlockingExtensionNotification(F.b8,c);break}';
 const REQUIRED_MARKER = "./src/acp/agent-session.ts";
 const STOP_GATE_RE =
   /e\.hookExecutor&&e\.hooksConfig&&[\s\S]*?&&e\.hookExecutor\.executeHookForStep\(f\._E\.stop,/g;
@@ -106,6 +114,8 @@ Module._extensions[".js"] = function patchedJsLoader(module, filename) {
   let patched = source;
   let changed = false;
   let rawInputPatched = false;
+  let taskOutputPatched = false;
+  let taskNotificationPatched = false;
   let stopGatePatchCount = 0;
   let beforeSubmitPatchCount = 0;
   let claudeBridgePatched = false;
@@ -118,6 +128,16 @@ Module._extensions[".js"] = function patchedJsLoader(module, filename) {
   if (matchesAcpBundle && patched.includes(BEFORE)) {
     patched = patched.replace(BEFORE, AFTER);
     rawInputPatched = true;
+    changed = true;
+  }
+  if (matchesAcpBundle && patched.includes(TASK_OUTPUT_BEFORE)) {
+    patched = patched.replace(TASK_OUTPUT_BEFORE, TASK_OUTPUT_AFTER);
+    taskOutputPatched = true;
+    changed = true;
+  }
+  if (matchesAcpBundle && patched.includes(TASK_NOTIFICATION_BEFORE)) {
+    patched = patched.replace(TASK_NOTIFICATION_BEFORE, TASK_NOTIFICATION_AFTER);
+    taskNotificationPatched = true;
     changed = true;
   }
 
@@ -201,7 +221,7 @@ Module._extensions[".js"] = function patchedJsLoader(module, filename) {
   debugLog(
     "[agent-patched] applied ACP patches to " +
       filename +
-      ` (rawInput=${rawInputPatched ? "yes" : "no"}, stopGate=${stopGatePatchCount}, beforeSubmit=${beforeSubmitPatchCount}, claudeBridge=${claudeBridgePatched ? "yes" : "no"}, modelRequestFormat=${modelRequestFormatPatched ? "yes" : "no"}, acpStopInvoke=${acpStopInvokePatched ? "yes" : "no"}, acpAssistantCapture=${acpAssistantCapturePatched ? "yes" : "no"})`,
+      ` (rawInput=${rawInputPatched ? "yes" : "no"}, taskOutput=${taskOutputPatched ? "yes" : "no"}, taskNotification=${taskNotificationPatched ? "yes" : "no"}, stopGate=${stopGatePatchCount}, beforeSubmit=${beforeSubmitPatchCount}, claudeBridge=${claudeBridgePatched ? "yes" : "no"}, modelRequestFormat=${modelRequestFormatPatched ? "yes" : "no"}, acpStopInvoke=${acpStopInvokePatched ? "yes" : "no"}, acpAssistantCapture=${acpAssistantCapturePatched ? "yes" : "no"})`,
   );
   module._compile(patched, filename);
 };
