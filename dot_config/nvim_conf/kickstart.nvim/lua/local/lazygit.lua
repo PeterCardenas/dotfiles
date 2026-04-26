@@ -16,43 +16,7 @@ local function setup_lazygit_buffer()
     pattern = 'term://*lazygit*',
     once = true,
     callback = function(args)
-      local dirty_buf_enter = false
       local bufnr = args.buf
-      local function correct_size()
-        local agentic_was_open = false
-        ---@module 'agentic'
-        local agentic = package.loaded['agentic']
-        if agentic then
-          local SessionRegistry = require('agentic.session_registry')
-          if SessionRegistry then
-            local tab_page_id = vim.api.nvim_get_current_tabpage()
-            local session = SessionRegistry.sessions[tab_page_id]
-            if session and session.widget:is_open() then
-              agentic_was_open = true
-              agentic.close()
-            end
-          end
-        end
-        local temp_bufnr = vim.api.nvim_create_buf(false, true)
-        vim.cmd('resize 0 0')
-        local cur_dirty_buf_enter = dirty_buf_enter
-        vim.defer_fn(function()
-          vim.cmd('resize 100 100')
-          if not cur_dirty_buf_enter then
-            dirty_buf_enter = true
-            set_secret_buf(temp_bufnr)
-            set_secret_buf(bufnr)
-            vim.api.nvim_buf_delete(temp_bufnr, { force = true })
-            vim.cmd('startinsert')
-          end
-          if agentic_was_open then
-            require('agentic').open({ auto_add_to_context = false })
-          end
-        end, 10)
-        if dirty_buf_enter then
-          dirty_buf_enter = false
-        end
-      end
       vim.keymap.set({ 't' }, 'q', function()
         local last_line_content = vim.api.nvim_buf_get_lines(bufnr, -2, -1, false)[1]:gsub('^Fetching%s.%s', '')
         -- Don't navigate away when typing in new branch name or searching.
@@ -79,12 +43,6 @@ local function setup_lazygit_buffer()
         set_secret_buf(bufnrs[1])
       end, { buffer = bufnr })
       vim.bo[bufnr].buflisted = false
-      vim.api.nvim_create_autocmd('VimResized', {
-        buffer = bufnr,
-        callback = function()
-          correct_size()
-        end,
-      })
 
       local function refresh_lazygit_files()
         -- TODO: consider shpool for backgrounding the process and sharing lazygit session
@@ -175,12 +133,7 @@ local function setup_lazygit_buffer()
         buffer = bufnr,
         callback = function()
           vim.cmd('startinsert')
-          if not dirty_buf_enter then
-            start_refresh_timer()
-          else
-            stop_refresh_timer()
-            dirty_buf_enter = false
-          end
+          start_refresh_timer()
         end,
       })
     end,
