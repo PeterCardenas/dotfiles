@@ -9,10 +9,12 @@ export LC_ALL=C
 
 local_only=false
 with_month=false
+short=false
 for arg in "$@"; do
   case "$arg" in
   --local) local_only=true ;;
   --with-month) with_month=true ;;
+  --short) short=true ;;
   esac
 done
 
@@ -24,6 +26,7 @@ mkdir -p "$spend_dir" "$cache_dir"
 # Check main cache (only when producing formatted output)
 if [ "$local_only" = false ]; then
   cache="${cache_dir}/tmux-spend"
+  $short && cache="${cache}-short"
   if [ -f "$cache" ]; then
     age=$((now - $(head -1 "$cache")))
     if [ "$age" -lt 10 ]; then
@@ -164,6 +167,8 @@ month_total=$(awk "BEGIN{printf \"%.2f\", $local_month_total + $remote_month_tot
 
 if [ "$today_total" = "0.00" ] && [ "$month_total" = "0.00" ]; then
   result=""
+elif $short; then
+  result="#[fg=#ff9e64]  #[fg=#c0caf5]\$${month_total}"
 else
   result="#[fg=#ff9e64]  #[fg=#c0caf5]\$${today_total} | \$${month_total}"
 fi
