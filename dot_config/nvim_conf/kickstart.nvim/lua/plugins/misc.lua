@@ -239,7 +239,7 @@ return {
   -- Better UI for select, notifications, popups, and many others.
   {
     'PeterCardenas/noice.nvim',
-    branch = 'fix-blink-cmp-cmdline-completion',
+    branch = 'dev',
     upstream = 'folke/noice.nvim',
     upstream_branch = 'main',
     priority = 999,
