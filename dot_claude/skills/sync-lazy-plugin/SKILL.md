@@ -1,68 +1,51 @@
 ---
 name: sync-lazy-plugin
-description: End-to-end workflow for `/sync-lazy-plugin`: take edits from a lazy.nvim checkout, publish them from the real source repo, refresh the installed checkout through Lazy, and update the matching chezmoi lockfile/config. Use this whenever the user explicitly runs `/sync-lazy-plugin` or asks to turn lazy checkout edits into proper repo commits plus a matching Lazy update.
+description: Workflow for `/sync-lazy-plugin`: move edits from a lazy.nvim checkout into the real source repo, push them there, refresh the installed checkout through Lazy, and update the matching chezmoi lockfile or plugin spec. Use this whenever the user wants lazy checkout edits turned into real repo commits plus a matching Lazy update.
 ---
 
 # Sync Lazy Plugin
 
-Run this skill as a default workflow, not a questionnaire. The goal is that `/sync-lazy-plugin` should usually complete end-to-end without follow-up questions.
-
-Use it for the full plugin workflow, not just a quick git check:
+Run this as the default `/sync-lazy-plugin` workflow, not a questionnaire. The normal path is:
 
 - start from edits in `~/.local/share/nvim/lazy/<plugin>`
-- move those edits into the real source repo, usually under `~/projects/<repo>`
-- commit and push from the real repo
+- move them into the real source repo, usually `~/projects/<repo>`
+- commit and push there
 - clear the temporary lazy checkout changes
-- run `Lazy update <plugin>` through the user's actual config
-- commit the resulting `lazy-lock.json` change, plus any required plugin-spec branch change, from chezmoi
+- run `Lazy update <plugin>`
+- commit the resulting `lazy-lock.json` change, plus any needed plugin-spec branch change, from chezmoi
 
 ## Core Rules
 
-- Do not commit from the lazy.nvim checkout.
-- Make commits only in the real source repo.
-- Do not invent ad hoc clone or fork commands; use the real fish helpers in this environment.
-- Do not edit `lazy-lock.json` by hand when Lazy can update it.
-- When moving edits from the lazy checkout to the source repo, use git patch commands, not manual copy or vague "recreate the changes" steps.
-- Do not stage unrelated chezmoi changes.
-- If another git client has a repo locked, stop and ask.
+- Treat the dirty lazy checkout as the source of truth for the requested edits, but never commit there.
+- Commit only in the real source repo.
+- Use the real fish helpers `clone` and `setup_fork`; do not recreate them in bash.
+- Prefer plugin-spec metadata from chezmoi, and fall back to lazy checkout remotes only when needed.
+- Update `lazy-lock.json` via Lazy, not by hand.
+- Move changes with git patches, not manual copy or "recreate the edits" work.
+- Stage only files relevant to this workflow.
+- Stop and ask when discovery is ambiguous or repo state is unsafe.
 
-## Defaults
+## 1. Discover Locations And Branch Plan
 
-Treat these as the default behavior so the workflow can just run:
-
-- Use the dirty lazy.nvim checkout as the plugin source of truth.
-- Use `~/projects/<repo>` as the real source repo path.
-- Read and then use the fish helpers `clone` and `setup_fork`; do not reimplement them in bash.
-- Prefer repo metadata from the plugin spec in chezmoi. In this setup, plugin specs often include:
-  - the fork repo string as the first entry, for example `'PeterCardenas/agentic.nvim'`
-  - `branch` for the fork branch to publish
-  - `upstream` for the upstream repo
-  - `upstream_branch` for the upstream base branch
-- If the plugin spec does not expose all of that metadata, fall back to the lazy checkout remotes.
-- Only stop and ask when discovery is genuinely ambiguous or the repo state is unsafe.
-
-## 1. Discover The Three Locations
-
-Identify, in this order:
+Identify:
 
 1. the lazy.nvim checkout path
 2. the real source repo path
-3. the chezmoi repo path and tracked lockfile path
+3. the chezmoi repo path and tracked `lazy-lock.json`
 
-Use concrete defaults instead of asking up front:
+Default discovery flow:
 
-1. Determine the plugin name from the user request, active file path, or the dirty lazy checkout path under `~/.local/share/nvim/lazy/<plugin>`.
-2. Locate the matching plugin spec in chezmoi, usually under `dot_config/nvim_conf/**`, by searching for the plugin name, fork repo slug, or upstream repo slug.
-3. From the plugin spec, prefer these values:
+1. infer the plugin name from the user request, active file, or dirty checkout path under `~/.local/share/nvim/lazy/<plugin>`
+2. locate the matching plugin spec in chezmoi, usually under `dot_config/nvim_conf/**`
+3. from that spec, prefer:
    - fork repo from the first repo string
    - fork branch from `branch`
    - upstream repo from `upstream`
    - upstream base branch from `upstream_branch`
-4. If the plugin spec is missing some of those values, derive them from the lazy checkout remotes.
-5. Set the source repo path to `~/projects/<repo>` where `<repo>` is the repo name portion of the fork or upstream repo slug.
-6. If that source repo path does not exist, create it with the fish `clone` helper.
+4. fill any gaps from the lazy checkout remotes
+5. set the source repo path to `~/projects/<repo>`, where `<repo>` is the repo name from the fork or upstream slug
 
-Read the helper definitions before running them:
+Before using helpers, read:
 
 1. `~/.config/fish/functions/clone.fish`
 2. any helper it calls, especially `clone-common.fish`
@@ -70,17 +53,16 @@ Read the helper definitions before running them:
 
 Then use the real helpers:
 
-- `clone owner/repo` to clone a source repo and carry over local git identity settings
-- `setup_fork` inside the repo when the fork remotes need to be wired up
+- `fish -lc 'clone owner/repo'` from `~/projects` if the source repo is missing
+- `fish -lc 'setup_fork'` inside the source repo if remotes are not ready
 
-Typical invocations:
+If a helper may prompt in a way that changes the workflow, ask instead of guessing.
 
-- `fish -lc 'clone owner/repo'` from the directory where the source repo should be created
-- `fish -lc 'setup_fork'` from inside the repo whose remotes need to be rewired
+Before changing anything, inspect how the plugin is pinned in chezmoi:
 
-If a helper may prompt for input, read its definition first, decide whether the prompt changes the workflow, and ask the user instead of guessing.
-
-Do not just say that you "read" the helpers. Use them.
+- if it is pinned to a branch, publish to that branch unless the user asked otherwise
+- if it is pinned to a tag, commit, or any other non-branch ref, stop and ask what branch to track
+- use `upstream_branch` as the base branch when present; otherwise use the upstream default branch
 
 ## 2. Inspect State First
 
@@ -104,18 +86,16 @@ For chezmoi, run:
 - `git status --short --branch`
 - identify the plugin spec file and the tracked `lazy-lock.json`
 
-Before doing any repo changes, inspect how the plugin is pinned in chezmoi and derive the branch plan:
+Notes:
 
-- If the plugin spec is pinned to a branch, use that as the fork branch to publish unless the user explicitly asked for something else.
-- If the plugin spec is pinned to a tag, commit, or anything other than a branch, stop immediately and ask the user what branch it should track. Do not start the source-repo sync, cleanup, or `Lazy update` work until that is resolved.
-- If the plugin spec has `upstream_branch`, use that as the base branch.
-- Otherwise, use the upstream repo default branch.
-
-If the source repo path is known but the repo is missing on disk, create it before continuing. If the source repo is behind its tracked branch, fetch and fast-forward before applying changes.
+- A detached lazy checkout is normal here. `git symbolic-ref --short -q HEAD` exits 1 on detached HEAD; treat that as expected, not as a blocker.
+- Do not chain these inspection commands with `&&` when one may legitimately return non-zero. Run them separately, or use `;` if you want all of them to run anyway.
+- If the source repo is missing, create it before continuing.
+- If the source repo is behind its tracked branch, fetch and fast-forward before applying changes.
 
 ## 3. Stop And Ask Instead Of Guessing
 
-Prompt the user when any of these are true:
+Ask the user if any of these are true:
 
 - you cannot identify a single plugin to sync
 - you cannot map the lazy checkout to a single plugin spec or repo slug
@@ -125,7 +105,7 @@ Prompt the user when any of these are true:
 - the requested commit split is ambiguous
 - the chezmoi repo has an active git client, a lock file, or unrelated staged changes you might disturb
 
-Use a short status summary followed by a direct question:
+Use a short status summary plus a direct question, for example:
 
 ```markdown
 Repo state:
@@ -141,62 +121,61 @@ How would you like me to proceed?
 5. Stop here
 ```
 
-## 4. Set Up The Source Repo
+## 4. Prepare The Source Repo
 
 - Prefer an existing writable source clone when one already exists.
 - The default source repo location is `~/projects/<repo>`.
-- If the repo is missing, run `fish -lc 'clone owner/repo'` from `~/projects` using the inferred repo slug.
-- After cloning, inspect the remotes. If `origin` and `upstream` are already correct and writable, continue.
-- If the repo is missing `upstream`, has the wrong `origin`, or otherwise lacks a writable fork remote, run `fish -lc 'setup_fork'` inside the repo.
-- Read the helper definitions first so you understand prompts and side effects, then execute the helper itself.
-- Verify the repo ends up with the expected fork branch, `origin`, `upstream`, and a writable remote.
-- Ask only if the repo slug is unclear or `setup_fork` still does not leave a usable writable remote.
-- If you need to base a new branch on work already present in the lazy checkout fork branch, fetch that branch into the source repo before checking out the new branch.
+- If the repo is missing, run `fish -lc 'clone owner/repo'` from `~/projects`.
+- If the repo is missing `upstream`, has the wrong `origin`, or otherwise lacks a writable fork remote, run `fish -lc 'setup_fork'`.
+- Verify the repo ends up with the expected branch, `origin`, `upstream`, and a writable remote.
+- If you need to base new work on a branch that already exists in the lazy checkout fork, fetch that branch into the source repo before checking it out.
 
 ## 5. Move Changes Into The Real Source Repo
 
-- Do not hand-copy edits from the lazy.nvim checkout into the source repo. Export a patch with git in the lazy checkout and apply it with git in the source repo.
-- If the lazy checkout already has committed work that needs to move over, export that commit range from the lazy checkout with `git format-patch --stdout <base>..HEAD > /tmp/<plugin>-commits.patch`, then apply it in the source repo with `git am -3 /tmp/<plugin>-commits.patch`.
-- If there is remaining uncommitted working-tree state in the lazy checkout, export it from the lazy checkout with `git diff --binary --relative > /tmp/<plugin>-worktree.patch`, then apply it in the source repo with `git apply --3way --index /tmp/<plugin>-worktree.patch`.
-- If only part of the lazy checkout should move over, scope the export explicitly with `git diff --binary --relative -- <paths...> > /tmp/<plugin>-worktree.patch` instead of applying the whole working tree.
-- If either `git am` or `git apply` fails, stop and ask instead of reconstructing the change manually.
-- Split the work into logical commits only when the user asked for multiple commits.
+- Do not hand-copy edits from the lazy checkout into the source repo. Export patches with git and apply them with git.
+- For committed lazy-checkout work, use `git format-patch --stdout <base>..HEAD > /tmp/<plugin>-commits.patch` and apply it in the source repo with `git am -3 /tmp/<plugin>-commits.patch`.
+- For uncommitted tracked changes, use `git diff --binary --relative > /tmp/<plugin>-worktree.patch` and apply it with `git apply --3way --index /tmp/<plugin>-worktree.patch`.
+- `git diff --binary --relative` does not include untracked files. Export those separately with `git diff --binary --no-index -- /dev/null <path>` and apply those patches too.
+- `git diff --no-index` exits 1 when it finds differences; treat that as expected patch-generation success, but verify the patch file exists.
+- If only part of the lazy checkout should move over, scope the export with `git diff --binary --relative -- <paths...>`.
+- If `git am` or `git apply` fails, stop and ask instead of reconstructing the edits manually.
+- Split into multiple commits only when the user asked for that.
 - Follow the target repo's validation instructions before pushing.
 
-## 6. Validate, Commit, And Push In The Source Repo
+## 6. Validate, Commit, And Push
 
 - Stage only the files for the current logical change.
 - Match the repo's existing commit message style.
 - Run the repo's validation steps before pushing.
-- If validation is blocked by missing tools, environment setup, or another non-code issue, summarize the blocker and ask the user whether to push anyway.
-- If validation runs and fails, stop and ask before pushing. Do not treat a real test or lint failure as equivalent to a setup problem.
+- If validation is blocked by missing tools, setup, or another non-code issue, summarize the blocker and ask whether to push anyway.
+- If validation runs and fails, stop and ask before pushing.
 
-## 7. Refresh The Lazy Checkout
+## 7. Refresh Lazy And Update Chezmoi
 
 After the source repo commits are pushed:
 
-- clear the temporary tracked edits from the lazy.nvim checkout, for example with `git restore`
-- list any untracked cleanup candidates first and remove only the ones that were clearly created by this workflow
-- if chezmoi pins the plugin branch, update that spec to the new branch before running Lazy
-- run the actual update through the user's config, for example `nvim --headless "+Lazy! update <plugin>" "+qa"`
+- clear the temporary tracked edits from the lazy checkout, for example with `git restore`
+- list untracked cleanup candidates first, then remove only the ones clearly created by this workflow
+- if chezmoi pins the plugin branch and it needs to change, update the plugin spec before running Lazy
+- run the real update through the user's config, for example `nvim --headless "+Lazy! update <plugin>" "+qa"`
+- prefer a real Lazy update over hand-editing the lockfile
+- expect the installed lazy checkout to end up detached at the resolved commit after the update
 
-Prefer a real Lazy update over hand-editing the lockfile. Expect the installed lazy checkout to end up detached at the resolved commit after the update.
+Then in chezmoi:
 
-## 8. Commit The Lockfile In Chezmoi
-
-- inspect the chezmoi repo status
+- inspect repo status
 - identify the lockfile change produced by the Lazy update
-- stage only the `lazy-lock.json` change and any plugin-spec file that had to change to track the new branch
+- stage only `lazy-lock.json` and any plugin-spec file that had to change
 - commit and push those files without touching unrelated dotfile changes
 
-## 9. Git Lock Safety
+## 8. Git Lock Safety
 
 If git reports a `*.lock` file and another git UI or process is active in that repo, do not delete the lock. Ask the user to close the other client first.
 
-Only clear a stale lock when both conditions are true:
+Only clear a stale lock when both are true:
 
 1. no active git process is using that repo
-2. the user wants you to clear it
+2. the user wants it cleared
 
 ## Output
 
