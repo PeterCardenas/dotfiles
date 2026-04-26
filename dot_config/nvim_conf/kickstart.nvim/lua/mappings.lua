@@ -1,6 +1,6 @@
 local nmap = require('utils.keymap').nmap
-local Config = require('utils.config')
 local Buf = require('utils.buf')
+local Config = require('utils.config')
 local Lazygit = require('local.lazygit')
 local Log = require('utils.log')
 

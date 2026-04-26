@@ -1,5 +1,5 @@
-local EntryDisplay = require('plugins.telescope.entry_display')
 local Buf = require('utils.buf')
+local EntryDisplay = require('plugins.telescope.entry_display')
 
 local ns_previewer = vim.api.nvim_create_namespace('buffer_picker_previewer')
 

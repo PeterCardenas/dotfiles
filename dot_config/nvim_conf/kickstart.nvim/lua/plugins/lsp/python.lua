@@ -1,8 +1,8 @@
-local Config = require('utils.config')
-local Spinner = require('utils.spinner')
-local Shell = require('utils.shell')
-local File = require('utils.file')
 local Async = require('utils.async')
+local Config = require('utils.config')
+local File = require('utils.file')
+local Shell = require('utils.shell')
+local Spinner = require('utils.spinner')
 local M = {}
 
 local enable_pyright = not Config.USE_JEDI

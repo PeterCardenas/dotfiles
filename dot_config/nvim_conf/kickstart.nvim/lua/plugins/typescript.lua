@@ -1,5 +1,5 @@
-local TypeScript = require('utils.typescript')
 local File = require('utils.file')
+local TypeScript = require('utils.typescript')
 
 ---@param client vim.lsp.Client
 ---@param bufnr integer

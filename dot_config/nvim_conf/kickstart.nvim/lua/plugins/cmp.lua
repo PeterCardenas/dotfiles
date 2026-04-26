@@ -1,7 +1,7 @@
-local Lsp = require('utils.lsp')
-local Treesitter = require('utils.treesitter')
-local Table = require('utils.table')
 local Config = require('utils.config')
+local Lsp = require('utils.lsp')
+local Table = require('utils.table')
+local Treesitter = require('utils.treesitter')
 
 ---@type LazyPluginSpec[]
 return {

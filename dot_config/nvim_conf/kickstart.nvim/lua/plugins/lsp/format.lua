@@ -1,9 +1,9 @@
-local Shell = require('utils.shell')
 local Async = require('utils.async')
 local File = require('utils.file')
-local TypeScript = require('utils.typescript')
-local Lsp = require('utils.lsp')
 local Log = require('utils.log')
+local Lsp = require('utils.lsp')
+local Shell = require('utils.shell')
+local TypeScript = require('utils.typescript')
 
 ---Lock for buffers to hold while formatting.
 ---@type table<integer, boolean>

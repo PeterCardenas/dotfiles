@@ -1,6 +1,6 @@
-local File = require('utils.file')
-local Config = require('utils.config')
 local Buf = require('utils.buf')
+local Config = require('utils.config')
+local File = require('utils.file')
 local M = {}
 
 local semantic_tokens_group = vim.api.nvim_create_augroup('vim_lsp_semantic_tokens_rewriter', { clear = true })

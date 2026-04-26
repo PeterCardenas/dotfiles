@@ -1,9 +1,9 @@
 local Async = require('utils.async')
 local File = require('utils.file')
 local Format = require('plugins.lsp.format')
-local Shell = require('utils.shell')
-local Python = require('plugins.lsp.python')
 local Log = require('utils.log')
+local Python = require('plugins.lsp.python')
+local Shell = require('utils.shell')
 local Spinner = require('utils.spinner')
 
 ---@module 'fidget'

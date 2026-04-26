@@ -1,6 +1,6 @@
-local Shell = require('utils.shell')
 local Async = require('utils.async')
 local Log = require('utils.log')
+local Shell = require('utils.shell')
 
 ---@async
 local function get_gh_user()

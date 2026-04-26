@@ -1,6 +1,6 @@
 local Async = require('utils.async')
-local String = require('utils.string')
 local Log = require('utils.log')
+local String = require('utils.string')
 M = {}
 
 ---Run a shell command synchronously and return the output.

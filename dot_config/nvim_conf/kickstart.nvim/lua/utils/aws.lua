@@ -1,5 +1,5 @@
-local Shell = require('utils.shell')
 local Async = require('utils.async')
+local Shell = require('utils.shell')
 
 local M = {}
 

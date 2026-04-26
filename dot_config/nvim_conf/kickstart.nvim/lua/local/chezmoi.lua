@@ -1,7 +1,7 @@
 local Async = require('utils.async')
-local Shell = require('utils.shell')
-local Log = require('utils.log')
 local File = require('utils.file')
+local Log = require('utils.log')
+local Shell = require('utils.shell')
 local Spinner = require('utils.spinner')
 
 local chezmoi_augroup = vim.api.nvim_create_augroup('Chezmoi', { clear = true })

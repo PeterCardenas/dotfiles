@@ -1,11 +1,11 @@
-local File = require('utils.file')
-local OnAttach = require('plugins.lsp.on_attach')
 local Config = require('utils.config')
-local Lsp = require('utils.lsp')
-local Python = require('plugins.lsp.python')
+local File = require('utils.file')
 local LocalLsp = require('plugins.lsp.local')
-local Table = require('utils.table')
 local Log = require('utils.log')
+local Lsp = require('utils.lsp')
+local OnAttach = require('plugins.lsp.on_attach')
+local Python = require('plugins.lsp.python')
+local Table = require('utils.table')
 -- [[ Configure LSP ]]
 
 -- Removes default behavior of autoformatting on save for zig
