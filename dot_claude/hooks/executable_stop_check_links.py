@@ -235,16 +235,16 @@ def _main() -> None:
         return _output()
 
     _output(
-        "Your final response has no reference links. Output ONLY the additional suffix to "
-        "append to the existing response, not a rewrite of the full response. If "
-        "relevant sources exist, output only (with multiple prefixed newlines):\n\nKey references:"
+        "Your final response has no reference links. Continue the previous answer by "
+        "outputting only an additional suffix, not a rewrite. Begin the suffix with "
+        "exactly two newline characters, then output:\n\nKey references:"
         "\n- [Short title](https://example.com)\n- [Short title](https://example.com)\n\n"
-        "Use well-formatted Markdown links. Make a best guess at the URL based on "
-        "conversation context — do not think or research to verify correctness; a plausible "
-        "guess is fine. Prefer links you already used in your turn. "
+        "Use well-formatted Markdown links. Make a best guess at the URL from "
+        "conversation context — do not think or research to verify correctness; a "
+        "plausible guess is fine. Prefer links you already used in your turn. "
         "Do not repeat any prior response text. Do not add preamble, thought content, "
         "explanations, or commentary about adding links. If links are truly unnecessary, "
-        "end immediately with no additional text."
+        "output nothing."
     )
 
 
