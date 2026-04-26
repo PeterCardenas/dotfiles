@@ -20,6 +20,7 @@ return {
     branch = 'vibin',
     upstream = 'carlos-algms/agentic.nvim',
     upstream_branch = 'main',
+    event = 'VeryLazy',
     cond = function()
       return Config.USE_AGENTIC
     end,
