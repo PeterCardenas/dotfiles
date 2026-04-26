@@ -43,7 +43,7 @@
   "mini.icons": { "branch": "main", "commit": "7fdae2443a0e2910015ca39ad74b50524ee682d3" },
   "neoscroll.nvim": { "branch": "dev", "commit": "c112b69da43de459e68224420ac6f3fa58ed3780" },
   "neovim-session-manager": { "branch": "master", "commit": "89d253a6c68af60b49570044591d5b8701866601" },
-  "noice.nvim": { "branch": "fix-blink-cmp-cmdline-completion", "commit": "17846b259b75085e6353f97603cb84d88b11addc" },
+  "noice.nvim": { "branch": "dev", "commit": "9c3d10706a418134b0b33e3be517f36e3dabc088" },
   "nui.nvim": { "branch": "main", "commit": "de740991c12411b663994b2860f1a4fd0937c130" },
   "nvim-autopairs": { "branch": "master", "commit": "59bce2eef357189c3305e25bc6dd2d138c1683f5" },
   "nvim-cmp": { "branch": "main", "commit": "1e1900b0769324a9675ef85b38f99cca29e203b3" },
