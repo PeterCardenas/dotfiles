@@ -4,7 +4,11 @@
 # Linux: free. BSD: sysctl counters.
 export LC_ALL=C
 
+short=false
+[ "$1" = "--short" ] && short=true
+
 cache="/tmp/tmux-ram-$(id -u)"
+$short && cache="${cache}-short"
 now=$(date +%s)
 if [ -f "$cache" ]; then
   age=$((now - $(head -1 "$cache")))
@@ -84,6 +88,10 @@ esac
 result="${result:-0G/0G}"
 used_part=${result%%/*}
 total_part=${result#*/}
-result="#[fg=$(usage_color "$usage_pct")]${used_part}#[fg=#c0caf5]/${total_part}"
+if $short; then
+  result="#[fg=$(usage_color "$usage_pct")]${used_part}"
+else
+  result="#[fg=$(usage_color "$usage_pct")]${used_part}#[fg=#c0caf5]/${total_part}"
+fi
 printf '%s\n%s' "$now" "$result" >"$cache"
 printf '%s' "$result"
