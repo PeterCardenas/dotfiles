@@ -1,5 +1,5 @@
-local File = require('utils.file')
 local EntryDisplay = require('plugins.telescope.entry_display')
+local File = require('utils.file')
 local M = {}
 
 ---@return fun(filename: string): table

@@ -1,8 +1,8 @@
 -- [[ Neovim Ghostty Integration ]]
 
 local Async = require('utils.async')
-local Shell = require('utils.shell')
 local Log = require('utils.log')
+local Shell = require('utils.shell')
 
 local M = {}
 local UPDATE_DEBOUNCE_MS = 50

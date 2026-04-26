@@ -1,10 +1,10 @@
 local Async = require('utils.async')
-local File = require('utils.file')
-local Shell = require('utils.shell')
-local Git = require('utils.git')
 local Buf = require('utils.buf')
 local Config = require('utils.config')
+local File = require('utils.file')
+local Git = require('utils.git')
 local Log = require('utils.log')
+local Shell = require('utils.shell')
 
 ---@async
 ---@param cwd string

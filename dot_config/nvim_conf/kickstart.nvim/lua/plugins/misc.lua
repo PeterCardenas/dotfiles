@@ -1,9 +1,9 @@
 local Async = require('utils.async')
-local Shell = require('utils.shell')
 local Buf = require('utils.buf')
 local Config = require('utils.config')
-local Git = require('utils.git')
 local File = require('utils.file')
+local Git = require('utils.git')
+local Shell = require('utils.shell')
 local Treesitter = require('utils.treesitter')
 
 local large_file_group = vim.api.nvim_create_augroup('Disable Large File Plugins', { clear = true })

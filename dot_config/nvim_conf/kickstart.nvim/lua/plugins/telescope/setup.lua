@@ -1,7 +1,7 @@
+local Async = require('utils.async')
+local BufferPicker = require('plugins.telescope.buffer_picker')
 local Config = require('utils.config')
 local FilePicker = require('plugins.telescope.files_picker')
-local BufferPicker = require('plugins.telescope.buffer_picker')
-local Async = require('utils.async')
 local Shell = require('utils.shell')
 
 local M = {}

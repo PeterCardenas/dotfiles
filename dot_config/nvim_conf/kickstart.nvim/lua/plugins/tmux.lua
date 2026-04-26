@@ -2,8 +2,8 @@
 
 local Async = require('utils.async')
 local Colors = require('utils.colorscheme')
-local Shell = require('utils.shell')
 local Log = require('utils.log')
+local Shell = require('utils.shell')
 
 ---@class TmuxCmdInfo
 ---@field pane_id string
