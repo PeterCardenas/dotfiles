@@ -35,8 +35,12 @@ fetch_total_cents() {
   fi
 }
 
+short=false
+[ "$1" = "--short" ] && short=true
+
 uid=$(id -u)
 cache="/tmp/tmux-cursor-spend-${uid}"
+$short && cache="${cache}-short"
 now=$(date +%s)
 if [ -f "$cache" ]; then
   age=$((now - $(head -1 "$cache")))
@@ -71,7 +75,11 @@ month_cents=$(fetch_total_cents "$month_start_ms")
 
 day_result=$(awk "BEGIN{printf \"\$%.2f\", $day_cents / 100}")
 month_result=$(awk "BEGIN{printf \"\$%.2f\", $month_cents / 100}")
-result="󰆦 ${day_result} | ${month_result}"
+if $short; then
+  result="󰆦 ${month_result}"
+else
+  result="󰆦 ${day_result} | ${month_result}"
+fi
 
 printf '%s\n%s' "$now" "$result" >"$cache"
 printf '%s' "$result"
