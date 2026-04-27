@@ -55,7 +55,7 @@ return {
         previewers = {
           builtin = {
             treesitter = {
-              context = true,
+              context = {},
             },
           },
           codeaction_native = {
