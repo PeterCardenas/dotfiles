@@ -123,7 +123,7 @@ vim.keymap.set({ 'v', 'n' }, 'gk', '<C-o>', { desc = 'Go to previous location' }
 Lazygit.set_keymap()
 
 if not Config.USE_TABLINE then
-  vim.api.nvim_create_autocmd({ 'BufReadPre', 'BufNewFile' }, {
+  vim.api.nvim_create_autocmd('BufEnter', {
     group = vim.api.nvim_create_augroup('close_current_buffer', { clear = true }),
     callback = function(args)
       local bufname = vim.api.nvim_buf_get_name(args.buf)
