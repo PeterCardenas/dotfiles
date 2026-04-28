@@ -248,8 +248,8 @@ return {
           },
           ['cursor-acp'] = {
             default_config_options = {
-              model = 'gpt-5.5',
-              reasoning = 'medium',
+              model = 'gpt-5.3-codex',
+              reasoning = 'high',
               fast = 'false',
             },
             mcp_servers = {
