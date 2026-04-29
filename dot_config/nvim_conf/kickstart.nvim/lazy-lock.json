@@ -41,7 +41,7 @@
   "mason.nvim": { "branch": "main", "commit": "12ddd182d9efbdc848b540f16484a583d52da0fb" },
   "mini.files": { "branch": "dev", "commit": "ec4f3b4347ef9e87e54e4a0aa2e84ab9722d8b27" },
   "mini.icons": { "branch": "main", "commit": "bac6317300e205335df425296570d84322730067" },
-  "neoscroll.nvim": { "branch": "dev", "commit": "c112b69da43de459e68224420ac6f3fa58ed3780" },
+  "neoscroll.nvim": { "branch": "dev", "commit": "bca551c11b5777db1a8151373f406d1307288f88" },
   "neovim-session-manager": { "branch": "master", "commit": "89d253a6c68af60b49570044591d5b8701866601" },
   "noice.nvim": { "branch": "dev", "commit": "9c3d10706a418134b0b33e3be517f36e3dabc088" },
   "nui.nvim": { "branch": "main", "commit": "de740991c12411b663994b2860f1a4fd0937c130" },
