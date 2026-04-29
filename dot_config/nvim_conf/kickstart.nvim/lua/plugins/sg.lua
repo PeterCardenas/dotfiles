@@ -286,6 +286,9 @@ return {
           -- Codex ACP
           ['codex-acp'] = {
             command = 'codex-acp',
+            default_config_options = {
+              mode = 'full-access',
+            },
             args = {},
             env = {
               OPENAI_API_KEY = openai_api_key,
@@ -350,6 +353,9 @@ return {
             local model_suffix = ''
             local all_options = config_opts and config_opts.all_options or nil
             local reasoning_value = all_options and all_options.reasoning and all_options.reasoning.currentValue or nil
+            if not reasoning_value then
+              reasoning_value = all_options and all_options.reasoning_effort and all_options.reasoning_effort.currentValue or nil
+            end
             if has_meaningful_value(reasoning_value) then
               if reasoning_value == 'extra-high' then
                 reasoning_value = 'xhigh'
