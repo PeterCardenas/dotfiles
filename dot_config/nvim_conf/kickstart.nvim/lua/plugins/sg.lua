@@ -112,7 +112,7 @@ return {
       vim.fn.mkdir(_spend_dir, 'p')
 
       local function _utc_date()
-        return os.date('!%Y-%m-%d')
+        return os.date('!%Y-%m-%d') --[[@as string]]
       end
 
       local function _flush_spend()
@@ -478,8 +478,8 @@ return {
                   entry = { _prev = 0 }
                   _spend_by_session[sid] = entry
                 end
-                local prev = entry._prev or 0
-                local delta = cost - prev
+                local prev_cost = entry._prev or 0
+                local delta = cost - prev_cost
                 local today = _utc_date()
                 if delta > 1e-9 then
                   entry[today] = (entry[today] or 0) + delta
@@ -500,6 +500,7 @@ return {
               session:schedule_header_refresh()
             end
           end,
+          ---@param data agentic.UserConfig.FileEditData
           on_file_edit = function(data)
             vim.api.nvim_exec_autocmds('User', {
               pattern = 'ChezmoiApplyPath',
