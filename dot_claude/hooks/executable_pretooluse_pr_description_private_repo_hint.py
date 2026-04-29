@@ -115,7 +115,7 @@ def _run_gh_json(cmd: list[str], timeout: int = 4) -> Optional[dict]:
             cmd,
             capture_output=True,
             text=True,
-            timeout=4,
+            timeout=timeout,
             check=False,
             env=_gh_env(),
         )
