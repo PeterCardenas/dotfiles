@@ -2,7 +2,7 @@
   "Comment.nvim": { "branch": "master", "commit": "e30b7f2008e52442154b66f7c519bfd2f1e32acb" },
   "LuaSnip": { "branch": "master", "commit": "a62e1083a3cfe8b6b206e7d3d33a51091df25357" },
   "actions-preview.nvim": { "branch": "master", "commit": "0ac9c2aa3cfc8c885321c0862b50b6b1c3392405" },
-  "agentic.nvim": { "branch": "vibin", "commit": "c1ac643a5a2c0b4cfaf5b8280917f88bf52cabe1" },
+  "agentic.nvim": { "branch": "vibin", "commit": "56e91d6747056281efaeba4af72b6157a88b7f4c" },
   "alpha-nvim": { "branch": "fix-invalid-win", "commit": "5aeb000f2ca7c33c6840141ceee31a75671b5890" },
   "blink-emoji.nvim": { "branch": "master", "commit": "dff709139ad5389fb55ebab026e75278a12b325a" },
   "blink.cmp": { "branch": "main", "commit": "90d14caca4ae557665ab105080c27d5f289a2e30" },
