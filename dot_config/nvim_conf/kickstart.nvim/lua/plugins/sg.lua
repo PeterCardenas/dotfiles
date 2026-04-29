@@ -1,5 +1,6 @@
 local Config = require('utils.config')
 local Log = require('utils.log')
+local Secrets = require('utils.secrets')
 local Spinner = require('utils.spinner')
 
 ---@type LazyPluginSpec[]
@@ -151,6 +152,12 @@ return {
         end, 200)
       end, {})
 
+      local openai_api_key_ok, openai_api_key = Secrets.read_api_key('~/.local/share/openai/api_key')
+
+      if not openai_api_key_ok then
+        Log.notify_error('OpenAI API key not found')
+      end
+
       require('agentic').setup({
         provider = 'cursor-acp',
 
@@ -280,7 +287,9 @@ return {
           ['codex-acp'] = {
             command = 'codex-acp',
             args = {},
-            env = {},
+            env = {
+              OPENAI_API_KEY = openai_api_key,
+            },
           },
         },
 
