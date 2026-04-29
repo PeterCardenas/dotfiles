@@ -1,4 +1,5 @@
 local M = {}
+local Log = require('utils.log')
 
 ---@param include_current boolean
 ---@return integer[]
@@ -31,6 +32,13 @@ function M.is_buf_large(bufnr, file_size_threshold)
 end
 
 function M.close_current_buffer()
+  local current_winid = vim.api.nvim_get_current_win()
+  local is_winfixbuf = vim.wo[current_winid].winfixbuf
+  if is_winfixbuf then
+    Log.notify_warn('Cannot close buffer: current window has winfixbuf enabled')
+    return
+  end
+
   local navigable_bufnrs = M.get_navigable_buffers(true)
   require('bufdelete').bufdelete()
   if #navigable_bufnrs == 1 then
