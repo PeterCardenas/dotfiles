@@ -725,6 +725,50 @@ return {
     'Shatur/neovim-session-manager',
     event = 'BufWritePost',
     config = function()
+      local function destroy_agentic_sessions_for_all_tabs()
+        local ok_registry, SessionRegistry = pcall(require, 'agentic.session_registry')
+        if not ok_registry or not SessionRegistry then
+          return
+        end
+
+        for tab_page_id, _ in pairs(SessionRegistry.sessions) do
+          if vim.api.nvim_tabpage_is_valid(tab_page_id) then
+            SessionRegistry.destroy_session(tab_page_id)
+          end
+        end
+      end
+
+      local function prewarm_agentic_sessions_for_all_tabs()
+        local ok_registry, SessionRegistry = pcall(require, 'agentic.session_registry')
+        if not ok_registry or not SessionRegistry then
+          return
+        end
+
+        for _, tab_page_id in ipairs(vim.api.nvim_list_tabpages()) do
+          if vim.api.nvim_tabpage_is_valid(tab_page_id) then
+            SessionRegistry.get_session_for_tab_page(tab_page_id)
+          end
+        end
+      end
+
+      local group = vim.api.nvim_create_augroup('AgenticSessionRestoreHooks', { clear = true })
+      vim.api.nvim_create_autocmd('User', {
+        group = group,
+        pattern = 'SessionLoadPre',
+        callback = function()
+          destroy_agentic_sessions_for_all_tabs()
+        end,
+      })
+      vim.api.nvim_create_autocmd('User', {
+        group = group,
+        pattern = 'SessionLoadPost',
+        callback = function()
+          vim.defer_fn(function()
+            prewarm_agentic_sessions_for_all_tabs()
+          end, 50)
+        end,
+      })
+
       require('session_manager').setup({
         autoload_mode = require('session_manager.config').AutoloadMode.CurrentDir,
         autosave_ignore_dirs = { '~/', '~/Downloads', '/' },
