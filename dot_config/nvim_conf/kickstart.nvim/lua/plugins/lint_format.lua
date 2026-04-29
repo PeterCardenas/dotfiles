@@ -502,6 +502,7 @@ return {
           lua = { 'stylua' },
           go = { 'golines' },
           bzl = { 'buildifier' },
+          python = { 'ruff_fix', 'ruff_format' },
           json = function(bufnr)
             local bufname = vim.api.nvim_buf_get_name(bufnr)
             if vim.endswith(bufname, 'lazy-lock.json') then
@@ -533,6 +534,39 @@ return {
           },
           golines = {
             args = { '--no-reformat-tags' },
+          },
+          ruff_fix = {
+            args = function()
+              local args = {
+                'check',
+                '--fix',
+                '--force-exclude',
+                '--exit-zero',
+                '--no-cache',
+              }
+              vim.list_extend(args, Python.ruff_check_args())
+              vim.list_extend(args, {
+                '--stdin-filename',
+                '$FILENAME',
+                '-',
+              })
+              return args
+            end,
+          },
+          ruff_format = {
+            args = function()
+              local args = {
+                'format',
+                '--force-exclude',
+              }
+              vim.list_extend(args, Python.ruff_format_args())
+              vim.list_extend(args, {
+                '--stdin-filename',
+                '$FILENAME',
+                '-',
+              })
+              return args
+            end,
           },
         },
         notify_on_error = true,
@@ -634,6 +668,29 @@ return {
         mypy_config_path,
       }
       require('lint').linters.dmypy.args = dmypy_args
+      local ruff_args = {
+        'check',
+        '--force-exclude',
+        '--quiet',
+        '--stdin-filename',
+        function()
+          return vim.api.nvim_buf_get_name(0)
+        end,
+        '--no-fix',
+        '--output-format',
+        'json',
+      }
+      vim.list_extend(ruff_args, Python.ruff_check_args())
+      ruff_args[#ruff_args + 1] = '-'
+      require('lint').linters.ruff.args = ruff_args
+      local original_ruff_parser = require('lint').linters.ruff.parser
+      require('lint').linters.ruff.parser = function(output, bufnr, linter_cwd)
+        local diagnostics = original_ruff_parser(output, bufnr, linter_cwd)
+        for _, diagnostic in ipairs(diagnostics) do
+          diagnostic.severity = vim.diagnostic.severity.ERROR
+        end
+        return diagnostics
+      end
       require('lint').linters.pylint.env = {
         PYTHONPATH = cwd .. ':' .. cwd .. '/' .. Python.GEN_FILES_PATH,
       }
@@ -695,7 +752,7 @@ return {
         bzl = { 'buildifier' },
         go = { 'golint' },
         proto = { 'buf_lint' },
-        python = { 'dmypy', 'pylint' },
+        python = { 'ruff', 'dmypy', 'pylint' },
         -- TODO: add jq as json linter
         fish = { 'fish' },
         lua = { 'stylua' },
