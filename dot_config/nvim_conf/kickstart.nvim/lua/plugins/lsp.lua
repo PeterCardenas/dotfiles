@@ -540,7 +540,7 @@ return {
 
     -- Setup language servers found locally.
     LocalLsp.add_config(servers)
-    -- Setup specific autocmds and ruff_lsp.
+    -- Setup language-specific LSP autocmds.
     Python.setup()
 
     for server_name, server_config in pairs(servers) do

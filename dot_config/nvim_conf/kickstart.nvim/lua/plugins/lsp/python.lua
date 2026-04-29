@@ -7,6 +7,30 @@ local M = {}
 
 local enable_pyright = not Config.USE_JEDI
 M.GEN_FILES_PATH = 'bazel-out/k8-fastbuild/bin'
+M.RUFF_ADDITIONAL_RULES = {
+  'D', -- pydocstyle: https://docs.astral.sh/ruff/rules/#pydocstyle-d
+  'W', -- pycodestyle warnings: https://docs.astral.sh/ruff/rules/#warning-w
+  'PLR0912', -- too-many-branches
+  'T201', -- print
+  'SLF001', -- private-member-access
+  'PLW1514', -- unspecified-encoding
+  'C416', -- unnecessary-comprehension
+  'SIM401', -- if-else-block-instead-of-dict-get
+  'PLE0302', --unexpected-special-method-signature
+  'TRY002', -- raise-vanilla-class
+  'B023', -- function-uses-loop-variable
+  'PLE1206', -- logging-too-few-args
+  'PLE1205', -- logging-too-many-args
+}
+M.RUFF_IGNORED_RULES = {
+  'W191', -- tab-indentation https://docs.astral.sh/ruff/rules/tab-indentation/
+  'E203', -- whitespace before ':' https://docs.astral.sh/ruff/rules/whitespace-before-colon/
+}
+M.RUFF_EXTEND_FIXABLE_RULES = {
+  'W605', -- invalid escape sequence https://docs.astral.sh/ruff/rules/invalid-escape-sequence/
+  'W293', -- trailing whitespace https://docs.astral.sh/ruff/rules/trailing-whitespace/
+  'E251', -- unexpected spaces around keyword / parameter equals
+}
 
 ---@module 'lspconfig'
 
@@ -103,7 +127,7 @@ local function pylsp_config()
           pylsp_mypy = {
             enabled = false,
           },
-          -- Disable other default formatters and linters in favor of ruff and pylint.
+          -- Disable other default formatters and linters in favor of external tooling.
           black = {
             enabled = false,
           },
@@ -130,78 +154,28 @@ local function pylsp_config()
   return config
 end
 
----@return LspTogglableConfig
-local function get_ruff_lsp_config()
-  local additional_rules = {
-    'D', -- pydocstyle: https://docs.astral.sh/ruff/rules/#pydocstyle-d
-    'W', -- pycodestyle warnings: https://docs.astral.sh/ruff/rules/#warning-w
-    'PLR0912', -- too-many-branches
-    'T201', -- print
-    'SLF001', -- private-member-access
-    'PLW1514', -- unspecified-encoding
-    'C416', -- unnecessary-comprehension
-    'SIM401', -- if-else-block-instead-of-dict-get
-    'PLE0302', --unexpected-special-method-signature
-    'TRY002', -- raise-vanilla-class
-    'B023', -- function-uses-loop-variable
-    'PLE1206', -- logging-too-few-args
-    'PLE1205', -- logging-too-many-args
-  }
-  local ignored_rules = {
-    'W191', -- tab-indentation https://docs.astral.sh/ruff/rules/tab-indentation/
-    'E203', -- whitespace before ':' https://docs.astral.sh/ruff/rules/whitespace-before-colon/, this comes up with false positives
-  }
-  local used_in_repo = {
-    'W605', -- invalid escape sequence https://docs.astral.sh/ruff/rules/invalid-escape-sequence/
-    'W293', -- trailing whitespace https://docs.astral.sh/ruff/rules/trailing-whitespace/
-    'E251', -- unexpected spaces around keyword / parameter equals https://docs.astral.sh/ruff/rules/unexpected-spaces-around-keyword-parameter-equals/
-  }
-  local ruff_args = {
-    -- Enable preview mode for some additional rules.
+---@return string[]
+function M.ruff_check_args()
+  return {
     '--preview',
-    '--extend-select=' .. table.concat(additional_rules, ','),
-    '--ignore=' .. table.concat(ignored_rules, ','),
-    -- Do not fix selected rules to minimize diff.
-    '--unfixable=' .. table.concat(additional_rules, ','),
-    -- Re-enable rules that are used in codebase.
-    '--extend-fixable=' .. table.concat(used_in_repo, ','),
+    '--extend-select=' .. table.concat(M.RUFF_ADDITIONAL_RULES, ','),
+    '--ignore=' .. table.concat(M.RUFF_IGNORED_RULES, ','),
+    '--unfixable=' .. table.concat(M.RUFF_ADDITIONAL_RULES, ','),
+    '--extend-fixable=' .. table.concat(M.RUFF_EXTEND_FIXABLE_RULES, ','),
   }
-  -- TODO(PeterPCardenas): Fork https://github.com/astral-sh/ruff-lsp
-  -- Add support to adding rules without changing how the codebase selects and fixes rules.
+end
 
-  ---@type LspTogglableConfig
-  local config = {
-    -- TODO: Try conform for formatting instead since getting issues with the formatter not using the right version.
-    init_options = {
-      settings = {
-        args = ruff_args,
-      },
-    },
-    handlers = {
-      ---@param _ lsp.ResponseError
-      ---@param result lsp.PublishDiagnosticsParams
-      ---@param ctx lsp.HandlerContext
-      ---@param _config table
-      [vim.lsp.protocol.Methods.textDocument_publishDiagnostics] = function(_, result, ctx, _config)
-        -- Change severity of ruff warnings to errors.
-        for _, diagnostic in ipairs(result.diagnostics) do
-          diagnostic.severity = vim.lsp.protocol.DiagnosticSeverity.Error
-        end
-        return vim.lsp.diagnostic.on_publish_diagnostics(_, result, ctx)
-      end,
-    },
+---@return string[]
+function M.ruff_format_args()
+  return {
+    '--preview',
   }
-  return config
 end
 
 --  Configures a language server after it attaches to a buffer.
 ---@param client vim.lsp.Client
 ---@param _ integer buffer number
 local function on_attach(client, _)
-  if client.name == 'ruff_lsp' then
-    -- Defer to pylsp jedi plugin for hover documentation.
-    client.server_capabilities.hoverProvider = false
-  end
   if client.name == 'pyright' then
     -- TODO: Use pyright instead of jedi for all language features when venvPath works.
     client.server_capabilities.definitionProvider = false
@@ -312,7 +286,7 @@ function M.maybe_install_python_dependencies(override_requirements_path, force_p
     return
   end
   progress_handle:report('Installing python tooling...')
-  success, output = Shell.async_cmd('bash', { '-c', 'source ' .. venv_path .. '/bin/activate && uv pip install python-lsp-server==1.13.0 mypy pylint' })
+  success, output = Shell.async_cmd('bash', { '-c', 'source ' .. venv_path .. '/bin/activate && uv pip install python-lsp-server==1.13.0 mypy pylint ruff' })
   if not success then
     progress_handle:finish('Failed to install python tooling')
     vim.schedule(function()
@@ -403,7 +377,6 @@ function M.add_config(servers)
   }
   servers.pyright = pyright_config()
   servers.pylsp = pylsp_config()
-  servers.ruff_lsp = get_ruff_lsp_config()
   servers.zuban = { enabled = Config.USE_ZUBAN, cmd_env = { ZUBAN_LOG_FILE = '/tmp/zuban.log', ZUBAN_LOG = 'debug' } }
 end
 

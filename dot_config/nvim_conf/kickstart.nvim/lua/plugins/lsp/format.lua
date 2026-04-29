@@ -141,10 +141,8 @@ local function fix_from_code_action(bufnr, ls_name, action_type, dry_run, on_com
     params.context = { only = { action_type }, diagnostics = {} }
     ---@param ls_results lsp.CodeAction[]
     client:request(vim.lsp.protocol.Methods.textDocument_codeAction, params, function(err, ls_results, _ctx, _config)
-      -- TODO: ruff is pretty noisy about errors
       if
         err
-        and client.name ~= 'ruff_lsp'
         and (
           client.name ~= 'rust-analyzer'
           or (
@@ -181,16 +179,6 @@ end
 ---@param on_complete? FormatCallback
 local function format_go_imports(bufnr, dry_run, on_complete)
   fix_from_code_action(bufnr, 'gopls', 'source.organizeImports', dry_run, on_complete)
-end
-
----Fix all auto-fixable ruff lsp errors.
----@param bufnr integer
----@param dry_run boolean
----@param on_complete? FormatCallback
-local function fix_ruff_errors(bufnr, dry_run, on_complete)
-  fix_from_code_action(bufnr, 'ruff_lsp', 'source.organizeImports', dry_run, function()
-    fix_from_code_action(bufnr, 'ruff_lsp', 'source.fixAll', dry_run, on_complete)
-  end)
 end
 
 ---Fix all auto-fixable rust_analyzer errors.
@@ -576,7 +564,6 @@ local function lsp_format(bufnr, dry_run, on_complete)
         if err then
           if
             client.name ~= 'gopls'
-            and client.name ~= 'ruff_lsp'
             and (
               client.name ~= 'rust-analyzer'
               or (
@@ -622,7 +609,6 @@ local function format_with_check(bufnr, dry_run, on_complete)
   local autofixers = {
     { 'gopls', format_go_imports },
     { 'pyright', auto_import_pyright },
-    { 'ruff_lsp', fix_ruff_errors },
     { 'typescript-tools', fix_typescript_errors },
     { 'rust-analyzer', fix_rust_analyzer_errors },
     { 'stylelint_lsp', fix_stylelint_errors },
