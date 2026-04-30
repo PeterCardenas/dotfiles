@@ -10,6 +10,8 @@ Prefer WebFetch tool over curl or wget.
 
 NEVER reply to other people's GitHub comments
 
+Always do rebase instead of merge commit.
+
 When using Bash or terminal tools:
 - use `;` instead of newlines to separate commands
 - do not put comments
