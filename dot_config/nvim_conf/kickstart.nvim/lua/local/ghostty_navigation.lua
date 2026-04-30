@@ -332,7 +332,7 @@ local function setup_autocommands()
     end,
   })
 
-  -- VimLeavePre needs special handling with sleep
+  -- Ensure all ghostty navigation is restored before leaving Neovim.
   vim.api.nvim_create_autocmd('VimLeavePre', {
     desc = 'Enable all ghostty navigation on vim leave',
     group = group,
@@ -344,7 +344,6 @@ local function setup_autocommands()
       else
         last_applied_directions = 'all'
       end
-      vim.cmd('sleep 10m')
     end,
   })
 

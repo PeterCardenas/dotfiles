@@ -121,9 +121,6 @@ local function setup_tmux_autocommands()
     group = tmux_navigator_group,
     callback = function()
       unset_is_vim_sync()
-      -- Hack for making sure vim doesn't exit with a non-zero exit code.
-      -- Reference: https://github.com/neovim/neovim/issues/21856#issuecomment-1514723887
-      vim.cmd('sleep 10m')
     end,
   })
   vim.api.nvim_create_autocmd('VimSuspend', {
