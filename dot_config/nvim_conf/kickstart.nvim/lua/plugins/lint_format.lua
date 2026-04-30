@@ -197,7 +197,7 @@ local function bazel_go_lint(abs_filepath)
     message = 'Querying for go targets...',
     pattern = 'moon',
   })
-  local success, output = Shell.async_cmd('buildozer', { '-types', 'go_library,go_test', 'print label srcs', '//' .. relative_parent_dir .. ':*' })
+  local success, output = Shell.async_cmd('buildozer', { '-types', 'go_library,go_test,go_binary', 'print label srcs', '//' .. relative_parent_dir .. ':*' })
   if not success then
     progress_handle:finish('Failed to query go targets')
     Log.notify_error('Failed to buildozer query for go: ' .. table.concat(output, '\n'))
@@ -206,18 +206,27 @@ local function bazel_go_lint(abs_filepath)
   ---@type string[]
   local matched_targets = {}
   for _, line in ipairs(output) do
-    local target, srcs_str = line:match('^(//[a-zA-Z_:/]+)%s+%[(.*)%]$')
-    local srcs = vim.split(srcs_str, ' ')
-    local matched_srcs = vim.tbl_filter(function(src) ---@param src string
-      return src == current_filename
-    end, srcs)
-    if #matched_srcs > 0 then
-      matched_targets[#matched_targets + 1] = target
+    local target, srcs_str = line:match('^(//[^%s]+)%s+%[(.*)%]$')
+    if target and srcs_str then
+      local srcs = vim.split(srcs_str, ' ')
+      local matched_srcs = vim.tbl_filter(function(src) ---@param src string
+        return src == current_filename
+      end, srcs)
+      if #matched_srcs > 0 then
+        matched_targets[#matched_targets + 1] = target
+      end
     end
   end
 
+  if #matched_targets == 0 then
+    progress_handle:finish('No matching go target found')
+    return
+  end
+
   progress_handle:report('Building go target...')
-  success, output = Shell.async_cmd('bazel', { output_base_flag, 'build', '--color=no', table.concat(matched_targets, ' ') }, { cwd = workspace_root })
+  local build_args = { output_base_flag, 'build', '--color=no' }
+  vim.list_extend(build_args, matched_targets)
+  success, output = Shell.async_cmd('bazel', build_args, { cwd = workspace_root })
   ---@type table<string, vim.Diagnostic[]>
   local file_diagnostics = {}
   ---@param line string
