@@ -235,7 +235,8 @@ vim.api.nvim_create_user_command('CopyPR', function()
   end
   local pr = buffer:pullRequest()
   local html = string.format('<a href="%s">%s</a> (+%d/-%d)', pr.url, html_escape(pr.title), pr.additions, pr.deletions)
-  local markdown = string.format('[%s](%s) (+%d/-%d)', pr.title, pr.url, pr.additions, pr.deletions)
+  local markdown_escaped_title = pr.title:gsub('%[', '\\['):gsub('%]', '\\]')
+  local markdown = string.format('[%s](%s) (+%d/-%d)', markdown_escaped_title, pr.url, pr.additions, pr.deletions)
   Async.void(
     ---@async
     function()
