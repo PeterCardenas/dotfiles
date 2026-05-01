@@ -23,6 +23,8 @@ Always do rebase instead of merge commit.
 
 Use conventional commit messages.
 
+Use PR template if it exists.
+
 When using Bash or terminal tools:
 - use `;` instead of newlines to separate commands
 - do not put comments
