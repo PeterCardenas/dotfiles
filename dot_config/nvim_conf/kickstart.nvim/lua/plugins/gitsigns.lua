@@ -195,18 +195,39 @@ vim.api.nvim_create_user_command('CreatePR', function()
   require('octo.commands').create_pr()
 end, { nargs = 0, desc = 'Create a PR for the current branch' })
 
+---@class PR
+---@field number number
+---@field url string
+---@field title string
+---@field additions number
+---@field deletions number
+
+---@async
+---@param cwd? string
+---@return boolean, PR|string
+local function get_current_branch_pr(cwd)
+  local success, output = Shell.async_cmd('gh', { 'pr', 'view', '--json', 'number,url,title,additions,deletions' }, { cwd = cwd })
+  if not success then
+    return false, table.concat(output, '\n')
+  end
+  local decoded = vim.json.decode(table.concat(output, '\n'))
+  if type(decoded) ~= 'table' then
+    return false, 'Could not parse gh pr metadata'
+  end
+  return true, decoded
+end
+
 vim.api.nvim_create_user_command('EditPR', function()
   Async.void(
     ---@async
     function()
-      local success, output = Shell.async_cmd('gh', { 'pr', 'view', '--json=number', '--jq=.number' })
+      local success, pr_or_error = get_current_branch_pr()
       if not success then
-        vim.schedule(function()
-          vim.notify('Could not find PR for current branch\n' .. table.concat(output, '\n'), vim.log.levels.ERROR)
-        end)
+        Log.notify_error('Could not find PR for current branch\n' .. pr_or_error, { title = 'Octo' })
         return
       end
-      local pr_number = output[1]
+      local pr = pr_or_error
+      local pr_number = pr.number
       vim.schedule(function()
         require('octo.utils').get_pull_request(pr_number)
       end)
@@ -222,24 +243,32 @@ local function html_escape(s)
 end
 
 vim.api.nvim_create_user_command('CopyPR', function()
-  local buffer = require('octo.utils').get_current_buffer()
-  if not buffer or not buffer:isPullRequest() then
-    Log.notify_error('Not in a PR buffer', { title = 'Octo' })
-    return
-  end
   -- TODO: Use osc 5522 once ghostty has support
   -- Reference: https://github.com/ghostty-org/ghostty/issues/10549
   if vim.fn.executable('wl-copy') == 0 then
     Log.notify_error('wl-copy not found', { title = 'Octo' })
     return
   end
-  local pr = buffer:pullRequest()
-  local html = string.format('<a href="%s">%s</a> (+%d/-%d)', pr.url, html_escape(pr.title), pr.additions, pr.deletions)
-  local markdown_escaped_title = pr.title:gsub('%[', '\\['):gsub('%]', '\\]')
-  local markdown = string.format('[%s](%s) (+%d/-%d)', markdown_escaped_title, pr.url, pr.additions, pr.deletions)
   Async.void(
     ---@async
     function()
+      local buffer = require('octo.utils').get_current_buffer()
+      ---@type PR|octo.PullRequest
+      local pr
+      if buffer and buffer:isPullRequest() then
+        pr = buffer:pullRequest()
+      else
+        local cwd = vim.uv.cwd()
+        local success, pr_or_error = get_current_branch_pr(cwd)
+        if not success then
+          Log.notify_error('Not in a PR buffer and could not find PR for current cwd:\n' .. pr_or_error, { title = 'Octo' })
+          return
+        end
+        pr = pr_or_error --[[@as PR]]
+      end
+      local html = string.format('<a href="%s">%s</a> (+%d/-%d)', pr.url, html_escape(pr.title), pr.additions, pr.deletions)
+      local markdown_escaped_title = pr.title:gsub('%[', '\\['):gsub('%]', '\\]')
+      local markdown = string.format('[%s](%s) (+%d/-%d)', markdown_escaped_title, pr.url, pr.additions, pr.deletions)
       local success, output = Shell.async_cmd('wl-copy', { '--type', 'text/html' }, { stdin = html })
       if not success then
         Log.notify_error('wl-copy failed:\n' .. table.concat(output, '\n'), { title = 'Octo' })
