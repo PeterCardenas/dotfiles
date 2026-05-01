@@ -3,6 +3,15 @@ ALWAYS use skills when the user's request matches a skill's purpose. Before taki
 Whenever I'm questioning you, don't treat it as an instruction to fix it immediately nor treat it as a criticism. Instead, just explain your reasoning.
 
 Always include links as reference in responses, especially in plans. Prefer specific links with HTML fragments and/or query parameters, e.g. https://example.com/docs/page.html#section-1.
+The end of your turn response should always look like:
+
+```text
+
+Key References:
+- [Short title](https://example.com)
+- [Short title](https://example.com)
+
+```
 
 When fetching documentation from a website, first check if `{origin}/llms.txt` exists and prefer URLs listed there. Also try `{url}.md` or `{path}.md` variants of the page — many documentation sites serve LLM-optimized markdown versions at these paths.
 
