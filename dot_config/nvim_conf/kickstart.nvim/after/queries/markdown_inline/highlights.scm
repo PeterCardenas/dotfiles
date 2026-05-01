@@ -22,11 +22,11 @@
 
 (full_reference_link
   (link_text) @markup.shortcut_link
-  (#set! priority 110))
+  (#set! priority 130))
 
 (shortcut_link
   (link_text) @markup.shortcut_link
-  (#set! priority 110))
+  (#set! priority 130))
 
 ((backslash_escape) @conceal
   (#offset! @conceal 0 0 0 -1)
