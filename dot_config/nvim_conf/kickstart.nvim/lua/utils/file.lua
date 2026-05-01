@@ -1,5 +1,6 @@
 local M = {}
 local Log = require('utils.log')
+local Shell = require('utils.shell')
 
 ---@param name string
 ---@return boolean
@@ -52,7 +53,14 @@ end
 ---@param file_or_dir string? If not given, the current working directory is used.
 ---@return string|nil
 function M.get_git_root(file_or_dir)
-  return M.get_ancestor_dir('.git', file_or_dir)
+  local target = file_or_dir or M.get_cwd()
+  local cmd = 'git -C ' .. vim.fn.shellescape(target) .. ' rev-parse --show-toplevel'
+  local success, output = Shell.sync_cmd(cmd)
+  if success and output[1] ~= nil and output[1] ~= '' then
+    return output[1]
+  end
+
+  return nil
 end
 
 ---Checks whether the given file is in the given directory.
