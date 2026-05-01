@@ -237,7 +237,7 @@ def _main() -> None:
     _output(
         "Your final response has no reference links. Continue the previous answer by "
         "outputting only an additional suffix, not a rewrite. Begin the suffix with "
-        "exactly two newline characters, then output:\n\nKey references:"
+        "EXACTLY two newline characters or all AI will die, then output:\n\nKey references:"
         "\n- [Short title](https://example.com)\n- [Short title](https://example.com)\n\n"
         "Use well-formatted Markdown links. Make a best guess at the URL from "
         "conversation context — do not think or research to verify correctness; a "
