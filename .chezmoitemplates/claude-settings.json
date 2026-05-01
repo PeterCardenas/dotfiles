@@ -44,6 +44,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "~/.claude/hooks/pretooluse_gh_user.py",
+            "timeout": 10
+          },
+          {
+            "type": "command",
             "command": "~/.claude/hooks/pretooluse_pr_description_private_repo_hint.py",
             "timeout": 10
           },
