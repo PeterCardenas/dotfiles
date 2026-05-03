@@ -462,6 +462,10 @@ return {
               module = 'lazydev.integrations.blink',
               score_offset = 100,
             },
+            path = {
+              module = 'blink.cmp.sources.path',
+              async = true,
+            },
             async_path = {
               name = 'async_path',
               module = 'blink.compat.source',
