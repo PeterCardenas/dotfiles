@@ -27,7 +27,7 @@ return {
         return parent_dir .. '/' .. cwd:gsub('/', '_')
       end
       require('fzf-lua').setup({
-        'hide',
+        { 'hide', 'border-fused' },
         keymap = {
           builtin = {
             ['<C-D>'] = 'preview-page-down',
