@@ -8,6 +8,9 @@ return {
   {
     'sourcegraph/sg.nvim',
     cmd = { 'CodyDo', 'CodyChat' },
+    cond = function()
+      return Config.USE_SUPERMAVEN
+    end,
     dependencies = {
       'nvim-lua/plenary.nvim',
       'nvim-telescope/telescope.nvim',
