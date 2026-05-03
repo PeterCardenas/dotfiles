@@ -49,6 +49,15 @@ query GetUserForksForRepo($owner: String!, $name: String!) {
         print_error "Failed to get forks for $repo"
         return 1
     end
+    set -l gh_user (gh api user --jq '.login')
+    if test $status -ne 0; or test -z "$gh_user"
+        print_error "Failed to detect GitHub user"
+        return 1
+    end
+    set -l is_user_owned 0
+    if string match -q -- "$gh_user" "$owner"
+        set is_user_owned 1
+    end
     if test (count $existing_fork) -eq 1
         print_info "Setting up existing fork"
         setup_fork
@@ -56,6 +65,10 @@ query GetUserForksForRepo($owner: String!, $name: String!) {
         set repo_matches (string match -gr '(.*)\.git' $repo_name)
         if test (count $repo_matches) -eq 1
             set repo_name $repo_matches[1]
+        end
+        if test $is_user_owned -eq 1
+            gh repo set-default $repo_name
+            return $status
         end
         if status is-interactive; and isatty stdin
             read --local --prompt-str "No existing fork found for $repo_name. Set one up now? [y/N] " should_setup_fork
