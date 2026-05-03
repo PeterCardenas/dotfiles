@@ -54,6 +54,9 @@ end
 ---@return string|nil
 function M.get_git_root(file_or_dir)
   local target = file_or_dir or M.get_cwd()
+  if vim.fn.filereadable(target) == 1 then
+    target = vim.fn.fnamemodify(target, ':h')
+  end
   local cmd = 'git -C ' .. vim.fn.shellescape(target) .. ' rev-parse --show-toplevel'
   local success, output = Shell.sync_cmd(cmd)
   if success and output[1] ~= nil and output[1] ~= '' then
