@@ -7,9 +7,7 @@ import json
 import re
 import sys
 
-COMMIT_CMD_RE = re.compile(
-    r"(^|[;&|])\s*git\b(?:(?![;&|]).)*\bcommit(\s|$)"
-)
+COMMIT_CMD_RE = re.compile(r"(^|[;&|])\s*git\b(?:(?![;&|]).)*\bcommit(\s|$)")
 PR_CREATE_CMD_RE = re.compile(r"(^|[;&|])\s*gh\s+pr\s+create(\s|$)")
 TRAILER_PATTERNS = (
     r"Made-with:\s*Cursor",
