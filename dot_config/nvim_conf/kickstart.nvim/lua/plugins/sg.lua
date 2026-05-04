@@ -428,9 +428,11 @@ return {
             end
             local transcript = '<conversation>\n' .. table.concat(parts, '\n') .. '\n</conversation>'
 
-            local prompt = 'Summarize this chat conversation in 5-8 words for use as a short title. '
-              .. 'Reply with ONLY the title, no quotes, no punctuation at the end.\n\n'
+            local prompt = 'Generate a short title for this chat conversation in 5-8 words. '
+              .. 'Reply with ONLY the title text, with no explanation, no markdown, no quotes, and no punctuation at the end.\n\n'
               .. transcript
+            local retry_prompt = 'That title was too long. Rewrite your previous answer as a 5-8 word title. '
+              .. 'Reply with ONLY the title text, with no explanation, no markdown, no quotes, and no punctuation at the end.'
 
             local Async = require('utils.async')
             Async.void(function() ---@async
@@ -442,18 +444,57 @@ return {
               })
               local max_retries = 3
               local title = nil
+              local next_prompt = prompt
+              ---@type string?
+              local title_session_id = nil
               for _ = 1, max_retries do
-                local ok, output = Shell.async_cmd('agent', { '-pf', '--mode', 'ask', '--model', 'composer-2-fast' }, { stdin = prompt })
+                local args = {
+                  '-pf',
+                  '--output-format',
+                  'json',
+                  '--mode',
+                  'ask',
+                  '--model',
+                  'composer-2-fast',
+                }
+                if title_session_id then
+                  vim.list_extend(args, { '--resume', title_session_id })
+                end
+                local ok, output = Shell.async_cmd('agent', args, { stdin = next_prompt })
                 if not ok or not output or #output == 0 then
                   Log.notify_error(table.concat(output or {}, '\n'), { title = 'Title generation failed, retrying...' })
                   goto continue
                 end
-                title = vim.trim(table.concat(output, ' '))
-                local word_count = select(2, title:gsub('%S+', ''))
+                local response_line = nil
+                for i = #output, 1, -1 do
+                  local line = vim.trim(output[i] or '')
+                  if line ~= '' then
+                    response_line = line
+                    break
+                  end
+                end
+                if not response_line then
+                  Log.notify_error(table.concat(output, '\n'), { title = 'Title generation returned no JSON, retrying...' })
+                  goto continue
+                end
+                local decoded_ok, response = pcall(vim.json.decode, response_line)
+                if not decoded_ok or type(response) ~= 'table' then
+                  Log.notify_error(table.concat(output, '\n'), { title = 'Could not parse title generation response, retrying...' })
+                  goto continue
+                end
+                local session_id = response.session_id --[[@as string|unknown]]
+                if type(session_id) == 'string' and session_id ~= '' then
+                  title_session_id = session_id
+                end
+                local candidate = type(response.result) == 'string' and vim.trim(response.result) or ''
+                local word_count = select(2, candidate:gsub('%S+', ''))
                 if word_count <= 10 then
+                  title = candidate
                   break
                 end
-                Log.notify_warn(string.format('Title too long (%d words), retrying...\n%s', word_count, title), { title = 'Title Generation' })
+                title = nil
+                next_prompt = retry_prompt
+                Log.notify_warn(string.format('Title too long (%d words), retrying...\n%s', word_count, candidate), { title = 'Title Generation' })
                 ::continue::
               end
               if title and title ~= '' then
