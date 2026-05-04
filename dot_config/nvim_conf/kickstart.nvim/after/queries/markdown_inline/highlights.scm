@@ -22,6 +22,7 @@
 
 (full_reference_link
   (link_text) @markup.shortcut_link
+  (link_label) @markup.shortcut_link
   (#set! priority 130))
 
 (shortcut_link
