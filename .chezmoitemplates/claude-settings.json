@@ -54,12 +54,7 @@
           },
           {
             "type": "command",
-            "command": "~/.claude/hooks/pretooluse_strip_commit_trailers.py",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/pretooluse_commitmsgfmt.py",
+            "command": "~/.claude/hooks/pretooluse_git_sanitize.py",
             "timeout": 10
           }
         ]
