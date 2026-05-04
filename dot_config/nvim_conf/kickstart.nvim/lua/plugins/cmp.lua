@@ -465,6 +465,9 @@ return {
             path = {
               module = 'blink.cmp.sources.path',
               async = true,
+              opts = {
+                show_hidden_files_by_default = true,
+              },
             },
             async_path = {
               name = 'async_path',
