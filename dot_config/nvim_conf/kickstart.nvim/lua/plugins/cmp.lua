@@ -440,6 +440,7 @@ return {
               -- The source handles this internally via enabled(), but you can
               -- also use score_offset to boost priority when active:
               score_offset = 100,
+              async = true,
             },
             fonts = {
               name = 'fonts',
