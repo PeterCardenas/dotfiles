@@ -1,7 +1,7 @@
 local Async = require('utils.async')
 local Config = require('utils.config')
 local Log = require('utils.log')
-local PickerHelpers = require('plugins.telescope.setup')
+local PickerHelpers = require('utils.picker')
 local Shell = require('utils.shell')
 PickerHelpers.create_keymaps()
 

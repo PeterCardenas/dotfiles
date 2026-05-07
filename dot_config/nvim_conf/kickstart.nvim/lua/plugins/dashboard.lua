@@ -70,16 +70,16 @@ return {
     dashboard.section.header.val = header
     dashboard.section.buttons.val = {
       create_button('f', '  Find file', function()
-        require('plugins.telescope.setup').find_files(false)
+        require('utils.picker').find_files(false)
       end),
       create_button('n', '  New file', function()
         vim.cmd('ene <BAR> startinsert')
       end),
       create_button('r', '  Recent files', function()
-        require('plugins.telescope.setup').find_recent_files()
+        require('utils.picker').find_recent_files()
       end),
       create_button('w', '  Find text', function()
-        require('plugins.telescope.setup').find_words(false)
+        require('utils.picker').find_words(false)
       end),
       create_button('g', '  LazyGit', function()
         require('local.lazygit').open_lazygit()

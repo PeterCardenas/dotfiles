@@ -1,7 +1,5 @@
 local Async = require('utils.async')
-local BufferPicker = require('plugins.telescope.buffer_picker')
 local Config = require('utils.config')
-local FilePicker = require('plugins.telescope.files_picker')
 local Shell = require('utils.shell')
 
 local M = {}
@@ -10,7 +8,7 @@ local fre_prune_in_progress = {}
 
 function M.find_recent_files()
   if Config.USE_TELESCOPE then
-    require('telescope.builtin').oldfiles({ entry_maker = FilePicker.make_files_entry() })
+    require('telescope.builtin').oldfiles({ entry_maker = require('plugins.telescope.files_picker').make_files_entry() })
   else
     require('fzf-lua.providers.oldfiles').oldfiles()
   end
@@ -89,7 +87,7 @@ end
 ---@param show_ignore boolean
 function M.find_files(show_ignore)
   if Config.USE_TELESCOPE then
-    FilePicker.find_files({ show_ignore = show_ignore })
+    require('plugins.telescope.files_picker').find_files({ show_ignore = show_ignore })
   else
     prune_missing_fre_entries('files')
     require('fzf-lua.providers.files').files({
@@ -152,9 +150,11 @@ function M.create_keymaps()
   end)
 
   nmap('[F]ind b[u]ffers', 'fu', function()
-    -- TODO: Convert custom telescope buffer picker to fzf-lua
-    -- require('fzf-lua.providers.buffers').buffers({ ignore_current_file = true })
-    BufferPicker.find_buffers()
+    if Config.USE_TELESCOPE then
+      require('plugins.telescope.buffer_picker').find_buffers()
+    else
+      require('plugins.fzf.buffer_picker').find_buffers()
+    end
   end)
 
   nmap('[F]ind [F]iles', 'ff', function()
