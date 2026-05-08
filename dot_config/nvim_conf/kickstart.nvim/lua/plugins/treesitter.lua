@@ -16,6 +16,16 @@ vim.api.nvim_create_autocmd({ 'FileType' }, {
   end,
 })
 
+-- Especially in agent chat, treesitter highlighting in nvim doesn't like really long, quickly updating text.
+vim.api.nvim_create_user_command('TSRestart', function()
+  local cur_buf = vim.api.nvim_get_current_buf()
+  vim.treesitter.stop(cur_buf)
+  vim.treesitter.start(cur_buf)
+end, {
+  desc = 'Restart Treesitter for the current buffer',
+  nargs = 0,
+})
+
 vim.api.nvim_create_user_command('TSLogToggleDebug', function()
   local ts_log_debug = vim.g.__ts_debug
   local enabled = ts_log_debug and ts_log_debug > 0
