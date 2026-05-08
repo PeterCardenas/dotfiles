@@ -17,24 +17,34 @@ end
 ---@field stdin? string
 ---@field detach? boolean
 
----@type async fun(cmd: string, args: string[], opts: ShellAsyncOpts | nil): (boolean, string[])
+---@class ShellCmdOutput: string[]
+---@field stdout string[]
+---@field stderr string[]
+
+---@type async fun(cmd: string, args: string[], opts: ShellAsyncOpts | nil): (boolean, ShellCmdOutput)
 M.async_cmd = Async.wrap(
   ---@param cmd string
   ---@param args string[]
   ---@param opts ShellAsyncOpts | nil
-  ---@param done fun(success: boolean, output: string[])
+  ---@param done fun(success: boolean, output: ShellCmdOutput)
   ---@return nil
   function(cmd, args, opts, done)
     opts = opts or {}
     local Job = require('plenary.job')
 
-    ---@type string[]
-    local output = {}
+    ---@type ShellCmdOutput
+    local output = {
+      stdout = {},
+      stderr = {},
+    }
+
+    ---@param channel 'stdout' | 'stderr'
     ---@param data string
-    local function handle_output(data)
+    local function handle_output(channel, data)
       if data then
         local lines = String.split_lines(data)
         vim.list_extend(output, lines)
+        vim.list_extend(output[channel], lines)
       end
     end
     ---@diagnostic disable-next-line: missing-fields
@@ -44,10 +54,10 @@ M.async_cmd = Async.wrap(
       writer = opts.stdin,
       detached = opts.detach,
       on_stdout = function(_, data)
-        handle_output(data)
+        handle_output('stdout', data)
       end,
       on_stderr = function(_, data)
-        handle_output(data)
+        handle_output('stderr', data)
       end,
       on_exit = function(_, code)
         ---@type boolean, string
