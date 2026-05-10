@@ -360,10 +360,6 @@ function setup_unix() {
 
 	mkdir -p "$HOME/.local/bin"
 	export PATH="$PATH:$HOME/.local/bin"
-	# Install Starship prompt
-	if ! command -v starship >/dev/null 2>&1; then
-		curl -sS https://starship.rs/install.sh | sh -s -- -y --bin-dir="$HOME/.local/bin"
-	fi
 
 	# Install tmux
 	if ! command -v tmux >/dev/null 2>&1 || [[ "$(tmux -V 2>/dev/null | cut -d' ' -f2)" != "3.5a" && "$(tmux -V 2>/dev/null | cut -d' ' -f2)" != "next-3.6" ]]; then
@@ -412,6 +408,7 @@ function setup_unix() {
 	# Install rust packages with cargo binstall
 	rust_packages=(
 		git-delta
+		starship
 		bob-nvim
 		fd-find
 		bat
