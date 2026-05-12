@@ -29,7 +29,7 @@ Common symptom:
 
 Use the bundled script:
 
-- `scripts/resolve_pr_private_images.py`
+- `${CLAUDE_SKILL_DIR}/scripts/resolve_pr_private_images.py`
 
 ## Usage
 
