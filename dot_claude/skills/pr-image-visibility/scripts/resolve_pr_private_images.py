@@ -97,20 +97,18 @@ class PRImageResolver:
         return "200" in first_line
 
     def _fetch_bodies(self, owner: str, repo: str, number: int) -> List[BodyEntry]:
-        output = self._gh(
-            [
-                "api",
-                "graphql",
-                "-F",
-                f"owner={owner}",
-                "-F",
-                f"repo={repo}",
-                "-F",
-                f"number={number}",
-                "-f",
-                f"query={GRAPHQL_QUERY}",
-            ]
-        )
+        output = self._gh([
+            "api",
+            "graphql",
+            "-F",
+            f"owner={owner}",
+            "-F",
+            f"repo={repo}",
+            "-F",
+            f"number={number}",
+            "-f",
+            f"query={GRAPHQL_QUERY}",
+        ])
         if not output:
             return []
         try:
@@ -224,18 +222,28 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Resolve GitHub image URLs from PR descriptions/comments."
     )
-    parser.add_argument("--gh-user", help="Optional gh user to switch to before API calls.")
+    parser.add_argument(
+        "--gh-user", help="Optional gh user to switch to before API calls."
+    )
     parser.add_argument("--json", action="store_true", help="Emit JSON output.")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    resolve_parser = subparsers.add_parser("resolve", help="Resolve one markdown image URL.")
-    resolve_parser.add_argument("--pr-url", help="PR URL: https://github.com/owner/repo/pull/123")
+    resolve_parser = subparsers.add_parser(
+        "resolve", help="Resolve one markdown image URL."
+    )
+    resolve_parser.add_argument(
+        "--pr-url", help="PR URL: https://github.com/owner/repo/pull/123"
+    )
     resolve_parser.add_argument("--repo", help="Repository in owner/repo format.")
     resolve_parser.add_argument("--pr-number", type=int, help="Pull request number.")
-    resolve_parser.add_argument("--src", required=True, help="Markdown image URL to resolve.")
+    resolve_parser.add_argument(
+        "--src", required=True, help="Markdown image URL to resolve."
+    )
 
     map_parser = subparsers.add_parser("map", help="Build URL map for a pull request.")
-    map_parser.add_argument("--pr-url", help="PR URL: https://github.com/owner/repo/pull/123")
+    map_parser.add_argument(
+        "--pr-url", help="PR URL: https://github.com/owner/repo/pull/123"
+    )
     map_parser.add_argument("--repo", help="Repository in owner/repo format.")
     map_parser.add_argument("--pr-number", type=int, help="Pull request number.")
 
