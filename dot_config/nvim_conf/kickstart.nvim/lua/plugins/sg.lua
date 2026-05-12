@@ -63,14 +63,6 @@ return {
         desc = 'agentic: restore session (history)',
       },
       {
-        '<leader>ax',
-        function()
-          require('agentic').switch_provider()
-        end,
-        mode = { 'n' },
-        desc = 'agentic: switch provider',
-      },
-      {
         '<leader>al',
         function()
           require('agentic').rotate_layout()
@@ -301,7 +293,7 @@ return {
         keymaps = {
           widget = {
             close = 'q',
-            switch_provider = '<localleader>s',
+            switch_provider_global = '<leader>ax',
           },
           prompt = {
             submit = { '<CR>', { '<C-s>', mode = { 'i', 'n', 'v' } } },
