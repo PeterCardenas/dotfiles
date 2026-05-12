@@ -117,14 +117,12 @@ end, { nargs = 0, desc = 'Open/Copy GitHub PR link for current line' })
 
 ---@param filename string
 local function relative_path_to_git_root(filename)
-  local current_file = vim.fn.fnamemodify(filename, ':p')
+  local current_file = vim.fs.normalize(vim.fn.fnamemodify(filename, ':p'))
   local current_dir = vim.fn.fnamemodify(current_file, ':h')
   local git_root = File.get_git_root(current_dir)
 
   if git_root and vim.fn.isdirectory(git_root) == 1 then
-    if vim.fn.stridx(current_file, git_root) == 0 then
-      return vim.fn.substitute(current_file, '^' .. vim.pesc(git_root) .. '/', '', '')
-    end
+    return vim.fs.relpath(vim.fs.normalize(git_root), current_file)
   end
 
   return nil
