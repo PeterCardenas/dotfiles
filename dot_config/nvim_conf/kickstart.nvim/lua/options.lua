@@ -470,6 +470,7 @@ vim.api.nvim_create_autocmd('FileType', {
 
 vim.filetype.add({
   extension = {
+    bazelignore = 'gitignore',
     mdx = 'markdown.mdx',
     sky = 'bzl',
     swcrc = 'json',
