@@ -10,8 +10,11 @@ The end of your turn response should always look like:
 Key References:
 - [Short title](https://example.com)
 - [Short title](https://example.com)
+- file/reference.txt: why referenced
 
 ```
+
+Prefer local file path over GitHub URLs.
 
 When fetching documentation from a website, first check if `{origin}/llms.txt` exists and prefer URLs listed there. Also try `{url}.md` or `{path}.md` variants of the page — many documentation sites serve LLM-optimized markdown versions at these paths.
 
@@ -28,3 +31,5 @@ Use PR template if it exists.
 When using Bash or terminal tools:
 - use `;` instead of newlines to separate commands
 - do not put comments
+
+When you look at an issue or pr, look at the comments as well for full context.
