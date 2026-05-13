@@ -489,7 +489,7 @@ return {
       --       Reference: https://docs.github.com/en/graphql/reference/objects#branchprotectionrule
       --       Reference: https://docs.github.com/en/graphql/reference/enums#mergestatestatus
       if not _G.GH_TOKEN then
-        vim.wait(1000, function()
+        vim.wait(10000, function()
           return _G.GH_TOKEN ~= nil
         end, 100)
         if not _G.GH_TOKEN then
