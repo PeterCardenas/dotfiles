@@ -6,6 +6,7 @@ local Lsp = require('utils.lsp')
 local OnAttach = require('plugins.lsp.on_attach')
 local Python = require('plugins.lsp.python')
 local Table = require('utils.table')
+local Yaml = require('utils.yaml')
 -- [[ Configure LSP ]]
 
 -- Removes default behavior of autoformatting on save for zig
@@ -409,12 +410,15 @@ return {
         },
       },
       on_attach = function(client, bufnr)
-        local file_name = vim.api.nvim_buf_get_name(bufnr)
-        -- If file name ends with template.yaml, then we disable yamlls diagnostics since jinja templates cannot be parsed correctly.
-        local template_yaml_extension = 'template.yaml'
-        if file_name:sub(-#template_yaml_extension) == template_yaml_extension then
+        -- yamlls cannot parse Jinja-templated YAML, so detach it from those buffers.
+        if Yaml.is_jinja_template_buffer(bufnr) then
           ---@type lsp.Handler
           client.handlers[LspMethod.textDocument_publishDiagnostics] = function() end
+          vim.schedule(function()
+            if vim.api.nvim_buf_is_valid(bufnr) and Yaml.is_jinja_template_buffer(bufnr) then
+              vim.lsp.buf_detach_client(bufnr, client.id)
+            end
+          end)
         end
       end,
     }
