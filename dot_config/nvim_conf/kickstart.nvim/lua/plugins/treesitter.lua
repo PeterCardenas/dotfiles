@@ -1,11 +1,12 @@
 local Log = require('utils.log')
+local Yaml = require('utils.yaml')
 
 vim.api.nvim_create_autocmd({ 'FileType' }, {
   group = vim.api.nvim_create_augroup('TreesitterAttach', { clear = true }),
   callback = function(args)
     local filetype = vim.bo[args.buf].filetype
     -- TODO: Maybe use dockerfile treesitter highlighting when the following is fixed: https://github.com/camdencheek/tree-sitter-dockerfile/issues/51
-    if filetype == 'dockerfile' or filetype == 'tmux' or (filetype == 'yaml' and vim.api.nvim_buf_get_name(args.buf):match('template%.yaml$')) then
+    if filetype == 'dockerfile' or filetype == 'tmux' or Yaml.is_jinja_template_buffer(args.buf) then
       return
     end
     local lang = vim.treesitter.language.get_lang(filetype)
