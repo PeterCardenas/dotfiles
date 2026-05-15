@@ -4,6 +4,7 @@ local Config = require('utils.config')
 local File = require('utils.file')
 local Git = require('utils.git')
 local Shell = require('utils.shell')
+local Spinner = require('utils.spinner')
 local Treesitter = require('utils.treesitter')
 
 local large_file_group = vim.api.nvim_create_augroup('Disable Large File Plugins', { clear = true })
@@ -413,6 +414,67 @@ return {
     lazy = false,
     -- See `:help lualine.txt`
     config = function()
+      local fps_state = {
+        last_loop_ms = nil,
+        display = '-- FPS',
+        sample_count = 0,
+        ---@type { delta_ms: number, time_ms: number }[]
+        samples = {},
+        total_delta_ms = 0,
+        window_ms = 1000,
+      }
+
+      -- Track FPS using a 1s rolling frame-time window so stalls linger visibly.
+      ---@param now number
+      ---@param delta_ms number
+      local function add_fps_sample(now, delta_ms)
+        local samples = fps_state.samples
+        samples[#samples + 1] = {
+          delta_ms = delta_ms,
+          time_ms = now,
+        }
+        fps_state.sample_count = fps_state.sample_count + 1
+        fps_state.total_delta_ms = fps_state.total_delta_ms + delta_ms
+
+        local cutoff_ms = now - fps_state.window_ms
+        while fps_state.sample_count > 0 and samples[1].time_ms < cutoff_ms do
+          local oldest = table.remove(samples, 1)
+          fps_state.sample_count = fps_state.sample_count - 1
+          fps_state.total_delta_ms = fps_state.total_delta_ms - oldest.delta_ms
+        end
+      end
+
+      -- Approximate UI FPS from the spinner timer cadence so blocking is visible.
+      local function update_fps()
+        local now = vim.uv.now()
+        local last_loop_ms = fps_state.last_loop_ms
+        fps_state.last_loop_ms = now
+        if not last_loop_ms then
+          return
+        end
+
+        local delta_ms = now - last_loop_ms
+        if delta_ms <= 0 then
+          return
+        end
+
+        add_fps_sample(now, delta_ms)
+        if fps_state.sample_count == 0 or fps_state.total_delta_ms <= 0 then
+          return
+        end
+
+        local fps = math.min(120, (fps_state.sample_count * 1000) / fps_state.total_delta_ms)
+        fps_state.display = string.format('%d FPS', math.floor(fps + 0.5))
+      end
+
+      local fps_timer = Spinner.create_timer()
+      fps_timer.start(update_fps)
+      vim.api.nvim_create_autocmd('VimLeavePre', {
+        callback = function()
+          fps_timer.stop()
+        end,
+      })
+
       require('lualine').setup({
         options = {
           icons_enabled = true,
@@ -506,6 +568,12 @@ return {
                 return vim.startswith(status, 'recording')
               end,
               color = { fg = '#ff9e64' },
+            },
+            {
+              function()
+                return fps_state.display
+              end,
+              icon = { '󰾆', color = { fg = '#7aa2f7' } },
             },
             -- TODO: Move this to the tmux statusbar
             {
