@@ -1,0 +1,9 @@
+k9s:
+  portForwardAddress: 0.0.0.0
+  ui:
+    logoless: true
+    enableMouse: true
+    noIcons: false
+    defaultsToFullScreen: true
+  logger:
+    textWrap: true
