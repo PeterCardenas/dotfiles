@@ -4,6 +4,5 @@ k9s:
     logoless: true
     enableMouse: true
     noIcons: false
-    defaultsToFullScreen: true
   logger:
     textWrap: true
