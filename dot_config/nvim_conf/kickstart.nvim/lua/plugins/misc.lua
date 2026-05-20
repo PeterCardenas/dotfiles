@@ -1395,7 +1395,10 @@ return {
                   end)
                 end
                 table.sort(urls_with_range, function(a, b)
-                  return a[2] < b[2] and a[3] < b[3]
+                  if a[2] == b[2] then
+                    return a[3] < b[3]
+                  end
+                  return a[2] < b[2]
                 end)
                 local imageURLsFromMd = {} ---@type string[]
                 for _, u in ipairs(urls_with_range) do
