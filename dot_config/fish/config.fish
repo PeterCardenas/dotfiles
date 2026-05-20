@@ -47,6 +47,7 @@ fish_add_path -P -m "$HOME/.local/share/bob/nvim-bin" \
     "$HOME/.local/go/bin" \
     "$HOME/.cargo/bin" \
     "$HOME/.fish-lsp/bin" \
+    "$PNPM_HOME/bin" \
     "$PNPM_HOME" \
     "$HOME/.zvm/bin" \
     "$ZVM_INSTALL/" \
