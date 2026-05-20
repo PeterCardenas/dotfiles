@@ -118,7 +118,7 @@ set -gx BOB_CONFIG $HOME/.config/bob/config.json
 
 # apt aliases
 abbr -a aptupd "sudo nala update"
-abbr -a aptupgd "sudo nala upgrade && sudo nala autoremove"
+abbr -a aptupgd "sudo nala upgrade"
 abbr -a aptinst "sudo nala install"
 abbr -a aptrm "sudo nala remove"
 
