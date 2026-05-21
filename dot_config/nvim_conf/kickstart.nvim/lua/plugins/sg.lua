@@ -337,6 +337,11 @@ return {
                 and normalized ~= 'disabled'
                 and normalized ~= 'none'
             end
+            ---@param value string
+            ---@return string
+            local function normalize_display_extra_high(value)
+              return (value:gsub('extra%-high', 'xhigh'))
+            end
             local ok, SessionRegistry = pcall(require, 'agentic.session_registry')
             if not ok then
               return parts.title
@@ -348,6 +353,7 @@ return {
             local provider = session.agent and session.agent.provider_config and session.agent.provider_config.name or '?'
             local config_opts = session.config_options
             local model_id = config_opts and config_opts.model and config_opts.model.currentValue or '?'
+            model_id = normalize_display_extra_high(model_id)
             local model_suffix = ''
             local all_options = config_opts and config_opts.all_options or nil
             local reasoning_value = all_options and all_options.reasoning and all_options.reasoning.currentValue or nil
@@ -355,10 +361,7 @@ return {
               reasoning_value = all_options and all_options.reasoning_effort and all_options.reasoning_effort.currentValue or nil
             end
             if has_meaningful_value(reasoning_value) then
-              if reasoning_value == 'extra-high' then
-                reasoning_value = 'xhigh'
-              end
-              model_suffix = model_suffix .. '-' .. reasoning_value
+              model_suffix = model_suffix .. '-' .. normalize_display_extra_high(reasoning_value)
             end
             local fast_value = all_options and all_options.fast and all_options.fast.currentValue or nil
             if is_enabled(fast_value) then
