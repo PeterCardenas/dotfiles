@@ -18,6 +18,7 @@ from pathlib import Path
 
 URL_RE = re.compile(r"https?://\S+")
 KEY_REFERENCES_MARKER = "Key references:"
+KEY_REFERENCES_MARKER_LOWER = KEY_REFERENCES_MARKER.lower()
 
 # Responses shorter than this (in chars) are considered trivial and skipped.
 MIN_RESPONSE_LENGTH = 120
@@ -227,7 +228,7 @@ def _main() -> None:
         return _output()
 
     # If the response already includes the references section marker, skip.
-    if KEY_REFERENCES_MARKER in last_text:
+    if KEY_REFERENCES_MARKER_LOWER in last_text.lower():
         return _output()
 
     # Check for URLs
