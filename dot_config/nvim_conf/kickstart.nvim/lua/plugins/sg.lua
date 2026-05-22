@@ -148,9 +148,37 @@ return {
       end, {})
 
       local openai_api_key_ok, openai_api_key = Secrets.read_api_key('~/.local/share/openai/api_key')
+      local cursor_api_key_ok, cursor_api_key = Secrets.read_api_key('~/.local/share/cursor/api_key')
 
       if not openai_api_key_ok then
         Log.notify_error('OpenAI API key not found')
+      end
+      if Config.USE_CURSOR_ACP and not cursor_api_key_ok then
+        Log.notify_error('Cursor API key not found (required when USE_CURSOR_ACP is set)')
+      end
+
+      ---@type table
+      local cursor_acp_provider = {
+        default_config_options = {
+          model = 'gpt-5.4-high',
+        },
+        mcp_servers = {
+          {
+            type = 'http',
+            name = 'figma-remote-mcp',
+            url = 'https://mcp.figma.com/mcp',
+            headers = {},
+          },
+        },
+        auto_approve = true,
+      }
+      if Config.USE_CURSOR_ACP then
+        cursor_acp_provider.command = 'cursor-acp'
+        cursor_acp_provider.args = {}
+        cursor_acp_provider.auth_method = false
+        cursor_acp_provider.env = {
+          CURSOR_API_KEY = cursor_api_key,
+        }
       end
 
       require('agentic').setup({
@@ -253,20 +281,7 @@ return {
               -- },
             },
           },
-          ['cursor-acp'] = {
-            default_config_options = {
-              model = 'gpt-5.4-high',
-            },
-            mcp_servers = {
-              {
-                type = 'http',
-                name = 'figma-remote-mcp',
-                url = 'https://mcp.figma.com/mcp',
-                headers = {},
-              },
-            },
-            auto_approve = true,
-          },
+          ['cursor-acp'] = cursor_acp_provider,
           -- OpenCode with Bedrock config
           ['opencode'] = {
             command = 'opencode',
@@ -311,7 +326,7 @@ return {
           },
         },
 
-        -- Custom headers: show provider | model | mode
+        -- Custom headers: show provider | runtime | model | mode
         headers = {
           chat = function(parts)
             ---@param value string?
@@ -352,10 +367,15 @@ return {
             end
             local provider = session.agent and session.agent.provider_config and session.agent.provider_config.name or '?'
             local config_opts = session.config_options
+            local all_options = config_opts and config_opts.all_options or nil
+            local runtime_id = config_opts and config_opts.runtime and config_opts.runtime.currentValue
+            if not runtime_id then
+              runtime_id = all_options and all_options.runtime and all_options.runtime.currentValue or nil
+            end
+            local runtime_label = type(runtime_id) == 'string' and has_meaningful_value(runtime_id) and runtime_id or nil
             local model_id = config_opts and config_opts.model and config_opts.model.currentValue or '?'
             model_id = normalize_display_extra_high(model_id)
             local model_suffix = ''
-            local all_options = config_opts and config_opts.all_options or nil
             local reasoning_value = all_options and all_options.reasoning and all_options.reasoning.currentValue or nil
             if not reasoning_value then
               reasoning_value = all_options and all_options.reasoning_effort and all_options.reasoning_effort.currentValue or nil
@@ -367,8 +387,12 @@ return {
             if is_enabled(fast_value) then
               model_suffix = model_suffix .. '-fast'
             end
-            local mode_id = config_opts and config_opts.mode and config_opts.mode.currentValue or '?'
-            local mode_name = config_opts and config_opts.get_mode_name and config_opts:get_mode_name(mode_id) or mode_id
+            local mode_current = config_opts and config_opts.mode and config_opts.mode.currentValue or nil
+            local mode_id = type(mode_current) == 'string' and has_meaningful_value(mode_current) and mode_current or nil
+            local mode_name = nil
+            if mode_id then
+              mode_name = config_opts and config_opts.get_mode_name and config_opts:get_mode_name(mode_id) or mode_id
+            end
             local usage = vim.t[vim.api.nvim_get_current_tabpage()].agentic_usage
             local usage_str = ''
             if usage and usage.used then
@@ -377,7 +401,17 @@ return {
               local cost_str = usage.cost and string.format(' $%.2f', usage.cost) or ''
               usage_str = size_k > 0 and string.format(' | %dk/%dk%s', used_k, size_k, cost_str) or string.format(' | %dk%s', used_k, cost_str)
             end
-            return string.format('%s | %s%s | %s%s', provider, model_id, model_suffix, mode_name, usage_str)
+            local header_segments = { provider }
+            if runtime_label then
+              table.insert(header_segments, runtime_label)
+            end
+            table.insert(header_segments, model_id .. model_suffix)
+            if mode_name then
+              table.insert(header_segments, mode_name .. usage_str)
+            elseif usage_str ~= '' then
+              table.insert(header_segments, (usage_str:gsub('^ | ', '')))
+            end
+            return table.concat(header_segments, ' | ')
           end,
         },
 
