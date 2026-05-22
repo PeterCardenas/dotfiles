@@ -31,6 +31,11 @@ M.USE_ZUBAN = os.getenv('USE_ZUBAN') ~= nil
 
 M.USE_AGENTIC = os.getenv('USE_AVANTE') == nil
 
+-- Opt-in via `USE_CURSOR_ACP=1` (or any non-empty value typical of other flags here).
+-- When enabled, kickstart configures Agentic's `cursor-acp` provider to run the
+-- `cursor-acp` CLI with API key env (see `plugins/sg.lua`).
+M.USE_CURSOR_ACP = os.getenv('USE_CURSOR_ACP') ~= nil
+
 M.FZF_LUA_REPO = 'ibhagwan/fzf-lua'
 
 return M
