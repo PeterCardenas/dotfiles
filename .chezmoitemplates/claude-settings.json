@@ -83,6 +83,11 @@
           {
             "type": "command",
             "command": "~/.claude/hooks/stop_check_links.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/skills/goal/scripts/claude_goal.py stop-hook",
+            "timeout": 10
           }
         ]
       }
