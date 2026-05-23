@@ -67,16 +67,19 @@ def _main() -> None:
         json.dump({}, sys.stdout)
         return
 
+    # On deny, Claude Code feeds permissionDecisionReason to the model (not
+    # additionalContext as the primary cancellation explanation). See hooks guide.
+    reason = (
+        "Blocked `git merge` because it may create a merge commit. "
+        "Use `git merge --ff-only ...`, `git merge --squash ...`, "
+        "or `git rebase` instead."
+    )
     json.dump(
         {
             "hookSpecificOutput": {
                 "hookEventName": "PreToolUse",
                 "permissionDecision": "deny",
-                "additionalContext": (
-                    "Blocked `git merge` because it may create a merge commit. "
-                    "Use `git merge --ff-only ...`, `git merge --squash ...`, "
-                    "or `git rebase` instead."
-                ),
+                "permissionDecisionReason": reason,
             }
         },
         sys.stdout,
