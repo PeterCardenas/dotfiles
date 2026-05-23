@@ -52,6 +52,22 @@ def emit_error(message: str) -> None:
     STDERR_LOGGER.error(message)
 
 
+def debug_log(event_name: str, payload: dict[str, Any] | None = None) -> None:
+    path = os.environ.get("CLAUDE_GOAL_DEBUG_LOG")
+    if not path:
+        return
+    try:
+        record = {
+            "ts": now(),
+            "event": event_name,
+            "payload": payload or {},
+        }
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(record, sort_keys=True) + "\n")
+    except OSError:
+        return
+
+
 def now() -> int:
     return int(time.time())
 
@@ -131,6 +147,12 @@ def init_db(conn: sqlite3.Connection) -> None:
             event TEXT NOT NULL,
             detail TEXT,
             created_at INTEGER NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS session_aliases (
+            alias_session_id TEXT PRIMARY KEY,
+            goal_id TEXT NOT NULL,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL
         );
         """
     )
@@ -218,6 +240,39 @@ def get_goal(conn: sqlite3.Connection, sid: str) -> sqlite3.Row | None:
     return conn.execute("SELECT * FROM goals WHERE session_id = ?", (sid,)).fetchone()
 
 
+def get_goal_by_alias(conn: sqlite3.Connection, alias_sid: str) -> sqlite3.Row | None:
+    return conn.execute(
+        """
+        SELECT goals.*
+        FROM session_aliases
+        JOIN goals ON goals.id = session_aliases.goal_id
+        WHERE session_aliases.alias_session_id = ?
+        """,
+        (alias_sid,),
+    ).fetchone()
+
+
+def upsert_goal_alias(conn: sqlite3.Connection, goal_id: str, alias_sid: str | None) -> None:
+    if not alias_sid:
+        return
+    ts = now()
+    execute(
+        conn,
+        """
+        INSERT INTO session_aliases(alias_session_id, goal_id, created_at, updated_at)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(alias_session_id) DO UPDATE SET
+            goal_id = excluded.goal_id,
+            updated_at = excluded.updated_at
+        """,
+        (alias_sid, goal_id, ts, ts),
+    )
+
+
+def delete_goal_aliases(conn: sqlite3.Connection, goal_id: str) -> None:
+    execute(conn, "DELETE FROM session_aliases WHERE goal_id = ?", (goal_id,))
+
+
 def get_first_goal(
     conn: sqlite3.Connection, session_ids: list[str]
 ) -> sqlite3.Row | None:
@@ -244,6 +299,10 @@ def candidate_session_ids(hook_data: dict[str, Any] | None = None) -> list[str]:
         os.environ.get("CLAUDE_SESSION_ID"),
     ]
     if hook_data:
+        # Cursor stop hooks identify the conversation with conversation_id
+        # rather than session_id. Include it so active goals remain reachable
+        # when the hook resumes a Cursor ACP conversation.
+        sources.append(hook_data.get("conversation_id"))
         sources.append(hook_data.get("session_id"))
         sources.append(cwd_session_id(hook_data.get("cwd")))
         workspace_roots = hook_data.get("workspace_roots")
@@ -281,6 +340,8 @@ def find_goal(
     matches: list[sqlite3.Row] = []
     for sid in candidates:
         row = get_goal(conn, sid)
+        if not row:
+            row = get_goal_by_alias(conn, sid)
         if row and (not only_active or row["status"] == "active"):
             matches.append(row)
     if matches:
@@ -337,6 +398,9 @@ def set_goal(
         """,
         (goal_id, sid, objective, status, token_budget, ts, ts, ts),
     )
+    upsert_goal_alias(
+        conn, goal_id, cwd_session_id(os.environ.get("PWD") or str(Path.cwd()))
+    )
     event(conn, sid, "set", objective, goal_id)
     return get_goal(conn, sid)  # type: ignore[return-value]
 
@@ -370,6 +434,7 @@ def clear_goal(conn: sqlite3.Connection, sid: str) -> bool:
     """Clear the goal reachable from sid, falling back across cwd drift."""
     goal = find_goal(conn, candidate_session_ids())
     if goal:
+        delete_goal_aliases(conn, goal["id"])
         execute(conn, "DELETE FROM goals WHERE id = ?", (goal["id"],))
         event(conn, goal["session_id"], "clear", goal_id=goal["id"])
         return True
@@ -526,14 +591,26 @@ def stop_hook() -> int:
         data = json.load(sys.stdin)
     except json.JSONDecodeError:
         data = {}
+    debug_log("stop_hook.input", data if isinstance(data, dict) else {})
 
-    is_cursor_stop = isinstance(data, dict) and any(
-        key in data for key in ("status", "loop_count", "conversation_id")
-    )
     candidates = candidate_session_ids(data)
+    debug_log(
+        "stop_hook.candidates",
+        {
+            "candidates": candidates,
+        },
+    )
 
     with sqlite_connect() as conn:
         goal = find_goal(conn, candidates, only_active=True)
+        debug_log(
+            "stop_hook.goal_lookup",
+            {
+                "found_goal": bool(goal),
+                "goal_session_id": goal["session_id"] if goal else None,
+                "goal_status": goal["status"] if goal else None,
+            },
+        )
         if not goal or goal["status"] != "active":
             return 0
 
@@ -548,29 +625,32 @@ def stop_hook() -> int:
             """,
             (goal["id"], goal["active_started_at"] or goal["created_at"]),
         ).fetchone()[0]
+        debug_log(
+            "stop_hook.count",
+            {
+                "recent_count": recent_count,
+                "max_continues": max_continues,
+            },
+        )
         if recent_count >= max_continues:
-            if is_cursor_stop:
-                emit("{}")
-            else:
-                emit(
-                    json.dumps({
-                        "continue": True,
-                        "stopReason": f"/goal auto-continuation stopped after {max_continues} Stop-hook continuations. Run /goal resume or raise CLAUDE_GOAL_MAX_STOP_CONTINUES to continue automatically.",
-                    })
-                )
+            emit("{}")
+            debug_log("stop_hook.limit_reached", {})
             return 0
 
         event(conn, goal["session_id"], "stop_continue", goal_id=goal["id"])
         reason = STOP_HOOK_REASON.format(objective=goal["objective"])
-        if is_cursor_stop:
-            emit(json.dumps({"followup_message": reason}))
-        else:
-            emit(
-                json.dumps({
-                    "decision": "block",
-                    "reason": reason,
-                })
-            )
+        emit(
+            json.dumps({
+                "decision": "block",
+                "reason": reason,
+            })
+        )
+        debug_log(
+            "stop_hook.continue",
+            {
+                "goal_session_id": goal["session_id"],
+            },
+        )
         return 0
 
 
