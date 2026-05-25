@@ -443,7 +443,7 @@ return {
       Config.FZF_LUA_REPO,
       'echasnovski/mini.icons',
       -- Not actual dependencies, but plugins that I want to be lazy loaded in addition to octo.nvim
-      'Bekaboo/dropbar.nvim',
+      'PeterCardenas/dropbar.nvim',
       'nvim-treesitter/nvim-treesitter-context',
       'nvim-telescope/telescope.nvim',
     },

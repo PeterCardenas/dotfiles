@@ -59,7 +59,10 @@ end, { desc = 'Focus on breadcrumbs' })
 
 ---@type LazyPluginSpec
 return {
-  'Bekaboo/dropbar.nvim',
+  'PeterCardenas/dropbar.nvim',
+  branch = 'master',
+  upstream = 'Bekaboo/dropbar.nvim',
+  upstream_branch = 'master',
   event = { 'BufReadPre', 'BufNewFile' },
   -- optional, but required for fuzzy finder support
   dependencies = {
