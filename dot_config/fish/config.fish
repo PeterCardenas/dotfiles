@@ -121,6 +121,8 @@ set -g async_prompt_inherit_variables all
 set -g async_prompt_functions __git_status_prompt __env_info_prompt
 
 set -gx XDG_CONFIG_HOME $HOME/.config
+# Force git --global writers like gh auth setup-git to use the XDG config path.
+set -gx GIT_CONFIG_GLOBAL $XDG_CONFIG_HOME/git/config
 
 set -gx BAT_THEME tokyonight_storm
 
