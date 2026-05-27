@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PostToolUse hook that nudges PR description review after a successful git push."""
+"""PostToolUse hook that nudges PR title/description review after a successful git push."""
 
 from __future__ import annotations
 
@@ -242,7 +242,8 @@ def _advisory(pr_details: dict) -> dict:
     additional_context = (
         f"Detected a successful `git push` for {pr_label}: {pr_title} ({pr_url}). "
         "Check whether the latest branch changes are reflected in the pull request and, "
-        "if needed, make sure the PR description is up to date before finishing."
+        "if needed, update the PR title and description before finishing "
+        "(including the title when it no longer matches what the branch actually does)."
     )
     return {
         "hookSpecificOutput": {
