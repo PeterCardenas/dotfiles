@@ -40,7 +40,6 @@
 	enabled = true
 	autoUpdate = true
 [commit]
-	gpgSign = true
 	verbose = true
 [init]
 	defaultBranch = main

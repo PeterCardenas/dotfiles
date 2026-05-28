@@ -21,6 +21,7 @@ function git-init-common --description 'Initialize a git repository' -a user -a 
         set -l signing_key (git --git-dir="$git_dir" config --get user.signingkey)
         git config --local user.email "$user_email"
         git config --local user.signingkey "$signing_key"
+        git config --local commit.gpgSign true
     else
         print_error "Known git dir not found: $git_dir"
         return 1
