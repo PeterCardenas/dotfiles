@@ -705,12 +705,22 @@ return {
     },
     event = 'VeryLazy',
     config = function()
+      --- @param bufnr integer
+      --- @return boolean
+      local function ufo_disabled_for_buf(bufnr)
+        if vim.bo[bufnr].filetype == 'AgenticChat' or vim.bo[bufnr].filetype == 'octo' then
+          return true
+        end
+        local filename = vim.api.nvim_buf_get_name(bufnr)
+        return filename:match('^octo:/') ~= nil
+      end
+
       require('ufo').setup({
         provider_selector = function(bufnr)
-          local filename = vim.api.nvim_buf_get_name(bufnr)
-          if filename:match('^octo:/') then
+          if ufo_disabled_for_buf(bufnr) then
             return ''
           end
+          local filename = vim.api.nvim_buf_get_name(bufnr)
           if vim.endswith(filename, 'template.yaml') then
             return { 'indent' }
           end
@@ -720,6 +730,9 @@ return {
       vim.api.nvim_create_autocmd('BufEnter', {
         group = vim.api.nvim_create_augroup('ufo-enable-on-enter', { clear = true }),
         callback = function(args)
+          if ufo_disabled_for_buf(args.buf) then
+            return
+          end
           require('ufo').enableFold(args.buf)
         end,
       })
