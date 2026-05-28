@@ -487,7 +487,7 @@ return {
                   '--mode',
                   'ask',
                   '--model',
-                  'composer-2-fast',
+                  'composer-2.5-fast',
                 }
                 if title_session_id then
                   vim.list_extend(args, { '--resume', title_session_id })
