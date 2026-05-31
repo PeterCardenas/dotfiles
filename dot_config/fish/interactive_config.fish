@@ -65,8 +65,6 @@ if uname -a | grep -q WSL2
     set -gx BROWSER "/mnt/c/Program\ Files/Mozilla\ Firefox/firefox.exe"
 else if test $os = Darwin
     set -gx BROWSER "/Applications/Arc.app/Contents/MacOS/Arc"
-    # iTerm2 Shell Integration
-    source ~/.iterm2_shell_integration.fish
 end
 
 # Set default editor to neovim.
