@@ -460,9 +460,9 @@ return {
             end
             local transcript = '<conversation>\n' .. table.concat(parts, '\n') .. '\n</conversation>'
 
-            local prompt = 'Generate a short title for this chat conversation in 5-8 words. '
-              .. 'Reply with ONLY the title text, with no explanation, no markdown, no quotes, and no punctuation at the end.\n\n'
-              .. transcript
+            local title_system_prompt = 'You generate short chat titles from conversation transcripts. '
+              .. 'Reply with ONLY the title text: 5-8 words, no explanation, no markdown, no quotes, and no punctuation at the end.'
+            local prompt = transcript
             local retry_prompt = 'That title was too long. Rewrite your previous answer as a 5-8 word title. '
               .. 'Reply with ONLY the title text, with no explanation, no markdown, no quotes, and no punctuation at the end.'
 
@@ -481,18 +481,20 @@ return {
               local title_session_id = nil
               for _ = 1, max_retries do
                 local args = {
-                  '-pf',
+                  '-p',
                   '--output-format',
                   'json',
-                  '--mode',
-                  'ask',
                   '--model',
-                  'composer-2.5-fast',
+                  'haiku',
+                  '--tools',
+                  '',
+                  '--system-prompt',
+                  title_system_prompt,
                 }
                 if title_session_id then
                   vim.list_extend(args, { '--resume', title_session_id })
                 end
-                local ok, output = Shell.async_cmd('agent', args, { stdin = next_prompt })
+                local ok, output = Shell.async_cmd('claude', args, { stdin = next_prompt })
                 if not ok or not output or #output == 0 then
                   Log.notify_error(table.concat(output or {}, '\n'), { title = 'Title generation failed, retrying...' })
                   goto continue
