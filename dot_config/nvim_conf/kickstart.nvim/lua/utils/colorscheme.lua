@@ -17,6 +17,18 @@ local function set_colors(background, cursor_line)
   local diagnostic_warn_hl = vim.api.nvim_get_hl(0, { name = 'DiagnosticWarn' })
   vim.api.nvim_set_hl(0, 'NoiceCmdlinePopupBorderSearch', { foreground = diagnostic_warn_hl.fg, background = background })
   vim.api.nvim_set_hl(0, 'NoiceCmdlineIconSearch', { foreground = diagnostic_warn_hl.fg, background = background })
+  local ok, theme = pcall(require, 'agentic.theme')
+  if ok then
+    local bg_override = { background = background }
+    for _, group in ipairs({
+      theme.HL_GROUPS.THOUGHT_TEXT,
+      theme.HL_GROUPS.TOOL_CALL_TEXT,
+    }) do
+      if vim.tbl_count(vim.api.nvim_get_hl(0, { name = group })) > 0 then
+        vim.api.nvim_set_hl(0, group, bg_override)
+      end
+    end
+  end
 end
 
 function M.set_focused_colors()
