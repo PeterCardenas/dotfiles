@@ -20,6 +20,9 @@ local DROPBAR_CONFIG = {
     update_events = {
       buf = {
         'OptionSet',
+        -- `OptionSet modified` reports `buf=0`, so saves via `vim.cmd('w')`
+        -- need an explicit write event to refresh the modified marker.
+        'BufWritePost',
         'FileChangedShellPost',
         'TextChanged',
         'TextChangedI',
