@@ -17,6 +17,15 @@ local DROPBAR_CONFIG = {
     },
   },
   bar = {
+    update_events = {
+      buf = {
+        'OptionSet',
+        'FileChangedShellPost',
+        'TextChanged',
+        'TextChangedI',
+        'ModeChanged',
+      },
+    },
     sources = function(buf, _)
       local sources = require('dropbar.sources')
       if vim.bo[buf].ft == 'markdown' then
