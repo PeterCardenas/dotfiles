@@ -432,6 +432,9 @@ function setup_unix() {
 	bat cache --build
 	popd
 
+	# Setup fish theme
+	fish -c "yes | fish_config theme save tokyonight_storm"
+
 	# Install go packages
 	go install github.com/jesseduffield/lazygit@latest
 	go install golang.org/x/lint/golint@latest
