@@ -160,7 +160,7 @@ return {
       ---@type table
       local cursor_acp_provider = {
         default_config_options = {
-          model = 'gpt-5.4-high',
+          model = 'gpt-5.5-medium',
         },
         mcp_servers = {
           {
