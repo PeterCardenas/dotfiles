@@ -9,6 +9,7 @@ scripts_dir="${TMUX_SCRIPTS_DIR:-$HOME/.config/tmux/scripts}"
 cursor_cmd=("$scripts_dir/cursor_spend.sh")
 claude_cmd=("$scripts_dir/claude_spend.sh")
 cpu_cmd=("$scripts_dir/cpu.sh")
+disk_cmd=("$scripts_dir/disk.sh")
 ram_cmd=("$scripts_dir/ram.sh")
 
 if $short; then
@@ -42,6 +43,7 @@ join_segments() {
 cursor_segment=$(run_segment "${cursor_cmd[@]}")
 claude_segment=$(run_segment "${claude_cmd[@]}")
 cpu_value=$(run_segment "${cpu_cmd[@]}")
+disk_value=$(run_segment "${disk_cmd[@]}")
 ram_value=$(run_segment "${ram_cmd[@]}")
 
 # Only render separators between segments that actually have content.
@@ -49,6 +51,7 @@ segments=(
   "${cursor_segment:+#[fg=#c0caf5]${cursor_segment}}"
   "${claude_segment:+#[fg=#c0caf5]${claude_segment}}"
   "${cpu_value:+#[fg=#ff9e64]󰍛 #[fg=#c0caf5]${cpu_value}}"
+  "${disk_value:+#[fg=#bb9af7]󰋊 #[fg=#c0caf5]${disk_value}}"
   "${ram_value:+#[fg=#7dcfff]󰘚 #[fg=#c0caf5]${ram_value}}"
 )
 
