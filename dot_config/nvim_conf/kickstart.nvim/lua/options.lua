@@ -460,15 +460,10 @@ vim.api.nvim_create_autocmd('BufWinEnter', {
 -- Faster loading of nvim-ts-context-commentstring plugin
 vim.g.skip_ts_context_commentstring_module = true
 
-vim.api.nvim_create_autocmd('FileType', {
-  pattern = 'bazelrc',
-  group = filetype_options_group,
-  callback = function()
-    vim.bo.commentstring = '# %s'
-  end,
-})
-
 vim.filetype.add({
+  filename = {
+    dot_bazelrc = 'bazelrc',
+  },
   extension = {
     bazelignore = 'gitignore',
     mdx = 'markdown.mdx',
