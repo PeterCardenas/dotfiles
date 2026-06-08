@@ -17,7 +17,7 @@ gib=$((1024 * 1024 * 1024))
 avail_color() {
   local avail_bytes="$1"
 
-  if [ "$avail_bytes" -lt $((100 * gib)) ]; then
+  if [ "$avail_bytes" -lt $((50 * gib)) ]; then
     printf '#f7768e'
   elif [ "$avail_bytes" -lt $((250 * gib)) ]; then
     printf '#ff9e64'
