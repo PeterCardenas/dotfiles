@@ -1,0 +1,3 @@
+build --local_resources=cpu=HOST_CPUS*0.4
+test --local_resources=cpu=HOST_CPUS*0.4
+
