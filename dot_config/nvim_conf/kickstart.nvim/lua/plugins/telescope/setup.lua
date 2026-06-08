@@ -100,7 +100,7 @@ function M.find_files(show_ignore)
 end
 
 function M.rg_words_opts()
-  return '--hidden -g "!.git" --column --line-number --no-heading --color=always --smart-case --max-columns=4096 -e'
+  return '--hidden -g "!.git/**" --column --line-number --no-heading --color=always --smart-case --max-columns=4096 -e'
 end
 
 ---@param show_ignore boolean
