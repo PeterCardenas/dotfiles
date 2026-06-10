@@ -34,6 +34,8 @@ When using Bash or terminal tools:
 
 When you look at an issue or pr, look at the comments as well for full context.
 
+When I'm referring to "session history" or "chat history", you should look in the ~/.cache/nvim/agentic/sessions/ directory
+
 # Neovim Config
 
 BLOCKING: When editing, debugging, or testing Neovim configuration or plugins (repos with a lua directory and maybe have nvim in the name), you MUST use the nvim-config skill.
