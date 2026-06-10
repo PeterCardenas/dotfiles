@@ -29,6 +29,16 @@
   "hooks": {
     "PreToolUse": [
       {
+        "matcher": ".*[Ss]lack.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/pretooluse_block_slack_send.py",
+            "timeout": 10
+          }
+        ]
+      },
+      {
         "matcher": "Edit|Write|Read|Glob|Grep",
         "hooks": [
           {
