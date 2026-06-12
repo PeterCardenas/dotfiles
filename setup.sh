@@ -507,8 +507,8 @@ EOF
 	bat --completion fish >"$HOME/.config/fish/completions/bat.fish"
 	delta --generate-completion fish >"$HOME/.config/fish/completions/delta.fish"
 
-	fish -c "pnpm install -g yarn typescript @mermaid-js/mermaid-cli"
-	fish -c "pnpm approve-builds -g"
+	fish -c "pnpm install -g yarn typescript @mermaid-js/mermaid-cli agent-browser @agentclientprotocol/codex-acp @agentclientprotocol/claude-agent-acp"
+	fish -c "pnpm approve-builds -g --all"
 	pushd "$HOME"
 	fish -c "clone fish-lsp"
 	mv "$HOME/fish-lsp" "$HOME/.fish-lsp"
