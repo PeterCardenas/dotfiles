@@ -3,6 +3,7 @@ local Buf = require('utils.buf')
 local Config = require('utils.config')
 local File = require('utils.file')
 local Git = require('utils.git')
+local Log = require('utils.log')
 local Shell = require('utils.shell')
 local Spinner = require('utils.spinner')
 local Treesitter = require('utils.treesitter')
@@ -806,6 +807,9 @@ return {
     'Shatur/neovim-session-manager',
     event = 'BufWritePost',
     config = function()
+      local agentic_session_restore_global = 'AgenticSessionRestoreByTabJson'
+      local SessionManagerConfig = require('session_manager.config')
+
       local function destroy_agentic_sessions_for_all_tabs()
         local ok_registry, SessionRegistry = pcall(require, 'agentic.session_registry')
         if not ok_registry or not SessionRegistry then
@@ -817,6 +821,65 @@ return {
             SessionRegistry.destroy_session(tab_page_id)
           end
         end
+      end
+
+      local function save_agentic_session_mapping()
+        local ok_registry, SessionRegistry = pcall(require, 'agentic.session_registry')
+        if not ok_registry or not SessionRegistry then
+          vim.g[agentic_session_restore_global] = nil
+          return
+        end
+
+        ---@type { tab_index: number, session_id: string }[]
+        local entries = {}
+        for tab_index, tab_page_id in ipairs(vim.api.nvim_list_tabpages()) do
+          local session = SessionRegistry.sessions and SessionRegistry.sessions[tab_page_id]
+          local chat_history = session and session.chat_history
+          local session_id = chat_history and chat_history.session_id or session and session.session_id
+          if type(session_id) == 'string' and session_id ~= '' then
+            entries[#entries + 1] = {
+              tab_index = tab_index,
+              session_id = session_id,
+            }
+          end
+        end
+
+        if #entries == 0 then
+          vim.g[agentic_session_restore_global] = nil
+          return
+        end
+
+        vim.g[agentic_session_restore_global] = vim.json.encode(entries)
+      end
+
+      local function clear_agentic_session_mapping()
+        vim.g[agentic_session_restore_global] = nil
+      end
+
+      ---@return table<number, string> tab_index_to_session_id
+      local function get_saved_agentic_session_mapping()
+        local raw_mapping = vim.g[agentic_session_restore_global]
+        if type(raw_mapping) ~= 'string' or raw_mapping == '' then
+          return {}
+        end
+
+        local ok, decoded = pcall(vim.json.decode, raw_mapping)
+        if not ok or type(decoded) ~= 'table' then
+          Log.notify_warn('Could not parse Agentic session restore metadata', { title = 'Session Restore' })
+          return {}
+        end
+
+        ---@type { tab_index: number, session_id: string }[]
+        local decoded_entries = decoded
+
+        ---@type table<number, string>
+        local tab_index_to_session_id = {}
+        for _, entry in ipairs(decoded_entries) do
+          if type(entry.tab_index) == 'number' and type(entry.session_id) == 'string' and entry.session_id ~= '' then
+            tab_index_to_session_id[entry.tab_index] = entry.session_id
+          end
+        end
+        return tab_index_to_session_id
       end
 
       local function prewarm_agentic_sessions_for_all_tabs()
@@ -832,7 +895,62 @@ return {
         end
       end
 
+      local function restore_agentic_sessions_for_all_tabs()
+        local tab_index_to_session_id = get_saved_agentic_session_mapping()
+        clear_agentic_session_mapping()
+
+        if vim.tbl_isempty(tab_index_to_session_id) then
+          prewarm_agentic_sessions_for_all_tabs()
+          return
+        end
+
+        local ok_registry, SessionRegistry = pcall(require, 'agentic.session_registry')
+        local ok_history, ChatHistory = pcall(require, 'agentic.ui.chat_history')
+        if not ok_registry or not SessionRegistry or not ok_history or not ChatHistory then
+          prewarm_agentic_sessions_for_all_tabs()
+          return
+        end
+
+        for tab_index, tab_page_id in ipairs(vim.api.nvim_list_tabpages()) do
+          local session_id = tab_index_to_session_id[tab_index]
+          if type(session_id) ~= 'string' or session_id == '' then
+            SessionRegistry.get_session_for_tab_page(tab_page_id)
+          else
+            ---@param history agentic.ui.ChatHistory|nil
+            ---@param err string|nil
+            ChatHistory.load(session_id, function(history, err)
+              if err or not history then
+                Log.notify_warn('Failed to restore Agentic session ' .. session_id .. ': ' .. (err or 'unknown error'), {
+                  title = 'Session Restore',
+                })
+                SessionRegistry.get_session_for_tab_page(tab_page_id)
+                return
+              end
+
+              ---@param session agentic.SessionManager
+              SessionRegistry.get_session_for_tab_page(tab_page_id, function(session)
+                session:restore_from_history(history, { replace_session = true })
+              end)
+            end)
+          end
+        end
+      end
+
       local group = vim.api.nvim_create_augroup('AgenticSessionRestoreHooks', { clear = true })
+      vim.api.nvim_create_autocmd('User', {
+        group = group,
+        pattern = 'SessionSavePre',
+        callback = function()
+          save_agentic_session_mapping()
+        end,
+      })
+      vim.api.nvim_create_autocmd('User', {
+        group = group,
+        pattern = 'SessionSavePost',
+        callback = function()
+          clear_agentic_session_mapping()
+        end,
+      })
       vim.api.nvim_create_autocmd('User', {
         group = group,
         pattern = 'SessionLoadPre',
@@ -845,13 +963,13 @@ return {
         pattern = 'SessionLoadPost',
         callback = function()
           vim.defer_fn(function()
-            prewarm_agentic_sessions_for_all_tabs()
+            restore_agentic_sessions_for_all_tabs()
           end, 50)
         end,
       })
 
       require('session_manager').setup({
-        autoload_mode = require('session_manager.config').AutoloadMode.CurrentDir,
+        autoload_mode = SessionManagerConfig.AutoloadMode.CurrentDir,
         autosave_ignore_dirs = { '~/', '~/Downloads', '/' },
         autosave_ignore_buftypes = { 'terminal', 'help', 'quickfix', 'prompt' },
       })
