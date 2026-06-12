@@ -809,25 +809,82 @@ return {
     config = function()
       local agentic_session_restore_global = 'AgenticSessionRestoreByTabJson'
       local SessionManagerConfig = require('session_manager.config')
+      local SessionManagerUtils = require('session_manager.utils')
 
-      local function destroy_agentic_sessions_for_all_tabs()
-        local ok_registry, SessionRegistry = pcall(require, 'agentic.session_registry')
-        if not ok_registry or not SessionRegistry then
+      local function install_session_manager_save_without_ui_side_effects()
+        if rawget(SessionManagerUtils, '__save_preserves_ui_buffers') then
           return
         end
 
-        for tab_page_id, _ in pairs(SessionRegistry.sessions) do
-          if vim.api.nvim_tabpage_is_valid(tab_page_id) then
-            SessionRegistry.destroy_session(tab_page_id)
+        rawset(SessionManagerUtils, '__save_preserves_ui_buffers', true)
+        SessionManagerUtils.save_session = function(filename)
+          local sessions_dir = vim.fn.fnamemodify(filename, ':h')
+          if vim.fn.isdirectory(sessions_dir) == 0 then
+            vim.fn.mkdir(sessions_dir, 'p')
+          end
+
+          local current_tab = vim.api.nvim_get_current_tabpage()
+          local current_win = vim.api.nvim_get_current_win()
+          local current_view = vim.fn.winsaveview()
+
+          SessionManagerUtils.active_session_filename = filename
+          local ok, err = pcall(function()
+            vim.api.nvim_exec_autocmds('User', { pattern = 'SessionSavePre' })
+            vim.cmd('mksession! ' .. vim.fn.fnameescape(filename))
+          end)
+          local post_ok, post_err = pcall(vim.api.nvim_exec_autocmds, 'User', { pattern = 'SessionSavePost' })
+
+          if vim.api.nvim_tabpage_is_valid(current_tab) then
+            vim.api.nvim_set_current_tabpage(current_tab)
+          end
+          if vim.api.nvim_win_is_valid(current_win) then
+            vim.api.nvim_set_current_win(current_win)
+            vim.fn.winrestview(current_view)
+          end
+
+          if not ok then
+            error(err)
+          end
+          if not post_ok then
+            error(post_err)
           end
         end
       end
 
+      ---@param session agentic.SessionManager|nil
+      ---@return boolean
+      local function has_persistable_agentic_history(session)
+        local messages = session and session.chat_history and session.chat_history.messages
+        return type(messages) == 'table' and #messages > 0
+      end
+
+      ---@return boolean destroyed
+      local function destroy_agentic_sessions_for_all_tabs()
+        local ok_registry, SessionRegistry = pcall(require, 'agentic.session_registry')
+        if not ok_registry or not SessionRegistry then
+          return false
+        end
+
+        ---@type integer[]
+        local tab_page_ids = {}
+        for tab_page_id, _ in pairs(SessionRegistry.sessions) do
+          if vim.api.nvim_tabpage_is_valid(tab_page_id) then
+            tab_page_ids[#tab_page_ids + 1] = tab_page_id
+          end
+        end
+
+        for _, tab_page_id in ipairs(tab_page_ids) do
+          SessionRegistry.destroy_session(tab_page_id)
+        end
+        return #tab_page_ids > 0
+      end
+
+      ---@return boolean has_saved_mapping
       local function save_agentic_session_mapping()
         local ok_registry, SessionRegistry = pcall(require, 'agentic.session_registry')
         if not ok_registry or not SessionRegistry then
           vim.g[agentic_session_restore_global] = nil
-          return
+          return false
         end
 
         ---@type { tab_index: number, session_id: string }[]
@@ -836,7 +893,7 @@ return {
           local session = SessionRegistry.sessions and SessionRegistry.sessions[tab_page_id]
           local chat_history = session and session.chat_history
           local session_id = chat_history and chat_history.session_id or session and session.session_id
-          if type(session_id) == 'string' and session_id ~= '' then
+          if type(session_id) == 'string' and session_id ~= '' and has_persistable_agentic_history(session) then
             entries[#entries + 1] = {
               tab_index = tab_index,
               session_id = session_id,
@@ -846,10 +903,11 @@ return {
 
         if #entries == 0 then
           vim.g[agentic_session_restore_global] = nil
-          return
+          return false
         end
 
         vim.g[agentic_session_restore_global] = vim.json.encode(entries)
+        return true
       end
 
       local function clear_agentic_session_mapping()
@@ -927,6 +985,9 @@ return {
                 return
               end
 
+              if not vim.api.nvim_tabpage_is_valid(tab_page_id) then
+                return
+              end
               ---@param session agentic.SessionManager
               SessionRegistry.get_session_for_tab_page(tab_page_id, function(session)
                 session:restore_from_history(history, { replace_session = true })
@@ -962,12 +1023,11 @@ return {
         group = group,
         pattern = 'SessionLoadPost',
         callback = function()
-          vim.defer_fn(function()
-            restore_agentic_sessions_for_all_tabs()
-          end, 50)
+          restore_agentic_sessions_for_all_tabs()
         end,
       })
 
+      install_session_manager_save_without_ui_side_effects()
       require('session_manager').setup({
         autoload_mode = SessionManagerConfig.AutoloadMode.CurrentDir,
         autosave_ignore_dirs = { '~/', '~/Downloads', '/' },
