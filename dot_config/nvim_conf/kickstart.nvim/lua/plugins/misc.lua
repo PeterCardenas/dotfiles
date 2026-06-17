@@ -808,8 +808,13 @@ return {
     event = 'BufWritePost',
     config = function()
       local agentic_session_restore_global = 'AgenticSessionRestoreByTabJson'
+      local agentic_session_restore_claimed = false
       local SessionManagerConfig = require('session_manager.config')
       local SessionManagerUtils = require('session_manager.utils')
+
+      local function reset_agentic_session_restore_state()
+        agentic_session_restore_claimed = false
+      end
 
       local function install_session_manager_save_without_ui_side_effects()
         if rawget(SessionManagerUtils, '__save_preserves_ui_buffers') then
@@ -954,13 +959,22 @@ return {
       end
 
       local function restore_agentic_sessions_for_all_tabs()
-        local tab_index_to_session_id = get_saved_agentic_session_mapping()
-        clear_agentic_session_mapping()
+        -- Neovim session files end with `doautoall SessionLoadPost`, and
+        -- session_manager.utils.load_session fires it again after sourcing.
+        -- Ignore the duplicate call so we do not prewarm empty sessions over
+        -- an in-flight tab-index restore.
+        if agentic_session_restore_claimed then
+          return
+        end
 
+        local tab_index_to_session_id = get_saved_agentic_session_mapping()
         if vim.tbl_isempty(tab_index_to_session_id) then
           prewarm_agentic_sessions_for_all_tabs()
           return
         end
+
+        agentic_session_restore_claimed = true
+        clear_agentic_session_mapping()
 
         local ok_registry, SessionRegistry = pcall(require, 'agentic.session_registry')
         local ok_history, ChatHistory = pcall(require, 'agentic.ui.chat_history')
@@ -1016,6 +1030,7 @@ return {
         group = group,
         pattern = 'SessionLoadPre',
         callback = function()
+          reset_agentic_session_restore_state()
           destroy_agentic_sessions_for_all_tabs()
         end,
       })
