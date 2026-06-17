@@ -176,6 +176,7 @@ return {
           },
           notification = {
             window = {
+              align = 'avoid_cursor',
               winblend = 0,
             },
             view = {
