@@ -71,6 +71,11 @@
             "type": "command",
             "command": "~/.claude/hooks/pretooluse_git_merge_ff_only.py",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/pretooluse_block_py_compile.py",
+            "timeout": 10
           }
         ]
       }
