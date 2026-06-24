@@ -253,6 +253,7 @@ return {
       require('notify').setup({
         top_down = false,
         merge_duplicates = true,
+        stages = require('local.notify_avoid_cursor').fade_in_slide_out(),
       })
       ---@diagnostic disable-next-line: missing-fields
       require('noice').setup({
