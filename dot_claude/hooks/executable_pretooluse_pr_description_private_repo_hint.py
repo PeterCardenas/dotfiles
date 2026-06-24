@@ -8,11 +8,18 @@ is private/internal, inject additional context nudging image-resolution behavior
 from __future__ import annotations
 
 import json
-import os
 import re
-import subprocess
 import sys
 from typing import Optional
+
+from hook_context import (
+    gh_hostname_for_cwd,
+    gh_user_candidates,
+    preferred_gh_user_candidates,
+    resolve_hook_cwd,
+    run_gh,
+    run_gh_json,
+)
 
 GH_CMD_RE = re.compile(r"(^|[;&|])\s*gh\s+", re.IGNORECASE)
 PR_VIEW_BODY_RE = re.compile(
@@ -24,13 +31,11 @@ API_PULL_RE = re.compile(
     re.IGNORECASE,
 )
 PR_URL_RE = re.compile(
-    r"https?://github\.com/([^/\s]+)/([^/\s]+)/pull/\d+",
+    r"https?://(?:github\.com|personal-github\.com|work-github\.com)/([^/\s]+)/([^/\s]+)/pull/\d+",
     re.IGNORECASE,
 )
 REPO_FLAG_RE = re.compile(r"--repo\s+([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)")
 PR_VIEW_NUMBER_RE = re.compile(r"gh\s+pr\s+view(?:\s+(\d+))?", re.IGNORECASE)
-DEFAULT_GH_HOST = "github.com"
-_USER_TOKEN_CACHE: dict[tuple[str, str], Optional[str]] = {}
 
 
 def _repo_from_command(command: str) -> Optional[str]:
@@ -49,7 +54,7 @@ def _repo_from_command(command: str) -> Optional[str]:
     return None
 
 
-def _repo_from_pr_view_context(command: str) -> Optional[str]:
+def _repo_from_pr_view_context(command: str, *, cwd: str, hostname: str) -> Optional[str]:
     match = PR_VIEW_NUMBER_RE.search(command)
     if not match:
         return None
@@ -60,8 +65,8 @@ def _repo_from_pr_view_context(command: str) -> Optional[str]:
         cmd.append(pr_number)
     cmd.extend(["--json", "url", "-q", ".url"])
 
-    for user in _gh_user_candidates(DEFAULT_GH_HOST):
-        result = _run_gh(cmd, timeout=4, user=user, hostname=DEFAULT_GH_HOST)
+    for user in preferred_gh_user_candidates(hostname) + gh_user_candidates(hostname):
+        result = run_gh(cmd, cwd=cwd, timeout=4, user=user, hostname=hostname)
         if not result or result.returncode != 0:
             continue
 
@@ -77,12 +82,10 @@ def _is_pr_description_read(command: str) -> bool:
     if PR_VIEW_BODY_RE.search(command):
         return True
 
-    # `gh api repos/<owner>/<repo>/pulls/<num>` defaults to GET and returns body.
     api_pull = API_PULL_RE.search(command)
     if not api_pull:
         return False
 
-    # Exclude obvious mutating calls; we only want read heuristics.
     lowered = command.lower()
     if any(
         flag in lowered
@@ -92,124 +95,16 @@ def _is_pr_description_read(command: str) -> bool:
     return True
 
 
-def _gh_env() -> dict:
-    env = os.environ.copy()
-    env.pop("GH_TOKEN", None)
-    env.pop("GITHUB_TOKEN", None)
-    return env
-
-
-def _run_gh(
-    cmd: list[str],
-    timeout: int = 4,
-    user: Optional[str] = None,
-    hostname: str = DEFAULT_GH_HOST,
-) -> Optional[subprocess.CompletedProcess]:
-    env = _gh_env()
-    if user:
-        token = _gh_token_for_user(user, hostname)
-        if not token:
-            return None
-        # Force gh to authenticate as this specific user for this call.
-        env["GH_TOKEN"] = token
-
-    try:
-        return subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            check=False,
-            env=env,
-        )
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        return None
-
-
-def _run_gh_json(
-    cmd: list[str],
-    timeout: int = 4,
-    user: Optional[str] = None,
-    hostname: str = DEFAULT_GH_HOST,
-) -> Optional[dict]:
-    result = _run_gh(cmd, timeout=timeout, user=user, hostname=hostname)
-    if not result:
-        return None
-
-    if result.returncode != 0:
-        return None
-
-    try:
-        return json.loads(result.stdout)
-    except json.JSONDecodeError:
-        return None
-
-
-def _gh_known_users(hostname: str = DEFAULT_GH_HOST) -> list[str]:
-    data = _run_gh_json(
-        ["gh", "auth", "status", "--hostname", hostname, "--json", "hosts"],
-        timeout=4,
-        hostname=hostname,
-    )
-    if not data:
-        return []
-
-    hosts = data.get("hosts")
-    entries = []
-    if isinstance(hosts, dict):
-        host_entries = hosts.get(hostname)
-        if isinstance(host_entries, list):
-            entries = host_entries
-    elif isinstance(hosts, list):
-        entries = hosts
-
-    users = []
-    for entry in entries:
-        if not isinstance(entry, dict):
-            continue
-        login = entry.get("login")
-        if isinstance(login, str) and login:
-            users.append(login)
-    return users
-
-
-def _gh_user_candidates(hostname: str = DEFAULT_GH_HOST) -> list[Optional[str]]:
-    # None means "use current gh default account" before trying explicit users.
-    seen = {None}
-    candidates: list[Optional[str]] = [None]
-    for user in _gh_known_users(hostname):
-        if user in seen:
-            continue
-        seen.add(user)
-        candidates.append(user)
-    return candidates
-
-
-def _gh_token_for_user(user: str, hostname: str = DEFAULT_GH_HOST) -> Optional[str]:
-    cache_key = (hostname, user)
-    if cache_key in _USER_TOKEN_CACHE:
-        return _USER_TOKEN_CACHE[cache_key]
-
-    result = _run_gh(
-        ["gh", "auth", "token", "--hostname", hostname, "--user", user],
-        timeout=4,
-        hostname=hostname,
-    )
-    if not result or result.returncode != 0:
-        _USER_TOKEN_CACHE[cache_key] = None
-        return None
-
-    token = (result.stdout or "").strip() or None
-    _USER_TOKEN_CACHE[cache_key] = token
-    return token
-
-
-def _repo_visibility(repo: Optional[str]) -> tuple[Optional[str], Optional[str]]:
-    for user in _gh_user_candidates(DEFAULT_GH_HOST):
-        # First, try REST API repo metadata (most direct source for private/internal).
+def _repo_visibility(
+    repo: Optional[str], *, cwd: str, hostname: str
+) -> tuple[Optional[str], Optional[str]]:
+    for user in preferred_gh_user_candidates(hostname) + gh_user_candidates(hostname):
         if repo:
-            api_data = _run_gh_json(
-                ["gh", "api", f"repos/{repo}"], user=user, hostname=DEFAULT_GH_HOST
+            api_data = run_gh_json(
+                ["gh", "api", f"repos/{repo}"],
+                cwd=cwd,
+                user=user,
+                hostname=hostname,
             )
             if api_data:
                 visibility = str(api_data.get("visibility") or "").lower() or None
@@ -218,12 +113,11 @@ def _repo_visibility(repo: Optional[str]) -> tuple[Optional[str], Optional[str]]
                 repo_name = api_data.get("full_name") or repo
                 return visibility, repo_name
 
-        # Fallback to gh repo view (works for current repo or explicit repo).
         cmd = ["gh", "repo", "view"]
         if repo:
             cmd.append(repo)
         cmd.extend(["--json", "nameWithOwner,isPrivate,visibility"])
-        data = _run_gh_json(cmd, user=user, hostname=DEFAULT_GH_HOST)
+        data = run_gh_json(cmd, cwd=cwd, user=user, hostname=hostname)
         if not data:
             continue
 
@@ -257,8 +151,12 @@ def _main() -> None:
         json.dump({}, sys.stdout)
         return
 
-    repo_hint = _repo_from_command(command) or _repo_from_pr_view_context(command)
-    visibility, repo_name = _repo_visibility(repo_hint)
+    cwd = resolve_hook_cwd(payload, tool_input)
+    hostname = gh_hostname_for_cwd(cwd)
+    repo_hint = _repo_from_command(command) or _repo_from_pr_view_context(
+        command, cwd=cwd, hostname=hostname
+    )
+    visibility, repo_name = _repo_visibility(repo_hint, cwd=cwd, hostname=hostname)
 
     if visibility not in {"private", "internal"}:
         json.dump({}, sys.stdout)

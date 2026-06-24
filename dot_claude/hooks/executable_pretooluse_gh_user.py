@@ -6,49 +6,17 @@ from __future__ import annotations
 import json
 import re
 import shlex
-import subprocess
 import sys
-from pathlib import Path
+
+from hook_context import (
+    gh_hostname_from_remote,
+    preferred_gh_user_for_remote,
+    repo_remote_url,
+    resolve_hook_cwd,
+)
 
 GH_CMD_RE = re.compile(r"(^|[;&|])\s*gh\s+", re.IGNORECASE)
 EXISTING_GH_TOKEN_RE = re.compile(r"(^|[;&|])\s*(?:env\s+)?GH_TOKEN=", re.IGNORECASE)
-
-DEFAULT_GH_USER = "PeterCardenas"
-WORK_GH_USER = "peter-cardenas-ai"
-
-
-def _run(cmd: list[str], timeout: int = 4) -> subprocess.CompletedProcess[str] | None:
-    try:
-        return subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            check=False,
-        )
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        return None
-
-
-def _repo_remote_url(cwd: str) -> str | None:
-    inside = _run(["git", "-C", cwd, "rev-parse", "--is-inside-work-tree"])
-    if not inside or inside.returncode != 0:
-        return None
-
-    remote = _run(["git", "-C", cwd, "config", "--get", "remote.origin.url"])
-    if not remote or remote.returncode != 0:
-        return None
-
-    value = (remote.stdout or "").strip()
-    return value or None
-
-
-def _select_user(remote_url: str) -> tuple[str, str]:
-    if "work-github.com" in remote_url:
-        return WORK_GH_USER, "work remote detected"
-    if "personal-github.com" in remote_url:
-        return DEFAULT_GH_USER, "personal remote detected"
-    return DEFAULT_GH_USER, "unknown remote, defaulting to personal user"
 
 
 def _main() -> None:
@@ -72,18 +40,20 @@ def _main() -> None:
         json.dump({}, sys.stdout)
         return
 
-    working_directory = tool_input.get("working_directory")
-    if not isinstance(working_directory, str) or not working_directory:
-        working_directory = str(Path.cwd())
-
-    remote_url = _repo_remote_url(working_directory)
+    cwd = resolve_hook_cwd(payload, tool_input)
+    remote_url = repo_remote_url(cwd)
     if not remote_url:
         json.dump({}, sys.stdout)
         return
 
-    gh_user, reason = _select_user(remote_url)
+    hostname = gh_hostname_from_remote(remote_url)
+    gh_user, reason = preferred_gh_user_for_remote(remote_url)
     user_arg = shlex.quote(gh_user)
-    rewritten = f'env GH_TOKEN="$(gh auth token --user {user_arg})" {command}'
+    host_arg = shlex.quote(hostname)
+    rewritten = (
+        f'env GH_HOST={host_arg} GH_TOKEN="$(gh auth token --hostname {host_arg} --user {user_arg})" '
+        f"{command}"
+    )
 
     updated_input = dict(tool_input)
     updated_input["command"] = rewritten
@@ -95,7 +65,7 @@ def _main() -> None:
                 "permissionDecision": "allow",
                 "updatedInput": updated_input,
                 "additionalContext": (
-                    f"Enforced gh user `{gh_user}` for this repository ({reason})."
+                    f"Enforced gh user `{gh_user}` on `{hostname}` for this repository ({reason})."
                 ),
             }
         },
