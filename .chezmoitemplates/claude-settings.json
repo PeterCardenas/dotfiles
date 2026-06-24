@@ -50,7 +50,7 @@
         ]
       },
       {
-        "matcher": "Bash",
+        "matcher": "Bash|.*[Ss]hell.*|.*[Tt]erminal.*",
         "hooks": [
           {
             "type": "command",
@@ -82,7 +82,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Bash|.*[Ss]hell.*|.*[Tt]erminal.*",
         "hooks": [
           {
             "type": "command",
