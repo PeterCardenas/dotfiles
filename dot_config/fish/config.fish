@@ -82,6 +82,7 @@ end
 function __env_info_prompt --description "Print environment info part of prompt (languages, tools, cloud)"
     __prompt env_info
 end
+# TODO: Changing mode causes reload unnecessarily
 function __env_info_prompt_loading_indicator -a last_prompt --description "Print loading indicator for env info part of prompt"
     set -l current_dir (pwd)
     if test "$current_dir" = "$prev_env_dir"
