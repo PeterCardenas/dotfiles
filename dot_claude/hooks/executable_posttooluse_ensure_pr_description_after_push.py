@@ -4,14 +4,19 @@
 from __future__ import annotations
 
 import json
-import os
 import re
 import shlex
-import subprocess
 import sys
 from typing import Optional
 
-DEFAULT_GH_HOST = "github.com"
+from hook_context import (
+    gh_hostname_for_cwd,
+    preferred_gh_user_candidates,
+    repo_remote_url,
+    resolve_hook_cwd,
+    run_gh_json,
+)
+
 COMMAND_SEPARATORS = {"&&", "||", ";", "|"}
 GIT_GLOBAL_OPTIONS_WITH_VALUES = {
     "-c",
@@ -25,7 +30,6 @@ GIT_GLOBAL_OPTIONS_WITH_VALUES = {
 }
 DRY_RUN_FLAGS = {"-n", "--dry-run"}
 ENV_ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=.*$")
-_USER_TOKEN_CACHE: dict[tuple[str, str], Optional[str]] = {}
 
 
 def _command_segments(command: str) -> list[list[str]]:
@@ -94,126 +98,18 @@ def is_git_push_command(command: str) -> bool:
     return False
 
 
-def _gh_env() -> dict[str, str]:
-    env = os.environ.copy()
-    env.pop("GH_TOKEN", None)
-    env.pop("GITHUB_TOKEN", None)
-    return env
-
-
-def _run_gh(
-    cmd: list[str],
-    *,
-    cwd: str,
-    timeout: int = 4,
-    user: Optional[str] = None,
-    hostname: str = DEFAULT_GH_HOST,
-) -> Optional[subprocess.CompletedProcess[str]]:
-    env = _gh_env()
-    if user:
-        token = _gh_token_for_user(user, hostname)
-        if not token:
-            return None
-        env["GH_TOKEN"] = token
-
-    try:
-        return subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            check=False,
-            cwd=cwd,
-            env=env,
-        )
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        return None
-
-
-def _run_gh_json(
-    cmd: list[str],
-    *,
-    cwd: str,
-    timeout: int = 4,
-    user: Optional[str] = None,
-    hostname: str = DEFAULT_GH_HOST,
-) -> Optional[dict]:
-    result = _run_gh(cmd, cwd=cwd, timeout=timeout, user=user, hostname=hostname)
-    if not result or result.returncode != 0:
-        return None
-
-    try:
-        data = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        return None
-
-    return data if isinstance(data, dict) else None
-
-
-def _gh_known_users(hostname: str = DEFAULT_GH_HOST) -> list[str]:
-    data = _run_gh_json(
-        ["gh", "auth", "status", "--hostname", hostname, "--json", "hosts"],
-        cwd=".",
-        hostname=hostname,
-    )
-    if not data:
-        return []
-
-    hosts = data.get("hosts")
-    entries: list[dict] = []
-    if isinstance(hosts, dict):
-        host_entries = hosts.get(hostname)
-        if isinstance(host_entries, list):
-            entries = [entry for entry in host_entries if isinstance(entry, dict)]
-    elif isinstance(hosts, list):
-        entries = [entry for entry in hosts if isinstance(entry, dict)]
-
-    users: list[str] = []
-    for entry in entries:
-        login = entry.get("login")
-        if isinstance(login, str) and login:
-            users.append(login)
-    return users
-
-
-def _gh_user_candidates(hostname: str = DEFAULT_GH_HOST) -> list[Optional[str]]:
-    seen: set[Optional[str]] = {None}
-    candidates: list[Optional[str]] = [None]
-    for user in _gh_known_users(hostname):
-        if user in seen:
-            continue
-        seen.add(user)
-        candidates.append(user)
-    return candidates
-
-
-def _gh_token_for_user(user: str, hostname: str = DEFAULT_GH_HOST) -> Optional[str]:
-    cache_key = (hostname, user)
-    if cache_key in _USER_TOKEN_CACHE:
-        return _USER_TOKEN_CACHE[cache_key]
-
-    result = _run_gh(
-        ["gh", "auth", "token", "--hostname", hostname, "--user", user],
-        cwd=".",
-        hostname=hostname,
-    )
-    if not result or result.returncode != 0:
-        _USER_TOKEN_CACHE[cache_key] = None
-        return None
-
-    token = (result.stdout or "").strip() or None
-    _USER_TOKEN_CACHE[cache_key] = token
-    return token
-
-
 def get_current_branch_pr(cwd: str) -> Optional[dict]:
     """Return PR metadata for the current branch, or None when no PR exists."""
-    for user in _gh_user_candidates(DEFAULT_GH_HOST):
-        data = _run_gh_json(
+    hostname = gh_hostname_for_cwd(cwd)
+    if not repo_remote_url(cwd):
+        return None
+
+    for user in preferred_gh_user_candidates(hostname):
+        data = run_gh_json(
             ["gh", "pr", "view", "--json", "number,title,url"],
             cwd=cwd,
             user=user,
-            hostname=DEFAULT_GH_HOST,
+            hostname=hostname,
         )
         if not data:
             continue
@@ -270,12 +166,7 @@ def _main() -> None:
         json.dump({}, sys.stdout)
         return
 
-    cwd = payload.get("cwd")
-    if not isinstance(cwd, str) or not cwd:
-        cwd = tool_input.get("working_directory")
-    if not isinstance(cwd, str) or not cwd:
-        cwd = "."
-
+    cwd = resolve_hook_cwd(payload, tool_input)
     pr_details = get_current_branch_pr(cwd)
     if not pr_details:
         json.dump({}, sys.stdout)
