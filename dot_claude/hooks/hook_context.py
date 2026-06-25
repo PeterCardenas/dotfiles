@@ -2,14 +2,100 @@
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
-from typing import Optional
+import sys
+from contextlib import contextmanager
+from typing import Callable, Iterator, Optional
 
 DEFAULT_GH_HOST = "github.com"
 WORK_GH_USER = "peter-cardenas-ai"
 DEFAULT_GH_USER = "PeterCardenas"
 _USER_TOKEN_CACHE: dict[tuple[str, str], Optional[str]] = {}
+
+
+class HookContextError(RuntimeError):
+    """Raised when hook helpers cannot resolve required context safely."""
+
+
+class MissingHookCwdError(HookContextError):
+    """Raised when cwd/working_directory is missing from the hook payload."""
+
+
+class MissingRepoRemoteError(HookContextError):
+    """Raised when origin remote URL cannot be resolved for a cwd."""
+
+
+_USER_ACTION_PREFIX = "User action required:"
+
+
+_MISSING_HOOK_CWD_MESSAGE = (
+    f"{_USER_ACTION_PREFIX} your editor did not send a working directory with this "
+    "shell command, so it was blocked. Please run the command yourself from a "
+    "checked-out repository, or update your Claude/Cursor dotfiles hook configuration."
+)
+
+_MISSING_REPO_REMOTE_MESSAGE = (
+    f"{_USER_ACTION_PREFIX} this command was blocked because `origin` is not configured "
+    "for the current directory (or you are not inside a git checkout). Please verify "
+    "with `git remote -v` and fix `remote.origin.url` yourself."
+)
+
+
+def deny_hook_response(message: str, hook_event_name: str = "PreToolUse") -> dict:
+    """Return a hook response that blocks execution and tells the user what to fix."""
+    if hook_event_name == "SubagentStart":
+        return {"permission": "deny", "user_message": message}
+
+    if hook_event_name == "PostToolUse":
+        return {
+            "hookSpecificOutput": {
+                "hookEventName": "PostToolUse",
+                "additionalContext": message,
+            }
+        }
+
+    output: dict[str, str] = {
+        "hookEventName": "PreToolUse",
+        "permissionDecision": "deny",
+        "permissionDecisionReason": message,
+    }
+    return {"hookSpecificOutput": output}
+
+
+@contextmanager
+def hook_error_response(hook_event_name: str = "PreToolUse") -> Iterator[None]:
+    """Capture hook context errors and write a deny response to stdout."""
+    try:
+        yield
+    except HookContextError as error:
+        json.dump(deny_hook_response(str(error), hook_event_name), sys.stdout)
+
+
+def run_hook(
+    main_fn: Callable[[dict], None],
+    *,
+    default_event: str = "PreToolUse",
+    invalid_input_response: dict | None = None,
+) -> None:
+    """Read hook stdin JSON and run *main_fn* inside hook_error_response."""
+    fallback = {} if invalid_input_response is None else invalid_input_response
+    try:
+        input_data = json.load(sys.stdin)
+    except json.JSONDecodeError:
+        json.dump(fallback, sys.stdout)
+        return
+    if not isinstance(input_data, dict):
+        json.dump(fallback, sys.stdout)
+        return
+
+    event_name = input_data.get("hook_event_name", default_event)
+    if not isinstance(event_name, str) or not event_name:
+        event_name = default_event
+
+    with hook_error_response(event_name):
+        main_fn(input_data)
 
 
 def resolve_hook_cwd(payload: dict, tool_input: dict | None = None) -> str:
@@ -22,7 +108,7 @@ def resolve_hook_cwd(payload: dict, tool_input: dict | None = None) -> str:
             value = source.get(key)
             if isinstance(value, str) and value:
                 return value
-    return "."
+    raise MissingHookCwdError(_MISSING_HOOK_CWD_MESSAGE)
 
 
 def repo_remote_url(cwd: str) -> Optional[str]:
@@ -54,6 +140,14 @@ def repo_remote_url(cwd: str) -> Optional[str]:
     return value or None
 
 
+def require_repo_remote_url(cwd: str) -> str:
+    """Return origin remote URL or raise when it cannot be resolved."""
+    remote_url = repo_remote_url(cwd)
+    if not remote_url:
+        raise MissingRepoRemoteError(_MISSING_REPO_REMOTE_MESSAGE)
+    return remote_url
+
+
 def gh_hostname_from_remote(remote_url: str) -> str:
     if "work-github.com" in remote_url:
         return "work-github.com"
@@ -71,7 +165,7 @@ def preferred_gh_user_for_remote(remote_url: str) -> tuple[str, str]:
 
 
 def gh_hostname_for_cwd(cwd: str) -> str:
-    return gh_hostname_from_remote(repo_remote_url(cwd) or "")
+    return gh_hostname_from_remote(require_repo_remote_url(cwd))
 
 
 def gh_env(hostname: str = DEFAULT_GH_HOST) -> dict[str, str]:
@@ -125,9 +219,9 @@ def run_gh_json(
         return None
 
     try:
-        import json
+        import json as json_module
 
-        data = json.loads(result.stdout)
+        data = json_module.loads(result.stdout)
     except json.JSONDecodeError:
         return None
 
