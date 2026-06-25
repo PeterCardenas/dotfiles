@@ -11,7 +11,7 @@ Default `/sync-lazy-plugin` flow:
 2. move them into the real repo, usually `~/projects/<repo>`
 3. commit and push there
 4. refresh with `Lazy update <plugin>`
-5. commit the resulting chezmoi lockfile or plugin-spec change
+5. commit and push only the resulting chezmoi lockfile or plugin-spec change
 
 ## Core Rules
 
@@ -94,7 +94,7 @@ Stop and ask if:
 - `setup_fork` fails or still leaves no writable remote
 - the source repo has unrelated changes that would mix into the requested commits
 - the requested commit split is ambiguous
-- the chezmoi repo has an active git client, a lock file, or unrelated staged changes you might disturb
+- the chezmoi repo has an active git client or a lock file
 
 Use a short repo-state summary plus a direct question.
 
@@ -143,8 +143,10 @@ Then in chezmoi:
 
 - inspect repo status
 - identify the lockfile change from the Lazy update
-- stage only `lazy-lock.json` and any plugin-spec file that changed
-- commit and push those files without touching unrelated dotfile changes
+- stage only the tracked `lazy-lock.json` and any plugin-spec file changed by this workflow
+- ignore all unrelated chezmoi repo state, including staged, unstaged, and untracked files
+- do not stop or ask because of unrelated chezmoi changes; leave them exactly as they are and exclude them from the commit
+- commit and push only those paths, for example with `git add -- dot_config/nvim_conf/kickstart.nvim/lazy-lock.json <plugin-spec-path>` followed by `git commit -- dot_config/nvim_conf/kickstart.nvim/lazy-lock.json <plugin-spec-path>`
 
 ## 8. Git Lock Safety
 
