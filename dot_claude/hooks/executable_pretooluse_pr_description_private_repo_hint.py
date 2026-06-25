@@ -19,6 +19,7 @@ from hook_context import (
     resolve_hook_cwd,
     run_gh,
     run_gh_json,
+    run_hook,
 )
 
 GH_CMD_RE = re.compile(r"(^|[;&|])\s*gh\s+", re.IGNORECASE)
@@ -130,13 +131,7 @@ def _repo_visibility(
     return None, None
 
 
-def _main() -> None:
-    try:
-        payload = json.load(sys.stdin)
-    except json.JSONDecodeError:
-        json.dump({}, sys.stdout)
-        return
-
+def _main(payload: dict) -> None:
     tool_input = payload.get("tool_input")
     if not isinstance(tool_input, dict):
         json.dump({}, sys.stdout)
@@ -183,4 +178,4 @@ def _main() -> None:
 
 
 if __name__ == "__main__":
-    _main()
+    run_hook(_main)

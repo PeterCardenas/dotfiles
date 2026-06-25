@@ -12,9 +12,10 @@ from typing import Optional
 from hook_context import (
     gh_hostname_for_cwd,
     preferred_gh_user_candidates,
-    repo_remote_url,
+    require_repo_remote_url,
     resolve_hook_cwd,
     run_gh_json,
+    run_hook,
 )
 
 COMMAND_SEPARATORS = {"&&", "||", ";", "|"}
@@ -100,9 +101,8 @@ def is_git_push_command(command: str) -> bool:
 
 def get_current_branch_pr(cwd: str) -> Optional[dict]:
     """Return PR metadata for the current branch, or None when no PR exists."""
+    require_repo_remote_url(cwd)
     hostname = gh_hostname_for_cwd(cwd)
-    if not repo_remote_url(cwd):
-        return None
 
     for user in preferred_gh_user_candidates(hostname):
         data = run_gh_json(
@@ -149,13 +149,7 @@ def _advisory(pr_details: dict) -> dict:
     }
 
 
-def _main() -> None:
-    try:
-        payload = json.load(sys.stdin)
-    except json.JSONDecodeError:
-        json.dump({}, sys.stdout)
-        return
-
+def _main(payload: dict) -> None:
     tool_input = payload.get("tool_input")
     if not isinstance(tool_input, dict):
         json.dump({}, sys.stdout)
@@ -176,4 +170,4 @@ def _main() -> None:
 
 
 if __name__ == "__main__":
-    _main()
+    run_hook(_main, default_event="PostToolUse")

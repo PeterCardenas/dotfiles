@@ -13,19 +13,14 @@ from hook_context import (
     preferred_gh_user_for_remote,
     repo_remote_url,
     resolve_hook_cwd,
+    run_hook,
 )
 
 GH_CMD_RE = re.compile(r"(^|[;&|])\s*gh\s+", re.IGNORECASE)
 EXISTING_GH_TOKEN_RE = re.compile(r"(^|[;&|])\s*(?:env\s+)?GH_TOKEN=", re.IGNORECASE)
 
 
-def _main() -> None:
-    try:
-        payload = json.load(sys.stdin)
-    except json.JSONDecodeError:
-        json.dump({}, sys.stdout)
-        return
-
+def _main(payload: dict) -> None:
     tool_input = payload.get("tool_input")
     if not isinstance(tool_input, dict):
         json.dump({}, sys.stdout)
@@ -74,4 +69,4 @@ def _main() -> None:
 
 
 if __name__ == "__main__":
-    _main()
+    run_hook(_main)
