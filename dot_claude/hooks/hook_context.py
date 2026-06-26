@@ -27,6 +27,10 @@ class MissingRepoRemoteError(HookContextError):
     """Raised when origin remote URL cannot be resolved for a cwd."""
 
 
+class MissingGhTokenError(HookContextError):
+    """Raised when gh auth token cannot be resolved for the selected user."""
+
+
 _USER_ACTION_PREFIX = "User action required:"
 
 
@@ -40,6 +44,12 @@ _MISSING_REPO_REMOTE_MESSAGE = (
     f"{_USER_ACTION_PREFIX} this command was blocked because `origin` is not configured "
     "for the current directory (or you are not inside a git checkout). Please verify "
     "with `git remote -v` and fix `remote.origin.url` yourself."
+)
+
+_MISSING_GH_TOKEN_MESSAGE = (
+    f"{_USER_ACTION_PREFIX} this command was blocked because `gh auth token` could not "
+    "resolve a token for the GitHub user required by this repository. Please run "
+    "`gh auth status` and ensure the expected account is logged in."
 )
 
 
@@ -168,12 +178,12 @@ def gh_hostname_for_cwd(cwd: str) -> str:
     return gh_hostname_from_remote(require_repo_remote_url(cwd))
 
 
-def gh_env(hostname: str = DEFAULT_GH_HOST) -> dict[str, str]:
+def gh_env(*, token: Optional[str] = None) -> dict[str, str]:
     env = os.environ.copy()
-    env.pop("GH_TOKEN", None)
-    env.pop("GITHUB_TOKEN", None)
-    if hostname:
-        env["GH_HOST"] = hostname
+    for key in ("GH_TOKEN", "GITHUB_TOKEN", "GH_HOST"):
+        env.pop(key, None)
+    if token:
+        env["GH_TOKEN"] = token
     return env
 
 
@@ -185,12 +195,13 @@ def run_gh(
     user: Optional[str] = None,
     hostname: str = DEFAULT_GH_HOST,
 ) -> Optional[subprocess.CompletedProcess[str]]:
-    env = gh_env(hostname)
+    token: Optional[str] = None
     if user:
         token = gh_token_for_user(user, hostname)
         if not token:
             return None
-        env["GH_TOKEN"] = token
+
+    env = gh_env(token=token)
 
     try:
         return subprocess.run(
@@ -269,11 +280,20 @@ def gh_token_for_user(user: str, hostname: str = DEFAULT_GH_HOST) -> Optional[st
     if cache_key in _USER_TOKEN_CACHE:
         return _USER_TOKEN_CACHE[cache_key]
 
-    result = run_gh(
-        ["gh", "auth", "token", "--hostname", hostname, "--user", user],
-        hostname=hostname,
-    )
-    if not result or result.returncode != 0:
+    try:
+        result = subprocess.run(
+            ["gh", "auth", "token", "--user", user],
+            capture_output=True,
+            text=True,
+            timeout=4,
+            check=False,
+            env=gh_env(),
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        _USER_TOKEN_CACHE[cache_key] = None
+        return None
+
+    if result.returncode != 0:
         _USER_TOKEN_CACHE[cache_key] = None
         return None
 
