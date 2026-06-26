@@ -9,7 +9,9 @@ import shlex
 import sys
 
 from hook_context import (
+    MissingGhTokenError,
     gh_hostname_from_remote,
+    gh_token_for_user,
     preferred_gh_user_for_remote,
     repo_remote_url,
     resolve_hook_cwd,
@@ -18,6 +20,12 @@ from hook_context import (
 
 GH_CMD_RE = re.compile(r"(^|[;&|])\s*gh\s+", re.IGNORECASE)
 EXISTING_GH_TOKEN_RE = re.compile(r"(^|[;&|])\s*(?:env\s+)?GH_TOKEN=", re.IGNORECASE)
+
+_MISSING_GH_TOKEN_MESSAGE = (
+    "User action required: this command was blocked because `gh auth token` could not "
+    "resolve a token for the GitHub user required by this repository. Please run "
+    "`gh auth status` and ensure the expected account is logged in."
+)
 
 
 def _main(payload: dict) -> None:
@@ -43,12 +51,12 @@ def _main(payload: dict) -> None:
 
     hostname = gh_hostname_from_remote(remote_url)
     gh_user, reason = preferred_gh_user_for_remote(remote_url)
-    user_arg = shlex.quote(gh_user)
-    host_arg = shlex.quote(hostname)
-    rewritten = (
-        f'env GH_HOST={host_arg} GH_TOKEN="$(gh auth token --hostname {host_arg} --user {user_arg})" '
-        f"{command}"
-    )
+    token = gh_token_for_user(gh_user, hostname)
+    if not token:
+        raise MissingGhTokenError(_MISSING_GH_TOKEN_MESSAGE)
+
+    token_arg = shlex.quote(token)
+    rewritten = f"GH_TOKEN={token_arg} {command}"
 
     updated_input = dict(tool_input)
     updated_input["command"] = rewritten
@@ -60,7 +68,7 @@ def _main(payload: dict) -> None:
                 "permissionDecision": "allow",
                 "updatedInput": updated_input,
                 "additionalContext": (
-                    f"Enforced gh user `{gh_user}` on `{hostname}` for this repository ({reason})."
+                    f"Enforced gh user `{gh_user}` for this repository ({reason})."
                 ),
             }
         },
