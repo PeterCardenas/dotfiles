@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 import subprocess
 import sys
 from contextlib import contextmanager
@@ -275,14 +276,26 @@ def gh_user_candidates(hostname: str = DEFAULT_GH_HOST) -> list[Optional[str]]:
     return candidates
 
 
+def gh_token_command_expr(user: str, hostname: str = DEFAULT_GH_HOST) -> str:
+    """Return a shell command substitution that resolves `gh auth token` for *user*."""
+    cmd = ["command", "gh", "auth", "token", "--user", user]
+    if hostname != DEFAULT_GH_HOST:
+        cmd.extend(["--hostname", hostname])
+    return "$(" + " ".join(shlex.quote(part) for part in cmd) + ")"
+
+
 def gh_token_for_user(user: str, hostname: str = DEFAULT_GH_HOST) -> Optional[str]:
     cache_key = (hostname, user)
     if cache_key in _USER_TOKEN_CACHE:
         return _USER_TOKEN_CACHE[cache_key]
 
+    cmd = ["gh", "auth", "token", "--user", user]
+    if hostname != DEFAULT_GH_HOST:
+        cmd.extend(["--hostname", hostname])
+
     try:
         result = subprocess.run(
-            ["gh", "auth", "token", "--user", user],
+            cmd,
             capture_output=True,
             text=True,
             timeout=4,

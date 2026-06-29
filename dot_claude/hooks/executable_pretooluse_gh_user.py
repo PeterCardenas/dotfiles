@@ -5,12 +5,12 @@ from __future__ import annotations
 
 import json
 import re
-import shlex
 import sys
 
 from hook_context import (
     MissingGhTokenError,
     gh_hostname_from_remote,
+    gh_token_command_expr,
     gh_token_for_user,
     preferred_gh_user_for_remote,
     repo_remote_url,
@@ -51,12 +51,11 @@ def _main(payload: dict) -> None:
 
     hostname = gh_hostname_from_remote(remote_url)
     gh_user, reason = preferred_gh_user_for_remote(remote_url)
-    token = gh_token_for_user(gh_user, hostname)
-    if not token:
+    if not gh_token_for_user(gh_user, hostname):
         raise MissingGhTokenError(_MISSING_GH_TOKEN_MESSAGE)
 
-    token_arg = shlex.quote(token)
-    rewritten = f"GH_TOKEN={token_arg} {command}"
+    token_expr = gh_token_command_expr(gh_user, hostname)
+    rewritten = f"GH_TOKEN={token_expr} {command}"
 
     updated_input = dict(tool_input)
     updated_input["command"] = rewritten
