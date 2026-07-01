@@ -1,4 +1,4 @@
-"""Shared helpers for Claude/Cursor hook payloads and gh host resolution."""
+"""Shared helpers for Claude/Cursor hook payloads and gh user resolution."""
 
 from __future__ import annotations
 
@@ -10,10 +10,9 @@ import sys
 from contextlib import contextmanager
 from typing import Callable, Iterator, Optional
 
-DEFAULT_GH_HOST = "github.com"
 WORK_GH_USER = "peter-cardenas-ai"
 DEFAULT_GH_USER = "PeterCardenas"
-_USER_TOKEN_CACHE: dict[tuple[str, str], Optional[str]] = {}
+_USER_TOKEN_CACHE: dict[str, Optional[str]] = {}
 
 
 class HookContextError(RuntimeError):
@@ -159,24 +158,12 @@ def require_repo_remote_url(cwd: str) -> str:
     return remote_url
 
 
-def gh_hostname_from_remote(remote_url: str) -> str:
-    if "work-github.com" in remote_url:
-        return "work-github.com"
-    if "personal-github.com" in remote_url:
-        return "personal-github.com"
-    return DEFAULT_GH_HOST
-
-
 def preferred_gh_user_for_remote(remote_url: str) -> tuple[str, str]:
     if "work-github.com" in remote_url:
         return WORK_GH_USER, "work remote detected"
     if "personal-github.com" in remote_url:
         return DEFAULT_GH_USER, "personal remote detected"
     return DEFAULT_GH_USER, "unknown remote, defaulting to personal user"
-
-
-def gh_hostname_for_cwd(cwd: str) -> str:
-    return gh_hostname_from_remote(require_repo_remote_url(cwd))
 
 
 def gh_env(*, token: Optional[str] = None) -> dict[str, str]:
@@ -194,11 +181,10 @@ def run_gh(
     cwd: str = ".",
     timeout: int = 4,
     user: Optional[str] = None,
-    hostname: str = DEFAULT_GH_HOST,
 ) -> Optional[subprocess.CompletedProcess[str]]:
     token: Optional[str] = None
     if user:
-        token = gh_token_for_user(user, hostname)
+        token = gh_token_for_user(user)
         if not token:
             return None
 
@@ -224,9 +210,8 @@ def run_gh_json(
     cwd: str = ".",
     timeout: int = 4,
     user: Optional[str] = None,
-    hostname: str = DEFAULT_GH_HOST,
 ) -> Optional[dict]:
-    result = run_gh(cmd, cwd=cwd, timeout=timeout, user=user, hostname=hostname)
+    result = run_gh(cmd, cwd=cwd, timeout=timeout, user=user)
     if not result or result.returncode != 0:
         return None
 
@@ -240,10 +225,9 @@ def run_gh_json(
     return data if isinstance(data, dict) else None
 
 
-def gh_known_users(hostname: str = DEFAULT_GH_HOST) -> list[str]:
+def gh_known_users() -> list[str]:
     data = run_gh_json(
-        ["gh", "auth", "status", "--hostname", hostname, "--json", "hosts"],
-        hostname=hostname,
+        ["gh", "auth", "status", "--json", "hosts"],
     )
     if not data:
         return []
@@ -251,7 +235,7 @@ def gh_known_users(hostname: str = DEFAULT_GH_HOST) -> list[str]:
     hosts = data.get("hosts")
     entries: list[dict] = []
     if isinstance(hosts, dict):
-        host_entries = hosts.get(hostname)
+        host_entries = hosts.get("github.com")
         if isinstance(host_entries, list):
             entries = [entry for entry in host_entries if isinstance(entry, dict)]
     elif isinstance(hosts, list):
@@ -265,33 +249,17 @@ def gh_known_users(hostname: str = DEFAULT_GH_HOST) -> list[str]:
     return users
 
 
-def gh_user_candidates(hostname: str = DEFAULT_GH_HOST) -> list[Optional[str]]:
-    seen: set[Optional[str]] = {None}
-    candidates: list[Optional[str]] = [None]
-    for user in gh_known_users(hostname):
-        if user in seen:
-            continue
-        seen.add(user)
-        candidates.append(user)
-    return candidates
-
-
-def gh_token_command_expr(user: str, hostname: str = DEFAULT_GH_HOST) -> str:
+def gh_token_command_expr(user: str) -> str:
     """Return a shell command substitution that resolves `gh auth token` for *user*."""
     cmd = ["command", "gh", "auth", "token", "--user", user]
-    if hostname != DEFAULT_GH_HOST:
-        cmd.extend(["--hostname", hostname])
     return "$(" + " ".join(shlex.quote(part) for part in cmd) + ")"
 
 
-def gh_token_for_user(user: str, hostname: str = DEFAULT_GH_HOST) -> Optional[str]:
-    cache_key = (hostname, user)
-    if cache_key in _USER_TOKEN_CACHE:
-        return _USER_TOKEN_CACHE[cache_key]
+def gh_token_for_user(user: str) -> Optional[str]:
+    if user in _USER_TOKEN_CACHE:
+        return _USER_TOKEN_CACHE[user]
 
     cmd = ["gh", "auth", "token", "--user", user]
-    if hostname != DEFAULT_GH_HOST:
-        cmd.extend(["--hostname", hostname])
 
     try:
         result = subprocess.run(
@@ -303,25 +271,26 @@ def gh_token_for_user(user: str, hostname: str = DEFAULT_GH_HOST) -> Optional[st
             env=gh_env(),
         )
     except (FileNotFoundError, subprocess.TimeoutExpired):
-        _USER_TOKEN_CACHE[cache_key] = None
+        _USER_TOKEN_CACHE[user] = None
         return None
 
     if result.returncode != 0:
-        _USER_TOKEN_CACHE[cache_key] = None
+        _USER_TOKEN_CACHE[user] = None
         return None
 
     token = (result.stdout or "").strip() or None
-    _USER_TOKEN_CACHE[cache_key] = token
+    _USER_TOKEN_CACHE[user] = token
     return token
 
 
-def preferred_gh_user_candidates(hostname: str) -> list[Optional[str]]:
-    preferred_user = (
-        WORK_GH_USER if hostname == "work-github.com" else DEFAULT_GH_USER
-    )
+def preferred_gh_user_candidates(remote_url: Optional[str] = None) -> list[Optional[str]]:
+    preferred_user = DEFAULT_GH_USER
+    if remote_url:
+        preferred_user, _reason = preferred_gh_user_for_remote(remote_url)
+
     seen: set[Optional[str]] = set()
     candidates: list[Optional[str]] = []
-    for user in [preferred_user, None, *gh_known_users(hostname)]:
+    for user in [preferred_user, None, *gh_known_users()]:
         if user in seen:
             continue
         seen.add(user)

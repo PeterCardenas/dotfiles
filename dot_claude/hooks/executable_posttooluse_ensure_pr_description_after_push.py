@@ -10,7 +10,6 @@ import sys
 from typing import Optional
 
 from hook_context import (
-    gh_hostname_for_cwd,
     preferred_gh_user_candidates,
     require_repo_remote_url,
     resolve_hook_cwd,
@@ -101,15 +100,13 @@ def is_git_push_command(command: str) -> bool:
 
 def get_current_branch_pr(cwd: str) -> Optional[dict]:
     """Return PR metadata for the current branch, or None when no PR exists."""
-    require_repo_remote_url(cwd)
-    hostname = gh_hostname_for_cwd(cwd)
+    remote_url = require_repo_remote_url(cwd)
 
-    for user in preferred_gh_user_candidates(hostname):
+    for user in preferred_gh_user_candidates(remote_url):
         data = run_gh_json(
             ["gh", "pr", "view", "--json", "number,title,url"],
             cwd=cwd,
             user=user,
-            hostname=hostname,
         )
         if not data:
             continue
