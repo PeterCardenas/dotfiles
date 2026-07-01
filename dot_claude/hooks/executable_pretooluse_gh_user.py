@@ -9,7 +9,6 @@ import sys
 
 from hook_context import (
     MissingGhTokenError,
-    gh_hostname_from_remote,
     gh_token_command_expr,
     gh_token_for_user,
     preferred_gh_user_for_remote,
@@ -49,12 +48,11 @@ def _main(payload: dict) -> None:
         json.dump({}, sys.stdout)
         return
 
-    hostname = gh_hostname_from_remote(remote_url)
     gh_user, reason = preferred_gh_user_for_remote(remote_url)
-    if not gh_token_for_user(gh_user, hostname):
+    if not gh_token_for_user(gh_user):
         raise MissingGhTokenError(_MISSING_GH_TOKEN_MESSAGE)
 
-    token_expr = gh_token_command_expr(gh_user, hostname)
+    token_expr = gh_token_command_expr(gh_user)
     rewritten = f"GH_TOKEN={token_expr} {command}"
 
     updated_input = dict(tool_input)

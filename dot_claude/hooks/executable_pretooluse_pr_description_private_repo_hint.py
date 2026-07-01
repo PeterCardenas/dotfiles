@@ -13,9 +13,8 @@ import sys
 from typing import Optional
 
 from hook_context import (
-    gh_hostname_for_cwd,
-    gh_user_candidates,
     preferred_gh_user_candidates,
+    repo_remote_url,
     resolve_hook_cwd,
     run_gh,
     run_gh_json,
@@ -55,7 +54,9 @@ def _repo_from_command(command: str) -> Optional[str]:
     return None
 
 
-def _repo_from_pr_view_context(command: str, *, cwd: str, hostname: str) -> Optional[str]:
+def _repo_from_pr_view_context(
+    command: str, *, cwd: str, remote_url: Optional[str]
+) -> Optional[str]:
     match = PR_VIEW_NUMBER_RE.search(command)
     if not match:
         return None
@@ -66,8 +67,8 @@ def _repo_from_pr_view_context(command: str, *, cwd: str, hostname: str) -> Opti
         cmd.append(pr_number)
     cmd.extend(["--json", "url", "-q", ".url"])
 
-    for user in preferred_gh_user_candidates(hostname) + gh_user_candidates(hostname):
-        result = run_gh(cmd, cwd=cwd, timeout=4, user=user, hostname=hostname)
+    for user in preferred_gh_user_candidates(remote_url):
+        result = run_gh(cmd, cwd=cwd, timeout=4, user=user)
         if not result or result.returncode != 0:
             continue
 
@@ -97,15 +98,14 @@ def _is_pr_description_read(command: str) -> bool:
 
 
 def _repo_visibility(
-    repo: Optional[str], *, cwd: str, hostname: str
+    repo: Optional[str], *, cwd: str, remote_url: Optional[str]
 ) -> tuple[Optional[str], Optional[str]]:
-    for user in preferred_gh_user_candidates(hostname) + gh_user_candidates(hostname):
+    for user in preferred_gh_user_candidates(remote_url):
         if repo:
             api_data = run_gh_json(
                 ["gh", "api", f"repos/{repo}"],
                 cwd=cwd,
                 user=user,
-                hostname=hostname,
             )
             if api_data:
                 visibility = str(api_data.get("visibility") or "").lower() or None
@@ -118,7 +118,7 @@ def _repo_visibility(
         if repo:
             cmd.append(repo)
         cmd.extend(["--json", "nameWithOwner,isPrivate,visibility"])
-        data = run_gh_json(cmd, cwd=cwd, user=user, hostname=hostname)
+        data = run_gh_json(cmd, cwd=cwd, user=user)
         if not data:
             continue
 
@@ -147,11 +147,11 @@ def _main(payload: dict) -> None:
         return
 
     cwd = resolve_hook_cwd(payload, tool_input)
-    hostname = gh_hostname_for_cwd(cwd)
+    remote_url = repo_remote_url(cwd)
     repo_hint = _repo_from_command(command) or _repo_from_pr_view_context(
-        command, cwd=cwd, hostname=hostname
+        command, cwd=cwd, remote_url=remote_url
     )
-    visibility, repo_name = _repo_visibility(repo_hint, cwd=cwd, hostname=hostname)
+    visibility, repo_name = _repo_visibility(repo_hint, cwd=cwd, remote_url=remote_url)
 
     if visibility not in {"private", "internal"}:
         json.dump({}, sys.stdout)
