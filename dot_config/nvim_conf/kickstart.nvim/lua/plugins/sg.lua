@@ -482,6 +482,8 @@ return {
               for _ = 1, max_retries do
                 local args = {
                   '-p',
+                  '--setting-sources',
+                  'project,local',
                   '--output-format',
                   'json',
                   '--model',
