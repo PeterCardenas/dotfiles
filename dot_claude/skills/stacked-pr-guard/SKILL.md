@@ -1,19 +1,6 @@
 ---
 name: stacked-pr-guard
-description: >-
-  MUST use this skill, instead of generic PR babysitting, for any multi-step
-  GitHub stacked PR branch-surgery workflow: stacked branches, dependent pull
-  requests, branch-as-base PRs, bottom-up merges, stack rebases, rebase
-  --update-refs, autosquash/fixup across a stack, force-with-lease pushes of
-  multiple branches, PR retargeting, reopening closed PRs in a stack, deleting
-  stack branches, reviewer/CODEOWNERS noise after a rebase, stale review
-  requests, or complaints that a PR suddenly requested unrelated owners. Use it
-  even if the user does not say "skill" and even if the task also includes
-  implementation work. This is the specialized guardrail for preventing
-  accidental auto-merge, stale base-branch rewinds, dependent PR diff explosions,
-  branch deletion surprises, and unrelated CODEOWNERS review spam. Leave ordinary
-  standalone PR monitoring, CI babysitting, and simple approved-PR merges to the
-  normal PR workflow unless stacked/dependent PR context appears.
+description: "Use this skill only when a request explicitly involves a PR stack or dependent branch-as-base PRs and changing or recovering those branches: stack rebases, bottom-up force-with-lease pushes, retargeting or reopening dependents, deleting stack branches, or CODEOWNERS noise after stack rewrites."
 ---
 
 # Stacked PR Guard
