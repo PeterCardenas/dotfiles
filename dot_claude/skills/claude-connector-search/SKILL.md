@@ -15,11 +15,11 @@ If the user asks for a write action, do the search first and ask for explicit co
 
 ## Quick Command
 
-Run `claude -p` from a trusted working directory. Do not use `--bare`, `--safe-mode`, `--disable-slash-commands`, or `--strict-mcp-config` because those can hide configured connectors.
+Run `claude -p` from a trusted working directory. Use `--setting-sources project,local` so delegated searches do not inherit user-level hooks that can add interactive follow-up instructions to machine-readable connector output. Do not use `--bare`, `--safe-mode`, `--disable-slash-commands`, or `--strict-mcp-config` because those can hide configured connectors.
 
 ```bash
 prompt='You are a read-only enterprise search delegate. Use the configured Jira, Confluence, and Slack connectors if they are available. For Slack, search both public and private channels. Do not use web search as a substitute. Do not post messages, add comments, transition issues, update fields, edit pages, or make any external changes. Task: <describe the user search request>. Return concise Markdown with: Summary; Jira findings with issue keys/status/assignees and URLs when available; Confluence findings with page titles/spaces and URLs when available; Slack findings with channel names, message dates/authors, thread links or permalinks when available; gaps or connector/access limitations.'
-claude -p --output-format json --no-session-persistence --max-budget-usd 1 --allowedTools "mcp__claude_ai_Atlassian__search,mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql,mcp__claude_ai_Slack__slack_search_public_and_private,mcp__claude_ai_Slack__slack_search_channels" -- "$prompt" < /dev/null
+claude -p --setting-sources project,local --output-format json --no-session-persistence --max-budget-usd 1 --allowedTools "mcp__claude_ai_Atlassian__search,mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql,mcp__claude_ai_Slack__slack_search_public_and_private,mcp__claude_ai_Slack__slack_search_channels" -- "$prompt" < /dev/null
 ```
 
 Read the JSON `result` field as the delegated answer. Also inspect `permission_denials`: if a read-only Jira or Slack search tool was denied, rerun once with that exact read-only tool name in `--allowedTools`. Do not allow broad tool patterns or write-capable connector tools.
@@ -35,6 +35,8 @@ If the CLI exits non-zero, report the error and whether it looks like missing au
 5. Summarize in the current conversation. Preserve uncertainty and access limitations instead of filling gaps from memory.
 
 For headless runs, expect MCP connector permissions to require pre-approval. Prefer exact read-only tool names from a prior `permission_denials` entry, such as `mcp__claude_ai_Atlassian__search`, `mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql`, `mcp__claude_ai_Slack__slack_search_public_and_private`, and `mcp__claude_ai_Slack__slack_search_channels`. If the connector exposes different read-only search tool names, use those exact names instead.
+
+Keep `--setting-sources project,local` on delegated commands unless you have verified the user's hooks are safe for nested, non-interactive runs. User-level Stop hooks can turn an otherwise successful connector result into a second model turn, which may pollute or replace the JSON `result`.
 
 Use `slack_search_public_and_private` for Slack message searches so results cover both public and private channels. Use `slack_search_channels` to resolve channel/workspace visibility before message search.
 
