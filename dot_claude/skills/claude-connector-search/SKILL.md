@@ -18,8 +18,8 @@ If the user asks for a write action, do the search first and ask for explicit co
 Run `claude -p` from a trusted working directory. Do not use `--bare`, `--safe-mode`, `--disable-slash-commands`, or `--strict-mcp-config` because those can hide configured connectors.
 
 ```bash
-prompt='You are a read-only enterprise search delegate. Use the configured Jira, Confluence, and Slack connectors if they are available. Do not use web search as a substitute. Do not post messages, add comments, transition issues, update fields, edit pages, or make any external changes. Task: <describe the user search request>. Return concise Markdown with: Summary; Jira findings with issue keys/status/assignees and URLs when available; Confluence findings with page titles/spaces and URLs when available; Slack findings with channel names, message dates/authors, thread links or permalinks when available; gaps or connector/access limitations.'
-claude -p --output-format json --no-session-persistence --max-budget-usd 1 --allowedTools "mcp__claude_ai_Atlassian__search,mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql,mcp__claude_ai_Slack__slack_search_public,mcp__claude_ai_Slack__slack_search_public_and_private,mcp__claude_ai_Slack__slack_search_channels" -- "$prompt" < /dev/null
+prompt='You are a read-only enterprise search delegate. Use the configured Jira, Confluence, and Slack connectors if they are available. For Slack, search both public and private channels. Do not use web search as a substitute. Do not post messages, add comments, transition issues, update fields, edit pages, or make any external changes. Task: <describe the user search request>. Return concise Markdown with: Summary; Jira findings with issue keys/status/assignees and URLs when available; Confluence findings with page titles/spaces and URLs when available; Slack findings with channel names, message dates/authors, thread links or permalinks when available; gaps or connector/access limitations.'
+claude -p --output-format json --no-session-persistence --max-budget-usd 1 --allowedTools "mcp__claude_ai_Atlassian__search,mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql,mcp__claude_ai_Slack__slack_search_public_and_private,mcp__claude_ai_Slack__slack_search_channels" -- "$prompt" < /dev/null
 ```
 
 Read the JSON `result` field as the delegated answer. Also inspect `permission_denials`: if a read-only Jira or Slack search tool was denied, rerun once with that exact read-only tool name in `--allowedTools`. Do not allow broad tool patterns or write-capable connector tools.
@@ -34,9 +34,9 @@ If the CLI exits non-zero, report the error and whether it looks like missing au
 4. Request source-specific evidence: Jira issue keys and URLs; Confluence page titles/spaces and URLs; Slack channel names, dates, authors, and permalinks.
 5. Summarize in the current conversation. Preserve uncertainty and access limitations instead of filling gaps from memory.
 
-For headless runs, expect MCP connector permissions to require pre-approval. Prefer exact read-only tool names from a prior `permission_denials` entry, such as `mcp__claude_ai_Atlassian__search`, `mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql`, `mcp__claude_ai_Slack__slack_search_public`, `mcp__claude_ai_Slack__slack_search_public_and_private`, and `mcp__claude_ai_Slack__slack_search_channels`. If the connector exposes different read-only search tool names, use those exact names instead.
+For headless runs, expect MCP connector permissions to require pre-approval. Prefer exact read-only tool names from a prior `permission_denials` entry, such as `mcp__claude_ai_Atlassian__search`, `mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql`, `mcp__claude_ai_Slack__slack_search_public_and_private`, and `mcp__claude_ai_Slack__slack_search_channels`. If the connector exposes different read-only search tool names, use those exact names instead.
 
-Use `slack_search_public_and_private` only when the user asks for private-channel coverage, complete Slack coverage, or a scope check that cannot be answered from public channels alone. Use `slack_search_channels` to resolve channel/workspace visibility before message search.
+Use `slack_search_public_and_private` for Slack message searches so results cover both public and private channels. Use `slack_search_channels` to resolve channel/workspace visibility before message search.
 
 When another agent will execute the command, prefer the single-line prompt variable form above. It avoids nested heredocs being flattened or retried by shell wrappers. Keep the `--` before the prompt because `--allowedTools` is variadic and otherwise consumes the prompt as another tool name.
 
@@ -54,7 +54,7 @@ Do not update Jira.
 ### Slack Only
 
 ```text
-Use the configured Slack connector only. Search for: <query>.
+Use the configured Slack connector only. Search public and private channels for: <query>.
 Constraints: <channels/users/date range if known>.
 Return channel, author, date, permalink/thread link when available, and a short quoted snippet.
 Do not send messages or reactions.
