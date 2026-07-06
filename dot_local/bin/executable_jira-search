@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+from pathlib import Path
+import sys
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+
+from connector_delegate import run_entrypoint
+
+
+ALLOWED_TOOLS = (
+    "mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql",
+    "mcp__claude_ai_Atlassian__search",
+)
+
+
+def build_prompt(query: str) -> str:
+    return (
+        "You are a read-only Jira connector delegate. Use configured Jira or "
+        "Atlassian connector tools only. Do not comment, transition issues, "
+        "update fields, edit pages, or make any external changes. Task: "
+        f"{query}. Return concise Markdown with: Summary; Jira issue keys, "
+        "titles, statuses, assignees, updated dates, and URLs when available; "
+        "why each issue matched; and connector/access limitations."
+    )
+
+
+if __name__ == "__main__":
+    raise SystemExit(
+        run_entrypoint(
+            argv=sys.argv[1:],
+            program=Path(sys.argv[0]).name,
+            allowed_tools=ALLOWED_TOOLS,
+            build_prompt=build_prompt,
+        )
+    )
