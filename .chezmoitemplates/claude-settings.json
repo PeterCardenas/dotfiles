@@ -13,7 +13,8 @@
       "ToolSearch",
       "Skill",
       "Bash(luac -p *)",
-      "Bash(ls *)"
+      "Bash(ls *)",
+      "Monitor"
     ],
     "deny": [
       "Read(*.env)",
