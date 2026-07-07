@@ -497,6 +497,27 @@ local function get_buildifier_warnings_arg()
   return buildifier_warnings_arg
 end
 
+---@param line string
+---@return boolean
+local function is_dmypy_unused_section_note(line)
+  return line:match('%.ini: note: unused section%(s%): ') ~= nil
+end
+
+---@param parser lint.parse
+---@return lint.parse
+local function filter_dmypy_parser_input(parser)
+  return function(output, bufnr, linter_cwd)
+    local filtered_lines = {} ---@type string[]
+    for line in vim.gsplit(output, '\n', { plain = true }) do
+      if not is_dmypy_unused_section_note(line) then
+        filtered_lines[#filtered_lines + 1] = line
+      end
+    end
+
+    return parser(table.concat(filtered_lines, '\n'), bufnr, linter_cwd)
+  end
+end
+
 ---@type LazyPluginSpec[]
 return {
   -- Formatting.
@@ -677,6 +698,7 @@ return {
         mypy_config_path,
       }
       require('lint').linters.dmypy.args = dmypy_args
+      require('lint').linters.dmypy.parser = filter_dmypy_parser_input(require('lint').linters.dmypy.parser)
       local ruff_args = {
         'check',
         '--force-exclude',
