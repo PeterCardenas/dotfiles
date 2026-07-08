@@ -25,6 +25,9 @@ description: Use when editing, debugging, or testing Neovim configuration or plu
 
 - Verify changes by opening a new tmux session and launching nvim with the actual config. Never just read code and propose changes as done.
 - Test both the broken state (without the fix) and the fixed state to confirm the fix actually addresses the issue.
+- When changing agentic.nvim behavior that is supposed to steer the agent, test a real model turn in tmux with the actual Neovim config. UI-only evidence such as `:messages`, notifications, or deterministic harnesses is not enough; verify the live agent observed the feedback and changed its next action.
+- For hook feedback that should influence agentic.nvim, prefer a red/green check: first prove the agent would take the wrong follow-up without agent-visible feedback, then prove the live model skips that follow-up after receiving the hook context.
+- Keep live model tests scoped to harmless files and prompts, and report exactly what data was sent to the model. Do not include secrets or broad repo context in the prompt.
 - For experimental features, implement behind an env var config flag, test thoroughly, then remove the flag once verified.
 - Treat every tmux test session as disposable. Clean it before create, clean it again when done, and verify the cleanup succeeded before you move on.
 
