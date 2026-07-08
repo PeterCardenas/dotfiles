@@ -14,7 +14,18 @@
       "Skill",
       "Bash(luac -p *)",
       "Bash(ls *)",
-      "Monitor"
+      "Monitor",
+      "EnterPlanMode",
+      "NotebookEdit",
+      "SendMessage",
+      "PushNotification",
+      "RemoteTrigger",
+      "ReportFindings",
+      "ScheduleWakeup",
+      "AskUserQuestion",
+      "CronCreate",
+      "CronDelete",
+      "CronList"
     ],
     "deny": [
       "Read(*.env)",
@@ -23,6 +34,9 @@
     ],
     "defaultMode": "default"
   },
+  "disableWorkflows": true,
+  "disableRemoteControl": true,
+  "disableArtifact": true,
   "attribution": {
     "commit": "",
     "pr": ""
