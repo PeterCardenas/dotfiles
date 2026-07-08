@@ -35,6 +35,10 @@ Before changing any PR branch in a stack:
    git diff --name-status origin/base...origin/head
    git log --oneline origin/base..origin/head
    ```
+5. Inspect each PR's internal commits, not just the final diff. A PR can have the right final tree while earlier commits add files that later commits delete:
+   ```bash
+   git log --oneline --name-status origin/base..origin/head
+   ```
 
 If a PR branch is the base of another open PR, do not delete it, temporarily push an old SHA to it, or rely on GitHub to retarget dependents correctly.
 
@@ -52,7 +56,7 @@ Prefer this sequence:
    git log --oneline --decorate -12
    ```
 4. Push bottom-up with `--force-with-lease`.
-5. After pushing each branch, verify that its PR still has a one-commit or expected diff relative to its base, and that review requests did not expand unexpectedly.
+5. After pushing each branch, verify that its PR still has a one-commit or expected diff relative to its base, and that review requests did not expand unexpectedly. If a branch has add/delete churn within its own commits, squash or fixup that branch before continuing.
 
 Never use plain force-push. Never use destructive git reset/checkout unless the user explicitly asks.
 
@@ -69,7 +73,9 @@ Before merging a PR:
    ```
 5. Do not enable auto-merge unless the user explicitly asks for auto-merge. A request to "merge" means merge now if allowed, not "enable auto-merge later."
 
-When a bottom PR is squash-merged, immediately rebase the remaining stack onto the new base and push bottom-up. Then verify PR bases, diffs, and review requests.
+When a bottom PR is squash-merged, immediately fetch `master`, rebase the next branch onto `origin/master`, push it, wait for fresh CI, then merge it before moving to the next branch. Repeat this merge -> fetch -> rebase -> push -> wait cycle for every layer.
+
+If `gh pr merge` says branch policy prohibits the merge after checks pass, inspect `reviewDecision`, `reviewRequests`, and unresolved review threads before enabling auto-merge or requesting review. Resolve addressed threads first; stale unresolved threads can hide an otherwise valid approval.
 
 ## Reopening or Recovering PRs
 
@@ -107,6 +113,12 @@ When review requests look wrong:
 5. Re-query requested reviewers and report the final set.
 
 Do not remove a legitimate CODEOWNER request just because it is inconvenient.
+
+Before re-requesting reviewers after a rebase, check unresolved review threads:
+```bash
+gh api graphql -f query='query($owner:String!, $repo:String!, $number:Int!) { repository(owner:$owner, name:$repo) { pullRequest(number:$number) { reviewThreads(first:100) { nodes { id isResolved path comments(first:10) { nodes { databaseId author { login } body } } } } } } }' -F owner=OWNER -F repo=REPO -F number=PR_NUMBER
+```
+If the requested change is addressed, resolve the thread instead of re-requesting review. Only re-request when `reviewDecision` remains unapproved after addressed threads are resolved.
 
 ## Final Report Checklist
 
