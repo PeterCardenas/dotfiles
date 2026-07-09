@@ -7,7 +7,7 @@ import subprocess
 import sys
 from collections.abc import Sequence
 
-from connector_delegate import run_delegate
+from connector_delegate import choose_output_mode, run_delegate
 
 
 JIRA_BASE_URL = "https://appliedintuition.atlassian.net/browse"
@@ -167,11 +167,29 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Print planned PR and Jira work without writing.",
     )
+    output_group = parser.add_mutually_exclusive_group()
+    output_group.add_argument(
+        "--json",
+        action="store_const",
+        const="json",
+        default="auto",
+        dest="output_mode",
+        help="Keep delegated Claude output as a single JSON result.",
+    )
+    output_group.add_argument(
+        "--human",
+        action="store_const",
+        const="human",
+        dest="output_mode",
+        help="Stream progress and print the delegated Markdown report.",
+    )
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    output_mode = choose_output_mode(args.output_mode, sys.stdout)
+    progress_output = sys.stderr if output_mode == "json" else sys.stdout
     try:
         issue_key = normalize_issue_key(args.issue_key)
     except ValueError as exc:
@@ -183,32 +201,41 @@ def main(argv: Sequence[str] | None = None) -> int:
     new_body = ensure_pr_body_autoclose(pr["body"], issue_key)
 
     if args.dry_run:
-        print(f"PR: {pr['url']}")
-        print(f"Issue: {issue_key} ({jira_issue_url(issue_key)})")
+        print(f"PR: {pr['url']}", file=progress_output)
+        print(f"Issue: {issue_key} ({jira_issue_url(issue_key)})", file=progress_output)
         if args.skip_pr:
-            print("PR body update: skipped")
+            print("PR body update: skipped", file=progress_output)
         elif new_body == pr["body"]:
-            print("PR body update: already prepared")
+            print("PR body update: already prepared", file=progress_output)
         else:
-            print("PR body update: would add:")
-            print(autoclose_line(issue_key))
+            print("PR body update: would add:", file=progress_output)
+            print(autoclose_line(issue_key), file=progress_output)
         if args.skip_jira:
-            print("Jira delegation: skipped")
+            print("Jira delegation: skipped", file=progress_output)
         else:
-            print("Jira delegation: would attach/link PR and add comment:")
-            print(comment)
+            print(
+                "Jira delegation: would attach/link PR and add comment:",
+                file=progress_output,
+            )
+            print(comment, file=progress_output)
         return 0
 
     if args.skip_pr:
-        print("Skipped GitHub PR body update")
+        print("Skipped GitHub PR body update", file=progress_output)
     elif new_body == pr["body"]:
-        print(f"GitHub PR already has an auto-close line for {issue_key}")
+        print(
+            f"GitHub PR already has an auto-close line for {issue_key}",
+            file=progress_output,
+        )
     else:
         update_pr_body(pr_url=pr["url"], body=new_body)
-        print(f"Updated GitHub PR body with auto-close line for {issue_key}")
+        print(
+            f"Updated GitHub PR body with auto-close line for {issue_key}",
+            file=progress_output,
+        )
 
     if args.skip_jira:
-        print("Skipped Jira attach/comment delegation")
+        print("Skipped Jira attach/comment delegation", file=progress_output)
         return 0
 
     prompt = build_jira_prompt(
@@ -221,6 +248,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         allowed_tools=parse_tools(args.jira_tool),
         prompt=prompt,
         max_budget_usd=args.max_budget_usd,
+        output_mode=output_mode,
     )
 
 
