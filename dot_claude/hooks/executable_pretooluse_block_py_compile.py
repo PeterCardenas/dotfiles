@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PreToolUse hook that blocks py_compile because it writes .pyc files."""
+"""PreToolUse hook that prevents shell commands from writing Python bytecode."""
 
 from __future__ import annotations
 
@@ -57,6 +57,31 @@ def _runs_py_compile(command: str) -> bool:
     return False
 
 
+def _runs_python(command: str) -> bool:
+    try:
+        lexer = shlex.shlex(command, posix=True, punctuation_chars=";&|")
+        lexer.whitespace_split = True
+        lexer.commenters = ""
+        tokens = list(lexer)
+    except ValueError:
+        return False
+    command_start = True
+    for token in tokens:
+        if all(char in ";&|" for char in token):
+            command_start = True
+            continue
+        if not command_start:
+            continue
+        command_name = _basename(token)
+        if command_name == "env" or ("=" in token and not token.startswith("=")):
+            continue
+        if PYTHON_COMMAND_RE.fullmatch(command_name):
+            return True
+        command_start = False
+
+    return False
+
+
 def _main() -> None:
     try:
         payload = json.load(sys.stdin)
@@ -69,16 +94,37 @@ def _main() -> None:
         return
 
     command = tool_input.get("command")
-    if not isinstance(command, str) or not _runs_py_compile(command):
+    if not isinstance(command, str):
+        json.dump({}, sys.stdout)
+        return
+
+    if _runs_py_compile(command):
+        reason = (
+            "Blocked `py_compile` because it writes `.pyc` files. "
+            "Use this no-write syntax check instead: "
+            "`python3 -c 'import sys, tokenize; "
+            '[compile(tokenize.open(p).read(), p, "exec") for p in sys.argv[1:]]\' '
+            "path/to/file.py`."
+        )
+        json.dump(
+            {
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "permissionDecision": "deny",
+                    "permissionDecisionReason": reason,
+                }
+            },
+            sys.stdout,
+        )
+        return
+
+    if not _runs_python(command) or "PYTHONDONTWRITEBYTECODE=" in command:
         json.dump({}, sys.stdout)
         return
 
     reason = (
-        "Blocked `py_compile` because it writes `.pyc` files. "
-        "Use this no-write syntax check instead: "
-        "`python3 -c 'import sys, tokenize; "
-        '[compile(tokenize.open(p).read(), p, "exec") for p in sys.argv[1:]]\' '
-        "path/to/file.py`."
+        "Blocked this Python command because imports can write `.pyc` files. "
+        "Rerun it with `PYTHONDONTWRITEBYTECODE=1` before the Python command."
     )
     json.dump(
         {
