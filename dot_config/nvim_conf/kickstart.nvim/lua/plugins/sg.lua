@@ -399,7 +399,7 @@ return {
             local usage = vim.t[vim.api.nvim_get_current_tabpage()].agentic_usage
             local context_value = all_options and all_options.context and all_options.context.currentValue or nil
             local size_label = usage and usage.size and usage.size > 0 and string.format('%dk', math.floor(usage.size / 1000))
-              or (has_meaningful_value(context_value) and context_value or nil)
+              or (has_meaningful_value(context_value) and (context_value == '1m' and '1000k' or context_value) or nil)
             local usage_str = ''
             if usage and usage.used then
               local used_k = math.floor(usage.used / 1000)
