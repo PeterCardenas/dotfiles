@@ -395,12 +395,16 @@ return {
               mode_name = config_opts and config_opts.get_mode_name and config_opts:get_mode_name(mode_id) or mode_id
             end
             local usage = vim.t[vim.api.nvim_get_current_tabpage()].agentic_usage
+            local context_value = all_options and all_options.context and all_options.context.currentValue or nil
+            local size_label = usage and usage.size and usage.size > 0 and string.format('%dk', math.floor(usage.size / 1000))
+              or (has_meaningful_value(context_value) and context_value or nil)
             local usage_str = ''
             if usage and usage.used then
               local used_k = math.floor(usage.used / 1000)
-              local size_k = usage.size and math.floor(usage.size / 1000) or 0
               local cost_str = usage.cost and string.format(' $%.2f', usage.cost) or ''
-              usage_str = size_k > 0 and string.format(' | %dk/%dk%s', used_k, size_k, cost_str) or string.format(' | %dk%s', used_k, cost_str)
+              usage_str = size_label and string.format(' | %dk/%s%s', used_k, size_label, cost_str) or string.format(' | %dk%s', used_k, cost_str)
+            elseif size_label then
+              usage_str = ' | 0k/' .. size_label
             end
             local header_segments = { provider }
             if runtime_label then
