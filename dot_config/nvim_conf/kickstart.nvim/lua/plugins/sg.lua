@@ -424,9 +424,14 @@ return {
 
         -- Hooks for custom behavior
         hooks = {
-          ---@param _data agentic.UserConfig.PromptSubmitData
-          on_prompt_submit = function(_data)
+          ---@param data agentic.UserConfig.PromptSubmitData
+          on_prompt_submit = function(data)
             vim.api.nvim_ui_send(string.format('\027]9;4;3\027\\'))
+            local SessionRegistry = require('agentic.session_registry')
+            local session = SessionRegistry.sessions and SessionRegistry.sessions[data.tab_page_id]
+            if session and session.chat_history then
+              session.chat_history:save()
+            end
           end,
           ---@param data agentic.UserConfig.ResponseCompleteData
           on_response_complete = function(data)
