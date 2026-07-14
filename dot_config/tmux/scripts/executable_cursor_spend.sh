@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Daily Cursor spend (UTC) for tmux status bar.
-# Calls the Cursor DashboardService ConnectRPC API with today's UTC start.
+# Cursor spend for tmux status bar.
+# Uses a seven-day rolling average to smooth day-to-day fluctuations.
 # Caches result for 120s to avoid hammering the API.
 export LC_ALL=C
 
@@ -37,14 +37,14 @@ fetch_total_cents() {
 
 remaining_color() {
   local remaining_cents="$1"
-  local daily_cents="$2"
+  local average_daily_cents="$2"
 
-  # Treat today's spend as one day of runway.
-  awk -v remaining="$remaining_cents" -v daily="$daily_cents" 'BEGIN {
+  # Treat the seven-day rolling average as one day of runway.
+  awk -v remaining="$remaining_cents" -v average="$average_daily_cents" 'BEGIN {
     if (remaining == "") print "#c0caf5"
-    else if (remaining <= daily) print "#f7768e"
-    else if (remaining <= daily * 3) print "#ff9e64"
-    else if (remaining < daily * 7) print "#e0af68"
+    else if (remaining <= average) print "#f7768e"
+    else if (remaining <= average * 3) print "#ff9e64"
+    else if (remaining < average * 7) print "#e0af68"
     else print "#9ece6a"
   }'
 }
@@ -79,13 +79,14 @@ if [ -z "$token" ]; then
   exit 0
 fi
 
-# UTC midnight today in epoch millis
-day_start_ms=$(date -u -d "today 00:00:00" +%s000 2>/dev/null || date -u -j -f "%H:%M:%S" "00:00:00" +%s000 2>/dev/null)
+# Seven days ago in UTC epoch millis.
+rolling_start_ms=$(date -u -d "7 days ago" +%s000 2>/dev/null || date -u -v-7d +%s000 2>/dev/null)
 month_ymd=$(date -u +%Y-%m-01)
 month_start_ms=$(date -u -d "${month_ymd} 00:00:00" +%s000 2>/dev/null || date -u -j -f "%Y-%m-%d %H:%M:%S" "${month_ymd} 00:00:00" +%s000 2>/dev/null)
 
-day_cents=$(fetch_total_cents "$day_start_ms")
+rolling_cents=$(fetch_total_cents "$rolling_start_ms")
 month_cents=$(fetch_total_cents "$month_start_ms")
+average_daily_cents=$(awk "BEGIN{print $rolling_cents / 7}")
 
 # The dashboard REST API expects the JWT subject alongside the access token.
 payload=${token#*.}
@@ -106,13 +107,13 @@ if [ -n "$user_id" ]; then
     jq -r '.individualUsage.onDemand.remaining // .individualUsage.overall.remaining // .teamUsage.onDemand.remaining // empty' 2>/dev/null)
 fi
 
-day_result=$(awk "BEGIN{printf \"\$%.2f\", $day_cents / 100}")
+average_daily_result=$(awk "BEGIN{printf \"\$%.2f/day\", $average_daily_cents / 100}")
 month_result=$(awk "BEGIN{printf \"\$%.2f\", $month_cents / 100}")
-color=$(remaining_color "$remaining_cents" "$day_cents")
+color=$(remaining_color "$remaining_cents" "$average_daily_cents")
 if $short; then
   result="󰆦 #[fg=${color}]${month_result}"
 else
-  result="󰆦 ${day_result} | #[fg=${color}]${month_result}"
+  result="󰆦 ${average_daily_result} | #[fg=${color}]${month_result}"
 fi
 
 printf '%s\n%s' "$now" "$result" >"$cache"
