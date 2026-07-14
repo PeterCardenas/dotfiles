@@ -11,6 +11,7 @@ from connector_delegate import run_entrypoint
 
 
 ALLOWED_TOOLS = (
+    "mcp__claude_ai_Atlassian__getAccessibleAtlassianResources",
     "mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql",
     "mcp__claude_ai_Atlassian__search",
 )
