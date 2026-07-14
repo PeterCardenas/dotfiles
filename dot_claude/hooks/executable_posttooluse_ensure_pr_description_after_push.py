@@ -134,9 +134,10 @@ def _advisory(pr_details: dict) -> dict:
     pr_label = f"#{pr_number}" if isinstance(pr_number, int) else "This branch"
     additional_context = (
         f"Detected a successful `git push` for {pr_label}: {pr_title} ({pr_url}). "
-        "Check whether the latest branch changes are reflected in the pull request and, "
-        "if needed, update the PR title and description before finishing "
-        "(including the title when it no longer matches what the branch actually does)."
+        "Required before completing this task: inspect the PR with "
+        f"`gh pr view {pr_url} --json title,body`, compare it with the pushed changes, "
+        "and, if either field is stale, update it with `gh pr edit`. "
+        "Do not merely acknowledge this reminder; complete the review and any needed update."
     )
     return {
         "hookSpecificOutput": {
