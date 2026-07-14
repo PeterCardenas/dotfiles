@@ -42,7 +42,7 @@ assert_color() {
   curl_log="$tmp/curl.log"
   output=$(HOME="$tmp/home" PATH="$tmp/bin:$PATH" TEST_CURL_LOG="$curl_log" TEST_REMAINING_CENTS="$remaining_cents" \
     bash "$script_dir/executable_cursor_spend.sh")
-  expected="󰆦 \$14.29/day | #[fg=${expected_color}]\$100.00"
+  expected="󰆦 \$100.00 | #[fg=${expected_color}]\$100.00"
   if [ "$output" != "$expected" ]; then
     printf 'expected %s for %s cents remaining, got: %s\n' "$expected_color" "$remaining_cents" "$output" >&2
     return 1

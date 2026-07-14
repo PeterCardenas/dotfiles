@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Cursor spend for tmux status bar.
-# Uses a seven-day rolling average to smooth day-to-day fluctuations.
+# Daily Cursor spend for tmux status bar.
+# Uses a seven-day rolling average only for remaining-budget colors.
 # Caches result for 120s to avoid hammering the API.
 export LC_ALL=C
 
@@ -79,11 +79,13 @@ if [ -z "$token" ]; then
   exit 0
 fi
 
-# Seven days ago in UTC epoch millis.
+# UTC midnight today and seven days ago in epoch millis.
+day_start_ms=$(date -u -d "today 00:00:00" +%s000 2>/dev/null || date -u -j -f "%H:%M:%S" "00:00:00" +%s000 2>/dev/null)
 rolling_start_ms=$(date -u -d "7 days ago" +%s000 2>/dev/null || date -u -v-7d +%s000 2>/dev/null)
 month_ymd=$(date -u +%Y-%m-01)
 month_start_ms=$(date -u -d "${month_ymd} 00:00:00" +%s000 2>/dev/null || date -u -j -f "%Y-%m-%d %H:%M:%S" "${month_ymd} 00:00:00" +%s000 2>/dev/null)
 
+day_cents=$(fetch_total_cents "$day_start_ms")
 rolling_cents=$(fetch_total_cents "$rolling_start_ms")
 month_cents=$(fetch_total_cents "$month_start_ms")
 average_daily_cents=$(awk "BEGIN{print $rolling_cents / 7}")
@@ -107,13 +109,13 @@ if [ -n "$user_id" ]; then
     jq -r '.individualUsage.onDemand.remaining // .individualUsage.overall.remaining // .teamUsage.onDemand.remaining // empty' 2>/dev/null)
 fi
 
-average_daily_result=$(awk "BEGIN{printf \"\$%.2f/day\", $average_daily_cents / 100}")
+day_result=$(awk "BEGIN{printf \"\$%.2f\", $day_cents / 100}")
 month_result=$(awk "BEGIN{printf \"\$%.2f\", $month_cents / 100}")
 color=$(remaining_color "$remaining_cents" "$average_daily_cents")
 if $short; then
   result="󰆦 #[fg=${color}]${month_result}"
 else
-  result="󰆦 ${average_daily_result} | #[fg=${color}]${month_result}"
+  result="󰆦 ${day_result} | #[fg=${color}]${month_result}"
 fi
 
 printf '%s\n%s' "$now" "$result" >"$cache"
