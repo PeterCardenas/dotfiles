@@ -160,7 +160,7 @@ return {
       ---@type table
       local cursor_acp_provider = {
         default_config_options = {
-          model = 'gpt-5.6-sol',
+          model = 'gpt-5.6-terra',
           reasoning = 'medium',
           context = '1m',
           -- fast = 'true', only 272k context
