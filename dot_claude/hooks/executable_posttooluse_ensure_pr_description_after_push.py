@@ -30,6 +30,13 @@ GIT_GLOBAL_OPTIONS_WITH_VALUES = {
 }
 DRY_RUN_FLAGS = {"-n", "--dry-run"}
 ENV_ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=.*$")
+PUSH_OPTIONS_WITH_VALUES = {
+    "--exec",
+    "--receive-pack",
+    "--repo",
+    "--push-option",
+    "-o",
+}
 
 
 def _command_segments(command: str) -> list[list[str]]:
@@ -98,13 +105,78 @@ def is_git_push_command(command: str) -> bool:
     return False
 
 
-def get_current_branch_pr(cwd: str) -> Optional[dict]:
-    """Return PR metadata for the current branch, or None when no PR exists."""
+def _push_args_without_options(args: list[str]) -> list[str]:
+    result: list[str] = []
+    index = 0
+    while index < len(args):
+        token = args[index]
+        if token == "--":
+            result.extend(args[index + 1 :])
+            break
+        if token in PUSH_OPTIONS_WITH_VALUES:
+            index += 2
+            continue
+        if any(token.startswith(f"{option}=") for option in PUSH_OPTIONS_WITH_VALUES):
+            index += 1
+            continue
+        if token.startswith("-"):
+            index += 1
+            continue
+        result.append(token)
+        index += 1
+    return result
+
+
+def _branch_from_refspec(refspec: str) -> Optional[str]:
+    if refspec.startswith("+"):
+        refspec = refspec[1:]
+    if ":" in refspec:
+        _source, destination = refspec.rsplit(":", 1)
+    else:
+        destination = refspec
+
+    destination = destination.strip()
+    if not destination or destination == "HEAD":
+        return None
+    if destination.startswith("refs/heads/"):
+        return destination.removeprefix("refs/heads/")
+    if destination.startswith("refs/"):
+        return None
+    return destination
+
+
+def pushed_branch_from_command(command: str) -> Optional[str]:
+    """Return the destination branch from a git push refspec when explicit."""
+    for segment in _command_segments(command):
+        subcommand, remaining = _first_git_subcommand(segment)
+        if subcommand != "push":
+            continue
+        if any(flag in DRY_RUN_FLAGS for flag in remaining):
+            continue
+
+        positional = _push_args_without_options(remaining)
+        if not positional:
+            continue
+
+        # First positional arg is usually the remote/repository. Refspecs follow it.
+        refspecs = positional[1:] if len(positional) > 1 else positional
+        for refspec in refspecs:
+            branch = _branch_from_refspec(refspec)
+            if branch:
+                return branch
+    return None
+
+
+def get_branch_pr(cwd: str, branch: Optional[str] = None) -> Optional[dict]:
+    """Return PR metadata for a branch, or None when no PR exists."""
     remote_url = require_repo_remote_url(cwd)
 
     for user in preferred_gh_user_candidates(remote_url):
+        cmd = ["gh", "pr", "view", "--json", "number,title,url"]
+        if branch:
+            cmd.insert(3, branch)
         data = run_gh_json(
-            ["gh", "pr", "view", "--json", "number,title,url"],
+            cmd,
             cwd=cwd,
             user=user,
         )
@@ -125,6 +197,11 @@ def get_current_branch_pr(cwd: str) -> Optional[dict]:
         return pr_details
 
     return None
+
+
+def get_current_branch_pr(cwd: str) -> Optional[dict]:
+    """Return PR metadata for the current branch, or None when no PR exists."""
+    return get_branch_pr(cwd)
 
 
 def _advisory(pr_details: dict) -> dict:
@@ -159,7 +236,9 @@ def _main(payload: dict) -> None:
         return
 
     cwd = resolve_hook_cwd(payload, tool_input)
-    pr_details = get_current_branch_pr(cwd)
+    pr_details = get_branch_pr(cwd, pushed_branch_from_command(command))
+    if not pr_details:
+        pr_details = get_current_branch_pr(cwd)
     if not pr_details:
         json.dump({}, sys.stdout)
         return
