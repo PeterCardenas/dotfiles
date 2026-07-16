@@ -343,7 +343,7 @@ function setup_unix() {
 	source "$HOME/.zshrc"
 	if ! command -v pnpm >/dev/null 2>&1; then
 		# Install pnpm
-		curl -fsSL https://get.pnpm.io/install.sh | sh -
+		curl -fsSL https://get.pnpm.io/install.sh | sh -s -- --no-shell-setup
 		# shellcheck source=/dev/null
 		source "$HOME/.zshrc"
 	fi
