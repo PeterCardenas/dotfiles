@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export LC_ALL=C
+
+scripts_dir="${TMUX_SCRIPTS_DIR:-$HOME/.config/tmux/scripts}"
+metrics_script="$scripts_dir/status_metrics.sh"
+
+if [ ! -x "$metrics_script" ]; then
+  exit 0
+fi
+
+markup=false
+segments=false
+mode=""
+for arg in "$@"; do
+  case "$arg" in
+  --markup) markup=true ;;
+  --segments) segments=true ;;
+  --short) mode="--short" ;;
+  *) mode="$arg" ;;
+  esac
+done
+
+if [ -n "$mode" ]; then
+  metrics="$("$metrics_script" "$mode" 2>/dev/null || true)"
+else
+  metrics="$("$metrics_script" 2>/dev/null || true)"
+fi
+if [ "$segments" = true ]; then
+  printf '%s' "$metrics" |
+    sed -E 's/[[:space:]]*/🤖 /g' |
+    perl -CS -0777 -ne '
+      s/\s+/ /g;
+      s/^ //;
+      s/ $//;
+
+      my $color = "#c0caf5";
+      my $text = "";
+      sub flush {
+        return if $text eq "";
+        print "$color\t$text\n";
+        $text = "";
+      }
+
+      while (length $_) {
+        if (s/^#\[fg=(#[0-9a-fA-F]{6})\]//) {
+          flush();
+          $color = $1;
+          next;
+        }
+        if (s/^#\[[^]]*\]//) {
+          next;
+        }
+        if (s/^([^#]+)//) {
+          $text .= $1;
+          next;
+        }
+        s/^(.)//s;
+        $text .= $1;
+      }
+
+      flush();
+    '
+  exit 0
+fi
+
+if [ "$markup" = false ]; then
+  printf '%s\n' "$metrics" |
+    sed -E 's/#\[[^]]*\]//g; s/[[:space:]]*/🤖 /g; s/[[:space:]]+/ /g; s/^ //; s/ $//'
+  exit 0
+fi
+
+status_markup="$(
+  printf '%s' "$metrics" |
+    sed -E 's/[[:space:]]*/🤖 /g' |
+    perl -CS -MHTML::Entities=encode_entities -0777 -ne '
+      s/\s+/ /g;
+      s/^ //;
+      s/ $//;
+      my $out = "";
+      my $open = 0;
+      while (length $_) {
+        if (s/^#\[fg=(#[0-9a-fA-F]{6})\]//) {
+          $out .= "</span>" if $open;
+          $out .= "<span foreground=\"$1\">";
+          $open = 1;
+          next;
+        }
+        if (s/^#\[[^]]*\]//) {
+          next;
+        }
+        if (s/^([^#]+)//) {
+          $out .= encode_entities($1);
+          next;
+        }
+        s/^(.)//s;
+        $out .= encode_entities($1);
+      }
+      $out .= "</span>" if $open;
+      print "$out\n";
+    '
+)"
+
+printf '%s\n' "$status_markup"
