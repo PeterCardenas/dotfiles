@@ -1,0 +1,7 @@
+{
+  "uuid": "tmux-status@pcardenas.local",
+  "name": "Tmux Status",
+  "description": "Show the tmux status metrics in the GNOME top bar.",
+  "shell-version": ["46"],
+  "version": 1
+}
