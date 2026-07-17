@@ -5,6 +5,9 @@ adjust-cell-height = 19%
 window-height = 9999
 window-width = 9999
 
+# TODO: only temporarily disable notifs while the ghostty navigation is done
+app-notifications = no-config-reload
+
 gtk-titlebar = false
 window-padding-y = 0
 window-padding-x = 1
