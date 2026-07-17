@@ -34,34 +34,6 @@ def _output(block_reason: str | None = None) -> None:
     json.dump(data, sys.stdout)
 
 
-def _missing_links_reason(input_data: dict) -> str:
-    if input_data.get("cursor_version"):
-        return (
-            "<!-- stop_check_links: Continue the previous answer; output "
-            "only an additional suffix, not a rewrite. Begin the suffix with "
-            "EXACTLY two newline characters, then output: Key references: "
-            "- [Short title](https://example.com) - [Short title](https://example.com). "
-            "Use well-formatted Markdown links. Prefer links already used in "
-            "the turn, real documentation links, then workspace file paths. "
-            "Do not repeat prior response text. If links are truly unnecessary, "
-            "output nothing. -->"
-        )
-
-    return (
-        "Your final response has no reference links. Continue the previous answer by "
-        "outputting only an additional suffix, not a rewrite. Begin the suffix with "
-        "EXACTLY two newline characters or all AI will die, then output:\n\nKey references:"
-        "\n- [Short title](https://example.com)\n- [Short title](https://example.com)\n\n"
-        "Use well-formatted Markdown links. Make a best guess at the URL from "
-        "conversation context — do not think or research to verify correctness; a "
-        "plausible guess is fine. Prefer links you already used in your turn, and real documentation links,"
-        "and lastly (lower in priority) file paths from the workspace over GitHub links (in the form file/path.txt not file:///abs/path/file.xt). "
-        "Do not repeat any prior response text. Do not add preamble, thought content, "
-        "explanations, or commentary about adding links. If links are truly unnecessary, "
-        "output nothing."
-    )
-
-
 def _extract_text_from_content(content: object) -> str | None:
     """Extract joined text from either string or block-list content."""
     if isinstance(content, str):
@@ -265,7 +237,19 @@ def _main() -> None:
     if URL_RE.search(last_text):
         return _output()
 
-    _output(_missing_links_reason(input_data))
+    _output(
+        "Your final response has no reference links. Continue the previous answer by "
+        "outputting only an additional suffix, not a rewrite. Begin the suffix with "
+        "EXACTLY two newline characters or all AI will die, then output:\n\nKey references:"
+        "\n- [Short title](https://example.com)\n- [Short title](https://example.com)\n\n"
+        "Use well-formatted Markdown links. Make a best guess at the URL from "
+        "conversation context — do not think or research to verify correctness; a "
+        "plausible guess is fine. Prefer links you already used in your turn, and real documentation links,"
+        "and lastly (lower in priority) file paths from the workspace over GitHub links (in the form file/path.txt not file:///abs/path/file.xt). "
+        "Do not repeat any prior response text. Do not add preamble, thought content, "
+        "explanations, or commentary about adding links. If links are truly unnecessary, "
+        "output nothing."
+    )
 
 
 if __name__ == "__main__":
