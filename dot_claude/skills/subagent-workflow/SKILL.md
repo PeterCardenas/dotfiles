@@ -1,11 +1,12 @@
 ---
 name: subagent-workflow
-description: Orchestrates substantial work across context-isolated subagents.
+description: Orchestrates substantial work by requiring all task execution to happen in context-isolated subagents.
 ---
 
 # Subagent Workflow
 
-- Default to direct work; use the smallest useful set of focused subagents.
+- Do all task execution in subagents. The parent agent only scopes, launches, resumes, verifies, and synthesizes subagent work.
+- Use the smallest useful set of focused subagents.
 - Stage substantial work as research → plan → implement → validate → adversarial review.
 - Give each subagent the necessary context, constraints, artifacts, and deliverable; tell it not to delegate further.
 - Parallelize only independent scopes; otherwise run sequentially.
