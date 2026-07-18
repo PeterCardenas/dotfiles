@@ -3,6 +3,28 @@ local EntryDisplay = require('plugins.telescope.entry_display')
 
 local ns_previewer = vim.api.nvim_create_namespace('buffer_picker_previewer')
 
+local M = {}
+
+---@param octo_buf table
+---@return string
+function M._format_octo_buffer_label(octo_buf)
+  local title = octo_buf.titleMetadata and octo_buf.titleMetadata.body or ''
+  local kind
+  if octo_buf.isPullRequestDiff and octo_buf:isPullRequestDiff() then
+    kind = 'PR Diff'
+  elseif octo_buf.isPullRequest and octo_buf:isPullRequest() then
+    kind = 'PR'
+  end
+
+  if not kind then
+    return title
+  end
+
+  local repo = octo_buf.repo or ''
+  local number = octo_buf.number and ('#' .. octo_buf.number) or ''
+  return vim.trim(table.concat({ repo, kind, number, title }, ' '))
+end
+
 local function make_buffer_entry()
   local icon_width = require('plenary.strings').strdisplaywidth((require('telescope.utils').get_devicons('fname')))
   local opts = {}
@@ -39,7 +61,7 @@ local function make_buffer_entry()
     local full_path = Path:new(entry.filename):expand()
     if octo_buffers and octo_buffers[entry.bufnr] then
       local octo_buf = octo_buffers[entry.bufnr]
-      display_bufname = octo_buf.titleMetadata.body or ''
+      display_bufname = M._format_octo_buffer_label(octo_buf)
       icon = ''
     end
     local buftype = vim.bo[entry.bufnr].buftype
@@ -83,7 +105,7 @@ local function make_buffer_entry()
     local octo_title = ''
     if octo_buffers and octo_buffers[entry.bufnr] then
       local octo_buf = octo_buffers[entry.bufnr]
-      octo_title = octo_buf.titleMetadata.body or ''
+      octo_title = M._format_octo_buffer_label(octo_buf)
     end
 
     ---@type BufferPickerEntry
@@ -100,8 +122,6 @@ local function make_buffer_entry()
     return require('telescope.make_entry').set_default_entry_mt(buffer_picker_entry, opts)
   end
 end
-
-local M = {}
 
 function M.find_buffers()
   local bufnrs = Buf.get_navigable_buffers(false)
