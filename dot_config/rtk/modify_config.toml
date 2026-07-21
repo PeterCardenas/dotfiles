@@ -1,0 +1,13 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- $config := dict -}}
+{{- if .chezmoi.stdin -}}
+{{- $config = fromToml .chezmoi.stdin -}}
+{{- end -}}
+{{- $excludeCommands := list
+  "pnpm lint"
+  "pnpm run lint"
+  "npm run lint"
+  "curl"
+  "^(pnpm exec |npx )?playwright"
+-}}
+{{- $config | setValueAtPath "hooks.exclude_commands" $excludeCommands | toToml -}}
