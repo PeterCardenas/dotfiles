@@ -263,7 +263,14 @@ return {
           ['claude-agent-acp'] = {
             command = 'claude-agent-acp',
             args = {},
-            -- env = { ENABLE_LSP_TOOL = '1' },
+            env = {
+              -- ENABLE_LSP_TOOL = '1',
+              -- Marks this claude session as tracked by nvim's spend accounting so the
+              -- Claude CLI Stop hook (stop_track_claude_spend.py) skips it and does not
+              -- double-count. claude-agent-acp reports entrypoint "sdk-ts", which the
+              -- hook cannot use to identify it, so nvim signals ownership explicitly here.
+              CLAUDE_AGENT_ACP = '1',
+            },
             default_config_options = {
               model = 'opus[1m]',
               mode = 'bypassPermissions',

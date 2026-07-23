@@ -183,8 +183,17 @@ def _is_cursor_payload(
 
 
 def _is_claude_agent_acp_payload(
-    payload: dict[str, Any], entries: Iterable[dict[str, Any]]
+    payload: dict[str, Any],
+    entries: Iterable[dict[str, Any]],
+    env: dict[str, str] | None = None,
 ) -> bool:
+    env = os.environ if env is None else env
+    # claude-agent-acp reports entrypoint "sdk-ts" (shared with other TS-SDK
+    # usage), so entrypoint alone can't identify it. nvim launches the process
+    # with CLAUDE_AGENT_ACP=1, which this hook inherits, to mark sessions it
+    # already tracks in its own spend accounting and that we must not double-count.
+    if env.get("CLAUDE_AGENT_ACP") == "1":
+        return True
     entrypoint = payload.get("entrypoint")
     if isinstance(entrypoint, str) and entrypoint == "claude-agent-acp":
         return True
