@@ -17,6 +17,7 @@ QUOTED_MESSAGE_RE = re.compile(r"(\s(?:-m|--message)\s+)([\"'])(.*?)(\2)", re.DO
 TRAILER_PATTERNS = (
     r"Made-with:\s*Cursor",
     r"Co-authored-by:\s*Cursor <[^>]+>",
+    r"Co-authored-by:\s*Claude <[^>]+>",
 )
 LITERAL_TRAILER_RES = tuple(
     re.compile(rf"(?i){pattern}(?=(?:\r?\n|$|['\"]))")
@@ -26,7 +27,11 @@ ESCAPED_TRAILER_RES = tuple(
     re.compile(rf"(?i){pattern}(?=(?:\\n|$|['\"]))")
     for pattern in TRAILER_PATTERNS
 )
-PR_ATTRIBUTION_PATTERNS = (r"Made with \[Cursor\]\(https://cursor\.com\)",)
+PR_ATTRIBUTION_PATTERNS = (
+    r"Made with \[Cursor\]\(https://cursor\.com\)",
+    # Claude Code prefixes the line with a 🤖 emoji; strip it too when present.
+    r"(?:🤖\s*)?Generated with \[Claude Code\]\(https://claude\.(?:com/claude-code|ai/code)\)",
+)
 LITERAL_PR_ATTRIBUTION_RES = tuple(
     re.compile(rf"(?i){pattern}(?=(?:\r?\n|$|['\"]))")
     for pattern in PR_ATTRIBUTION_PATTERNS
@@ -83,7 +88,7 @@ def _replace_quoted_message(command: str) -> str:
     return QUOTED_MESSAGE_RE.sub(_replacement, command, count=1)
 
 
-def _strip_cursor_attribution(command: str) -> str:
+def _strip_agent_attribution(command: str) -> str:
     cleaned = command
     for trailer_re in LITERAL_TRAILER_RES:
         cleaned = trailer_re.sub("", cleaned)
@@ -103,7 +108,7 @@ def _strip_cursor_attribution(command: str) -> str:
 
 
 def _sanitize_command(command: str) -> str:
-    command = _strip_cursor_attribution(command)
+    command = _strip_agent_attribution(command)
     if HEREDOC_MESSAGE_RE.search(command):
         return _replace_heredoc_message(command)
 
@@ -141,7 +146,7 @@ def _main() -> None:
                 "hookEventName": "PreToolUse",
                 "permissionDecision": "allow",
                 "updatedInput": updated_input,
-                "additionalContext": "Removed Cursor attribution and formatted the git command.",
+                "additionalContext": "Removed agent attribution and formatted the git command.",
             }
         },
         sys.stdout,
