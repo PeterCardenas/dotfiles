@@ -107,6 +107,13 @@ return {
       local _spend_file = _spend_dir .. '/' .. vim.fn.getpid()
       vim.fn.mkdir(_spend_dir, 'p')
 
+      -- Track the in-flight title generation per chat session so a newer
+      -- response for the same session supersedes the previous one: its spinner
+      -- is dismissed and its result discarded. Keyed by ACP session id; the
+      -- stored handle is compared by identity to detect supersession.
+      ---@type table<string, SpinnerProgressHandle>
+      local _title_gen_by_session = {}
+
       local function _utc_date()
         return os.date('!%Y-%m-%d') --[[@as string]]
       end
@@ -491,13 +498,31 @@ return {
               .. 'Reply with ONLY the title text, with no explanation, no markdown, no quotes, and no punctuation at the end.'
 
             local Async = require('utils.async')
+
+            -- Supersede any in-flight title generation for this session before
+            -- starting a new one: dismiss its spinner and let its async loop
+            -- discard its result. Prefer the ACP session id, then the persisted
+            -- chat session id, then the tab page.
+            local session_key = data.session_id
+            if not session_key or session_key == '' then
+              session_key = chat_history.session_id
+            end
+            if not session_key or session_key == '' then
+              session_key = 'tab:' .. data.tab_page_id
+            end
+            local prev_gen = _title_gen_by_session[session_key]
+            if prev_gen then
+              prev_gen:finish()
+            end
+            local title_progress = Spinner.create_progress_handle({
+              group = 'Agentic',
+              message = 'Generating title...',
+              pattern = 'moon',
+            })
+            _title_gen_by_session[session_key] = title_progress
+
             Async.void(function() ---@async
               local Shell = require('utils.shell')
-              local title_progress = Spinner.create_progress_handle({
-                group = 'Agentic',
-                message = 'Generating title...',
-                pattern = 'moon',
-              })
               local title = nil
               local next_prompt = transcript
               ---@type string?
@@ -520,6 +545,11 @@ return {
                   vim.list_extend(args, { '--resume', title_session_id })
                 end
                 local ok, output = Shell.async_cmd('claude', args, { stdin = next_prompt })
+                -- A newer response for this session superseded us while awaiting;
+                -- the new generation already owns the spinner, so just bail.
+                if _title_gen_by_session[session_key] ~= title_progress then
+                  return
+                end
                 if not ok or not output or #output == 0 then
                   Log.notify_error(table.concat(output or {}, '\n'), { title = 'Title generation failed, retrying...' })
                   goto continue
@@ -556,6 +586,12 @@ return {
                 Log.notify_warn(string.format('Title too long (%d words), retrying...\n%s', word_count, candidate), { title = 'Title Generation' })
                 ::continue::
               end
+              -- Only the current generation owns the spinner and may persist a
+              -- title; a superseding response would have returned above.
+              if _title_gen_by_session[session_key] ~= title_progress then
+                return
+              end
+              _title_gen_by_session[session_key] = nil
               title_progress:finish(title and title ~= '' and 'Generated title' or 'Failed to generate title')
               if title and title ~= '' then
                 vim.schedule(function()
