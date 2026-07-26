@@ -52,6 +52,9 @@ remaining_color() {
 short=false
 [ "$1" = "--short" ] && short=true
 
+# shellcheck source=spend_format.sh
+. "$(cd "$(dirname "$0")" && pwd)/spend_format.sh"
+
 uid=$(id -u)
 cache="/tmp/tmux-cursor-spend-${uid}"
 $short && cache="${cache}-short"
@@ -109,12 +112,13 @@ if [ -n "$user_id" ]; then
     jq -r '.individualUsage.onDemand.remaining // .individualUsage.overall.remaining // .teamUsage.onDemand.remaining // empty' 2>/dev/null)
 fi
 
-day_result=$(awk "BEGIN{printf \"\$%.2f\", $day_cents / 100}")
-month_result=$(awk "BEGIN{printf \"\$%.2f\", $month_cents / 100}")
 color=$(remaining_color "$remaining_cents" "$average_daily_cents")
 if $short; then
+  month_result=$(format_short_money "$(awk "BEGIN{print $month_cents / 100}")")
   result="󰆦 #[fg=${color}]${month_result}"
 else
+  day_result=$(awk "BEGIN{printf \"\$%.2f\", $day_cents / 100}")
+  month_result=$(awk "BEGIN{printf \"\$%.2f\", $month_cents / 100}")
   result="󰆦 ${day_result} | #[fg=${color}]${month_result}"
 fi
 
