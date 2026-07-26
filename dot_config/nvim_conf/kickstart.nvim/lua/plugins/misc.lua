@@ -1424,8 +1424,65 @@ return {
         vim.env.CHROME_DEVEL_SANDBOX = chrome_sandbox_location
       end
       -- TODO: Add double buffering upstream to remove the need for this.
-      ---@type table<string, string>
+      -- GitHub rewrites private image links to short-lived signed URLs whose JWT
+      -- carries a ~5 minute `exp` (matching the inner S3 X-Amz-Expires=300). Cache
+      -- resolved URLs against that expiry so a stale entry is refetched instead of
+      -- returning 404 forever.
+      ---@type table<string, { url: string, exp: number? }>
       local resolved_url_cache = {}
+      -- Refresh slightly before the real expiry so the download finishes while the
+      -- signature is still valid.
+      local resolved_url_expiry_margin = 30
+      ---@param url string
+      ---@return number? exp unix expiry, nil when the URL does not expire
+      ---@return string? err set when the URL is signed but its expiry is unreadable
+      local function signed_url_expiry(url)
+        local jwt = url:match('[?&]jwt=([^&#]+)')
+        if not jwt then
+          return nil
+        end
+        local payload = jwt:match('^[^.]+%.([^.]+)')
+        if not payload then
+          return nil, 'signed image URL has no JWT payload'
+        end
+        payload = payload:gsub('-', '+'):gsub('_', '/')
+        local pad = #payload % 4
+        if pad > 0 then
+          payload = payload .. string.rep('=', 4 - pad)
+        end
+        local ok, claims = pcall(function()
+          return vim.json.decode(vim.base64.decode(payload))
+        end)
+        if not ok or type(claims) ~= 'table' or type(claims.exp) ~= 'number' then
+          return nil, 'signed image URL has no readable `exp` claim'
+        end
+        return claims.exp
+      end
+      ---@param src string
+      ---@return string? url a cached resolved URL that has not expired
+      local function get_cached_resolved_url(src)
+        local entry = resolved_url_cache[src]
+        if not entry then
+          return nil
+        end
+        if entry.exp and os.time() >= entry.exp - resolved_url_expiry_margin then
+          resolved_url_cache[src] = nil
+          return nil
+        end
+        return entry.url
+      end
+      ---@param src string
+      ---@param url string
+      local function cache_resolved_url(src, url)
+        local exp, err = signed_url_expiry(url)
+        -- A signed URL whose expiry cannot be read is not safe to cache: keeping it
+        -- forever is exactly the permanent-staleness bug this cache exists to avoid.
+        if err then
+          vim.notify(err .. '\n' .. url, vim.log.levels.ERROR, { title = 'snacks.image' })
+          return
+        end
+        resolved_url_cache[src] = { url = url, exp = exp }
+      end
       require('snacks').setup({
         -- TODO: Re-enable when indent is equal or better than indent-blankline
         -- indent = { enabled = true },
@@ -1504,8 +1561,9 @@ return {
             return vim.startswith(src, 'https://cursor.com') or vim.startswith(src, 'https://static.graphite.dev')
           end,
           async_resolve = function(file, src, on_complete)
-            if resolved_url_cache[src] then
-              return on_complete(resolved_url_cache[src])
+            local cached = get_cached_resolved_url(src)
+            if cached then
+              return on_complete(cached)
             end
             if not vim.startswith(src, 'https://github.com') or not vim.startswith(file, 'octo:/') then
               return on_complete(nil)
@@ -1616,10 +1674,13 @@ return {
                   imageURLsFromHTML[#imageURLsFromHTML + 1] = imageURL
                 end
                 for idx, imageURL in ipairs(imageURLsFromMd) do
-                  resolved_url_cache[imageURL] = imageURLsFromHTML[idx]
+                  local resolved = imageURLsFromHTML[idx]
+                  if resolved then
+                    cache_resolved_url(imageURL, resolved)
+                  end
                 end
               end
-              on_complete(resolved_url_cache[src])
+              on_complete(get_cached_resolved_url(src))
             end)
           end,
         },
