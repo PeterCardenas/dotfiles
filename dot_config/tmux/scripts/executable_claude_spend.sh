@@ -18,6 +18,9 @@ for arg in "$@"; do
   esac
 done
 
+# shellcheck source=spend_format.sh
+. "$(cd "$(dirname "$0")" && pwd)/spend_format.sh"
+
 now=$(date +%s)
 spend_dir="${XDG_DATA_HOME:-$HOME/.local/share}/claude-spend"
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/claude-spend"
@@ -168,7 +171,7 @@ month_total=$(awk "BEGIN{printf \"%.2f\", $local_month_total + $remote_month_tot
 if [ "$today_total" = "0.00" ] && [ "$month_total" = "0.00" ]; then
   result=""
 elif $short; then
-  result="#[fg=#ff9e64]  #[fg=#c0caf5]\$${month_total}"
+  result="#[fg=#ff9e64]  #[fg=#c0caf5]$(format_short_money "$month_total")"
 else
   result="#[fg=#ff9e64]  #[fg=#c0caf5]\$${today_total} | \$${month_total}"
 fi
