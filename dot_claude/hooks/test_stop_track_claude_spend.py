@@ -20,6 +20,7 @@ from __future__ import annotations
 import importlib.util
 import io
 import json
+import os
 import tempfile
 import unittest
 from unittest import mock
@@ -85,6 +86,13 @@ class TrackClaudeSpendTest(unittest.TestCase):
         self.data_home = self.root / "data"
         self.transcript = self.root / "session.jsonl"
         self.module = load_module()
+        # These tests exercise the non-ACP path, but the suite is often run from
+        # inside an ACP session (nvim), where an inherited CLAUDE_AGENT_ACP=1
+        # would make every payload get skipped.
+        env = mock.patch.dict(os.environ, {}, clear=False)
+        env.start()
+        self.addCleanup(env.stop)
+        os.environ.pop("CLAUDE_AGENT_ACP", None)
 
     def write_transcript(self, entries: list[dict]) -> None:
         self.transcript.write_text(
@@ -272,6 +280,160 @@ class TrackClaudeSpendTest(unittest.TestCase):
             )
 
         self.assertEqual("22.0500", self.read_daily_total())
+
+
+class MultiBlockRequestTest(unittest.TestCase):
+    """One billed request split across several transcript entries.
+
+    Regression: Claude Code writes one entry per content block, all sharing a
+    requestId, with a running `output_tokens`. The hook used to keep the first
+    copy, so a request's output was billed at whatever the first block had
+    reached — a systematic undercount of the priciest component.
+    """
+
+    PRICING = {
+        "claude-opus-5": {
+            "input_cost_per_token": 0.000005,
+            "output_cost_per_token": 0.000025,
+            "cache_creation_input_token_cost": 0.00000625,
+            "cache_read_input_token_cost": 0.0000005,
+        }
+    }
+
+    def setUp(self) -> None:
+        self.module = load_module()
+
+    def entry(self, output_tokens: int, block: str) -> dict:
+        return {
+            "type": "assistant",
+            "requestId": "req_1",
+            "timestamp": "2026-06-06T18:32:26.000Z",
+            "message": {
+                "model": "claude-opus-5",
+                "role": "assistant",
+                "content": [{"type": block}],
+                "usage": {
+                    "input_tokens": 0,
+                    "cache_creation_input_tokens": 0,
+                    "cache_read_input_tokens": 0,
+                    "output_tokens": output_tokens,
+                },
+            },
+        }
+
+    def costs(self, entries: list[dict]) -> list[tuple[str, str, float]]:
+        return self.module._assistant_costs(entries, "2026-06-06", self.PRICING)
+
+    def test_running_output_tokens_bills_the_final_total(self) -> None:
+        costs = self.costs(
+            [
+                self.entry(7, "thinking"),
+                self.entry(7, "tool_use"),
+                self.entry(297, "tool_use"),
+            ]
+        )
+        self.assertEqual(1, len(costs))
+        self.assertAlmostEqual(297 * 0.000025, costs[0][2])
+
+    def test_out_of_order_copies_still_bill_the_largest(self) -> None:
+        costs = self.costs([self.entry(297, "text"), self.entry(7, "thinking")])
+        self.assertEqual(1, len(costs))
+        self.assertAlmostEqual(297 * 0.000025, costs[0][2])
+
+    def test_date_comes_from_the_first_copy(self) -> None:
+        # A response streaming across midnight must bill to the day it started.
+        first = self.entry(7, "thinking")
+        second = self.entry(297, "text")
+        second["timestamp"] = "2026-06-07T00:00:05.000Z"
+        costs = self.costs([first, second])
+        self.assertEqual([("req_1", "2026-06-06", 297 * 0.000025)], costs)
+
+    def test_distinct_requests_are_kept_separate(self) -> None:
+        second = self.entry(100, "text")
+        second["requestId"] = "req_2"
+        costs = self.costs([self.entry(50, "text"), second])
+        self.assertEqual(["req_1", "req_2"], [c[0] for c in costs])
+        self.assertAlmostEqual(150 * 0.000025, sum(c[2] for c in costs))
+
+
+class CacheWriteTtlPricingTest(unittest.TestCase):
+    """Cache-creation tokens must be priced by their TTL.
+
+    Regression: every cache write used to be billed at the 5-minute rate. Claude
+    Code writes 1-hour caches, which Anthropic bills at 2x base input instead of
+    1.25x, so the hook under-reported real spend by ~17% overall.
+    """
+
+    PRICES = {
+        "input_cost_per_token": 0.000005,
+        "output_cost_per_token": 0.000025,
+        "cache_creation_input_token_cost": 0.00000625,
+        "cache_creation_input_token_cost_above_1hr": 0.00001,
+        "cache_read_input_token_cost": 0.0000005,
+    }
+
+    def setUp(self) -> None:
+        self.module = load_module()
+        self.pricing = {"claude-opus-5": dict(self.PRICES)}
+
+    def cost(self, usage: dict) -> float:
+        return self.module._cost_from_usage(
+            {"model": "claude-opus-5", "usage": usage}, self.pricing
+        )
+
+    def test_one_hour_cache_writes_use_the_one_hour_rate(self) -> None:
+        cost = self.cost(
+            {
+                "cache_creation_input_tokens": 1_000_000,
+                "cache_creation": {
+                    "ephemeral_1h_input_tokens": 1_000_000,
+                    "ephemeral_5m_input_tokens": 0,
+                },
+            }
+        )
+        self.assertAlmostEqual(10.0, cost)
+
+    def test_five_minute_cache_writes_use_the_five_minute_rate(self) -> None:
+        cost = self.cost(
+            {
+                "cache_creation_input_tokens": 1_000_000,
+                "cache_creation": {
+                    "ephemeral_1h_input_tokens": 0,
+                    "ephemeral_5m_input_tokens": 1_000_000,
+                },
+            }
+        )
+        self.assertAlmostEqual(6.25, cost)
+
+    def test_mixed_ttls_are_priced_separately(self) -> None:
+        cost = self.cost(
+            {
+                "cache_creation_input_tokens": 1_000_000,
+                "cache_creation": {
+                    "ephemeral_1h_input_tokens": 400_000,
+                    "ephemeral_5m_input_tokens": 600_000,
+                },
+            }
+        )
+        self.assertAlmostEqual(400_000 * 0.00001 + 600_000 * 0.00000625, cost)
+
+    def test_missing_breakdown_falls_back_to_five_minute_rate(self) -> None:
+        # Older transcripts report only the total, with no `cache_creation` map.
+        self.assertAlmostEqual(
+            6.25, self.cost({"cache_creation_input_tokens": 1_000_000})
+        )
+
+    def test_model_without_one_hour_price_falls_back_to_base_rate(self) -> None:
+        self.pricing["claude-opus-5"].pop(
+            "cache_creation_input_token_cost_above_1hr"
+        )
+        cost = self.cost(
+            {
+                "cache_creation_input_tokens": 1_000_000,
+                "cache_creation": {"ephemeral_1h_input_tokens": 1_000_000},
+            }
+        )
+        self.assertAlmostEqual(6.25, cost)
 
 
 if __name__ == "__main__":

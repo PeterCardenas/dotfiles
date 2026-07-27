@@ -83,6 +83,25 @@ def _tiered_cost(
     return 200_000 * base_cost + (tokens - 200_000) * above_200k_cost
 
 
+def _cache_write_tokens_by_ttl(usage: dict[str, Any]) -> tuple[float, float]:
+    """Split cache-creation tokens into (5m, 1h) buckets.
+
+    Anthropic bills a 1-hour cache write at 2x base input against 1.25x for the
+    5-minute default, so the two TTLs cannot share a price. `usage.cache_creation`
+    carries the breakdown; transcripts that predate it only report the total, which
+    we attribute to the 5-minute default.
+    """
+    total = _usage_number(usage, "cache_creation_input_tokens")
+    detail = usage.get("cache_creation")
+    if not isinstance(detail, dict):
+        return total, 0.0
+    ttl_5m = _usage_number(detail, "ephemeral_5m_input_tokens")
+    ttl_1h = _usage_number(detail, "ephemeral_1h_input_tokens")
+    if ttl_5m <= 0 and ttl_1h <= 0:
+        return total, 0.0
+    return ttl_5m, ttl_1h
+
+
 def _cost_from_usage(message: dict[str, Any], pricing: dict[str, Any]) -> float:
     usage = message.get("usage")
     if not isinstance(usage, dict):
@@ -106,11 +125,17 @@ def _cost_from_usage(message: dict[str, Any], pricing: dict[str, Any]) -> float:
 
     input_tokens = _usage_number(usage, "input_tokens")
     output_tokens = _usage_number(usage, "output_tokens")
-    cache_write_tokens = _usage_number(usage, "cache_creation_input_tokens")
+    cache_write_5m_tokens, cache_write_1h_tokens = _cache_write_tokens_by_ttl(usage)
     cache_read_tokens = _usage_number(usage, "cache_read_input_tokens")
     input_cost = _as_float(prices.get("input_cost_per_token")) or 0.0
     output_cost = _as_float(prices.get("output_cost_per_token")) or 0.0
     cache_write_cost = _as_float(prices.get("cache_creation_input_token_cost")) or 0.0
+    # Fall back to the 5m rate when a model has no 1h entry, so an unpriced TTL
+    # degrades to an undercount rather than dropping the tokens entirely.
+    cache_write_1h_cost = (
+        _as_float(prices.get("cache_creation_input_token_cost_above_1hr"))
+        or cache_write_cost
+    )
     cache_read_cost = _as_float(prices.get("cache_read_input_token_cost")) or 0.0
     return (
         _tiered_cost(
@@ -124,9 +149,18 @@ def _cost_from_usage(message: dict[str, Any], pricing: dict[str, Any]) -> float:
             _as_float(prices.get("output_cost_per_token_above_200k_tokens")),
         )
         + _tiered_cost(
-            cache_write_tokens,
+            cache_write_5m_tokens,
             cache_write_cost,
             _as_float(prices.get("cache_creation_input_token_cost_above_200k_tokens")),
+        )
+        + _tiered_cost(
+            cache_write_1h_tokens,
+            cache_write_1h_cost,
+            _as_float(
+                prices.get(
+                    "cache_creation_input_token_cost_above_1hr_above_200k_tokens"
+                )
+            ),
         )
         + _tiered_cost(
             cache_read_tokens,
@@ -220,11 +254,27 @@ def _load_transcript(path: Path) -> list[dict[str, Any]]:
     return entries
 
 
+def _message_output_tokens(message: dict[str, Any]) -> float:
+    usage = message.get("usage")
+    return _usage_number(usage, "output_tokens") if isinstance(usage, dict) else 0.0
+
+
 def _assistant_costs(
     entries: Iterable[dict[str, Any]], today: str, pricing: dict[str, Any]
 ) -> list[tuple[str, str, float]]:
-    seen_in_transcript: set[str] = set()
-    costs: list[tuple[str, str, float]] = []
+    """Cost per billed request, one entry per requestId.
+
+    Claude Code writes a separate transcript entry per content block, all sharing
+    one requestId. Input and cache counts repeat unchanged on every copy, but
+    `output_tokens` is a running total, so the largest copy is the one that covers
+    the whole request — keeping the first copy instead undercounts output, the
+    most expensive component. Verified over a week of transcripts: `output_tokens`
+    is non-decreasing across copies in every multi-copy request, and no other
+    usage field varies.
+    """
+    best_message: dict[str, dict[str, Any]] = {}
+    day_by_request: dict[str, str] = {}
+    order: list[str] = []
     for entry in entries:
         if entry.get("type") != "assistant":
             continue
@@ -232,13 +282,22 @@ def _assistant_costs(
         if not isinstance(message, dict) or message.get("role") != "assistant":
             continue
         request_id = _entry_request_id(entry)
-        if request_id in seen_in_transcript:
-            continue
-        seen_in_transcript.add(request_id)
-        cost = _cost_from_usage(message, pricing)
+        previous = best_message.get(request_id)
+        if previous is None:
+            order.append(request_id)
+            # The first copy carries the request's own timestamp; later copies can
+            # cross a date boundary mid-response, which would misfile the cost.
+            day_by_request[request_id] = _date_from_entry(entry, today)
+            best_message[request_id] = message
+        elif _message_output_tokens(message) > _message_output_tokens(previous):
+            best_message[request_id] = message
+
+    costs: list[tuple[str, str, float]] = []
+    for request_id in order:
+        cost = _cost_from_usage(best_message[request_id], pricing)
         if cost <= 0:
             continue
-        costs.append((request_id, _date_from_entry(entry, today), cost))
+        costs.append((request_id, day_by_request[request_id], cost))
     return costs
 
 
