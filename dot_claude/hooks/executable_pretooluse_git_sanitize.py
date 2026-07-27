@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import re
+import shlex
 import subprocess
 import sys
 
@@ -72,18 +73,64 @@ def _replace_heredoc_message(command: str) -> str:
     return HEREDOC_MESSAGE_RE.sub(_replacement, command, count=1)
 
 
+def _decode_dquoted(text: str) -> str:
+    """Decode the literal text bash hands to a program from a double-quoted arg.
+
+    Single left-to-right pass (not chained str.replace, which would
+    double-process already-decoded output). Inside bash double quotes a
+    backslash is only special before `$`, backtick, `"`, `\\`, and a real
+    newline (line continuation); every other backslash is passed through
+    unchanged, backslash and all.
+    """
+    out: list[str] = []
+    i = 0
+    n = len(text)
+    while i < n:
+        char = text[i]
+        if char == "\\" and i + 1 < n:
+            nxt = text[i + 1]
+            if nxt in ("$", "`", '"', "\\"):
+                out.append(nxt)
+                i += 2
+                continue
+            if nxt == "\n":
+                # Backslash-newline is a line continuation inside bash double
+                # quotes: it is consumed and contributes nothing to the value.
+                i += 2
+                continue
+            if nxt == "n":
+                # Not real bash semantics: this repairs the common agent
+                # mistake of writing the two characters `\n` inside a
+                # double-quoted -m instead of an actual newline. Kept
+                # intentionally (this is why the old code had
+                # `.replace("\\n", "\n")`).
+                out.append("\n")
+                i += 2
+                continue
+            out.append(char)
+            out.append(nxt)
+            i += 2
+            continue
+        out.append(char)
+        i += 1
+    return "".join(out)
+
+
 def _replace_quoted_message(command: str) -> str:
     def _replacement(match: re.Match[str]) -> str:
-        prefix, quote, message, suffix = match.groups()
+        prefix, quote, message, _closing_quote = match.groups()
         if quote == "'":
             return match.group(0)
 
-        decoded = message.replace("\\n", "\n")
+        decoded = _decode_dquoted(message)
         formatted = _format_message(decoded).rstrip("\n")
-        encoded = (
-            formatted.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
-        )
-        return f"{prefix}{quote}{encoded}{suffix}"
+        # shlex.quote (single-quoting) replaces hand-rolled double-quote
+        # escaping so arbitrary bytes (including real newlines) round-trip
+        # correctly; the original quote char is dropped since shlex.quote
+        # picks its own. Behavior change: `$(...)`/`$VAR` in the original
+        # double-quoted -m used to expand at exec time -- now it's committed
+        # literally, since the message is re-encoded as inert text.
+        return f"{prefix}{shlex.quote(formatted)}"
 
     return QUOTED_MESSAGE_RE.sub(_replacement, command, count=1)
 
