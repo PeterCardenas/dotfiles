@@ -68,33 +68,52 @@ roll_pid_file() {
     done
 }
 
-# Sum live PID files; roll dead ones into their respective daily files
+# Is this PID file still owned by the nvim that writes it?
+#
+# A PID file may only be rolled once its owner is gone. A live nvim rewrites the
+# file from its in-memory per-date totals on every flush, so rolling it early
+# just hands those same dates back: the roll deletes the file, the next flush
+# recreates it with the same dates, and they get rolled a second time when nvim
+# finally exits. That double-counted every nvim alive across the UTC date change.
+#
+# Checking the process name as well means a recycled PID (some unrelated process
+# now holding the number) is still treated as dead, so stale files get cleaned up
+# instead of lingering and inflating the month total forever.
+owner_alive() {
+  kill -0 "$1" 2>/dev/null || return 1
+  case "$(ps -o comm= -p "$1" 2>/dev/null)" in
+  *nvim*) return 0 ;;
+  *) return 1 ;;
+  esac
+}
+
+# Sum live PID files; roll dead ones into their respective daily files.
+# Serialized against the Claude Stop hook, which flocks this same file before its
+# own read-modify-write of daily-*. Without it two concurrent runs (the cached
+# status-bar call and the peer's uncached --local call) can both roll the same
+# dead PID file before either removes it. flock is Linux-only; on macOS the
+# window stays unguarded, which is the pre-existing behaviour.
 live_today_total=0
 live_month_total=0
 if [ -d "$spend_dir" ]; then
+  exec 9>"${spend_dir}/.claude-cli.lock" || exec 9>/dev/null
+  command -v flock >/dev/null 2>&1 && flock -x 9
   for f in "$spend_dir"/*; do
     [ -f "$f" ] || continue
     base=$(basename "$f")
     case "$base" in daily-*) continue ;; esac
-    today_val=$(pid_today "$f")
-    month_val=$(pid_month "$f")
-    today_val=${today_val:-0}
-    month_val=${month_val:-0}
-    if kill -0 "$base" 2>/dev/null; then
-      # No spend today + file only has old entries → PID was reused; clean up
-      if { [ "$today_val" = "0" ] || [ "$today_val" = "0.0000" ]; } &&
-        [ -s "$f" ] && ! grep -q "^${today} " "$f"; then
-        roll_pid_file "$f"
-        rm -f "$f"
-        continue
-      fi
-      live_today_total=$(awk "BEGIN{printf \"%.4f\", $live_today_total + $today_val}")
-      live_month_total=$(awk "BEGIN{printf \"%.4f\", $live_month_total + $month_val}")
+    if owner_alive "$base"; then
+      today_val=$(pid_today "$f")
+      month_val=$(pid_month "$f")
+      live_today_total=$(awk "BEGIN{printf \"%.4f\", $live_today_total + ${today_val:-0}}")
+      live_month_total=$(awk "BEGIN{printf \"%.4f\", $live_month_total + ${month_val:-0}}")
     else
       roll_pid_file "$f"
       rm -f "$f"
     fi
   done
+  command -v flock >/dev/null 2>&1 && flock -u 9
+  exec 9>&-
 fi
 
 # Re-read daily aggregates (may have been updated by roll_pid_file)
@@ -140,29 +159,55 @@ remote_today_total=0
 remote_month_total=0
 remote_cache="${cache_dir}/tmux-spend-remote"
 remote_ttl=30
+# How long a peer total stays usable after the last successful fetch. A brief
+# network blip must not read as "the peer spent $0" — that silently drops the
+# whole machine from the total, which is exactly the kind of scope gap that made
+# these numbers disagree with the server-side aggregate.
+remote_max_stale=600
 
+# Cache layout: line 1 = write time, line 2 = "<today> <month>", line 3 = epoch
+# of the last successful fetch (absent in caches written by older versions).
+remote_age=$((remote_ttl + 1))
+remote_prev_today=0
+remote_prev_month=0
+remote_last_ok=0
 if [ -n "$remote_host" ] && [ -f "$remote_cache" ]; then
-  remote_age=$((now - $(head -1 "$remote_cache")))
+  remote_stamp=$(head -1 "$remote_cache")
+  case "$remote_stamp" in
+  '' | *[!0-9]*) remote_stamp=0 ;;
+  esac
+  [ "$remote_stamp" -gt 0 ] && remote_age=$((now - remote_stamp))
+  remote_cached=$(sed -n '2p' "$remote_cache")
+  remote_prev_today=$(awk '{ print ($1 == "" ? 0 : $1) }' <<<"$remote_cached")
+  remote_prev_month=$(awk '{ print ($2 == "" ? $1 : $2) }' <<<"$remote_cached")
+  remote_prev_today=${remote_prev_today:-0}
+  remote_prev_month=${remote_prev_month:-0}
+  remote_last_ok=$(sed -n '3p' "$remote_cache")
+  case "$remote_last_ok" in
+  '' | *[!0-9]*) remote_last_ok=0 ;;
+  esac
   if [ "$remote_age" -lt "$remote_ttl" ]; then
-    remote_cached=$(sed -n '2p' "$remote_cache")
-    remote_today_total=$(awk '{ print $1 }' <<<"$remote_cached")
-    remote_month_total=$(awk '{ print ($2 == "" ? $1 : $2) }' <<<"$remote_cached")
-    remote_today_total=${remote_today_total:-0}
-    remote_month_total=${remote_month_total:-0}
+    remote_today_total=$remote_prev_today
+    remote_month_total=$remote_prev_month
   fi
 fi
 
 # Fetch fresh remote value if cache is stale
-if [ -n "$remote_host" ] && { [ ! -f "$remote_cache" ] || [ "$remote_age" -ge "$remote_ttl" ]; }; then
+if [ -n "$remote_host" ] && [ "$remote_age" -ge "$remote_ttl" ]; then
   if remote_val=$(ssh -o ConnectTimeout=1 -o BatchMode=yes \
     "$remote_host" '$HOME/.config/tmux/scripts/claude_spend.sh --local --with-month' 2>/dev/null) && [ -n "$remote_val" ]; then
     remote_today_total=$(awk '{ print $1 }' <<<"$remote_val")
     remote_month_total=$(awk '{ print ($2 == "" ? $1 : $2) }' <<<"$remote_val")
     remote_today_total=${remote_today_total:-0}
     remote_month_total=${remote_month_total:-0}
+    remote_last_ok=$now
+  elif [ "$remote_last_ok" -gt 0 ] && [ $((now - remote_last_ok)) -lt "$remote_max_stale" ]; then
+    # Peer unreachable but recently seen: carry the last good totals forward.
+    remote_today_total=$remote_prev_today
+    remote_month_total=$remote_prev_month
   fi
   # Cache even on failure (avoids retrying every 10s)
-  printf '%s\n%s %s' "$now" "$remote_today_total" "$remote_month_total" >"$remote_cache"
+  printf '%s\n%s %s\n%s' "$now" "$remote_today_total" "$remote_month_total" "$remote_last_ok" >"$remote_cache"
 fi
 
 today_total=$(awk "BEGIN{printf \"%.2f\", $local_today_total + $remote_today_total}")
