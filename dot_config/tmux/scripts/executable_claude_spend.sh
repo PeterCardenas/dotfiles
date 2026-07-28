@@ -160,13 +160,29 @@ mkdir -p "$cache_dir"
 next_attempt=0
 usage=
 last_ok=0
-if [ -f "$cache" ]; then
+read_cache() {
+  [ -f "$cache" ] || return 0
   next_attempt=$(head -1 "$cache")
   case "$next_attempt" in '' | *[!0-9]*) next_attempt=0 ;; esac
   usage=$(sed -n '2p' "$cache")
   last_ok=$(sed -n '3p' "$cache")
   case "$last_ok" in '' | *[!0-9]*) last_ok=0 ;; esac
-fi
+}
+
+# Every status-bar redraw runs this script once per client, several times a
+# minute, so copies of it read the cache while another is writing it. A plain
+# `>` truncates the file first, and a sibling reading in that window sees an
+# empty line 2 — indistinguishable from "never fetched", which it then persists
+# together with its own backoff, blanking the segment until some later fetch
+# happens to succeed. Replacing the file means a reader only ever sees one
+# complete generation of the cache.
+write_cache() {
+  local tmp
+  tmp=$(mktemp "${cache}.XXXXXX") || return 0
+  printf '%s\n%s\n%s' "$1" "$2" "$3" >"$tmp" && mv -f "$tmp" "$cache" || rm -f "$tmp"
+}
+
+read_cache
 
 if [ "$now" -ge "$next_attempt" ]; then
   attempt=$(fetch_usage)
@@ -189,7 +205,18 @@ if [ "$now" -ge "$next_attempt" ]; then
   else
     next_attempt=$((now + usage_ttl))
   fi
-  printf '%s\n%s\n%s' "$next_attempt" "$usage" "$last_ok" >"$cache"
+
+  if [ -n "$fresh" ]; then
+    write_cache "$next_attempt" "$usage" "$last_ok"
+  else
+    # A failed attempt has nothing but the new backoff to contribute, and a
+    # sibling run may have landed a good reading while this fetch was in
+    # flight. Re-read before writing so a failure can never carry a pre-fetch
+    # copy of the reading back over a newer one.
+    backoff_until=$next_attempt
+    read_cache
+    write_cache "$backoff_until" "$usage" "$last_ok"
+  fi
 fi
 
 [ -n "$usage" ] || exit 0
