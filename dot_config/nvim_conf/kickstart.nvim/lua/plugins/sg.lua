@@ -330,6 +330,17 @@ return {
             local function normalize_display_extra_high(value)
               return (value:gsub('extra%-high', 'xhigh'))
             end
+            -- Context sizes arrive as `1m`/`272k`; render everything in `k` so the
+            -- used/total pair shares a unit.
+            ---@param value string
+            ---@return string
+            local function format_context_label(value)
+              local millions = value:match('^(%d+)m$')
+              if not millions then
+                return value
+              end
+              return tostring(tonumber(millions) * 1000) .. 'k'
+            end
             local ok, SessionRegistry = pcall(require, 'agentic.session_registry')
             if not ok then
               return parts.title
@@ -348,13 +359,20 @@ return {
             local runtime_label = type(runtime_id) == 'string' and has_meaningful_value(runtime_id) and runtime_id or nil
             local model_id = config_opts and config_opts.model and config_opts.model.currentValue or '?'
             model_id = normalize_display_extra_high(model_id)
-            local model_suffix = ''
-            local reasoning_value = all_options and all_options.reasoning and all_options.reasoning.currentValue or nil
-            if not reasoning_value then
-              reasoning_value = all_options and all_options.reasoning_effort and all_options.reasoning_effort.currentValue or nil
+            -- Claude model ids carry the context window as a suffix (`opus[1m]`), and
+            -- claude-agent-acp exposes no `context` option. Strip the hint from the
+            -- model name and reuse it as the context size below.
+            local model_context_hint = model_id:match('%[(%d+m)%]$')
+            if model_context_hint then
+              model_id = model_id:sub(1, #model_id - #model_context_hint - 2)
             end
-            if has_meaningful_value(reasoning_value) then
-              model_suffix = model_suffix .. '-' .. normalize_display_extra_high(reasoning_value)
+            local model_suffix = ''
+            -- Each provider names its effort option differently (claude-agent-acp:
+            -- `effort`, codex-acp: `reasoning_effort`), so read the category-normalized
+            -- `thought_level` field instead of guessing option ids.
+            local thought_level_value = config_opts and config_opts.thought_level and config_opts.thought_level.currentValue or nil
+            if has_meaningful_value(thought_level_value) then
+              model_suffix = model_suffix .. '-' .. normalize_display_extra_high(thought_level_value)
             end
             local fast_value = all_options and all_options.fast and all_options.fast.currentValue or nil
             if is_enabled(fast_value) then
@@ -368,8 +386,11 @@ return {
             end
             local usage = vim.t[vim.api.nvim_get_current_tabpage()].agentic_usage
             local context_value = all_options and all_options.context and all_options.context.currentValue or nil
+            if not has_meaningful_value(context_value) then
+              context_value = model_context_hint
+            end
             local size_label = usage and usage.size and usage.size > 0 and string.format('%dk', math.floor(usage.size / 1000))
-              or (has_meaningful_value(context_value) and (context_value == '1m' and '1000k' or context_value) or nil)
+              or (has_meaningful_value(context_value) and format_context_label(context_value) or nil)
             local usage_str = ''
             if usage and usage.used then
               local used_k = math.floor(usage.used / 1000)
