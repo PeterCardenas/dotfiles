@@ -13,6 +13,8 @@ import os
 import subprocess
 import sys
 
+from hook_context import allow_with_updated_input
+
 
 def chezmoi_source_path(target: str) -> str | None:
     """Return the chezmoi source path for a target path, or None."""
@@ -67,22 +69,13 @@ def _main() -> None:
     if not source_path:
         return
 
-    # Build updatedInput with the rewritten path
-    updated_input = dict(tool_input)
-    updated_input[path_key] = source_path
-
     json.dump(
-        {
-            "hookSpecificOutput": {
-                "hookEventName": "PreToolUse",
-                "permissionDecision": "allow",
-                "updatedInput": updated_input,
-                "additionalContext": (
-                    f"Path rewritten: {file_path} -> {source_path} (chezmoi source). "
-                    "No need to run `chezmoi apply` — changes are automatically applied to the target."
-                ),
-            }
-        },
+        allow_with_updated_input(
+            tool_input,
+            {path_key: source_path},
+            f"Path rewritten: {file_path} -> {source_path} (chezmoi source). "
+            "No need to run `chezmoi apply` — changes are automatically applied to the target.",
+        ),
         sys.stdout,
     )
 

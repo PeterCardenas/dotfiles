@@ -9,6 +9,7 @@ import sys
 
 from hook_context import (
     MissingGhTokenError,
+    allow_with_updated_input,
     gh_token_command_expr,
     gh_token_for_user,
     preferred_gh_user_for_remote,
@@ -55,20 +56,12 @@ def _main(payload: dict) -> None:
     token_expr = gh_token_command_expr(gh_user)
     rewritten = f"GH_TOKEN={token_expr} {command}"
 
-    updated_input = dict(tool_input)
-    updated_input["command"] = rewritten
-
     json.dump(
-        {
-            "hookSpecificOutput": {
-                "hookEventName": "PreToolUse",
-                "permissionDecision": "allow",
-                "updatedInput": updated_input,
-                "additionalContext": (
-                    f"Enforced gh user `{gh_user}` for this repository ({reason})."
-                ),
-            }
-        },
+        allow_with_updated_input(
+            tool_input,
+            {"command": rewritten},
+            f"Enforced gh user `{gh_user}` for this repository ({reason}).",
+        ),
         sys.stdout,
     )
 

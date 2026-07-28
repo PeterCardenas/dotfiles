@@ -167,9 +167,11 @@ def _main(payload: dict) -> None:
 
     json.dump(
         {
+            # Context-only response: no permissionDecision, since this hook
+            # neither approves nor blocks the command. A decision without a
+            # permissionDecisionReason is dropped by the harness anyway.
             "hookSpecificOutput": {
                 "hookEventName": "PreToolUse",
-                "permissionDecision": "allow",
                 "additionalContext": additional_context,
             }
         },
