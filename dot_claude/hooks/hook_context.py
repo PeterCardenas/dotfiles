@@ -74,6 +74,28 @@ def deny_hook_response(message: str, hook_event_name: str = "PreToolUse") -> dic
     return {"hookSpecificOutput": output}
 
 
+def allow_with_updated_input(tool_input: dict, updates: dict, reason: str) -> dict:
+    """Return a PreToolUse response that swaps in modified tool arguments.
+
+    permissionDecisionReason is not optional here, even though it reads like
+    prose for a human: the harness validates the decision as a whole, and
+    without a reason it keeps additionalContext while dropping updatedInput --
+    so the hook looks like it ran (its context shows up) while the tool still
+    executes the original, unmodified arguments.
+    """
+    updated_input = dict(tool_input)
+    updated_input.update(updates)
+    return {
+        "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow",
+            "permissionDecisionReason": reason,
+            "updatedInput": updated_input,
+            "additionalContext": reason,
+        }
+    }
+
+
 @contextmanager
 def hook_error_response(hook_event_name: str = "PreToolUse") -> Iterator[None]:
     """Capture hook context errors and write a deny response to stdout."""
@@ -283,7 +305,9 @@ def gh_token_for_user(user: str) -> Optional[str]:
     return token
 
 
-def preferred_gh_user_candidates(remote_url: Optional[str] = None) -> list[Optional[str]]:
+def preferred_gh_user_candidates(
+    remote_url: Optional[str] = None,
+) -> list[Optional[str]]:
     preferred_user = DEFAULT_GH_USER
     if remote_url:
         preferred_user, _reason = preferred_gh_user_for_remote(remote_url)
