@@ -3,11 +3,18 @@
 {{- if .chezmoi.stdin -}}
 {{- $config = fromToml .chezmoi.stdin -}}
 {{- end -}}
+{{- /*
+  rtk's built-in git-log filter truncates every output line at 120 columns and
+  appends "...", which silently corrupts `--format`/`--pretty` output that is
+  being read for its exact bytes -- e.g. verifying a commit message, where it
+  makes an intact body look mangled. Plain `git log` browsing stays filtered.
+*/ -}}
 {{- $excludeCommands := list
   "pnpm lint"
   "pnpm run lint"
   "npm run lint"
   "curl"
   "^(pnpm exec |npx )?playwright"
+  "^git log .*--(format|pretty)"
 -}}
 {{- $config | setValueAtPath "hooks.exclude_commands" $excludeCommands | toToml -}}
