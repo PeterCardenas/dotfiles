@@ -1,225 +1,232 @@
 #!/usr/bin/env bash
-# Daily Claude spend (UTC) from nvim agentic sessions for tmux status bar.
-# PID files contain lines of "YYYY-MM-DD <cost>".
-# Sums today's (UTC) values from: daily aggregate + live PID files.
-# Dead PID files are rolled into the daily aggregate before pruning.
-# When not --local, also aggregates spend from a peer machine via SSH.
-# Caches: local result 10s, remote result 30s.
+# Claude usage-credit spend for the tmux status bar.
+#
+# Reads the figure Claude itself reports (GET /api/oauth/usage) with the Claude
+# Code OAuth token. That number is authoritative, account-wide (every machine
+# already included) and billing-cycle scoped, so nothing here derives cost from
+# transcripts or aggregates per-session accounting.
+#
+# The endpoint exposes no per-day breakdown (extra_usage.daily and .weekly are
+# null and no query parameter populates them; daily buckets exist only on the
+# admin-keyed Analytics API). Today's spend is therefore derived by
+# checkpointing the authoritative cumulative counter once a day and differencing
+# it.
+#
+# A failed fetch keeps showing the last good figure: a blip, a rate limit or an
+# expired token must not read as "$0 spent", nor leave a hole where the segment
+# was.
 export LC_ALL=C
 
-local_only=false
-with_month=false
 short=false
-for arg in "$@"; do
-  case "$arg" in
-  --local) local_only=true ;;
-  --with-month) with_month=true ;;
-  --short) short=true ;;
-  esac
-done
+[ "$1" = "--short" ] && short=true
 
 # shellcheck source=spend_format.sh
 . "$(cd "$(dirname "$0")" && pwd)/spend_format.sh"
 
-now=$(date +%s)
-spend_dir="${XDG_DATA_HOME:-$HOME/.local/share}/claude-spend"
-cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/claude-spend"
-mkdir -p "$spend_dir" "$cache_dir"
+# Every running Claude Code and ACP session polls this same endpoint on the same
+# token, and it answers a burst with a 429 that outlasts several minutes. A
+# status bar has no business competing for that budget, and cycle-to-date spend
+# does not move fast enough to need a tighter refresh.
+usage_ttl=300
+# Cycle-to-date spend moves slowly, so an old reading is still worth showing —
+# far better than a hole in the status bar, and a sustained rate limit outlasts
+# any short staleness bound. It is dropped only once it is old enough to be
+# meaningless, which is also the only guard against a days-old figure passing
+# for a current one.
+usage_max_stale=21600
+# Anthropic documents ~1 request/minute as the sustained ceiling and answers
+# bursts with a 429 carrying Retry-After (17 minutes, once observed). That
+# header is authoritative; this is only the fallback when it is missing.
+usage_rate_limit_backoff=600
+usage_max_backoff=3600
 
-# Check main cache (only when producing formatted output)
-if [ "$local_only" = false ]; then
-  cache="${cache_dir}/tmux-spend"
-  $short && cache="${cache}-short"
-  if [ -f "$cache" ]; then
-    age=$((now - $(head -1 "$cache")))
-    if [ "$age" -lt 10 ]; then
-      sed -n '2p' "$cache"
-      exit 0
-    fi
+# Day boundaries are local, not UTC: UTC midnight lands at 17:00 PT, mid
+# workday, which would split a single working day across two "days".
+today=$(date +%Y-%m-%d)
+history_file="${XDG_DATA_HOME:-$HOME/.local/share}/claude-spend/history"
+
+# Prints "<status> <retry_after_seconds>" on line 1 and, on success,
+# "<used> <exponent> <limit> <percent> <severity>" on line 2 — monetary fields
+# in minor units, "-" for a field the API omits. Line 2 is empty on any failure.
+# Both come back through stdout because the caller runs this in a command
+# substitution, where a global assignment would not survive the subshell.
+#
+# The `spend` block is preferred over `extra_usage`: it carries the currency
+# exponent and Claude's own severity rating. `extra_usage` is the fallback,
+# being the shape the CLI itself parses.
+fetch_usage() {
+  local creds token body headers status retry_after
+  creds="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/.credentials.json"
+  [ -f "$creds" ] || return 0
+  token=$(jq -r '.claudeAiOauth.accessToken // empty' "$creds" 2>/dev/null)
+  [ -n "$token" ] || return 0
+
+  body=$(mktemp) || return 0
+  headers=$(mktemp) || { rm -f "$body"; return 0; }
+  status=$(curl -sS --max-time 5 -o "$body" -D "$headers" -w '%{http_code}' \
+    "https://api.anthropic.com/api/oauth/usage" \
+    -H "Authorization: Bearer $token" \
+    -H "Content-Type: application/json" 2>/dev/null)
+  # A rate-limited response says how long it wants to be left alone; obeying it
+  # beats guessing, especially since every Claude Code session on this machine
+  # shares the token's budget.
+  retry_after=$(awk 'tolower($1) == "retry-after:" { gsub(/[^0-9]/, "", $2); print $2; exit }' \
+    "$headers")
+  rm -f "$headers"
+  printf '%s %s\n' "${status:-000}" "${retry_after:-0}"
+
+  if [ "$status" != "200" ]; then
+    rm -f "$body"
+    return 0
   fi
-fi
-today=$(date -u +%Y-%m-%d)
-month_prefix=$(date -u +%Y-%m)
-daily_file="${spend_dir}/daily-${today}"
 
-# Extract today's cost from a PID file (lines: "YYYY-MM-DD <cost>")
-pid_today() {
-  awk -v d="$today" '$1 == d { sum += $2 } END { printf "%.4f", sum }' "$1" 2>/dev/null
+  # Both blocks are absent (or disabled) when usage credits are not active for
+  # the account, in which case there is no spend to report.
+  jq -r '
+    (.spend // {}) as $spend
+    | (.extra_usage // {}) as $extra
+    | select($spend.enabled == true or $extra.is_enabled == true)
+    | [($spend.used.amount_minor // $extra.used_credits // "-"),
+       ($spend.used.exponent // $extra.decimal_places // 2),
+       ($spend.limit.amount_minor // $extra.monthly_limit // "-"),
+       ($spend.percent // $extra.utilization // "-"),
+       ($spend.severity // "-")]
+    | select(.[0] != "-")
+    | @tsv' "$body" 2>/dev/null
+  rm -f "$body"
 }
 
-# Extract UTC month-to-date cost from a PID file
-pid_month() {
-  awk -v m="$month_prefix" 'index($1, m "-") == 1 { sum += $2 } END { printf "%.4f", sum }' "$1" 2>/dev/null
-}
-
-# Roll all entries from a PID file into their respective daily files
-roll_pid_file() {
-  awk '{ sums[$1] += $2 } END { for (d in sums) printf "%s %.4f\n", d, sums[d] }' "$1" 2>/dev/null |
-    while read -r day cost; do
-      [ -z "$day" ] && continue
-      df="${spend_dir}/daily-${day}"
-      prev=0
-      if [ -f "$df" ]; then
-        prev=$(cat "$df" 2>/dev/null)
-        prev=${prev:-0}
-      fi
-      new=$(awk "BEGIN{printf \"%.4f\", $prev + $cost}")
-      printf '%s' "$new" >"$df"
-    done
-}
-
-# Is this PID file still owned by the nvim that writes it?
-#
-# A PID file may only be rolled once its owner is gone. A live nvim rewrites the
-# file from its in-memory per-date totals on every flush, so rolling it early
-# just hands those same dates back: the roll deletes the file, the next flush
-# recreates it with the same dates, and they get rolled a second time when nvim
-# finally exits. That double-counted every nvim alive across the UTC date change.
-#
-# Checking the process name as well means a recycled PID (some unrelated process
-# now holding the number) is still treated as dead, so stale files get cleaned up
-# instead of lingering and inflating the month total forever.
-owner_alive() {
-  kill -0 "$1" 2>/dev/null || return 1
-  case "$(ps -o comm= -p "$1" 2>/dev/null)" in
-  *nvim*) return 0 ;;
+# Claude's own rating of the current spend level, so the segment agrees with
+# what /usage and the member dashboard show. Only "warning" (at 81%) has been
+# observed in the wild, so an unrecognized value falls through to the percentage
+# tiers rather than silently losing the color.
+severity_color() {
+  case "$1" in
+  critical | exceeded | error | danger) printf '#f7768e' ;;
+  warning) printf '#ff9e64' ;;
+  info | caution) printf '#e0af68' ;;
+  ok | none | normal) printf '#9ece6a' ;;
   *) return 1 ;;
   esac
 }
 
-# Sum live PID files; roll dead ones into their respective daily files.
-# Serialized against the Claude Stop hook, which flocks this same file before its
-# own read-modify-write of daily-*. Without it two concurrent runs (the cached
-# status-bar call and the peer's uncached --local call) can both roll the same
-# dead PID file before either removes it. flock is Linux-only; on macOS the
-# window stays unguarded, which is the pre-existing behaviour.
-live_today_total=0
-live_month_total=0
-if [ -d "$spend_dir" ]; then
-  exec 9>"${spend_dir}/.claude-cli.lock" || exec 9>/dev/null
-  command -v flock >/dev/null 2>&1 && flock -x 9
-  for f in "$spend_dir"/*; do
-    [ -f "$f" ] || continue
-    base=$(basename "$f")
-    case "$base" in daily-*) continue ;; esac
-    if owner_alive "$base"; then
-      today_val=$(pid_today "$f")
-      month_val=$(pid_month "$f")
-      live_today_total=$(awk "BEGIN{printf \"%.4f\", $live_today_total + ${today_val:-0}}")
-      live_month_total=$(awk "BEGIN{printf \"%.4f\", $live_month_total + ${month_val:-0}}")
-    else
-      roll_pid_file "$f"
-      rm -f "$f"
-    fi
-  done
-  command -v flock >/dev/null 2>&1 && flock -u 9
-  exec 9>&-
+percent_color() {
+  awk -v pct="$1" 'BEGIN {
+    if (pct == "-" || pct == "") print "#c0caf5"
+    else if (pct >= 90) print "#f7768e"
+    else if (pct >= 75) print "#ff9e64"
+    else if (pct >= 50) print "#e0af68"
+    else print "#9ece6a"
+  }'
+}
+
+# Minor units (cents for USD) to a plain dollar amount.
+major_units() {
+  awk -v minor="$1" -v places="$2" 'BEGIN { printf "%.2f", minor / (10 ^ places) }'
+}
+
+# Closing reading of the most recent day before today, in minor units.
+previous_day_reading() {
+  [ -f "$history_file" ] || return 0
+  awk -v today="$today" '$1 < today { reading = $2 } END { if (reading != "") print reading }' \
+    "$history_file"
+}
+
+# Checkpoint the cumulative counter for today, replacing any earlier reading for
+# the same day, and drop days past the retention cutoff. Called only after a
+# successful fetch, so a stale cached figure never becomes a checkpoint. Two
+# concurrent runs can lose one update to each other; the next fetch re-records
+# the same value, so racing costs nothing and no lock is warranted.
+record_reading() {
+  local used=$1 cutoff tmp
+  cutoff=$(date -d '31 days ago' +%Y-%m-%d 2>/dev/null || date -v-31d +%Y-%m-%d) || return 0
+  mkdir -p "$(dirname "$history_file")" || return 0
+  tmp=$(mktemp "${history_file}.XXXXXX") || return 0
+  {
+    [ -f "$history_file" ] &&
+      awk -v today="$today" -v cutoff="$cutoff" '$1 != today && $1 >= cutoff' "$history_file"
+    printf '%s %s\n' "$today" "$used"
+  } | sort -u >"$tmp" && mv -f "$tmp" "$history_file" || rm -f "$tmp"
+}
+
+now=$(date +%s)
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/claude-spend"
+cache="${cache_dir}/usage"
+mkdir -p "$cache_dir"
+
+# Cache layout: line 1 = earliest next attempt, line 2 = last good reading,
+# line 3 = epoch of that reading. Line 1 paces requests even when they fail;
+# line 3 is what bounds how long a stale reading stays on screen.
+next_attempt=0
+usage=
+last_ok=0
+if [ -f "$cache" ]; then
+  next_attempt=$(head -1 "$cache")
+  case "$next_attempt" in '' | *[!0-9]*) next_attempt=0 ;; esac
+  usage=$(sed -n '2p' "$cache")
+  last_ok=$(sed -n '3p' "$cache")
+  case "$last_ok" in '' | *[!0-9]*) last_ok=0 ;; esac
 fi
 
-# Re-read daily aggregates (may have been updated by roll_pid_file)
-daily_today_total=0
-if [ -f "$daily_file" ]; then
-  daily_today_total=$(cat "$daily_file" 2>/dev/null)
-  daily_today_total=${daily_today_total:-0}
-fi
-
-daily_month_total=0
-if [ -d "$spend_dir" ]; then
-  for df in "$spend_dir"/daily-"${month_prefix}"-*; do
-    [ -f "$df" ] || continue
-    day_total=$(cat "$df" 2>/dev/null)
-    day_total=${day_total:-0}
-    daily_month_total=$(awk "BEGIN{printf \"%.4f\", $daily_month_total + $day_total}")
-  done
-fi
-
-local_today_total=$(awk "BEGIN{printf \"%.4f\", $daily_today_total + $live_today_total}")
-local_month_total=$(awk "BEGIN{printf \"%.4f\", $daily_month_total + $live_month_total}")
-
-# --local: output raw number for remote aggregation, skip formatting/remote
-if [ "$local_only" = true ]; then
-  if [ "$with_month" = true ]; then
-    printf '%s %s' "$local_today_total" "$local_month_total"
-  else
-    printf '%s' "$local_today_total"
+if [ "$now" -ge "$next_attempt" ]; then
+  attempt=$(fetch_usage)
+  read -r status retry_after <<<"$(head -1 <<<"$attempt")"
+  fresh=$(sed -n '2p' <<<"$attempt")
+  if [ -n "$fresh" ]; then
+    usage=$fresh
+    last_ok=$now
+    record_reading "$(awk '{ print $1 }' <<<"$fresh")"
   fi
+  if [ "$status" = "429" ]; then
+    backoff=$usage_rate_limit_backoff
+    case "$retry_after" in
+    '' | 0 | *[!0-9]*) ;;
+    *) backoff=$retry_after ;;
+    esac
+    # A server can always name an absurd delay; cap it so the segment recovers.
+    [ "$backoff" -gt "$usage_max_backoff" ] && backoff=$usage_max_backoff
+    next_attempt=$((now + backoff))
+  else
+    next_attempt=$((now + usage_ttl))
+  fi
+  printf '%s\n%s\n%s' "$next_attempt" "$usage" "$last_ok" >"$cache"
+fi
+
+[ -n "$usage" ] || exit 0
+[ "$((now - last_ok))" -lt "$usage_max_stale" ] || exit 0
+
+read -r used_minor exponent limit_minor percent severity <<<"$usage"
+
+# The API sends percent alongside the limit, but derive it when absent so a
+# known limit always colors the segment.
+if [ "$percent" = "-" ] && [ "$limit_minor" != "-" ]; then
+  percent=$(awk -v used="$used_minor" -v limit="$limit_minor" \
+    'BEGIN { print (limit > 0) ? used / limit * 100 : "-" }')
+fi
+
+color=$(severity_color "$severity") || color=$(percent_color "$percent")
+used_display=$(major_units "$used_minor" "$exponent")
+
+if $short; then
+  printf '%s' "#[fg=#ff9e64]  #[fg=${color}]$(format_short_money "$used_display")"
   exit 0
 fi
 
-# --- Remote aggregation ---
-# Determine peer SSH host based on local hostname.
-# macbook → desktop, desktop → macbook (both via tailscale)
-remote_host=""
-case "$(hostname)" in
-*MacBook* | *macbook*) remote_host="desktop" ;;
-*) remote_host="macbook" ;;
-esac
+segment="#[fg=${color}]\$${used_display}"
 
-remote_today_total=0
-remote_month_total=0
-remote_cache="${cache_dir}/tmux-spend-remote"
-remote_ttl=30
-# How long a peer total stays usable after the last successful fetch. A brief
-# network blip must not read as "the peer spent $0" — that silently drops the
-# whole machine from the total, which is exactly the kind of scope gap that made
-# these numbers disagree with the server-side aggregate.
-remote_max_stale=600
-
-# Cache layout: line 1 = write time, line 2 = "<today> <month>", line 3 = epoch
-# of the last successful fetch (absent in caches written by older versions).
-remote_age=$((remote_ttl + 1))
-remote_prev_today=0
-remote_prev_month=0
-remote_last_ok=0
-if [ -n "$remote_host" ] && [ -f "$remote_cache" ]; then
-  remote_stamp=$(head -1 "$remote_cache")
-  case "$remote_stamp" in
-  '' | *[!0-9]*) remote_stamp=0 ;;
-  esac
-  [ "$remote_stamp" -gt 0 ] && remote_age=$((now - remote_stamp))
-  remote_cached=$(sed -n '2p' "$remote_cache")
-  remote_prev_today=$(awk '{ print ($1 == "" ? 0 : $1) }' <<<"$remote_cached")
-  remote_prev_month=$(awk '{ print ($2 == "" ? $1 : $2) }' <<<"$remote_cached")
-  remote_prev_today=${remote_prev_today:-0}
-  remote_prev_month=${remote_prev_month:-0}
-  remote_last_ok=$(sed -n '3p' "$remote_cache")
-  case "$remote_last_ok" in
-  '' | *[!0-9]*) remote_last_ok=0 ;;
-  esac
-  if [ "$remote_age" -lt "$remote_ttl" ]; then
-    remote_today_total=$remote_prev_today
-    remote_month_total=$remote_prev_month
-  fi
+# Today is the counter's rise since yesterday's closing checkpoint, so it only
+# appears once a previous day has been recorded. A drop means the billing cycle
+# rolled over, which makes the whole counter today's spend.
+previous_reading=$(previous_day_reading)
+if [ -n "$previous_reading" ]; then
+  today_minor=$(awk -v now="$used_minor" -v prev="$previous_reading" \
+    'BEGIN { print (now >= prev) ? now - prev : now }')
+  segment="\$$(major_units "$today_minor" "$exponent") #[fg=#565f89]| ${segment}"
 fi
 
-# Fetch fresh remote value if cache is stale
-if [ -n "$remote_host" ] && [ "$remote_age" -ge "$remote_ttl" ]; then
-  if remote_val=$(ssh -o ConnectTimeout=1 -o BatchMode=yes \
-    "$remote_host" '$HOME/.config/tmux/scripts/claude_spend.sh --local --with-month' 2>/dev/null) && [ -n "$remote_val" ]; then
-    remote_today_total=$(awk '{ print $1 }' <<<"$remote_val")
-    remote_month_total=$(awk '{ print ($2 == "" ? $1 : $2) }' <<<"$remote_val")
-    remote_today_total=${remote_today_total:-0}
-    remote_month_total=${remote_month_total:-0}
-    remote_last_ok=$now
-  elif [ "$remote_last_ok" -gt 0 ] && [ $((now - remote_last_ok)) -lt "$remote_max_stale" ]; then
-    # Peer unreachable but recently seen: carry the last good totals forward.
-    remote_today_total=$remote_prev_today
-    remote_month_total=$remote_prev_month
-  fi
-  # Cache even on failure (avoids retrying every 10s)
-  printf '%s\n%s %s\n%s' "$now" "$remote_today_total" "$remote_month_total" "$remote_last_ok" >"$remote_cache"
+# A null limit means unlimited: there is no ratio to show.
+if [ "$limit_minor" != "-" ]; then
+  segment="${segment} #[fg=#565f89]/ #[fg=#c0caf5]\$$(major_units "$limit_minor" "$exponent")"
 fi
 
-today_total=$(awk "BEGIN{printf \"%.2f\", $local_today_total + $remote_today_total}")
-month_total=$(awk "BEGIN{printf \"%.2f\", $local_month_total + $remote_month_total}")
-
-if [ "$today_total" = "0.00" ] && [ "$month_total" = "0.00" ]; then
-  result=""
-elif $short; then
-  result="#[fg=#ff9e64]  #[fg=#c0caf5]$(format_short_money "$month_total")"
-else
-  result="#[fg=#ff9e64]  #[fg=#c0caf5]\$${today_total} | \$${month_total}"
-fi
-
-printf '%s\n%s' "$now" "$result" >"$cache"
-printf '%s' "$result"
+printf '%s' "#[fg=#ff9e64]  #[fg=#c0caf5]${segment}"

@@ -98,52 +98,12 @@ return {
       'nvim-treesitter/nvim-treesitter',
     },
     config = function()
-      -- Track cost per session for tmux status bar aggregation.
-      -- Each nvim writes its own PID file keyed by UTC date so sessions
-      -- spanning midnight split correctly. Format: "YYYY-MM-DD <cost>\n" per line.
-      ---@type table<string, table<string, number>>
-      local _spend_by_session = {} -- session_id -> { date -> cost }
-      local _spend_dir = (os.getenv('XDG_DATA_HOME') or (os.getenv('HOME') .. '/.local/share')) .. '/claude-spend'
-      local _spend_file = _spend_dir .. '/' .. vim.fn.getpid()
-      vim.fn.mkdir(_spend_dir, 'p')
-
       -- Track the in-flight title generation per chat session so a newer
       -- response for the same session supersedes the previous one: its spinner
       -- is dismissed and its result discarded. Keyed by ACP session id; the
       -- stored handle is compared by identity to detect supersession.
       ---@type table<string, SpinnerProgressHandle>
       local _title_gen_by_session = {}
-
-      local function _utc_date()
-        return os.date('!%Y-%m-%d') --[[@as string]]
-      end
-
-      local function _flush_spend()
-        -- Aggregate by date across all sessions
-        ---@type table<string, number>
-        local by_date = {} -- date -> cost
-        for _, dates in pairs(_spend_by_session) do
-          for date, cost in pairs(dates) do
-            if date ~= '_prev' then
-              by_date[date] = (by_date[date] or 0) + cost
-            end
-          end
-        end
-        ---@type string[]
-        local lines = {}
-        for date, cost in pairs(by_date) do
-          lines[#lines + 1] = string.format('%s %.4f', date, cost)
-        end
-        local content = table.concat(lines, '\n')
-        vim.uv.fs_open(_spend_file, 'w', tonumber('644', 8), function(err, fd)
-          if err or not fd then
-            return
-          end
-          vim.uv.fs_write(fd, content, -1, function()
-            vim.uv.fs_close(fd)
-          end)
-        end)
-      end
 
       vim.api.nvim_create_user_command('AgenticFullscreen', function()
         require('agentic').toggle()
@@ -272,11 +232,6 @@ return {
             args = {},
             env = {
               -- ENABLE_LSP_TOOL = '1',
-              -- Marks this claude session as tracked by nvim's spend accounting so the
-              -- Claude CLI Stop hook (stop_track_claude_spend.py) skips it and does not
-              -- double-count. claude-agent-acp reports entrypoint "sdk-ts", which the
-              -- hook cannot use to identify it, so nvim signals ownership explicitly here.
-              CLAUDE_AGENT_ACP = '1',
             },
             default_config_options = {
               model = 'opus[1m]',
@@ -622,31 +577,6 @@ return {
                 size = data.update.size,
                 cost = cost,
               }
-              local SessionRegistry = require('agentic.session_registry')
-              local session = SessionRegistry.sessions[data.tab_page_id]
-              local provider_name = session and session.agent and session.agent.provider_config and session.agent.provider_config.name or nil
-              if cost and provider_name == 'Claude Agent ACP' then
-                local sid = data.session_id
-                local entry = _spend_by_session[sid]
-                if not entry then
-                  entry = { _prev = 0 }
-                  _spend_by_session[sid] = entry
-                end
-                local prev_cost = entry._prev or 0
-                local delta = cost - prev_cost
-                local today = _utc_date()
-                if delta > 1e-9 then
-                  entry[today] = (entry[today] or 0) + delta
-                elseif delta < -1e-9 then
-                  -- Cost dropped (likely compaction/reset): count the new baseline once.
-                  entry[today] = (entry[today] or 0) + cost
-                end
-                -- Always advance baseline so decreases/resets do not stall accrual.
-                -- TODO: Handle rare upward-reset jumps (e.g. provider-side reindexing)
-                -- by capping implausible single-update deltas.
-                entry._prev = cost
-                _flush_spend()
-              end
             end
             local SessionRegistry = require('agentic.session_registry')
             local session = SessionRegistry.sessions and SessionRegistry.sessions[data.tab_page_id]
