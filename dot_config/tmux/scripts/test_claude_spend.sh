@@ -34,7 +34,8 @@ check() {
 
 # Emulates `curl -o <file> -w '%{http_code}'`: writes the staged body to the -o
 # path and prints the status. Exits nonzero like curl does on a transport error
-# when FAKE_CURL_FAIL is set.
+# when FAKE_CURL_FAIL is set. FAKE_SIBLING_CACHE stands in for another copy of
+# the script updating the cache while this request is in flight.
 cat >"$tmp/bin/curl" <<'EOF'
 #!/usr/bin/env bash
 out=
@@ -45,6 +46,9 @@ for arg in "$@"; do
   [ "$prev" = "-D" ] && headers=$arg
   prev=$arg
 done
+if [ -n "${FAKE_SIBLING_CACHE:-}" ]; then
+  printf '%s' "$FAKE_SIBLING_LINES" >"$FAKE_SIBLING_CACHE"
+fi
 [ -n "${FAKE_CURL_FAIL:-}" ] && exit 7
 [ -n "$out" ] && cat "$FAKE_USAGE_JSON" >"$out"
 if [ -n "$headers" ]; then
@@ -305,6 +309,37 @@ check "server error: normal TTL cadence retained" "yes" \
   "$(awk -v next_at="$(head -1 "$cache")" -v now="$now" \
     'BEGIN { print (next_at - now <= 450) ? "yes" : "no" }')"
 unset FAKE_HTTP_STATUS
+
+# --- 20. Concurrent runs must not lose each other's reading ---
+# One copy of the script runs per tmux client per redraw, so a fetch is often in
+# flight while a sibling records a newer reading. A failure that wrote back its
+# own pre-fetch copy of the cache would roll that reading back, and a torn read
+# of a half-written cache would blank the segment outright.
+reset_state
+write_cache "$((now - 1))" "121074 2 150000 81 warning" "$((now - 300))"
+export FAKE_CURL_FAIL=1 FAKE_SIBLING_CACHE="$cache"
+FAKE_SIBLING_LINES="$((now + 200))
+135000 2 150000 90 critical
+$now"
+export FAKE_SIBLING_LINES
+out=$("$script")
+check "failed fetch keeps a concurrent run's newer reading" "yes" \
+  "$(grep -q '\$1350.00' <<<"$out" && echo yes || echo no)"
+check "failed fetch does not roll back the newer epoch" "$now" "$(sed -n '3p' "$cache")"
+check "failed fetch still records its own backoff" "yes" \
+  "$(awk -v next_at="$(head -1 "$cache")" -v now="$now" \
+    'BEGIN { d = next_at - now; print (d > 0 && d <= 450) ? "yes" : "no" }')"
+unset FAKE_CURL_FAIL FAKE_SIBLING_CACHE FAKE_SIBLING_LINES
+
+# The cache is swapped in whole, so no partial file is ever left where a reader
+# would find it.
+reset_state
+stage_usage 121074 150000 81 warning
+"$script" >/dev/null
+check "cache replaced atomically: no temp files left behind" "" \
+  "$(find "$(dirname "$cache")" -name 'usage.*' -print)"
+check "cache still holds a complete reading" $'121074\t2\t150000\t81\twarning' \
+  "$(sed -n '2p' "$cache")"
 
 if [ "$failures" -gt 0 ]; then
   printf '\n%d test(s) failed\n' "$failures"
