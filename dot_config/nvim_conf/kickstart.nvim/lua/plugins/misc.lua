@@ -717,6 +717,23 @@ return {
         return filename:match('^octo:/') ~= nil
       end
 
+      local treesitter_foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+
+      --- `Octo pr diff` buffers hold a plain unified diff, so unlike the extmark-rendered
+      --- octo issue/PR buffers they are worth folding. ufo cannot do it: its treesitter
+      --- provider bails out on `nofile` buffers and falls back to indent folds, which a
+      --- diff has none of. Drive those folds off treesitter directly instead.
+      --- @param bufnr integer
+      --- @return boolean
+      local function is_octo_pull_diff(bufnr)
+        local filename = vim.api.nvim_buf_get_name(bufnr)
+        if not filename:match('^octo:/') then
+          return false
+        end
+        local buffer_info = require('octo.uri').parse(filename)
+        return buffer_info ~= nil and buffer_info.kind == 'pull_diff'
+      end
+
       require('ufo').setup({
         provider_selector = function(bufnr)
           if ufo_disabled_for_buf(bufnr) then
@@ -733,9 +750,41 @@ return {
         group = vim.api.nvim_create_augroup('ufo-enable-on-enter', { clear = true }),
         callback = function(args)
           if ufo_disabled_for_buf(args.buf) then
+            if is_octo_pull_diff(args.buf) then
+              vim.wo.foldmethod = 'expr'
+              vim.wo.foldexpr = treesitter_foldexpr
+            elseif vim.wo.foldmethod == 'expr' and vim.wo.foldexpr == treesitter_foldexpr then
+              -- ufo leaves 'foldmethod' alone for these buffers, so drop what an
+              -- `Octo pr diff` buffer left behind in this window rather than folding an
+              -- octo issue or a review diff by it. Anything else owns its own folds.
+              vim.wo.foldmethod = 'manual'
+            end
             return
           end
           require('ufo').enableFold(args.buf)
+        end,
+      })
+      vim.api.nvim_create_autocmd('FileType', {
+        pattern = 'diff',
+        group = vim.api.nvim_create_augroup('ufo-octo-pull-diff-folds', { clear = true }),
+        callback = function(args)
+          if not is_octo_pull_diff(args.buf) then
+            return
+          end
+          -- octo renders the diff asynchronously and sets 'filetype' last, which is what
+          -- makes treesitter drop the fold levels it computed while the buffer was still
+          -- empty. Nothing re-evaluates 'foldexpr' after that, so ask for a fold update,
+          -- scheduled so it runs after treesitter has invalidated those stale levels.
+          vim.schedule(function()
+            if not vim.api.nvim_buf_is_valid(args.buf) then
+              return
+            end
+            for _, win in ipairs(vim.fn.win_findbuf(args.buf)) do
+              vim.api.nvim_win_call(win, function()
+                vim.cmd('normal! zx')
+              end)
+            end
+          end)
         end,
       })
     end,
