@@ -27,3 +27,14 @@
     (addition)
     (deletion)
   ]+ @fold)
+
+; A change line whose context is empty (a bare " ") also ends the (block) it was in,
+; so the rest of that hunk spills out as flat siblings — the usual shape for a GitHub
+; PR diff, where upstream's (block) fold then only covers the header lines. Fold any
+; leftover run of change lines that neither pattern above reached.
+(source
+  [
+    (context)
+    (addition)
+    (deletion)
+  ]+ @fold)
