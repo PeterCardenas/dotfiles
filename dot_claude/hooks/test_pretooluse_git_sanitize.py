@@ -12,9 +12,12 @@ non-executable file.
 from __future__ import annotations
 
 import importlib.util
+import json
 import os
+import shlex
 import stat
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -27,6 +30,11 @@ SCRIPT_PATH = Path(__file__).with_name("executable_pretooluse_git_sanitize.py")
 
 
 def load_module():
+    # The hook imports hook_context, a sibling in the same hooks directory
+    # (which is on sys.path when Claude Code runs the deployed script, but not
+    # when this test loads it by path).
+    if str(SCRIPT_PATH.parent) not in sys.path:
+        sys.path.insert(0, str(SCRIPT_PATH.parent))
     spec = importlib.util.spec_from_file_location(
         "pretooluse_git_sanitize", SCRIPT_PATH
     )
@@ -34,6 +42,26 @@ def load_module():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _run_hook(command: str) -> dict:
+    """Run the hook as Claude Code does -- payload on stdin -- and return its
+    parsed response."""
+    payload = {
+        "session_id": "test",
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Bash",
+        "tool_input": {"command": command, "description": "test"},
+    }
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT_PATH)],
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, f"hook failed: {result.stderr}"
+    return json.loads(result.stdout)
 
 
 # A stub `git` that dumps whatever follows -m/--message to a file, so tests
@@ -51,6 +79,10 @@ done
 """
 
 
+def _count_message_options(command: str) -> int:
+    return sum(token in ("-m", "--message") for token in shlex.split(command))
+
+
 def _deliver_via_stub_git(command: str) -> str:
     """Execute `command` under bash with a stub `git` on PATH and return the
     exact text `git` received as its -m/--message argument."""
@@ -59,7 +91,9 @@ def _deliver_via_stub_git(command: str) -> str:
         stub_dir.mkdir()
         stub_git = stub_dir / "git"
         stub_git.write_text(_STUB_GIT_SCRIPT)
-        stub_git.chmod(stub_git.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+        stub_git.chmod(
+            stub_git.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH
+        )
 
         out_file = Path(tmpdir) / "captured_message.txt"
         env = dict(os.environ)
@@ -111,7 +145,7 @@ class StripAgentAttributionTest(unittest.TestCase):
 
     def test_removes_claude_attribution_without_emoji(self) -> None:
         command = (
-            'gh pr create --body "$(cat <<\'EOF\'\n'
+            "gh pr create --body \"$(cat <<'EOF'\n"
             "Body.\n\n"
             "Generated with [Claude Code](https://claude.com/claude-code)\n"
             'EOF\n)"'
@@ -126,11 +160,13 @@ class StripAgentAttributionTest(unittest.TestCase):
         # Message content is unchanged (no attribution to strip); only the
         # quote style changes, since re-encoding always goes through
         # shlex.quote() now (see comment on the sibling test above).
-        self.assertEqual(cleaned, "git commit -m 'docs: mention Claude Code in the readme'")
+        self.assertEqual(
+            cleaned, "git commit -m 'docs: mention Claude Code in the readme'"
+        )
 
     def test_still_strips_cursor_attribution(self) -> None:
         command = (
-            'gh pr create --body "$(cat <<\'EOF\'\n'
+            "gh pr create --body \"$(cat <<'EOF'\n"
             "Body.\n\n"
             "Made with [Cursor](https://cursor.com)\n"
             'EOF\n)"'
@@ -171,9 +207,7 @@ class DoubleQuotedMessageRoundTripTest(unittest.TestCase):
         self.assertIn("$1.2k", delivered)
         self.assertNotIn("\\$", delivered)
         self.assertGreaterEqual(delivered.count("\n"), 2)
-        self.assertIn(
-            "feat(tmux.statusbar): slim down the narrow tier", delivered
-        )
+        self.assertIn("feat(tmux.statusbar): slim down the narrow tier", delivered)
 
     def test_literal_backslash_n_is_deliberately_treated_as_newline(self) -> None:
         """Accepted trade-off, not a bug: a double-quoted -m body containing
@@ -246,6 +280,92 @@ class DoubleQuotedMessageRoundTripTest(unittest.TestCase):
         cleaned = self.module._sanitize_command(command)
         self.assertEqual(cleaned, command)
 
+    def test_repeated_m_args_join_into_one_wrapped_message(self) -> None:
+        """The multiple-`-m` path: formatting only the first -m left every
+        later paragraph as one 400-char line. That is a valid commit body, but
+        an unreadable one -- and it is what made `rtk git log` (which
+        truncates output lines at 120 chars and appends `...`) look like the
+        stored message had been mangled.
+        """
+        paragraphs = (
+            "fix(nvim.shell): stop leaking libuv check handles",
+            "Shell.async_cmd used plenary.job, which allocates a uv_check_t per Job "
+            "to poll for pipe drain, allocates a SECOND one when Job:start() "
+            "re-enters _reset(), and on completion only stops the handle before "
+            "dropping the reference.",
+            "Migrate to native vim.system(), which closes its own check handle on "
+            "exit. The public Async.wrap signature is unchanged, so no caller is "
+            "affected.",
+        )
+        command = "git commit" + "".join(f' -m "{p}"' for p in paragraphs)
+
+        cleaned = self.module._sanitize_command(command)
+        delivered = _deliver_via_stub_git(cleaned)
+
+        # The collapsed args must leave exactly one message argument, or the
+        # stub (which records the last -m it sees) would prove nothing.
+        self.assertEqual(_count_message_options(cleaned), 1)
+        for paragraph in paragraphs:
+            self.assertIn(paragraph, " ".join(delivered.split()))
+        self.assertNotIn("...", delivered)
+        self.assertLessEqual(max(len(line) for line in delivered.splitlines()), 120)
+
+    def test_two_commits_on_one_line_keep_their_own_messages(self) -> None:
+        """Joining -m args must stay inside one `git commit`. Scanning the whole
+        line merged both commits' messages into the first one, which left the
+        second commit with no -m at all.
+        """
+        command = (
+            'git commit --amend -q -m "chore: first" ; '
+            'git commit -m "feat: second" -m "Second body."'
+        )
+        cleaned = self.module._sanitize_command(command)
+
+        first, second = cleaned.split(";")
+        self.assertEqual(_count_message_options(first), 1)
+        self.assertEqual(_count_message_options(second), 1)
+        self.assertIn("chore: first", first)
+        self.assertNotIn("chore: first", second)
+        self.assertIn("feat: second", second)
+        self.assertIn("Second body.", second)
+        self.assertNotIn("feat: second", first)
+
+    def test_semicolon_inside_a_message_is_not_a_command_boundary(self) -> None:
+        command = 'git commit -m "fix: guard a; b in the parser" -m "Body text."'
+        cleaned = self.module._sanitize_command(command)
+        delivered = _deliver_via_stub_git(cleaned)
+
+        self.assertEqual(_count_message_options(cleaned), 1)
+        self.assertIn("guard a; b in the parser", delivered)
+        self.assertIn("Body text.", delivered)
+
+    def test_unparseable_message_arg_leaves_command_untouched(self) -> None:
+        # An unquoted -m body means the parser cannot tell where the message
+        # ends, so joining would drop or reorder paragraphs. Bail instead.
+        command = 'git commit -m wip -m "second paragraph here"'
+        self.assertEqual(self.module._sanitize_command(command), command)
+
+    def test_dash_m_inside_a_message_body_is_not_read_as_an_option(self) -> None:
+        command = 'git commit -m "docs: explain when to pass -m twice"'
+        cleaned = self.module._sanitize_command(command)
+        delivered = _deliver_via_stub_git(cleaned)
+        # Counted after bash-style tokenizing: the body's own " -m " text is
+        # not an option, and a substring count would say otherwise.
+        self.assertEqual(_count_message_options(cleaned), 1)
+        self.assertIn("pass -m twice", delivered)
+
+    def test_single_quoted_body_joins_literally(self) -> None:
+        # Mixed quoting: the double-quoted body gets bash's double-quote
+        # decoding, the single-quoted one must stay byte-literal (its `\n` is
+        # two characters, not a newline).
+        command = "git commit -m \"feat: add thing\" -m 'prints a \\n between rows'"
+
+        cleaned = self.module._sanitize_command(command)
+        delivered = _deliver_via_stub_git(cleaned)
+
+        self.assertIn("feat: add thing", delivered)
+        self.assertIn("\\n between rows", delivered)
+
     def test_attribution_stripped_end_to_end_round_trip(self) -> None:
         raw_message = (
             "feat: add cost tracker\\n\\n"
@@ -264,6 +384,34 @@ class DoubleQuotedMessageRoundTripTest(unittest.TestCase):
         self.assertNotIn("\\$", delivered)
         self.assertGreaterEqual(delivered.count("\n"), 1)
         self.assertIn("feat: add cost tracker", delivered)
+
+
+class HookResponseContractTest(unittest.TestCase):
+    """The response shape the harness actually honors.
+
+    A rewrite is only applied when permissionDecision comes with a
+    permissionDecisionReason. Without the reason the harness still surfaces
+    additionalContext, so the hook reports success while the original command
+    runs -- the failure that made every rewrite here a silent no-op.
+    """
+
+    def test_rewrite_response_carries_a_permission_decision_reason(self) -> None:
+        response = _run_hook(
+            'git commit -m "feat: x\\n\\n'
+            '🤖 Generated with [Claude Code](https://claude.com/claude-code)"'
+        )
+        output = response["hookSpecificOutput"]
+
+        self.assertIn("updatedInput", output)
+        self.assertEqual(output["permissionDecision"], "allow")
+        self.assertTrue(output["permissionDecisionReason"])
+        self.assertEqual(output["hookEventName"], "PreToolUse")
+        self.assertNotIn("Claude Code", output["updatedInput"]["command"])
+        # Unrelated tool_input keys must survive the swap.
+        self.assertEqual(output["updatedInput"]["description"], "test")
+
+    def test_untouched_command_gets_an_empty_response(self) -> None:
+        self.assertEqual(_run_hook("git status"), {})
 
 
 if __name__ == "__main__":
