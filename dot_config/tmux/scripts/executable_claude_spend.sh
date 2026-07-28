@@ -224,9 +224,4 @@ if [ -n "$previous_reading" ]; then
   segment="\$$(major_units "$today_minor" "$exponent") #[fg=#565f89]| ${segment}"
 fi
 
-# A null limit means unlimited: there is no ratio to show.
-if [ "$limit_minor" != "-" ]; then
-  segment="${segment} #[fg=#565f89]/ #[fg=#c0caf5]\$$(major_units "$limit_minor" "$exponent")"
-fi
-
 printf '%s' "#[fg=#ff9e64]  #[fg=#c0caf5]${segment}"

@@ -117,12 +117,14 @@ now=$(date +%s)
 today=$(date +%Y-%m-%d)
 yesterday=$(date -d '1 day ago' +%Y-%m-%d 2>/dev/null || date -v-1d +%Y-%m-%d)
 
-# --- 1. A normal reading renders "used / limit", colored by severity ---
+# --- 1. A normal reading renders the used amount, colored by severity ---
 reset_state
 stage_usage 121074 150000 81 warning
 out=$("$script")
-check "used and limit rendered in dollars" "yes" \
-  "$(grep -q '\$1210.74 #\[fg=#565f89\]/ #\[fg=#c0caf5\]\$1500.00' <<<"$out" && echo yes || echo no)"
+check "used amount rendered in dollars" "yes" \
+  "$(grep -q '\$1210.74$' <<<"$out" && echo yes || echo no)"
+check "the limit is not rendered" "no" \
+  "$(grep -q '\$1500.00' <<<"$out" && echo yes || echo no)"
 check "severity warning colors the amount orange" "yes" \
   "$(grep -q 'fg=#ff9e64\]\$1210.74' <<<"$out" && echo yes || echo no)"
 
@@ -153,14 +155,14 @@ reset_state
 stage_extra_usage_only 60000 150000 40
 out=$("$script")
 check "extra_usage fallback: amount rendered" "yes" \
-  "$(grep -q '\$600.00 #\[fg=#565f89\]/ #\[fg=#c0caf5\]\$1500.00' <<<"$out" && echo yes || echo no)"
+  "$(grep -q '\$600.00$' <<<"$out" && echo yes || echo no)"
 check "extra_usage fallback: colored by percent" "yes" \
   "$(grep -q 'fg=#9ece6a\]\$600.00' <<<"$out" && echo yes || echo no)"
 
-# --- 6. A null limit means unlimited: no ratio, no color tier ---
+# --- 6. A null limit leaves no percent to derive, so no color tier applies ---
 reset_state
 stage_usage 121074 - - unknown_severity
-check "unlimited: used amount only" "yes" \
+check "unlimited: uncolored used amount" "yes" \
   "$(grep -q 'fg=#c0caf5\]\$1210.74$' <<<"$("$script")" && echo yes || echo no)"
 
 # --- 7. Percent is derived when the API omits it ---
