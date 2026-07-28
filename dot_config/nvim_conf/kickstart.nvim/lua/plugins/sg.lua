@@ -236,6 +236,7 @@ return {
             default_config_options = {
               model = 'opus[1m]',
               mode = 'bypassPermissions',
+              effort = 'medium',
             },
             mcp_servers = {
               {
