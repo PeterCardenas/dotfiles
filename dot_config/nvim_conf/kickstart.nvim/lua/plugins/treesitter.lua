@@ -26,6 +26,13 @@ end, {
   desc = 'Restart Treesitter for the current buffer',
   nargs = 0,
 })
+vim.api.nvim_create_user_command('TSStop', function()
+  local cur_buf = vim.api.nvim_get_current_buf()
+  vim.treesitter.stop(cur_buf)
+end, {
+  desc = 'Restart Treesitter for the current buffer',
+  nargs = 0,
+})
 
 vim.api.nvim_create_user_command('TSLogToggleDebug', function()
   local ts_log_debug = vim.g.__ts_debug
