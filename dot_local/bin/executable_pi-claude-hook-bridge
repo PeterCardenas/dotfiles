@@ -254,6 +254,9 @@ def _run_stop(config: HookConfig, payload: dict[str, Any]) -> dict[str, Any]:
         return {"action": "stop_stub", "reason": _STOP_STUB_REASON}
 
     claude_payload = {"hook_event_name": "Stop", "transcript_path": transcript_path}
+    session_id = payload.get("session_id")
+    if isinstance(session_id, str) and session_id:
+        claude_payload["session_id"] = session_id
     cwd = payload.get("cwd")
     if isinstance(cwd, str) and cwd:
         claude_payload["cwd"] = cwd
