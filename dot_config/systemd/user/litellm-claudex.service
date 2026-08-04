@@ -1,0 +1,24 @@
+[Unit]
+Description=LiteLLM proxy translating Anthropic Messages API to OpenAI Codex
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Secrets are read here rather than stored in config.yaml, so the chezmoi-managed
+# config carries no credentials. Same key file that sg.lua reads for codex-acp.
+ExecStart=/bin/sh -c 'OPENAI_API_KEY=$(cat %h/.local/share/openai/api_key) \
+  LITELLM_MASTER_KEY=$(cat %h/.local/share/litellm/master_key) \
+  exec %h/.local/bin/litellm --config %h/.config/litellm/config.yaml --host 127.0.0.1 --port 4000'
+Restart=on-failure
+RestartSec=5s
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectControlGroups=true
+ReadWritePaths=%h/.local/share/litellm
+
+[Install]
+WantedBy=default.target
