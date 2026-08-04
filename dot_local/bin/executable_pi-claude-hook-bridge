@@ -1,0 +1,297 @@
+#!/usr/bin/env python3
+"""Bridge Pi extension events to the existing Claude hook scripts.
+
+The bridge intentionally speaks a tiny JSON protocol so tests and future Pi
+extensions can exercise hook compatibility without running an authenticated Pi
+model session.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import re
+import shlex
+import subprocess
+import sys
+from pathlib import Path
+from typing import Any
+
+
+HookConfig = dict[str, list[dict[str, Any]]]
+
+_TOOL_NAME_MAP = {
+    "bash": "Bash",
+    "shell": "Bash",
+    "terminal": "Bash",
+    "read": "Read",
+    "edit": "Edit",
+    "write": "Write",
+    "grep": "Grep",
+    "find": "Find",
+    "ls": "LS",
+}
+
+_STOP_STUB_REASON = (
+    "Pi message_end does not currently provide the Claude/Cursor transcript_path "
+    "needed by stop_autoformat.py. When Pi exposes a stable session transcript path, "
+    "send it to this bridge as transcript_path and run the configured Stop hooks."
+)
+
+
+def _output(payload: dict[str, Any]) -> None:
+    json.dump(payload, sys.stdout)
+
+
+def _load_stdin() -> dict[str, Any]:
+    try:
+        payload = json.load(sys.stdin)
+    except json.JSONDecodeError:
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _load_config() -> HookConfig:
+    config_path = _config_path()
+    if config_path is None:
+        return {}
+
+    try:
+        raw_config = json.loads(config_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return _extract_hooks(raw_config)
+
+
+def _config_path() -> Path | None:
+    candidate = Path.home() / ".claude" / "settings.json"
+    return candidate if candidate.is_file() else None
+
+
+def _extract_hooks(raw_config: Any) -> HookConfig:
+    if not isinstance(raw_config, dict):
+        return {}
+    hooks = raw_config.get("hooks")
+    if isinstance(hooks, dict):
+        return hooks
+    return raw_config
+
+
+def _pi_tool_name(event: dict[str, Any]) -> str:
+    raw_name = event.get("toolName") or event.get("tool_name") or ""
+    if not isinstance(raw_name, str):
+        return ""
+    return _TOOL_NAME_MAP.get(raw_name, raw_name[:1].upper() + raw_name[1:])
+
+
+def _matches_tool(matcher: str | None, tool_name: str) -> bool:
+    if matcher is None:
+        return True
+    try:
+        return re.fullmatch(matcher, tool_name) is not None
+    except re.error:
+        return matcher == tool_name
+
+
+def _matching_hook_commands(
+    config: HookConfig, hook_event_name: str, tool_name: str
+) -> list[str]:
+    commands: list[str] = []
+    for group in config.get(hook_event_name, []):
+        if not isinstance(group, dict):
+            continue
+        matcher = group.get("matcher")
+        if isinstance(matcher, str) and not _matches_tool(matcher, tool_name):
+            continue
+        if matcher is None and hook_event_name != "Stop":
+            continue
+        for hook in group.get("hooks", []):
+            if not isinstance(hook, dict):
+                continue
+            command = hook.get("command")
+            if isinstance(command, str) and command.strip():
+                commands.append(command)
+    return commands
+
+
+def _command_argv(command: str) -> list[str]:
+    expanded = os.path.expandvars(os.path.expanduser(command))
+    return shlex.split(expanded)
+
+
+def _run_hook(
+    command: str, claude_payload: dict[str, Any]
+) -> tuple[dict[str, Any], str | None]:
+    try:
+        result = subprocess.run(
+            _command_argv(command),
+            input=json.dumps(claude_payload),
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError, ValueError) as exc:
+        return {}, f"failed to run hook `{command}`: {exc}"
+
+    if result.returncode != 0:
+        stderr = result.stderr.strip()
+        suffix = f": {stderr}" if stderr else ""
+        return {}, f"hook `{command}` exited {result.returncode}{suffix}"
+
+    stdout = result.stdout.strip()
+    if not stdout:
+        return {}, None
+
+    try:
+        parsed = json.loads(stdout)
+    except json.JSONDecodeError as exc:
+        return {}, f"hook `{command}` returned invalid JSON: {exc}"
+    return parsed if isinstance(parsed, dict) else {}, None
+
+
+def _tool_input_with_cwd(
+    payload: dict[str, Any], event: dict[str, Any]
+) -> dict[str, Any]:
+    raw_input = event.get("input")
+    tool_input = dict(raw_input) if isinstance(raw_input, dict) else {}
+    cwd = payload.get("cwd")
+    if isinstance(cwd, str) and cwd:
+        tool_input.setdefault("cwd", cwd)
+        tool_input.setdefault("working_directory", cwd)
+    return tool_input
+
+
+def _claude_payload(
+    payload: dict[str, Any], hook_event_name: str, event: dict[str, Any]
+) -> dict[str, Any]:
+    tool_input = _tool_input_with_cwd(payload, event)
+    result: dict[str, Any] = {
+        "hook_event_name": hook_event_name,
+        "tool_name": _pi_tool_name(event),
+        "tool_input": tool_input,
+    }
+
+    cwd = payload.get("cwd")
+    if isinstance(cwd, str) and cwd:
+        result["cwd"] = cwd
+        result["working_directory"] = cwd
+
+    for key in ("session_id", "transcript_path"):
+        value = payload.get(key)
+        if isinstance(value, str) and value:
+            result[key] = value
+
+    if hook_event_name == "PostToolUse":
+        result["tool_result"] = {
+            "content": event.get("content"),
+            "details": event.get("details"),
+            "is_error": bool(event.get("isError") or event.get("is_error")),
+        }
+    return result
+
+
+def _pretooluse_decision(hook_output: dict[str, Any]) -> tuple[str | None, str | None]:
+    specific = hook_output.get("hookSpecificOutput")
+    if not isinstance(specific, dict):
+        return None, None
+    decision = specific.get("permissionDecision")
+    reason = specific.get("permissionDecisionReason")
+    if isinstance(decision, str):
+        return decision, reason if isinstance(reason, str) else None
+    return None, None
+
+
+def _posttooluse_context(hook_output: dict[str, Any]) -> str | None:
+    specific = hook_output.get("hookSpecificOutput")
+    if not isinstance(specific, dict):
+        return None
+    context = specific.get("additionalContext")
+    return context if isinstance(context, str) and context else None
+
+
+def _run_pretooluse(
+    config: HookConfig, payload: dict[str, Any], event: dict[str, Any]
+) -> dict[str, Any]:
+    tool_name = _pi_tool_name(event)
+    claude_payload = _claude_payload(payload, "PreToolUse", event)
+    for command in _matching_hook_commands(config, "PreToolUse", tool_name):
+        hook_output, error = _run_hook(command, claude_payload)
+        if error:
+            return {"action": "block", "reason": f"Pi Claude hook bridge {error}"}
+        decision, reason = _pretooluse_decision(hook_output)
+        if decision == "deny":
+            return {"action": "block", "reason": reason or "Blocked by Claude hook"}
+    return {"action": "allow"}
+
+
+def _run_posttooluse(
+    config: HookConfig, payload: dict[str, Any], event: dict[str, Any]
+) -> dict[str, Any]:
+    tool_name = _pi_tool_name(event)
+    claude_payload = _claude_payload(payload, "PostToolUse", event)
+    messages: list[str] = []
+    for command in _matching_hook_commands(config, "PostToolUse", tool_name):
+        hook_output, error = _run_hook(command, claude_payload)
+        if error:
+            messages.append(f"Pi Claude hook bridge {error}")
+            continue
+        context = _posttooluse_context(hook_output)
+        if context:
+            messages.append(context)
+    return (
+        {"action": "context", "messages": messages} if messages else {"action": "allow"}
+    )
+
+
+def _run_stop(config: HookConfig, payload: dict[str, Any]) -> dict[str, Any]:
+    commands = _matching_hook_commands(config, "Stop", "")
+    if not commands:
+        return {"action": "allow"}
+
+    transcript_path = payload.get("transcript_path")
+    if not isinstance(transcript_path, str) or not transcript_path:
+        return {"action": "stop_stub", "reason": _STOP_STUB_REASON}
+
+    claude_payload = {"hook_event_name": "Stop", "transcript_path": transcript_path}
+    cwd = payload.get("cwd")
+    if isinstance(cwd, str) and cwd:
+        claude_payload["cwd"] = cwd
+        claude_payload["working_directory"] = cwd
+
+    for command in commands:
+        hook_output, error = _run_hook(command, claude_payload)
+        if error:
+            return {"action": "block", "reason": f"Pi Claude hook bridge {error}"}
+        if hook_output.get("decision") == "block":
+            reason = hook_output.get("reason")
+            return {
+                "action": "block",
+                "reason": reason if isinstance(reason, str) else "Blocked by Stop hook",
+            }
+    return {"action": "allow"}
+
+
+def _main() -> int:
+    payload = _load_stdin()
+    config = _load_config()
+    event = payload.get("event")
+    event_dict = event if isinstance(event, dict) else {}
+    event_type = payload.get("event_type")
+
+    if event_type == "tool_call":
+        _output(_run_pretooluse(config, payload, event_dict))
+        return 0
+    if event_type == "tool_result":
+        _output(_run_posttooluse(config, payload, event_dict))
+        return 0
+    if event_type == "message_end":
+        _output(_run_stop(config, payload))
+        return 0
+
+    _output({"action": "allow"})
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(_main())
