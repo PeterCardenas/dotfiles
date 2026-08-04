@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
@@ -6,7 +7,6 @@ import {
 	isBashToolResult,
 	isToolCallEventType,
 	type ExtensionAPI,
-	type MessageEndEvent,
 	type ToolResultEvent,
 } from "@earendil-works/pi-coding-agent";
 
@@ -14,6 +14,8 @@ type BridgeInput = {
 	event_type: "tool_call" | "tool_result" | "message_end";
 	cwd: string;
 	event: unknown;
+	session_id?: string;
+	transcript_path?: string;
 };
 
 type BridgeResponse =
@@ -117,18 +119,59 @@ async function handleBashToolResult(event: ToolResultEvent, cwd: string) {
 	};
 }
 
-async function maybeRunStopStub(event: MessageEndEvent, cwd: string): Promise<void> {
-	if (process.env.PI_CLAUDE_HOOK_BRIDGE_CHECK_STOP !== "1") {
-		return;
+const claudeInstructionsPath = join(homedir(), ".claude", "CLAUDE.md");
+
+function appendClaudeInstructions(event: {
+	systemPrompt: string;
+	systemPromptOptions: {
+		contextFiles?: Array<{ path: string; content: string }>;
+	};
+}): { systemPrompt: string } | undefined {
+	const contextFiles = event.systemPromptOptions.contextFiles ?? [];
+	if (
+		contextFiles.some((file) => file.path === claudeInstructionsPath) ||
+		!existsSync(claudeInstructionsPath)
+	) {
+		return undefined;
 	}
 
+	let content: string;
+	try {
+		content = readFileSync(claudeInstructionsPath, "utf8");
+	} catch {
+		return undefined;
+	}
+
+	return {
+		systemPrompt: `${event.systemPrompt}\n\n<project_context>\n\nProject-specific instructions and guidelines:\n\n<project_instructions path="${claudeInstructionsPath}">\n${content}\n</project_instructions>\n\n</project_context>\n`,
+	};
+}
+
+async function runStopHook(
+	event: unknown,
+	ctx: {
+		cwd: string;
+		sessionManager: {
+			getSessionFile(): string | undefined;
+			getSessionId(): string;
+		};
+	},
+): Promise<void> {
+	const transcriptPath = ctx.sessionManager.getSessionFile();
 	const response = await runBridge({
 		event_type: "message_end",
-		cwd,
+		cwd: ctx.cwd,
 		event,
+		session_id: ctx.sessionManager.getSessionId(),
+		...(transcriptPath ? { transcript_path: transcriptPath } : {}),
 	});
 	if (response.action === "stop_stub") {
 		process.stderr.write(`Pi Claude Stop hook stub: ${response.reason}\n`);
+	}
+	if (response.action === "block") {
+		process.stderr.write(
+			`Pi Claude Stop hook advisory block: ${response.reason ?? "blocked"}\n`,
+		);
 	}
 }
 
@@ -157,9 +200,11 @@ export default function (pi: ExtensionAPI) {
 		};
 	});
 
+	pi.on("before_agent_start", (event) => appendClaudeInstructions(event));
+
 	pi.on("tool_result", async (event, ctx) => handleBashToolResult(event, ctx.cwd));
 
-	pi.on("message_end", async (event, ctx) => {
-		await maybeRunStopStub(event, ctx.cwd);
+	pi.on("agent_settled", async (event, ctx) => {
+		await runStopHook(event, ctx);
 	});
 }
