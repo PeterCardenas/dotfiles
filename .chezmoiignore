@@ -1,5 +1,6 @@
 README.md
 .git-blame-ignore-revs
+.gitignore
 gnome-settings.conf
 setup.sh
 # Ignore config files specific to linux
