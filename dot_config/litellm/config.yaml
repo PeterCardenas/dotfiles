@@ -1,0 +1,27 @@
+# LiteLLM proxy that lets Claude Code's harness (claude-agent-acp) run on Codex
+# weights: it accepts Anthropic `/v1/messages` and forwards to the OpenAI
+# Responses API. Every codex model is Responses-only, so the chat-completions
+# path is never used here.
+#
+# Consumed by the litellm-claudex systemd user unit, which injects
+# OPENAI_API_KEY and LITELLM_MASTER_KEY so no secret is stored in this file.
+
+model_list:
+  - model_name: gpt-5.3-codex
+    litellm_params:
+      model: openai/gpt-5.3-codex
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: gpt-5.1-codex-mini
+    litellm_params:
+      model: openai/gpt-5.1-codex-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+
+litellm_settings:
+  # Claude Code sends Anthropic-only fields (cache_control breakpoints, thinking
+  # config) that the Responses API rejects. Drop them rather than 400 the turn;
+  # OpenAI does automatic prefix caching server-side, so dropping the explicit
+  # breakpoints costs cache control, not caching itself.
+  drop_params: true

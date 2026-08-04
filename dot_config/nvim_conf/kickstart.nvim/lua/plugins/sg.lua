@@ -116,9 +116,15 @@ return {
 
       local openai_api_key_ok, openai_api_key = Secrets.read_api_key('~/.local/share/openai/api_key')
       local cursor_api_key_ok, cursor_api_key = Secrets.read_api_key('~/.local/share/cursor/api_key')
+      -- Local LiteLLM proxy key (litellm-claudex.service), used by the claudex
+      -- provider to reach Codex weights through Claude Code's harness.
+      local litellm_key_ok, litellm_key = Secrets.read_api_key('~/.local/share/litellm/master_key')
 
       if not openai_api_key_ok then
         Log.notify_error('OpenAI API key not found')
+      end
+      if not litellm_key_ok then
+        Log.notify_error('LiteLLM proxy key not found (required by the claudex provider)')
       end
       if Config.USE_CURSOR_ACP and not cursor_api_key_ok then
         Log.notify_error('Cursor API key not found (required when USE_CURSOR_ACP is set)')
@@ -255,6 +261,30 @@ return {
             },
           },
           ['cursor-acp'] = cursor_acp_provider,
+          -- Claude Code's harness running on Codex weights. Same binary as
+          -- `claude-agent-acp`, redirected at the local LiteLLM proxy, which
+          -- translates Anthropic Messages to the OpenAI Responses API.
+          -- CLAUDE_CONFIG_DIR points at a config rendered from the SAME shared
+          -- template as ~/.claude (hooks/permissions stay one source of truth)
+          -- plus the codex `availableModels`. That list is an allowlist that
+          -- RESTRICTS the picker, so it must not live in the shared ~/.claude
+          -- settings -- doing so hides opus/sonnet/haiku from the real
+          -- Anthropic-backed provider. See dot_config/claudex/settings.json.tmpl.
+          ['claudex-acp'] = {
+            name = 'Claudex ACP',
+            _extends = 'claude-agent-acp',
+            command = 'claude-agent-acp',
+            args = {},
+            env = {
+              ANTHROPIC_BASE_URL = 'http://127.0.0.1:4000',
+              ANTHROPIC_AUTH_TOKEN = litellm_key,
+              CLAUDE_CONFIG_DIR = vim.fn.expand('~/.config/claudex'),
+            },
+            default_config_options = {
+              model = 'gpt-5.3-codex',
+              mode = 'bypassPermissions',
+            },
+          },
           -- OpenCode with Bedrock config
           ['opencode'] = {
             command = 'opencode',
