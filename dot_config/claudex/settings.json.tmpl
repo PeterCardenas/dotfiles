@@ -1,0 +1,13 @@
+{{/*
+  Claude Code config for the `claudex-acp` provider (Codex weights behind Claude
+  Code's harness). Renders the SAME shared settings template as ~/.claude, so
+  hooks/permissions stay in one source of truth, then adds the codex model ids.
+
+  `availableModels` is an allowlist that RESTRICTS the picker, so it cannot live
+  in the shared ~/.claude settings: that would hide opus/sonnet/haiku from the
+  real Anthropic-backed provider. Scoping it here via CLAUDE_CONFIG_DIR keeps the
+  restriction on claudex only.
+*/ -}}
+{{ $settings := includeTemplate "claude-settings.json" . | fromJson -}}
+{{ $_ := set $settings "availableModels" (list "gpt-5.3-codex" "gpt-5.1-codex-mini") -}}
+{{ $settings | toPrettyJson }}
