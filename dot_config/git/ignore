@@ -32,3 +32,5 @@ venv/
 
 # MacOS
 **/.DS_Store
+
+**/.pi-subagents/
