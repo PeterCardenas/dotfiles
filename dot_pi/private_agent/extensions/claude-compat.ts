@@ -176,8 +176,11 @@ async function runStopHook(
 }
 
 export default function (pi: ExtensionAPI) {
-	pi.on("resources_discover", () => ({
-		skillPaths: [join(homedir(), ".claude", "skills")],
+	pi.on("resources_discover", (event) => ({
+		skillPaths: [
+			join(homedir(), ".claude", "skills"),
+			join(event.cwd, ".claude", "skills"),
+		],
 	}));
 
 	pi.on("tool_call", async (event, ctx) => {
