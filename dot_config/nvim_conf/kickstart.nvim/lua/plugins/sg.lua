@@ -152,7 +152,7 @@ return {
       end
 
       require('agentic').setup({
-        provider = 'cursor-acp',
+        provider = 'pi-acp',
 
         -- Right-side chat layout.
         windows = {
