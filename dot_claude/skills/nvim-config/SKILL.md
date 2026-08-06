@@ -7,6 +7,7 @@ description: Use when editing, debugging, or testing Neovim configuration or plu
 
 ## Editing
 
+- Edit chezmoi-managed source paths in this repository, not runtime targets such as `~/.config/nvim` or `~/.claude`; do not edit generated targets directly.
 - DO NOT run `chezmoi apply`. It is not necessary after editing config files — and changes are automatically applied to the target after edits.
 - Always read the plugin source in `~/.local/share/nvim/lazy/<plugin>/` before editing config that touches that plugin. Never guess at field names, APIs, or behavior.
 - When adding functionality, `grep` across the existing config to find how similar things are done. Follow existing patterns.
@@ -121,17 +122,14 @@ If a repro needs multiple tmux variants, give each one its own disposable sessio
 
 ## Profiling
 
-Profiling is controlled by env vars:
+For the `profile.nvim` path, `NVIM_PROFILE` must be set before Neovim starts. Without it, `profile.nvim` and `:ToggleProfile` are not configured; setting it inside Neovim cannot enable them.
 
-| Var | Effect |
-|---|---|
-| `NVIM_PROFILE=1` | Enable profile.nvim — instruments all modules, toggle recording manually with `:ToggleProfile` |
-| `NVIM_PROFILE=start` | Enable profile.nvim — auto-records init→`VeryLazy`, then prompts to save |
+Launch with:
 
-**profile.nvim workflow:**
-1. Launch: `NVIM_PROFILE=1 nvim` (on-demand) or `NVIM_PROFILE=start nvim` (startup capture)
-2. `:ToggleProfile` to start/stop recording — on stop, prompts to save (default: `/tmp/neovim_lua_profile.json`)
-3. Output is Chrome Trace Event Format (JSON array). Each entry has: `name` (function), `dur` (microseconds, on `ph:"X"` complete events), `ts` (timestamp µs), `cat` (e.g. `"function"`), `args` (call arguments).
+- `NVIM_PROFILE=1 nvim` — instruments modules; use `:ToggleProfile` to start/stop, then choose the JSON output path.
+- `NVIM_PROFILE=start nvim` — starts recording and registers a one-shot `VeryLazy` autocmd that invokes `:ToggleProfile` to stop and prompt for output; this does not promise a complete startup lifecycle.
+
+Set `NVIM_PROFILE` in the shell before launch (or `export NVIM_PROFILE=1`/`start`); relaunch after changing it. Traces are Chrome Trace Event JSON, e.g. `/tmp/neovim_lua_profile.json`.
 
 **Analyzing traces with jq:**
 ```bash
