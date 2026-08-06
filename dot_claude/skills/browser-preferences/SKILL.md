@@ -13,9 +13,7 @@ Before the first `agent-browser` command, run `agent-browser skills get core`. L
 
 ## Session continuity
 
-If the task names an existing browser session, reuse that exact session. Preserve its authentication and its headed/headless mode; do not close, reset, replace, or change it unless the user asks.
-
-For a new routine session, use headless mode. Use headed mode only when visual inspection, upload interaction, or interactive debugging needs it. Check Wayland compatibility before trying headed mode.
+Always use headless mode. If the task names an existing browser session, reuse that exact session without changing it.
 
 ## Authentication
 
