@@ -11,18 +11,30 @@ import {
 } from "@earendil-works/pi-coding-agent";
 
 type BridgeInput = {
-	event_type: "tool_call" | "tool_result" | "message_end";
+	event_type: "tool_call" | "tool_result" | "stop";
 	cwd: string;
 	event: unknown;
-	session_id?: string;
-	transcript_path?: string;
 };
+
+type PiStopReason = "pending" | "stop" | "length" | "toolUse" | "error" | "aborted";
 
 type BridgeResponse =
 	| { action: "allow" }
 	| { action: "block"; reason?: string }
 	| { action: "context"; messages?: string[] }
-	| { action: "stop_stub"; reason: string };
+	| { action: "follow_up"; reasons: string[] };
+
+function claudeStopReason(stopReason: PiStopReason | string): string {
+	switch (stopReason) {
+		case "pending": return "pending";
+		case "stop": return "end_turn";
+		case "length": return "end_turn";
+		case "toolUse": return "tool_use";
+		case "error": return "error";
+		case "aborted": return "aborted";
+		default: return "end_turn";
+	}
+}
 
 function bridgePath(): string {
 	return join(homedir(), ".local", "bin", "pi-claude-hook-bridge");
@@ -45,16 +57,13 @@ function parseBridgeResponse(stdout: string): BridgeResponse {
 			reason: typeof response.reason === "string" ? response.reason : undefined,
 		};
 	}
+	if (response.action === "follow_up") {
+		return { action: "follow_up", reasons: isStringArray(response.reasons) ? response.reasons : [] };
+	}
 	if (response.action === "context") {
 		return {
 			action: "context",
 			messages: isStringArray(response.messages) ? response.messages : [],
-		};
-	}
-	if (response.action === "stop_stub") {
-		return {
-			action: "stop_stub",
-			reason: typeof response.reason === "string" ? response.reason : "",
 		};
 	}
 	return { action: "allow" };
@@ -147,34 +156,6 @@ function appendClaudeInstructions(event: {
 	};
 }
 
-async function runStopHook(
-	event: unknown,
-	ctx: {
-		cwd: string;
-		sessionManager: {
-			getSessionFile(): string | undefined;
-			getSessionId(): string;
-		};
-	},
-): Promise<void> {
-	const transcriptPath = ctx.sessionManager.getSessionFile();
-	const response = await runBridge({
-		event_type: "message_end",
-		cwd: ctx.cwd,
-		event,
-		session_id: ctx.sessionManager.getSessionId(),
-		...(transcriptPath ? { transcript_path: transcriptPath } : {}),
-	});
-	if (response.action === "stop_stub") {
-		process.stderr.write(`Pi Claude Stop hook stub: ${response.reason}\n`);
-	}
-	if (response.action === "block") {
-		process.stderr.write(
-			`Pi Claude Stop hook advisory block: ${response.reason ?? "blocked"}\n`,
-		);
-	}
-}
-
 export default function (pi: ExtensionAPI) {
 	pi.on("resources_discover", (event) => ({
 		skillPaths: [
@@ -207,7 +188,31 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("tool_result", async (event, ctx) => handleBashToolResult(event, ctx.cwd));
 
-	pi.on("agent_settled", async (event, ctx) => {
-		await runStopHook(event, ctx);
+	pi.on("agent_end", async (event, ctx) => {
+		const message = [...event.messages].reverse().find((candidate) => candidate.role === "assistant");
+		if (!message) return undefined;
+		const text = message.content.filter((block) => block.type === "text").map((block) => block.text).join("\n");
+		const sessionId = ctx.sessionManager.getSessionId();
+		let response: BridgeResponse;
+		try {
+			const stopReason = claudeStopReason(message.stopReason);
+			response = await runBridge({
+				event_type: "stop",
+				cwd: ctx.cwd,
+				event: { last_assistant_message: text, stop_reason: stopReason, cwd: ctx.cwd, working_directory: ctx.cwd, session_id: sessionId, conversation_id: sessionId, workspace_roots: [ctx.cwd] },
+			});
+		} catch (error) {
+			const reason = error instanceof Error ? error.message : String(error);
+			response = { action: "block", reason: `Pi Claude hook bridge failed: ${reason}` };
+		}
+		const reasons = response.action === "follow_up"
+			? response.reasons
+			: response.action === "block"
+				? [response.reason ?? "Blocked by Claude-compatible Pi hook bridge"]
+				: [];
+		if (!reasons.length) return undefined;
+		// Each agent_end callback gets exactly one follow-up; later turns must be checked again.
+		await pi.sendUserMessage(`Address all Stop-hook feedback by continuing the prior task:\n${reasons.map((reason) => `- ${reason}`).join("\n")}`, { deliverAs: "followUp" });
+		return undefined;
 	});
 }

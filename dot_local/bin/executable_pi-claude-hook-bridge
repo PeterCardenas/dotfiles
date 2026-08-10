@@ -32,13 +32,6 @@ _TOOL_NAME_MAP = {
     "ls": "LS",
 }
 
-_STOP_STUB_REASON = (
-    "Pi message_end does not currently provide the Claude/Cursor transcript_path "
-    "needed by stop_autoformat.py. When Pi exposes a stable session transcript path, "
-    "send it to this bridge as transcript_path and run the configured Stop hooks."
-)
-
-
 def _output(payload: dict[str, Any]) -> None:
     json.dump(payload, sys.stdout)
 
@@ -147,7 +140,9 @@ def _run_hook(
         parsed = json.loads(stdout)
     except json.JSONDecodeError as exc:
         return {}, f"hook `{command}` returned invalid JSON: {exc}"
-    return parsed if isinstance(parsed, dict) else {}, None
+    if not isinstance(parsed, dict):
+        return {}, "hook returned non-object JSON"
+    return parsed, None
 
 
 def _tool_input_with_cwd(
@@ -244,35 +239,46 @@ def _run_posttooluse(
     )
 
 
-def _run_stop(config: HookConfig, payload: dict[str, Any]) -> dict[str, Any]:
-    commands = _matching_hook_commands(config, "Stop", "")
+def _stop_commands(config: HookConfig) -> list[str]:
+    commands: list[str] = []
+    for group in config.get("Stop", []):
+        if not isinstance(group, dict):
+            continue
+        for hook in group.get("hooks", []):
+            if isinstance(hook, dict) and isinstance(hook.get("command"), str) and hook["command"].strip():
+                commands.append(hook["command"])
+    return commands
+
+
+def _run_stop(config: HookConfig, payload: dict[str, Any], event: dict[str, Any]) -> dict[str, Any]:
+    commands = _stop_commands(config)
     if not commands:
         return {"action": "allow"}
 
-    transcript_path = payload.get("transcript_path")
-    if not isinstance(transcript_path, str) or not transcript_path:
-        return {"action": "stop_stub", "reason": _STOP_STUB_REASON}
-
-    claude_payload = {"hook_event_name": "Stop", "transcript_path": transcript_path}
-    session_id = payload.get("session_id")
-    if isinstance(session_id, str) and session_id:
-        claude_payload["session_id"] = session_id
+    claude_payload = dict(event)
+    claude_payload["hook_event_name"] = "Stop"
     cwd = payload.get("cwd")
     if isinstance(cwd, str) and cwd:
         claude_payload["cwd"] = cwd
         claude_payload["working_directory"] = cwd
+    session_id = event.get("session_id") or payload.get("session_id")
+    if isinstance(session_id, str) and session_id:
+        claude_payload["session_id"] = session_id
+        claude_payload["conversation_id"] = session_id
+    if isinstance(cwd, str) and cwd:
+        claude_payload.setdefault("workspace_roots", [cwd])
 
+    reasons: list[str] = []
     for command in commands:
         hook_output, error = _run_hook(command, claude_payload)
         if error:
-            return {"action": "block", "reason": f"Pi Claude hook bridge {error}"}
+            reasons.append(f"Pi Claude hook bridge {error}")
+            continue
         if hook_output.get("decision") == "block":
             reason = hook_output.get("reason")
-            return {
-                "action": "block",
-                "reason": reason if isinstance(reason, str) else "Blocked by Stop hook",
-            }
-    return {"action": "allow"}
+            reasons.append(reason if isinstance(reason, str) else "Blocked by Stop hook")
+    unique_reasons = list(dict.fromkeys(reasons))
+    return {"action": "follow_up", "reasons": unique_reasons} if unique_reasons else {"action": "allow"}
 
 
 def _main() -> int:
@@ -288,8 +294,8 @@ def _main() -> int:
     if event_type == "tool_result":
         _output(_run_posttooluse(config, payload, event_dict))
         return 0
-    if event_type == "message_end":
-        _output(_run_stop(config, payload))
+    if event_type == "stop":
+        _output(_run_stop(config, payload, event_dict))
         return 0
 
     _output({"action": "allow"})
