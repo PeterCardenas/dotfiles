@@ -128,7 +128,7 @@ async function handleBashToolResult(event: ToolResultEvent, cwd: string) {
 	};
 }
 
-const claudeInstructionsPath = join(homedir(), ".claude", "CLAUDE.md");
+const claudeInstructionsPath = join(homedir(), "CLAUDE.md");
 
 function appendClaudeInstructions(event: {
 	systemPrompt: string;

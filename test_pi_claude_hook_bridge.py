@@ -27,6 +27,11 @@ class PiClaudeHookBridgeTest(unittest.TestCase):
         self.assertNotIn("theme", settings)
         self.assertNotIn("/home/pcardenas", PI_SETTINGS.read_text(encoding="utf-8"))
 
+    def test_claude_compat_reads_home_claude_instructions(self) -> None:
+        source = EXTENSION.read_text(encoding="utf-8")
+        self.assertIn('const claudeInstructionsPath = join(homedir(), "CLAUDE.md");', source)
+        self.assertNotIn('join(homedir(), ".claude", "CLAUDE.md")', source)
+
     def test_claude_stop_reason_maps_pi_stop_reasons(self) -> None:
         source = EXTENSION.read_text(encoding="utf-8")
         self.assertIn("function claudeStopReason", source)
