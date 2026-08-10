@@ -110,7 +110,7 @@
           },
           {
             "type": "command",
-            "command": "python3 ~/.claude/skills/goal/scripts/claude_goal.py stop-hook",
+            "command": "python3 $HOME/.claude/skills/goal/scripts/claude_goal.py stop-hook",
             "timeout": 10
           }
         ]
