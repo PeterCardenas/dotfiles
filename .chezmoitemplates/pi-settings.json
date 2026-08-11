@@ -1,11 +1,8 @@
 {
-  "defaultProvider": "applied",
-  "defaultModel": "gpt-5-6-terra",
   "quietStartup": true,
   "packages": [
     "npm:pi-web-access",
     "npm:@tintinweb/pi-subagents"
   ],
-  "steeringMode": "all",
   "extensions": ["~/.pi/agent/extensions/claude-compat.ts"]
 }
