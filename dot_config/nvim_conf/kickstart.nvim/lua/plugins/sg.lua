@@ -226,6 +226,13 @@ return {
 
         -- ACP provider configurations
         acp_providers = {
+          ['pi-acp'] = {
+            default_config_options = {
+              model = 'gpt-5.6-terra',
+              provider = 'openai',
+              thought_level = 'medium',
+            },
+          },
           -- Claude ACP with Opus model via Bedrock
           ['claude-agent-acp'] = {
             command = 'claude-agent-acp',
@@ -299,7 +306,7 @@ return {
           },
         },
 
-        -- Custom headers: show provider | runtime | model | mode
+        -- Custom headers: show ACP provider | runtime | model provider/model | mode
         headers = {
           chat = function(parts)
             ---@param value string?
@@ -359,6 +366,8 @@ return {
             local runtime_label = type(runtime_id) == 'string' and has_meaningful_value(runtime_id) and runtime_id or nil
             local model_id = config_opts and config_opts.model and config_opts.model.currentValue or '?'
             model_id = normalize_display_extra_high(model_id)
+            local model_provider_value = all_options and all_options.provider and all_options.provider.currentValue or nil
+            local model_provider = type(model_provider_value) == 'string' and has_meaningful_value(model_provider_value) and model_provider_value or nil
             -- Claude model ids carry the context window as a suffix (`opus[1m]`), and
             -- claude-agent-acp exposes no `context` option. Strip the hint from the
             -- model name and reuse it as the context size below.
@@ -403,7 +412,7 @@ return {
             if runtime_label then
               table.insert(header_segments, runtime_label)
             end
-            table.insert(header_segments, model_id .. model_suffix)
+            table.insert(header_segments, (model_provider and model_provider .. '/' or '') .. model_id .. model_suffix)
             if mode_name then
               table.insert(header_segments, mode_name .. usage_str)
             elseif usage_str ~= '' then
