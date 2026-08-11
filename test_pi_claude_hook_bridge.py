@@ -32,6 +32,31 @@ class PiClaudeHookBridgeTest(unittest.TestCase):
         self.assertIn('const claudeInstructionsPath = join(homedir(), "CLAUDE.md");', source)
         self.assertNotIn('join(homedir(), ".claude", "CLAUDE.md")', source)
 
+    def test_claude_compat_appends_managed_context_without_local_instructions(self) -> None:
+        source = EXTENSION.read_text(encoding="utf-8")
+        function_source = source[source.index('async function appendClaudeInstructions'):]
+        managed_call = function_source.index('managed = await runBridge')
+        local_guard = function_source.index('const localAlreadyLoaded')
+        self.assertGreater(managed_call, local_guard)
+        self.assertIn('return managedText ? { systemPrompt: `${event.systemPrompt}${managedText}` } : undefined;', function_source)
+
+    def test_claude_compat_managed_context_failure_preserves_home_claude_behavior(self) -> None:
+        source = EXTENSION.read_text(encoding="utf-8")
+        function_source = source[source.index('async function appendClaudeInstructions'):]
+        managed_call = function_source.index('managed = await runBridge')
+        managed_statement = function_source[function_source.rfind('try', 0, managed_call):function_source.index('const managedText', managed_call)]
+        self.assertIn('try', managed_statement)
+        self.assertIn('catch', managed_statement)
+        self.assertIn('managed = { action: "allow" }', managed_statement)
+        self.assertIn('const claudeInstructionsPath = join(homedir(), "CLAUDE.md");', source)
+        self.assertIn('readFileSync(claudeInstructionsPath, "utf8")', function_source)
+
+    def test_claude_compat_does_not_duplicate_local_instructions(self) -> None:
+        source = EXTENSION.read_text(encoding="utf-8")
+        self.assertIn('contextFiles.some((file) => file.path === claudeInstructionsPath)', source)
+        self.assertIn('const managedText = managed.action === "managed_context"', source)
+
+
     def test_claude_stop_reason_maps_pi_stop_reasons(self) -> None:
         source = EXTENSION.read_text(encoding="utf-8")
         self.assertIn("function claudeStopReason", source)
@@ -69,20 +94,100 @@ class PiClaudeHookBridgeTest(unittest.TestCase):
         allowed = self._run("stop", {"last_assistant_message": long_message + "\n\nKey References:", "stop_reason": "end_turn"}, settings)
         self.assertEqual(allowed, {"action": "allow"})
 
-    def _run(self, event_type: str, event: dict[str, object], settings: dict[str, object]) -> dict[str, object]:
+    def _run(
+        self,
+        event_type: str,
+        event: dict[str, object],
+        settings: dict[str, object],
+        *,
+        remote: dict[str, object] | str | None = None,
+        endpoint: dict[str, object] | str | None = None,
+    ) -> dict[str, object]:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / ".claude").mkdir()
             (root / ".claude/settings.json").write_text(json.dumps(settings), encoding="utf-8")
+            if remote is not None:
+                (root / ".claude/remote-settings.json").write_text(
+                    remote if isinstance(remote, str) else json.dumps(remote), encoding="utf-8"
+                )
+            endpoint_path = root / "settings.json"
+            if endpoint is not None:
+                endpoint_path.write_text(
+                    endpoint if isinstance(endpoint, str) else json.dumps(endpoint), encoding="utf-8"
+                )
+            env = {**os.environ, "HOME": str(root)}
+            if endpoint is not None:
+                env["PI_CLAUDE_MANAGED_SETTINGS_PATH"] = str(endpoint_path)
             result = subprocess.run(
                 [sys.executable, str(BRIDGE)],
                 input=json.dumps({"event_type": event_type, "event": event, "cwd": str(root)}),
                 text=True,
                 capture_output=True,
                 check=True,
-                env={**os.environ, "HOME": str(root)},
+                env=env,
             )
             return json.loads(result.stdout)
+
+    def test_managed_hooks_run_endpoint_then_remote_then_user(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            marker = Path(directory) / "runs"
+            script = "from pathlib import Path; import sys; Path(sys.argv[1]).open('a').write(sys.argv[2]+'\\n')"
+            def command(label: str) -> str:
+                return f"{sys.executable} -c {json.dumps(script)} {marker} {label}"
+            make = lambda label: {"hooks": [{"command": command(label)}]}
+            response = self._run("tool_call", {"toolName": "bash", "input": {}}, {"hooks": {"PreToolUse": [{"matcher": ".*", "hooks": make("user")["hooks"]}]}}, remote={"hooks": {"PreToolUse": [{"matcher": ".*", "hooks": make("remote")["hooks"]}]}}, endpoint={"hooks": {"PreToolUse": [{"matcher": ".*", "hooks": make("endpoint")["hooks"]}]}})
+            self.assertEqual(response, {"action": "allow"})
+            self.assertEqual(marker.read_text().splitlines(), ["endpoint", "remote", "user"])
+
+    def test_endpoint_override_named_settings_json_is_managed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            endpoint = {"allowManagedHooksOnly": True, "hooks": {"PreToolUse": [{"matcher": ".*", "hooks": []}]}}
+            user_marker = Path(directory) / "user"
+            user_script = f"from pathlib import Path; Path('{user_marker}').write_text('ran')"
+            user_command = f"{sys.executable} -c {json.dumps(user_script)}"
+            user = {"hooks": {"PreToolUse": [{"matcher": ".*", "hooks": [{"command": user_command}]}]}}
+            response = self._run("tool_call", {"toolName": "bash", "input": {}}, user, endpoint=endpoint)
+            self.assertEqual(response, {"action": "allow"})
+            self.assertFalse(user_marker.exists())
+
+    def test_managed_hooks_only_skips_user_for_tools_and_stop(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            endpoint_marker = Path(directory) / "endpoint"
+            user_marker = Path(directory) / "user"
+            endpoint_script = "from pathlib import Path; Path('MARKER').write_text('ran')".replace('MARKER', str(endpoint_marker))
+            user_script = "from pathlib import Path; Path('MARKER').write_text('ran')".replace('MARKER', str(user_marker))
+            endpoint_command = f"{sys.executable} -c {json.dumps(endpoint_script)}"
+            user_command = f"{sys.executable} -c {json.dumps(user_script)}"
+            managed = {"allowManagedHooksOnly": True, "hooks": {"PreToolUse": [{"matcher": ".*", "hooks": [{"command": endpoint_command}]}], "Stop": [{"hooks": [{"command": endpoint_command}]}]}}
+            user = {"hooks": {"PreToolUse": [{"matcher": ".*", "hooks": [{"command": user_command}]}], "Stop": [{"hooks": [{"command": user_command}]}]}}
+            self._run("tool_call", {"toolName": "bash", "input": {}}, user, endpoint=managed)
+            self.assertTrue(endpoint_marker.exists())
+            self.assertFalse(user_marker.exists())
+            self._run("stop", {"last_assistant_message": "x"}, user, endpoint=managed)
+            self.assertFalse(user_marker.exists())
+
+    def test_malformed_remote_does_not_hide_user_hooks(self) -> None:
+        marker = Path(tempfile.gettempdir()) / f"pi-claude-{os.getpid()}"
+        try:
+            script = "from pathlib import Path; Path('MARKER').write_text('ran')".replace('MARKER', str(marker))
+            command = f"{sys.executable} -c {json.dumps(script)}"
+            self._run("tool_call", {"toolName": "bash", "input": {}}, {"hooks": {"PreToolUse": [{"matcher": ".*", "hooks": [{"command": command}]}]}}, remote="not json")
+            self.assertTrue(marker.exists())
+        finally:
+            marker.unlink(missing_ok=True)
+
+    def test_managed_context_prefers_endpoint_and_ignores_user(self) -> None:
+        response = self._run("managed_context", {}, {"claudeMd": "user"}, remote={"claudeMd": "remote"}, endpoint={"claudeMd": "endpoint"})
+        self.assertEqual(response, {"action": "managed_context", "instructions": "endpoint"})
+
+    def test_managed_context_uses_remote_when_endpoint_empty(self) -> None:
+        response = self._run("managed_context", {}, {}, remote={"claudeMd": "remote"}, endpoint={"claudeMd": ""})
+        self.assertEqual(response, {"action": "managed_context", "instructions": "remote"})
+
+    def test_managed_context_ignores_user_when_endpoint_absent_and_remote_has_no_claude_md(self) -> None:
+        response = self._run("managed_context", {}, {"claudeMd": "user"}, remote={})
+        self.assertEqual(response, {"action": "allow"})
 
     def test_stop_hook_receives_direct_context_and_follow_up(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

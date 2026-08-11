@@ -15,10 +15,20 @@ import shlex
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, Literal
 
 
 HookConfig = dict[str, list[dict[str, Any]]]
+SourceKind = Literal["endpoint", "remote", "user"]
+
+
+@dataclass(frozen=True)
+class ManagedSource:
+    hooks: HookConfig
+    kind: SourceKind
+    managed_only: bool
+    instructions: str | None = None
 
 _TOOL_NAME_MAP = {
     "bash": "Bash",
@@ -44,30 +54,42 @@ def _load_stdin() -> dict[str, Any]:
     return payload if isinstance(payload, dict) else {}
 
 
-def _load_config() -> HookConfig:
-    config_path = _config_path()
-    if config_path is None:
-        return {}
+def _load_sources() -> list[ManagedSource]:
+    paths = [
+        Path(os.environ.get("PI_CLAUDE_MANAGED_SETTINGS_PATH", "/etc/claude-code/managed-settings.json")),
+        Path.home() / ".claude" / "remote-settings.json",
+        Path.home() / ".claude" / "settings.json",
+    ]
+    sources: list[ManagedSource] = []
+    for index, path in enumerate(paths):
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if isinstance(raw, dict):
+            kind: SourceKind = ("endpoint", "remote", "user")[index]
+            sources.append(ManagedSource(
+                hooks=_extract_hooks(raw),
+                kind=kind,
+                managed_only=bool(raw.get("allowManagedHooksOnly")),
+                instructions=raw.get("claudeMd") if isinstance(raw.get("claudeMd"), str) else None,
+            ))
+    return sources
 
-    try:
-        raw_config = json.loads(config_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
-    return _extract_hooks(raw_config)
 
-
-def _config_path() -> Path | None:
-    candidate = Path.home() / ".claude" / "settings.json"
-    return candidate if candidate.is_file() else None
+def _managed_context(sources: list[ManagedSource]) -> str | None:
+    for source in sources:
+        if source.kind in ("endpoint", "remote") and source.instructions:
+            return source.instructions
+    return None
 
 
 def _extract_hooks(raw_config: Any) -> HookConfig:
     if not isinstance(raw_config, dict):
         return {}
     hooks = raw_config.get("hooks")
-    if isinstance(hooks, dict):
-        return hooks
-    return raw_config
+    result = hooks if isinstance(hooks, dict) else raw_config
+    return result
 
 
 def _pi_tool_name(event: dict[str, Any]) -> str:
@@ -87,23 +109,27 @@ def _matches_tool(matcher: str | None, tool_name: str) -> bool:
 
 
 def _matching_hook_commands(
-    config: HookConfig, hook_event_name: str, tool_name: str
+    config: list[ManagedSource], hook_event_name: str, tool_name: str
 ) -> list[str]:
     commands: list[str] = []
-    for group in config.get(hook_event_name, []):
-        if not isinstance(group, dict):
-            continue
-        matcher = group.get("matcher")
-        if isinstance(matcher, str) and not _matches_tool(matcher, tool_name):
-            continue
-        if matcher is None and hook_event_name != "Stop":
-            continue
-        for hook in group.get("hooks", []):
-            if not isinstance(hook, dict):
+    include_user = not any(source.managed_only for source in config if source.kind != "user")
+    selected = config if include_user else [source for source in config if source.kind != "user"]
+    for source_record in selected:
+        source = source_record.hooks
+        for group in source.get(hook_event_name, []):
+            if not isinstance(group, dict):
                 continue
-            command = hook.get("command")
-            if isinstance(command, str) and command.strip():
-                commands.append(command)
+            matcher = group.get("matcher")
+            if isinstance(matcher, str) and not _matches_tool(matcher, tool_name):
+                continue
+            if matcher is None and hook_event_name != "Stop":
+                continue
+            for hook in group.get("hooks", []):
+                if not isinstance(hook, dict):
+                    continue
+                command = hook.get("command")
+                if isinstance(command, str) and command.strip():
+                    commands.append(command)
     return commands
 
 
@@ -206,7 +232,7 @@ def _posttooluse_context(hook_output: dict[str, Any]) -> str | None:
 
 
 def _run_pretooluse(
-    config: HookConfig, payload: dict[str, Any], event: dict[str, Any]
+    config: list[ManagedSource], payload: dict[str, Any], event: dict[str, Any]
 ) -> dict[str, Any]:
     tool_name = _pi_tool_name(event)
     claude_payload = _claude_payload(payload, "PreToolUse", event)
@@ -221,7 +247,7 @@ def _run_pretooluse(
 
 
 def _run_posttooluse(
-    config: HookConfig, payload: dict[str, Any], event: dict[str, Any]
+    config: list[ManagedSource], payload: dict[str, Any], event: dict[str, Any]
 ) -> dict[str, Any]:
     tool_name = _pi_tool_name(event)
     claude_payload = _claude_payload(payload, "PostToolUse", event)
@@ -239,18 +265,22 @@ def _run_posttooluse(
     )
 
 
-def _stop_commands(config: HookConfig) -> list[str]:
+def _stop_commands(config: list[ManagedSource]) -> list[str]:
     commands: list[str] = []
-    for group in config.get("Stop", []):
-        if not isinstance(group, dict):
-            continue
-        for hook in group.get("hooks", []):
-            if isinstance(hook, dict) and isinstance(hook.get("command"), str) and hook["command"].strip():
-                commands.append(hook["command"])
+    include_user = not any(source.managed_only for source in config if source.kind != "user")
+    selected = config if include_user else [source for source in config if source.kind != "user"]
+    for source_record in selected:
+        source = source_record.hooks
+        for group in source.get("Stop", []):
+            if not isinstance(group, dict):
+                continue
+            for hook in group.get("hooks", []):
+                if isinstance(hook, dict) and isinstance(hook.get("command"), str) and hook["command"].strip():
+                    commands.append(hook["command"])
     return commands
 
 
-def _run_stop(config: HookConfig, payload: dict[str, Any], event: dict[str, Any]) -> dict[str, Any]:
+def _run_stop(config: list[ManagedSource], payload: dict[str, Any], event: dict[str, Any]) -> dict[str, Any]:
     commands = _stop_commands(config)
     if not commands:
         return {"action": "allow"}
@@ -283,11 +313,15 @@ def _run_stop(config: HookConfig, payload: dict[str, Any], event: dict[str, Any]
 
 def _main() -> int:
     payload = _load_stdin()
-    config = _load_config()
+    config = _load_sources()
     event = payload.get("event")
     event_dict = event if isinstance(event, dict) else {}
     event_type = payload.get("event_type")
 
+    if event_type == "managed_context":
+        instructions = _managed_context(config)
+        _output({"action": "managed_context", "instructions": instructions} if instructions is not None else {"action": "allow"})
+        return 0
     if event_type == "tool_call":
         _output(_run_pretooluse(config, payload, event_dict))
         return 0

@@ -11,7 +11,7 @@ import {
 } from "@earendil-works/pi-coding-agent";
 
 type BridgeInput = {
-	event_type: "tool_call" | "tool_result" | "stop";
+	event_type: "tool_call" | "tool_result" | "stop" | "managed_context";
 	cwd: string;
 	event: unknown;
 };
@@ -22,7 +22,8 @@ type BridgeResponse =
 	| { action: "allow" }
 	| { action: "block"; reason?: string }
 	| { action: "context"; messages?: string[] }
-	| { action: "follow_up"; reasons: string[] };
+	| { action: "follow_up"; reasons: string[] }
+	| { action: "managed_context"; instructions: string };
 
 function claudeStopReason(stopReason: PiStopReason | string): string {
 	switch (stopReason) {
@@ -59,6 +60,9 @@ function parseBridgeResponse(stdout: string): BridgeResponse {
 	}
 	if (response.action === "follow_up") {
 		return { action: "follow_up", reasons: isStringArray(response.reasons) ? response.reasons : [] };
+	}
+	if (response.action === "managed_context") {
+		return typeof response.instructions === "string" ? { action: "managed_context", instructions: response.instructions } : { action: "allow" };
 	}
 	if (response.action === "context") {
 		return {
@@ -130,29 +134,34 @@ async function handleBashToolResult(event: ToolResultEvent, cwd: string) {
 
 const claudeInstructionsPath = join(homedir(), "CLAUDE.md");
 
-function appendClaudeInstructions(event: {
+async function appendClaudeInstructions(event: {
 	systemPrompt: string;
 	systemPromptOptions: {
 		contextFiles?: Array<{ path: string; content: string }>;
 	};
-}): { systemPrompt: string } | undefined {
+}): Promise<{ systemPrompt: string } | undefined> {
 	const contextFiles = event.systemPromptOptions.contextFiles ?? [];
-	if (
-		contextFiles.some((file) => file.path === claudeInstructionsPath) ||
-		!existsSync(claudeInstructionsPath)
-	) {
-		return undefined;
+	const localAlreadyLoaded = contextFiles.some((file) => file.path === claudeInstructionsPath);
+	let managed: BridgeResponse;
+	try {
+		managed = await runBridge({ event_type: "managed_context", cwd: process.cwd(), event: {} });
+	} catch {
+		managed = { action: "allow" };
+	}
+	const managedText = managed.action === "managed_context" ? `\n\n${managed.instructions}` : "";
+	if (localAlreadyLoaded || !existsSync(claudeInstructionsPath)) {
+		return managedText ? { systemPrompt: `${event.systemPrompt}${managedText}` } : undefined;
 	}
 
 	let content: string;
 	try {
 		content = readFileSync(claudeInstructionsPath, "utf8");
 	} catch {
-		return undefined;
+		return managedText ? { systemPrompt: `${event.systemPrompt}${managedText}` } : undefined;
 	}
 
 	return {
-		systemPrompt: `${event.systemPrompt}\n\n<project_context>\n\nProject-specific instructions and guidelines:\n\n<project_instructions path="${claudeInstructionsPath}">\n${content}\n</project_instructions>\n\n</project_context>\n`,
+		systemPrompt: `${event.systemPrompt}${managedText}\n\n<project_context>\n\nProject-specific instructions and guidelines:\n\n<project_instructions path="${claudeInstructionsPath}">\n${content}\n</project_instructions>\n\n</project_context>\n`,
 	};
 }
 
@@ -184,7 +193,7 @@ export default function (pi: ExtensionAPI) {
 		};
 	});
 
-	pi.on("before_agent_start", (event) => appendClaudeInstructions(event));
+	pi.on("before_agent_start", async (event) => appendClaudeInstructions(event));
 
 	pi.on("tool_result", async (event, ctx) => handleBashToolResult(event, ctx.cwd));
 
