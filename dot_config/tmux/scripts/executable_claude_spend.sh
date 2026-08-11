@@ -43,6 +43,7 @@ usage_max_backoff=3600
 # Day boundaries are local, not UTC: UTC midnight lands at 17:00 PT, mid
 # workday, which would split a single working day across two "days".
 today=$(date +%Y-%m-%d)
+yesterday=$(date -d '1 day ago' +%Y-%m-%d 2>/dev/null || date -v-1d +%Y-%m-%d)
 history_file="${XDG_DATA_HOME:-$HOME/.local/share}/claude-spend/history"
 
 # Prints "<status> <retry_after_seconds>" on line 1 and, on success,
@@ -126,10 +127,14 @@ major_units() {
 }
 
 # Closing reading of the most recent day before today, in minor units.
-previous_day_reading() {
+yesterday_reading() {
   [ -f "$history_file" ] || return 0
-  awk -v today="$today" '$1 < today { reading = $2 } END { if (reading != "") print reading }' \
-    "$history_file"
+  awk -v day="$yesterday" '$1 == day { reading = $2 } END { if (reading != "") print reading }' "$history_file"
+}
+
+earliest_today_reading() {
+  [ -f "$history_file" ] || return 0
+  awk -v day="$today" '$1 == day { print $2; exit }' "$history_file"
 }
 
 # Checkpoint the cumulative counter for today, replacing any earlier reading for
@@ -143,10 +148,9 @@ record_reading() {
   mkdir -p "$(dirname "$history_file")" || return 0
   tmp=$(mktemp "${history_file}.XXXXXX") || return 0
   {
-    [ -f "$history_file" ] &&
-      awk -v today="$today" -v cutoff="$cutoff" '$1 != today && $1 >= cutoff' "$history_file"
+    [ -f "$history_file" ] && awk -v cutoff="$cutoff" '$1 >= cutoff' "$history_file"
     printf '%s %s\n' "$today" "$used"
-  } | sort -u >"$tmp" && mv -f "$tmp" "$history_file" || rm -f "$tmp"
+  } >"$tmp" && mv -f "$tmp" "$history_file" || rm -f "$tmp"
 }
 
 now=$(date +%s)
@@ -183,6 +187,12 @@ write_cache() {
 }
 
 read_cache
+
+# Capture the baseline before a successful fetch records the current counter;
+# the fresh reading must not become its own zero-spend baseline.
+previous_reading=$(yesterday_reading)
+uncertain=
+[ -n "$previous_reading" ] || { previous_reading=$(earliest_today_reading); uncertain='?'; }
 
 if [ "$now" -ge "$next_attempt" ]; then
   attempt=$(fetch_usage)
@@ -244,11 +254,11 @@ segment="#[fg=${color}]\$${used_display}"
 # Today is the counter's rise since yesterday's closing checkpoint, so it only
 # appears once a previous day has been recorded. A drop means the billing cycle
 # rolled over, which makes the whole counter today's spend.
-previous_reading=$(previous_day_reading)
 if [ -n "$previous_reading" ]; then
-  today_minor=$(awk -v now="$used_minor" -v prev="$previous_reading" \
-    'BEGIN { print (now >= prev) ? now - prev : now }')
-  segment="\$$(major_units "$today_minor" "$exponent") #[fg=#565f89]| ${segment}"
+  today_minor=$(awk -v now="$used_minor" -v prev="$previous_reading" 'BEGIN { print (now >= prev) ? now - prev : now }')
+  segment="\$$(major_units "$today_minor" "$exponent")${uncertain} #[fg=#565f89]| ${segment}"
+else
+  segment="\$? #[fg=#565f89]| ${segment}"
 fi
 
 printf '%s' "#[fg=#ff9e64]  #[fg=#c0caf5]${segment}"

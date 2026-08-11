@@ -186,36 +186,40 @@ rm -f "$CLAUDE_CONFIG_DIR/.credentials.json"
 stage_usage 121074 150000 81 warning
 check "missing credentials: empty segment" "" "$("$script")"
 
-# --- 10. Today is the rise since yesterday's closing checkpoint ---
+# --- 10. Exact yesterday uses its latest reading ---
 reset_state
-write_history "$yesterday 100000"
+write_history "$yesterday 90000" "$yesterday 100000" "$today 110000"
 stage_usage 121074 150000 81 warning
-check "today differenced from yesterday's checkpoint" "yes" \
-  "$(grep -q '\$210.74 #\[fg=#565f89\]| ' <<<"$("$script")" && echo yes || echo no)"
+out=$("$script")
+check "latest yesterday checkpoint" "#[fg=#ff9e64]  #[fg=#c0caf5]\$210.74 #[fg=#565f89]| #[fg=#ff9e64]\$1210.74" "$out"
 
-# --- 11. With no prior day recorded there is no today figure to show ---
+# --- 11. Missing yesterday uses earliest today and marks it uncertain ---
 reset_state
+write_history "$today 110000" "$today 115000"
 stage_usage 121074 150000 81 warning
-check "no checkpoint history: no today figure" "no" \
-  "$(grep -q '#\[fg=#565f89\]| ' <<<"$("$script")" && echo yes || echo no)"
+check "earliest today fallback" "#[fg=#ff9e64]  #[fg=#c0caf5]\$110.74? #[fg=#565f89]| #[fg=#ff9e64]\$1210.74" "$("$script")"
 
-# --- 12. A counter drop means the cycle rolled over: it is all today's spend ---
+# --- 12. Neither baseline produces only unknown today field ---
+reset_state
+write_history "$(date -d '3 days ago' +%Y-%m-%d) 200000"
+stage_usage 121074 150000 81 warning
+out=$("$script")
+check "missing daily baseline" "#[fg=#ff9e64]  #[fg=#c0caf5]\$? #[fg=#565f89]| #[fg=#ff9e64]\$1210.74" "$out"
+
+# --- 13. Counter reset uses whole current counter ---
 reset_state
 write_history "$yesterday 200000"
 stage_usage 121074 150000 81 warning
-check "cycle reset: today is the whole counter" "yes" \
-  "$(grep -q '\$1210.74 #\[fg=#565f89\]| #\[fg=#ff9e64\]\$1210.74' <<<"$("$script")" && echo yes || echo no)"
+check "cycle reset" "yes" "$(grep -q '\$1210.74 #\[fg=#565f89\]| ' <<<"$("$script")" && echo yes || echo no)"
 
-# --- 13. Today's checkpoint is replaced, not appended ---
+# --- 14. Successful readings retain every checkpoint entry ---
 reset_state
 write_history "$yesterday 100000" "$today 110000"
 stage_usage 121074 150000 81 warning
-"$script" >/dev/null
-check "checkpoint file keeps one line per day" "2" "$(wc -l <"$history")"
-check "today's checkpoint updated to the latest reading" "$today 121074" \
-  "$(grep "^$today " "$history")"
-check "yesterday's checkpoint left alone" "$yesterday 100000" \
-  "$(grep "^$yesterday " "$history")"
+check "retained ordering and segment" "#[fg=#ff9e64]  #[fg=#c0caf5]\$210.74 #[fg=#565f89]| #[fg=#ff9e64]\$1210.74" "$("$script")"
+check "history retains individual readings" "$yesterday 100000
+$today 110000
+$today 121074" "$(cat "$history")"
 
 # --- 14. A failed fetch must not poison the checkpoints ---
 reset_state
