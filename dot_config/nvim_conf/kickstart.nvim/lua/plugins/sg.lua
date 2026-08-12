@@ -33,7 +33,7 @@ return {
       {
         '<leader>at',
         function()
-          require('agentic').toggle()
+          require('agentic').toggle({ auto_add_to_context = false })
         end,
         mode = { 'n', 'v' },
         desc = 'agentic: toggle',
@@ -49,7 +49,7 @@ return {
       {
         '<leader>an',
         function()
-          require('agentic').new_session()
+          require('agentic').new_session({ auto_add_to_context = false })
         end,
         mode = { 'n', 'v' },
         desc = 'agentic: new session',
