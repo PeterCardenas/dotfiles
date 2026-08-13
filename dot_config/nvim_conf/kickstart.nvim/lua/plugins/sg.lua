@@ -617,9 +617,10 @@ return {
           end,
           ---@param data agentic.UserConfig.FileEditData
           on_file_edit = function(data)
+            -- TODO: Remove when agentic.nvim/pi-acp passes an unprefixed file path.
             vim.api.nvim_exec_autocmds('User', {
               pattern = 'ChezmoiApplyPath',
-              data = { path = data.file_path },
+              data = { path = (data.file_path:gsub('^edit ', '')) },
             })
           end,
         },
