@@ -228,7 +228,7 @@ return {
         acp_providers = {
           ['pi-acp'] = {
             default_config_options = {
-              model = 'gpt-5.6-terra',
+              model = 'gpt-5.6-sol',
               provider = 'openai',
               thought_level = 'medium',
             },
