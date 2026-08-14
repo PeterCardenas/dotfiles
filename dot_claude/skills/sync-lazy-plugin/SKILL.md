@@ -94,7 +94,7 @@ Stop and ask if:
 - `setup_fork` fails or still leaves no writable remote
 - the source repo has unrelated changes that would mix into the requested commits
 - the requested commit split is ambiguous
-- the chezmoi repo has an active git client or a lock file
+- a git lock/in-progress operation or other repository state makes mutation unsafe; an active Git UI/client alone is not a blocker
 
 Use a short repo-state summary plus a direct question.
 
@@ -150,7 +150,7 @@ Then in chezmoi:
 
 ## 8. Git Lock Safety
 
-- If git reports a `*.lock` file and another git process or UI is active, do not delete the lock. Ask the user to close it first.
+- If git reports a `*.lock` file or an in-progress Git operation, do not mutate the repo; ask the user to resolve it first. An active Git UI/client alone is not a blocker.
 - Only clear a stale lock when no active git process is using the repo and the user wants it cleared.
 
 ## Output
