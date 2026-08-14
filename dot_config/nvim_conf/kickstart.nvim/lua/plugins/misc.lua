@@ -557,6 +557,11 @@ return {
           },
           lualine_x = {
             {
+              require('utils.config_staleness').component,
+              cond = require('utils.config_staleness').is_stale,
+              color = 'DiagnosticWarn',
+            },
+            {
               ---@diagnostic disable-next-line: undefined-field
               require('noice').api.status.mode.get,
               cond = function()
