@@ -31,17 +31,27 @@ description: Use when editing, debugging, or testing Neovim configuration or plu
 - Keep live model tests scoped to harmless files and prompts, and report exactly what data was sent to the model. Do not include secrets or broad repo context in the prompt.
 - For experimental features, implement behind an env var config flag, test thoroughly, then remove the flag once verified.
 - Treat every tmux test session as disposable. Clean it before create, clean it again when done, and verify the cleanup succeeded before you move on.
+- Launch test instances with `-i NONE`. Disposable tests must not read or write the user's ShaDa file.
+- Exit Neovim with `:qa!` before killing its tmux session. Abruptly killing live Neovim instances can leave ShaDa temporary files behind; use `tmux kill-session` only as a timed-out fallback.
 
 ### Launching tmux for testing
 
 **Prefer a disposable session lifecycle over ad hoc commands:**
 ```bash
 session="agentic-nvim-$$"
-cleanup() { tmux kill-session -t "$session" 2>/dev/null || true; }
-cleanup
+cleanup() {
+  tmux has-session -t "$session" 2>/dev/null || return
+  tmux send-keys -t "$session" Escape ':qa!' Enter
+  for _ in $(seq 1 70); do
+    tmux has-session -t "$session" 2>/dev/null || return
+    sleep 0.1
+  done
+  tmux kill-session -t "$session" 2>/dev/null || true
+}
+tmux kill-session -t "$session" 2>/dev/null || true
 trap cleanup EXIT INT TERM
 
-tmux new-session -d -s "$session" -x 200 -y 50 "nvim 2>&1; sleep 5"
+tmux new-session -d -s "$session" -x 200 -y 50 "nvim -i NONE 2>&1; sleep 5"
 # ... tmux send-keys / capture-pane against "$session" ...
 
 cleanup
@@ -53,7 +63,7 @@ tmux has-session -t "$session" 2>/dev/null && exit 1
 
 **Create a detached session with fixed dimensions:**
 ```bash
-tmux new-session -d -s <session-name> -x 200 -y 50 "<command>"
+tmux new-session -d -s <session-name> -x 200 -y 50 "nvim -i NONE <args> 2>&1; sleep 5"
 ```
 - Always detach (`-d`) — never attach interactively.
 - Make the session name unique to avoid conflicts with other agents.
@@ -63,7 +73,7 @@ tmux new-session -d -s <session-name> -x 200 -y 50 "<command>"
 **Clean up stale sessions before creating:**
 ```bash
 tmux kill-session -t <name> 2>/dev/null || true
-tmux new-session -d -s <name> -x 200 -y 50 "nvim 2>&1; sleep 5"
+tmux new-session -d -s <name> -x 200 -y 50 "nvim -i NONE 2>&1; sleep 5"
 ```
 
 **Launching**
@@ -73,7 +83,7 @@ Send-keys — create the session first, then send commands:
    session="agentic-nvim-$$"
    tmux kill-session -t "$session" 2>/dev/null || true
    tmux new-session -d -s "$session" -x 200 -y 50
-   tmux send-keys -t "$session" "nvim /tmp/test.lua" Enter
+   tmux send-keys -t "$session" "nvim -i NONE /tmp/test.lua" Enter
    ```
 
 **Capturing output:**
@@ -92,14 +102,20 @@ tmux send-keys -t <name> ':autocmd Chezmoi BufWritePost' Enter
 
 **With environment variables (e.g. profiling):**
 ```bash
-tmux new-session -d -s nvim_prof -x 200 -y 50 "NVIM_PROFILE=start nvim 2>&1; sleep 5"
+tmux new-session -d -s nvim_prof -x 200 -y 50 "NVIM_PROFILE=start nvim -i NONE 2>&1; sleep 5"
 ```
 
 **Always clean up when done:**
 ```bash
+tmux send-keys -t <name> Escape ':qa!' Enter
+for _ in $(seq 1 70); do
+  tmux has-session -t <name> 2>/dev/null || break
+  sleep 0.1
+done
 tmux kill-session -t <name> 2>/dev/null || true
 tmux has-session -t <name> 2>/dev/null && exit 1
 ```
+The final `kill-session` is fallback cleanup after Neovim had time to exit, not the normal exit path.
 
 ### Common tmux pitfalls
 
@@ -111,8 +127,9 @@ tmux has-session -t <name> 2>/dev/null && exit 1
 # WRONG — kill only runs on failure, then second new-session also fails
 tmux new-session -d -s test ... 2>/dev/null || tmux kill-session -t test && tmux new-session -d -s test ...
 
-# RIGHT — always kill first, then create
-tmux kill-session -t test 2>/dev/null; tmux new-session -d -s test -x 200 -y 50
+# RIGHT — remove a stale pre-existing session, then create a ShaDa-isolated test
+# After testing, exit Neovim gracefully as shown above before fallback cleanup.
+tmux kill-session -t test 2>/dev/null; tmux new-session -d -s test -x 200 -y 50 "nvim -i NONE"
 ```
 
 **Do not leave cleanup to memory.**
