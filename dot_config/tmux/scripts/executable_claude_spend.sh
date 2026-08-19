@@ -188,14 +188,22 @@ write_cache() {
 
 read_cache
 
+# Serialize the stale-cache decision with the fetch so concurrent status-bar
+# redraws do not issue duplicate requests or overwrite a newer cache.
+lock="${cache}.lock"
+exec 9>"$lock"
+
 # Capture the baseline before a successful fetch records the current counter;
 # the fresh reading must not become its own zero-spend baseline.
 previous_reading=$(yesterday_reading)
 uncertain=
 [ -n "$previous_reading" ] || { previous_reading=$(earliest_today_reading); uncertain='?'; }
 
-if [ "$now" -ge "$next_attempt" ]; then
-  attempt=$(fetch_usage)
+if flock -n 9; then
+  # The cache may have changed while waiting for the lock.
+  read_cache
+  if [ "$now" -ge "$next_attempt" ]; then
+    attempt=$(fetch_usage)
   read -r status retry_after <<<"$(head -1 <<<"$attempt")"
   fresh=$(sed -n '2p' <<<"$attempt")
   if [ -n "$fresh" ]; then
@@ -227,6 +235,10 @@ if [ "$now" -ge "$next_attempt" ]; then
     read_cache
     write_cache "$backoff_until" "$usage" "$last_ok"
   fi
+  fi
+else
+  # A lock loser only consumes the complete cache written by the winner.
+  read_cache
 fi
 
 [ -n "$usage" ] || exit 0

@@ -46,6 +46,10 @@ for arg in "$@"; do
   [ "$prev" = "-D" ] && headers=$arg
   prev=$arg
 done
+if [ -n "${FAKE_CURL_COUNT:-}" ]; then
+  printf 'request\n' >>"$FAKE_CURL_COUNT"
+  sleep 0.2
+fi
 if [ -n "${FAKE_SIBLING_CACHE:-}" ]; then
   printf '%s' "$FAKE_SIBLING_LINES" >"$FAKE_SIBLING_CACHE"
 fi
@@ -335,13 +339,25 @@ check "failed fetch still records its own backoff" "yes" \
     'BEGIN { d = next_at - now; print (d > 0 && d <= 450) ? "yes" : "no" }')"
 unset FAKE_CURL_FAIL FAKE_SIBLING_CACHE FAKE_SIBLING_LINES
 
+# --- 21. Concurrent stale-cache runs share one API request ---
+reset_state
+write_cache "$((now - 1))" "121074 2 150000 81 warning" "$((now - 300))"
+stage_usage 121074 150000 81 warning
+export FAKE_CURL_COUNT="$tmp/curl-count"
+: >"$FAKE_CURL_COUNT"
+("$script" >/dev/null) & first=$!
+("$script" >/dev/null) & second=$!
+wait "$first" "$second"
+check "concurrent stale cache: one API request" "1" "$(wc -l <"$FAKE_CURL_COUNT")"
+unset FAKE_CURL_COUNT
+
 # The cache is swapped in whole, so no partial file is ever left where a reader
 # would find it.
 reset_state
 stage_usage 121074 150000 81 warning
 "$script" >/dev/null
 check "cache replaced atomically: no temp files left behind" "" \
-  "$(find "$(dirname "$cache")" -name 'usage.*' -print)"
+  "$(find "$(dirname "$cache")" -name 'usage.*' ! -name 'usage.lock' -print)"
 check "cache still holds a complete reading" $'121074\t2\t150000\t81\twarning' \
   "$(sed -n '2p' "$cache")"
 
