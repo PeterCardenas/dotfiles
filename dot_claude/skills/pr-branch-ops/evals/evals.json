@@ -1,0 +1,76 @@
+{
+  "skill_name": "pr-branch-ops",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Rebase this PR onto the latest origin/master, resolve its conflicts, run the relevant tests, and push it.",
+      "expected_output": "The agent checks for dependent PRs before deciding this is standalone, preserves unrelated work, rebases onto the remote base, uses force-with-lease, and verifies the PR afterward.",
+      "files": [],
+      "assertions": [
+        "Checks whether the PR branch is the base of any open dependent PR before rewriting it.",
+        "Inspects and preserves unrelated working-tree changes.",
+        "Rebases onto the fetched remote base rather than a stale local master.",
+        "Uses force-with-lease and verifies the resulting remote PR."
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "Amend the current fix into this PR's only commit and push the rewritten branch.",
+      "expected_output": "The agent checks worktree scope and dependents, amends safely, tests, uses force-with-lease, and verifies the remote PR state.",
+      "files": [],
+      "assertions": [
+        "Checks that the current changes belong to this PR and preserves unrelated work.",
+        "Checks for dependent PRs before rewriting the branch.",
+        "Runs relevant tests before pushing.",
+        "Uses force-with-lease and performs post-push PR verification."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Split the carousel and ref changes into two separate PR branches off master. They are not stacked.",
+      "expected_output": "The agent treats this as PR branch topology work, creates both branches from current origin/master, keeps their diffs independent, and explicitly verifies both PR bases.",
+      "files": [],
+      "assertions": [
+        "Uses the fetched origin/master as the base for both independent branches.",
+        "Keeps each branch's commits and diff scoped to one concern.",
+        "Does not make either new PR branch depend on the other.",
+        "Verifies each PR's explicit base and resulting diff."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I'm on the tip of a six-PR stack. Amend the bottom feature commit, rebase with update refs, push bottom-up, and merge each ready layer.",
+      "expected_output": "The agent maps the stack, snapshots PR state, uses autosquash update-refs and bottom-up force-with-lease pushes, then performs a merge-fetch-rebase-push-wait loop without enabling auto-merge.",
+      "files": [],
+      "assertions": [
+        "Maps the complete stack and snapshots bases, commits, files, and review state.",
+        "Uses autosquash with update-refs and verifies rewritten local refs.",
+        "Pushes bottom-up with force-with-lease and verifies each PR after its push.",
+        "Uses the merge-fetch-rebase-push-wait loop and does not enable auto-merge without an explicit request."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "After rebasing my stack, the middle PR requested unrelated CODEOWNERS. Check whether the history is wrong and clean up only stale requests.",
+      "expected_output": "The agent verifies base, commits, files, CODEOWNERS, events, and unresolved threads before removing only demonstrably stale requests and reporting the final reviewer set.",
+      "files": [],
+      "assertions": [
+        "Checks the current base, commit list, and changed files before concluding the rebase is wrong.",
+        "Checks CODEOWNERS, review-request events, and unresolved threads.",
+        "Preserves legitimate reviewers and removes only demonstrably stale requests.",
+        "Re-queries and reports the final reviewer set."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Create a temporary local branch so I can experiment with this parser, but do not push it or create a PR.",
+      "expected_output": "The skill should not trigger because this is explicitly local-only Git work with no PR branch impact.",
+      "files": [],
+      "assertions": [
+        "Recognizes that the PR branch operations skill does not apply.",
+        "Does not add GitHub, PR, CODEOWNERS, reviewer, or CI ceremony.",
+        "Keeps the proposed local operation minimal."
+      ]
+    }
+  ]
+}
