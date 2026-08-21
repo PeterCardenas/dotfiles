@@ -1,0 +1,7 @@
+#!/bin/bash
+cat > /dev/null
+mkdir -p "$HOME/.pi/agent/models.d"
+cat > "$HOME/.pi/agent/models.d/{{ base .chezmoi.sourceDir }}.json" <<'FRAGMENT'
+{{ template "pi-models.json" . }}
+FRAGMENT
+exec "$HOME/.pi/agent/merge_models_d.py"
