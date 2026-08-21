@@ -1,3 +1,5 @@
+vim.env.PYTHONDONTWRITEBYTECODE = '1'
+
 local Config = require('utils.config')
 local Log = require('utils.log')
 
