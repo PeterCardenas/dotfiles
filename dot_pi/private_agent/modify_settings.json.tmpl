@@ -1,9 +1,5 @@
 #!/bin/bash
-cat > /dev/null
-mkdir -p "$HOME/.pi/agent"
-settings="$HOME/.pi/agent/settings.json"
-[ -f "$settings" ] || printf '{}\n' > "$settings"
-jq -s '.[0] * .[1]' "$settings" - <<'FRAGMENT' > "$settings.tmp"
+jq -s 'reduce .[] as $settings ({}; . * $settings)' /dev/stdin <(cat <<'FRAGMENT'
 {{ template "pi-settings.json" . }}
 FRAGMENT
-mv "$settings.tmp" "$settings"
+)
