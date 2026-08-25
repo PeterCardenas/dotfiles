@@ -1,4 +1,5 @@
 set -gx PYTHONDONTWRITEBYTECODE 1
+set -gx BINSTALL_DISABLE_STRATEGIES quick-install
 
 if status is-interactive
     source $HOME/.config/fish/interactive_config.fish
