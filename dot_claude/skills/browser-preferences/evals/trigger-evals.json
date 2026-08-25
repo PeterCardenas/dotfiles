@@ -1,0 +1,20 @@
+[
+  {"query":"Check whether GitHub PR #42 exists and show its title. Use whatever reliable method is fastest.","should_trigger":true},
+  {"query":"Update PR #42's description and verify the saved text. The browser may already be open.","should_trigger":true},
+  {"query":"Refresh my tmux usage indicator every minute; stale auth must not pop open or focus a browser.","should_trigger":true},
+  {"query":"Use my existing qa-auth browser session to inspect the settings page after Okta MFA.","should_trigger":true},
+  {"query":"Click Apply in the local web app and take a screenshot of the rendered result.","should_trigger":true},
+  {"query":"Upload these screenshots to GitHub PR #42; gh is authenticated but browser login is flaky.","should_trigger":true},
+  {"query":"Fill the vendor portal form with this CSV, but do not submit until I approve the exact target.","should_trigger":true},
+  {"query":"Open Slack's desktop app, inspect my unread channels, and don't send anything.","should_trigger":true},
+  {"query":"Scrape the values from this client-rendered dashboard after selecting Last 30 days.","should_trigger":true},
+  {"query":"Search the web for the latest PostgreSQL release notes and summarize them with links.","should_trigger":false},
+  {"query":"Use gh pr view 42 --json title,state and paste the output.","should_trigger":false},
+  {"query":"Fetch https://example.com/api/docs and explain the authentication section.","should_trigger":false},
+  {"query":"Use the Jira connector to find open issues assigned to me.","should_trigger":false},
+  {"query":"Review this React BrowserRouter component for type errors; do not run the app.","should_trigger":false},
+  {"query":"Read ./fixtures/dashboard.html and list its form controls from the source.","should_trigger":false},
+  {"query":"Explain why browsers block third-party cookies and what SameSite=Lax means.","should_trigger":false},
+  {"query":"Run curl -fsS http://localhost:8080/health and report the status.","should_trigger":false},
+  {"query":"Find the official Figma API rate-limit documentation using web search.","should_trigger":false}
+]

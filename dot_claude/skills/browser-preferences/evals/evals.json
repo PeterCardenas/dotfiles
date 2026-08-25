@@ -1,0 +1,72 @@
+{
+  "skill_name": "browser-preferences",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Check whether GitHub PR #42 exists and show its current title and status.",
+      "expected_output": "Uses gh or the GitHub API instead of opening a browser.",
+      "files": [],
+      "expectations": [
+        "Prefers gh or the GitHub API because rendered UI state is unnecessary.",
+        "Does not launch or focus a browser."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Refresh the tmux usage indicator every minute. If its auth token is stale, keep the status useful without interrupting me.",
+      "expected_output": "Keeps unattended polling browser-free and does not hide authentication behind an implicit browser launch.",
+      "files": [],
+      "expectations": [
+        "Uses cached state or a non-interactive refresh path for polling.",
+        "Never launches or focuses a browser from the background refresh.",
+        "Makes any interactive authentication step explicit rather than triggering it during polling."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Use the existing browser session named qa-auth to inspect the settings page after I finish Okta MFA. Do not submit anything; tell me what you checked.",
+      "expected_output": "Reuses the named session, invokes login-unblock for MFA, and avoids external mutations.",
+      "files": [],
+      "expectations": [
+        "Preserves and reuses qa-auth rather than creating or resetting a session.",
+        "Invokes login-unblock immediately for Okta MFA and does not handle credentials.",
+        "Verifies authentication in the same session before inspection.",
+        "Does not submit or mutate anything."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "The default automated browser is open, so update PR #42's description there and tell me when it saved.",
+      "expected_output": "Does not equate an open browser with authentication; prefers gh/API and verifies persisted state.",
+      "files": [],
+      "expectations": [
+        "Prefers gh or the GitHub API when it can perform the update.",
+        "Does not treat a running browser process as proof of authentication.",
+        "Obtains explicit confirmation for the exact external mutation.",
+        "Reads the PR description back before reporting success."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Click the visible Apply button in my local web app and capture the result; this is specifically a browser interaction test.",
+      "expected_output": "Uses agent-browser because visible UI behavior is the subject of the task.",
+      "files": [],
+      "expectations": [
+        "Uses agent-browser rather than replacing the requested UI test with a CLI.",
+        "Loads agent-browser core guidance before the first browser command.",
+        "Validates the rendered result and captures focused evidence."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Upload these screenshots to PR #42. Browser login has been unreliable, but gh is authenticated.",
+      "expected_output": "Uses the authenticated CLI/API path and requests approval before upload.",
+      "files": [],
+      "expectations": [
+        "Prefers the authenticated gh/API workflow over browser UI.",
+        "Uses the PR screenshot workflow.",
+        "States the exact upload target and requests explicit confirmation before uploading."
+      ]
+    }
+  ]
+}
