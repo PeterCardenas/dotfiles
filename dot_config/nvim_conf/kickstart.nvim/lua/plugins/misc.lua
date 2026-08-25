@@ -412,7 +412,10 @@ return {
 
   {
     -- Set lualine as statusline
-    'nvim-lualine/lualine.nvim',
+    'PeterCardenas/lualine.nvim',
+    branch = 'octo-cwd-branch',
+    upstream = 'nvim-lualine/lualine.nvim',
+    upstream_branch = 'master',
     lazy = false,
     -- See `:help lualine.txt`
     config = function()
