@@ -620,7 +620,10 @@ return {
             -- TODO: Remove when agentic.nvim/pi-acp passes an unprefixed file path.
             vim.api.nvim_exec_autocmds('User', {
               pattern = 'ChezmoiApplyPath',
-              data = { path = (data.file_path:gsub('^edit ', '')) },
+              data = {
+                path = data.file_path:match('^edit ') and data.file_path:gsub('^edit ', '')
+                  or data.file_path:gsub('^write ', ''),
+              },
             })
           end,
         },
