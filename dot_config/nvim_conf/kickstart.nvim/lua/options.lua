@@ -1,4 +1,5 @@
 local Config = require('utils.config')
+local File = require('utils.file')
 
 -- [[ Setting options ]]
 -- Folding setup for nvim-ufo
@@ -427,7 +428,11 @@ vim.api.nvim_create_autocmd('FileType', {
   pattern = { 'typescript', 'typescriptreact', 'scss' },
   group = filetype_options_group,
   callback = function()
-    local ancestor_dir = require('utils.file').get_ancestor_dir('package.json', vim.fn.expand('%:p'))
+    local filename = vim.fn.expand('%:p')
+    if not File.file_exists(filename) then
+      return
+    end
+    local ancestor_dir = File.get_ancestor_dir('package.json', filename)
     if ancestor_dir == nil then
       return
     end
