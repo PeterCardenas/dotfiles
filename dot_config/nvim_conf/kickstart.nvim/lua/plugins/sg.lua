@@ -3,6 +3,8 @@ local Log = require('utils.log')
 local Secrets = require('utils.secrets')
 local Spinner = require('utils.spinner')
 
+local Pending = require('utils.agentic_pending')
+
 ---@type LazyPluginSpec[]
 return {
   {
@@ -98,6 +100,7 @@ return {
       'nvim-treesitter/nvim-treesitter',
     },
     config = function()
+      Pending.setup()
       -- Track the in-flight title generation per chat session so a newer
       -- response for the same session supersedes the previous one: its spinner
       -- is dismissed and its result discarded. Keyed by ACP session id; the
@@ -153,7 +156,6 @@ return {
 
       require('agentic').setup({
         provider = 'pi-acp',
-
         -- Right-side chat layout.
         windows = {
           position = 'right',
@@ -426,6 +428,8 @@ return {
         hooks = {
           ---@param data agentic.UserConfig.PromptSubmitData
           on_prompt_submit = function(data)
+            Pending.mark_prompt(data)
+            vim.schedule(Pending.recompute)
             vim.api.nvim_ui_send(string.format('\027]9;4;3\027\\'))
             local SessionRegistry = require('agentic.session_registry')
             local session = SessionRegistry.sessions and SessionRegistry.sessions[data.tab_page_id]
@@ -435,6 +439,7 @@ return {
           end,
           ---@param data agentic.UserConfig.ResponseCompleteData
           on_response_complete = function(data)
+            vim.schedule(Pending.recompute)
             if not data.success then
               vim.api.nvim_ui_send(string.format('\027]9;4;2;100\027\\'))
               return
