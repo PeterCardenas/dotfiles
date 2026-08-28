@@ -23,6 +23,8 @@ Before the first `agent-browser` command, run `agent-browser skills get core`. L
 
 Use headless mode. If the task names an existing browser session, reuse that exact session without changing it. Verify the target session or profile has the required access; a running browser process is not proof that it is authenticated.
 
+Avoid attaching to a person's existing Chrome through CDP because it gives automation access to that profile's authenticated cookies and session state. When the task genuinely requires an existing headed Chrome and the user explicitly approves that exposure, connect with explicit `--cdp <port-or-url>` rather than `--auto-connect` and operate in one existing tab for the whole task. Agent-browser v0.31.1 calls `Page.bringToFront` during auto-connect and tab switching; ordinary explicit CDP attachment, reads, snapshots, evaluation, clicks, fills, and navigation do not explicitly activate the page. A newly launched headed Chrome window or native browser dialog can still take focus, so use headless Chrome or an isolated display when focus isolation is required.
+
 ## Authentication
 
 Prefer the relevant CLI authentication flow when browser UI is unnecessary. For login, SSO, consent, MFA, or an identity-provider redirect in browser work, invoke the `login-unblock` skill immediately and say that the workflow is blocked on user action. Never retrieve, print, store, or hard-code credentials, recreate an identity-provider flow, or repeatedly retry challenges. Resume and verify the same session after authentication.

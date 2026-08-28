@@ -67,6 +67,18 @@
         "Uses the PR screenshot workflow.",
         "States the exact upload target and requests explicit confirmation before uploading."
       ]
+    },
+    {
+      "id": 7,
+      "prompt": "I need agent-browser to use the authenticated headed Chrome already exposed over CDP, but do not let automation pull its window into focus.",
+      "expected_output": "Treats CDP attachment as an approved exception, uses an explicit CDP endpoint, and stays in one existing tab to avoid agent-browser activation paths.",
+      "files": [],
+      "expectations": [
+        "Normally avoids CDP attachment because it exposes the existing Chrome profile and session.",
+        "When CDP is required and approved, uses explicit --cdp rather than --auto-connect.",
+        "Operates in one existing tab instead of switching tabs because auto-connect and tab switching call Page.bringToFront.",
+        "Warns that headed Chrome launch or native dialogs can still take focus."
+      ]
     }
   ]
 }
