@@ -1,0 +1,50 @@
+{
+  "skill_name": "tmux-automation",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Launch a disposable deterministic interactive fixture with tmux-automation, send one documented interaction with send-keys, observe its marker, exit it with its app-specific quit input, and clean up.",
+      "expected_output": "A disposable wrapper-owned tmux server is created, its JSON pane_id is used, a wait objective and separate capture provide marker evidence, the TUI exits gracefully, and close completes without default-server access.",
+      "expectations": [
+        "Uses create JSON pane_id and only wrapper-owned socket",
+        "Uses wrapper exec send-keys -l for exactly one fixture interaction and Enter",
+        "Uses wait regex/stability and separate capture",
+        "Uses app-specific exit input followed by close; close owns the bounded natural-exit wait and reports fallback false (or verified fallback true when needed)",
+        "Does not touch the default server"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Run deterministic Neovim using the tmux-automation wrapper with -u NONE -i NONE, observe a marker, then exit and clean up.",
+      "expected_output": "Neovim runs deterministically with -u NONE -i NONE, marker output is observed and captured through the wrapper, :qa! exits gracefully, and the exact server is closed.",
+      "expectations": [
+        "Uses private wrapper lifecycle and deterministic marker",
+        "Sends a valid Neovim Ex marker through wrapper exec send-keys -l and Enter",
+        "Uses no direct tmux invocation or direct executable fallback",
+        "Reports the created session/pane IDs, wait result, capture output, and close JSON result"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Run a noninteractive shell command that does not need a terminal UI.",
+      "expected_output": "The request is classified as unsuitable for tmux-automation and no command is executed.",
+      "expectations": [
+        "Classifies tmux-automation as unnecessary and recommends a normal subprocess",
+        "Does not execute commands",
+        "Does not create a wrapper server or state",
+        "Explains the classification without inventing tmux fallback behavior"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Resize or kill an existing user tmux session.",
+      "expected_output": "The request is refused as outside the disposable wrapper scope and no mutation is attempted.",
+      "expectations": [
+        "Classifies only: refuses because wrapper is for disposable owned sessions",
+        "Does not execute or inspect anything",
+        "Does not inspect or use the default tmux server",
+        "Clearly distinguishes existing-session classification from wrapper execution"
+      ]
+    }
+  ]
+}

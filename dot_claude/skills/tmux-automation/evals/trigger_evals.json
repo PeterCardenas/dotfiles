@@ -1,0 +1,82 @@
+[
+  {
+    "query": "Use tmux-automation to launch a disposable Neovim TUI, send keys, wait for a marker, capture it, and close the private server.",
+    "should_trigger": true
+  },
+  {
+    "query": "Test this lazygit terminal UI in an isolated disposable tmux server with keystrokes and capture.",
+    "should_trigger": true
+  },
+  {
+    "query": "Run k9s through the wrapper and observe its interactive screen before cleanup.",
+    "should_trigger": true
+  },
+  {
+    "query": "Automate an fzf prompt using tmux-automation send-keys and wait for the selection.",
+    "should_trigger": true
+  },
+  {
+    "query": "Launch this curses-based deployment picker in a fixed-size disposable terminal (200x50), wait for the menu to render, send Down twice and Enter, capture the resulting details screen, verify it contains Status: ready, and cleanly remove the private session.",
+    "should_trigger": true
+  },
+  {
+    "query": "Resize an existing user tmux session and inspect its panes; refuse and do not execute.",
+    "should_trigger": true
+  },
+  {
+    "query": "Run the ordinary unit tests with pytest and report failures.",
+    "should_trigger": false
+  },
+  {
+    "query": "Execute this noninteractive shell command and print its output.",
+    "should_trigger": false
+  },
+  {
+    "query": "Explain conceptually how tmux servers and sessions work.",
+    "should_trigger": false
+  },
+  {
+    "query": "Run a Python script in a normal subprocess without a terminal UI.",
+    "should_trigger": false
+  },
+  {
+    "query": "List files in the repository; no interactive application is involved.",
+    "should_trigger": false
+  },
+  {
+    "query": "Review this tmux configuration text without connecting to or automating a session.",
+    "should_trigger": false
+  },
+  {
+    "query": "Attach to my existing tmux session and close it after inspecting the pane; refuse and do not execute.",
+    "should_trigger": true
+  },
+  {
+    "query": "Use tmux to run a one-shot noninteractive build command, no TUI or keystrokes.",
+    "should_trigger": false
+  },
+  {
+    "query": "Capture a screenshot of an ordinary browser tab with no terminal UI.",
+    "should_trigger": false
+  },
+  {
+    "query": "Create a persistent tmux server for my daily shell sessions.",
+    "should_trigger": false
+  },
+  {
+    "query": "Automate a disposable ncurses dashboard with keyboard input and verify its screen.",
+    "should_trigger": true
+  },
+  {
+    "query": "Write documentation explaining tmux socket security, without running anything.",
+    "should_trigger": false
+  },
+  {
+    "query": "Run Neovim headlessly in CI and assert an output file, with no interactive terminal.",
+    "should_trigger": false
+  },
+  {
+    "query": "Test a disposable terminal editor through private tmux, wait for text, then clean up.",
+    "should_trigger": true
+  }
+]
