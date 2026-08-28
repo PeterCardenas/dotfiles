@@ -1,7 +1,7 @@
 {
   "providers": {
     "openai": {
-      "apiKey": "!tr -d \"\\r\\n\" < /home/pcardenas/.local/share/openai/api_key"
+      "apiKey": "!tr -d \"\\r\\n\" < ~/.local/share/openai/api_key"
     }
   }
 }
