@@ -44,7 +44,7 @@ class PiSettingsModifierTest(unittest.TestCase):
 
             settings = json.loads(result.stdout)
             self.assertTrue(settings["quietStartup"])
-            self.assertEqual(settings["packages"], ["npm:pi-web-access", "npm:@tintinweb/pi-subagents"])
+            self.assertEqual(settings["packages"], ["npm:pi-web-access", "git:github.com/peter-cardenas-ai/pi-subagents"])
             self.assertEqual(settings["extensions"], ["~/.pi/agent/extensions/claude-compat.ts"])
             self.assertEqual(settings["theme"], "dark")
             self.assertEqual(settings["editor"], {"fontSize": 14, "wordWrap": True})
@@ -63,7 +63,7 @@ class PiSettingsModifierTest(unittest.TestCase):
 
         settings = json.loads(result.stdout)
         self.assertTrue(settings["quietStartup"])
-        self.assertEqual(settings["packages"], ["npm:pi-web-access", "npm:@tintinweb/pi-subagents"])
+        self.assertEqual(settings["packages"], ["npm:pi-web-access", "git:github.com/peter-cardenas-ai/pi-subagents"])
         self.assertEqual(settings["extensions"], ["~/.pi/agent/extensions/claude-compat.ts"])
 
 

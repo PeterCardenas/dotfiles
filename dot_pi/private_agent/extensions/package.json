@@ -19,6 +19,7 @@
   "type": "module",
   "devDependencies": {
     "@earendil-works/pi-coding-agent": "^0.83.0",
-    "@types/node": "^26.1.2"
+    "@types/node": "^26.1.2",
+    "jiti": "^2.7.0"
   }
 }

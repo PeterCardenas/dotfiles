@@ -2,7 +2,6 @@
   "name": "pi-extensions",
   "private": true,
   "dependencies": {
-    "@tintinweb/pi-subagents": "0.18.0",
     "pi-web-access": "0.24.0"
   }
 }

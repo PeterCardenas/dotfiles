@@ -2,7 +2,7 @@
   "quietStartup": true,
   "packages": [
     "npm:pi-web-access",
-    "npm:@tintinweb/pi-subagents"
+    "git:github.com/peter-cardenas-ai/pi-subagents"
   ],
   "extensions": ["~/.pi/agent/extensions/claude-compat.ts"]
 }

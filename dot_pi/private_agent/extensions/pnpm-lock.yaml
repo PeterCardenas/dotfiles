@@ -213,6 +213,9 @@ importers:
       '@types/node':
         specifier: ^26.1.2
         version: 26.1.2
+      jiti:
+        specifier: ^2.7.0
+        version: 2.7.0
 
 packages:
 
