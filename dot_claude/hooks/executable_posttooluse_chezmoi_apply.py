@@ -3,15 +3,26 @@
 
 from __future__ import annotations
 
+import base64
+import binascii
 import json
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 from hook_context import deny_hook_response
 
 
 def _main() -> None:
+    if len(sys.argv) != 3 or sys.argv[1] != "--source-base64":
+        return
+    try:
+        source_root = Path(base64.b64decode(sys.argv[2], validate=True).decode("utf-8")).resolve()
+    except (binascii.Error, UnicodeDecodeError, ValueError):
+        return
+    if not source_root.is_dir():
+        return
     try:
         payload = json.load(sys.stdin)
     except json.JSONDecodeError:
@@ -33,24 +44,14 @@ def _main() -> None:
     cwd = payload.get("cwd") or payload.get("working_directory")
     if not isinstance(cwd, str) or not cwd:
         cwd = os.getcwd()
-    absolute_path = os.path.realpath(
-        file_path if os.path.isabs(file_path) else os.path.join(cwd, file_path)
-    )
-
     try:
-        source_result = subprocess.run(
-            ["chezmoi", "source-path"],
-            capture_output=True,
-            text=True,
-            timeout=5,
-            check=False,
+        absolute_path = os.path.realpath(
+            file_path if os.path.isabs(file_path) else os.path.join(cwd, file_path)
         )
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        return
-    if source_result.returncode != 0:
+    except ValueError:
         return
 
-    source_path = os.path.realpath(source_result.stdout.strip())
+    source_path = os.path.realpath(source_root)
     try:
         inside_source = os.path.commonpath([source_path, absolute_path]) == source_path
     except ValueError:
@@ -60,7 +61,7 @@ def _main() -> None:
 
     try:
         apply_result = subprocess.run(
-            ["chezmoi", "apply", "--source-path", absolute_path],
+            ["chezmoi", "--source", source_path, "apply", "--source-path", absolute_path],
             capture_output=True,
             text=True,
             timeout=30,

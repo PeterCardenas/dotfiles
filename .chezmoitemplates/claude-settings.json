@@ -95,7 +95,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/posttooluse_chezmoi_apply.py",
+            "command": {{ printf "~/.claude/hooks/posttooluse_chezmoi_apply.py --source-base64 %s" (b64enc .chezmoi.sourceDir) | toJson }},
             "timeout": 30
           }
         ]
