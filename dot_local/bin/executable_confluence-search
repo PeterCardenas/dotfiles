@@ -10,7 +10,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 from connector_delegate import run_entrypoint
 
 
-ALLOWED_TOOLS = ("mcp__claude_ai_Atlassian__search",)
+ALLOWED_TOOLS = (
+    "mcp__claude_ai_Atlassian__getAccessibleAtlassianResources",
+    "mcp__claude_ai_Atlassian__getConfluencePage",
+    "mcp__claude_ai_Atlassian__search",
+)
 
 
 def build_prompt(query: str) -> str:
