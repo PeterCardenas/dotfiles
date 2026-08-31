@@ -91,6 +91,16 @@
     ],
     "PostToolUse": [
       {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/posttooluse_chezmoi_apply.py",
+            "timeout": 30
+          }
+        ]
+      },
+      {
         "matcher": "Bash|.*[Ss]hell.*|.*[Tt]erminal.*",
         "hooks": [
           {

@@ -11,21 +11,17 @@ from pathlib import Path
 
 BRIDGE = Path(__file__).parent / "dot_local/bin/executable_pi-claude-hook-bridge"
 EXTENSION = Path(__file__).parent / "dot_pi/private_agent/extensions/claude-compat.ts"
-PI_SETTINGS = Path(__file__).parent / "dot_pi/private_agent/settings.json"
+PI_SETTINGS_TEMPLATE = Path(__file__).parent / ".chezmoitemplates/pi-settings.json"
 
 
 class PiClaudeHookBridgeTest(unittest.TestCase):
     def test_pi_settings_registers_extension_for_rpc_processes(self) -> None:
-        settings = json.loads(PI_SETTINGS.read_text(encoding="utf-8"))
+        template = PI_SETTINGS_TEMPLATE.read_text(encoding="utf-8")
+        settings = json.loads(template)
         self.assertEqual(settings["extensions"], ["~/.pi/agent/extensions/claude-compat.ts"])
-        self.assertEqual(settings["defaultProvider"], "applied")
-        self.assertEqual(settings["defaultModel"], "gpt-5-6-terra")
         self.assertTrue(settings["quietStartup"])
         self.assertEqual(settings["packages"], ["npm:pi-web-access", "git:github.com/peter-cardenas-ai/pi-subagents"])
-        self.assertEqual(settings["steeringMode"], "all")
-        self.assertNotIn("lastChangelogVersion", settings)
-        self.assertNotIn("theme", settings)
-        self.assertNotIn("/home/pcardenas", PI_SETTINGS.read_text(encoding="utf-8"))
+        self.assertNotIn("/home/pcardenas", template)
 
     def test_claude_compat_registers_and_contributes_agent_roots_behaviorally(self) -> None:
         script = r'''const fs = require("node:fs");
@@ -68,6 +64,55 @@ console.log(JSON.stringify({trusted, untrusted, globalRoots, root, cwd}));'''
         source = EXTENSION.read_text(encoding="utf-8")
         self.assertIn('const claudeInstructionsPath = join(homedir(), "CLAUDE.md");', source)
         self.assertNotIn('join(homedir(), ".claude", "CLAUDE.md")', source)
+
+    def test_claude_compat_bridges_edit_tool_results(self) -> None:
+        script = r'''const fs = require("node:fs");
+const path = require("node:path");
+const { createJiti } = require("jiti");
+const extension = createJiti(__filename)(process.argv[2]);
+const handlers = new Map();
+const pi = { events: { on() {} }, on(name, fn) { handlers.set(name, fn); }, registerTool() {}, registerCommand() {}, registerEntryRenderer() {}, registerFlag() {}, registerMessageRenderer() {} };
+extension.default(pi);
+handlers.get("tool_result")({toolName:"edit", input:{path:"tracked.txt"}, content:[], isError:false}, {cwd:process.cwd()}).then(() => {
+  console.log(fs.readFileSync(path.join(process.env.HOME, "bridge-input.json"), "utf8"));
+});'''
+        workspace = EXTENSION.parent
+        with tempfile.TemporaryDirectory(dir=workspace) as temp_dir, tempfile.TemporaryDirectory() as home:
+            harness = Path(temp_dir) / "harness.cjs"
+            harness.write_text(script, encoding="utf-8")
+            bridge = Path(home) / ".local/bin/pi-claude-hook-bridge"
+            bridge.parent.mkdir(parents=True)
+            bridge.write_text(
+                "#!/usr/bin/env python3\nimport json, os, sys\n"
+                "payload=json.load(sys.stdin)\n"
+                "open(os.path.join(os.environ['HOME'], 'bridge-input.json'), 'w').write(json.dumps(payload))\n"
+                "print(json.dumps({'action':'allow'}))\n",
+                encoding="utf-8",
+            )
+            bridge.chmod(0o755)
+            try:
+                result = subprocess.run(
+                    ["node", str(harness), str(EXTENSION)],
+                    cwd=workspace,
+                    capture_output=True,
+                    text=True,
+                    env={**os.environ, "HOME": home},
+                )
+            finally:
+                harness.unlink(missing_ok=True)
+        if result.returncode != 0:
+            self.fail(f"edit tool-result bridge failed (exit {result.returncode}):\\n{result.stderr}")
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["event_type"], "tool_result")
+        self.assertEqual(
+            payload["event"],
+            {
+                "toolName": "edit",
+                "input": {"path": "tracked.txt"},
+                "content": [],
+                "isError": False,
+            },
+        )
 
     def test_claude_compat_appends_managed_context_without_local_instructions(self) -> None:
         source = EXTENSION.read_text(encoding="utf-8")

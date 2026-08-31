@@ -620,17 +620,6 @@ return {
               session:schedule_header_refresh()
             end
           end,
-          ---@param data agentic.UserConfig.FileEditData
-          on_file_edit = function(data)
-            -- TODO: Remove when agentic.nvim/pi-acp passes an unprefixed file path.
-            vim.api.nvim_exec_autocmds('User', {
-              pattern = 'ChezmoiApplyPath',
-              data = {
-                path = data.file_path:match('^edit ') and data.file_path:gsub('^edit ', '')
-                  or data.file_path:gsub('^write ', ''),
-              },
-            })
-          end,
         },
       })
     end,

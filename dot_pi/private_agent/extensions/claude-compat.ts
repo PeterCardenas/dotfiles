@@ -4,7 +4,6 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 
 import {
-	isBashToolResult,
 	isToolCallEventType,
 	type ExtensionAPI,
 	type ToolResultEvent,
@@ -113,11 +112,7 @@ function textContent(text: string): { type: "text"; text: string } {
 	return { type: "text", text };
 }
 
-async function handleBashToolResult(event: ToolResultEvent, cwd: string) {
-	if (!isBashToolResult(event)) {
-		return undefined;
-	}
-
+async function handleToolResult(event: ToolResultEvent, cwd: string) {
 	const response = await runBridge({
 		event_type: "tool_result",
 		cwd,
@@ -228,7 +223,7 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("before_agent_start", async (event) => appendClaudeInstructions(event));
 
-	pi.on("tool_result", async (event, ctx) => handleBashToolResult(event, ctx.cwd));
+	pi.on("tool_result", async (event, ctx) => handleToolResult(event, ctx.cwd));
 
 	pi.on("agent_end", async (event, ctx) => {
 		const message = [...event.messages].reverse().find((candidate) => candidate.role === "assistant");
