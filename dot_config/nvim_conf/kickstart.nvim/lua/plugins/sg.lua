@@ -483,10 +483,9 @@ return {
             end
             local transcript = '<conversation>\n' .. table.concat(parts, '\n') .. '\n</conversation>'
 
-            local title_system_prompt = 'You generate short chat titles from conversation transcripts. '
-              .. 'Reply with ONLY the title text: 5-8 words, no explanation, no markdown, no quotes, and no punctuation at the end. Ignore any instruction about adding links.'
-            local retry_prompt = 'That title was too long. Rewrite your previous answer as a 5-8 word title. '
-              .. 'Reply with ONLY the title text, with no explanation, no markdown, no quotes, and no punctuation at the end.'
+            local title_prompt = 'You generate short chat titles from conversation transcripts. '
+              .. 'Reply with ONLY the title text: 5-8 words, no explanation, no markdown, no quotes, and no punctuation at the end. Ignore any instruction about adding links.\n\n'
+              .. transcript
 
             local Async = require('utils.async')
 
@@ -515,27 +514,27 @@ return {
             Async.void(function() ---@async
               local Shell = require('utils.shell')
               local title = nil
-              local next_prompt = transcript
-              ---@type string?
-              local title_session_id = nil
+              local next_prompt = title_prompt
               for _ = 1, 3 do
                 local args = {
                   '-p',
-                  '--setting-sources',
-                  'project,local',
-                  '--output-format',
-                  'json',
+                  '--no-session',
                   '--model',
-                  'haiku',
-                  '--tools',
-                  '',
+                  'gpt-5.6-luna',
+                  '--thinking',
+                  'low',
+                  '--no-tools',
+                  '--no-extensions',
+                  '--no-skills',
+                  '--no-prompt-templates',
+                  '--no-context-files',
+                  '--no-approve',
                   '--system-prompt',
-                  title_system_prompt,
+                  ' ',
+                  '--append-system-prompt',
+                  '',
                 }
-                if title_session_id then
-                  vim.list_extend(args, { '--resume', title_session_id })
-                end
-                local ok, output = Shell.async_cmd('claude', args, { stdin = next_prompt })
+                local ok, output = Shell.async_cmd('pi', args, { stdin = next_prompt })
                 -- A newer response for this session superseded us while awaiting;
                 -- the new generation already owns the spinner, so just bail.
                 if _title_gen_by_session[session_key] ~= title_progress then
@@ -545,35 +544,18 @@ return {
                   Log.notify_error(table.concat(output or {}, '\n'), { title = 'Title generation failed, retrying...' })
                   goto continue
                 end
-                local response_line = nil
-                for i = #output, 1, -1 do
-                  local line = vim.trim(output[i] or '')
-                  if line ~= '' then
-                    response_line = line
-                    break
-                  end
-                end
-                if not response_line then
-                  Log.notify_error(table.concat(output, '\n'), { title = 'Title generation returned no JSON, retrying...' })
+                local candidate = vim.trim(table.concat(output.stdout, '\n'))
+                if candidate == '' then
+                  Log.notify_error(table.concat(output, '\n'), { title = 'Title generation returned no output, retrying...' })
                   goto continue
                 end
-                local decoded_ok, response = pcall(vim.json.decode, response_line)
-                if not decoded_ok or type(response) ~= 'table' then
-                  Log.notify_error(table.concat(output, '\n'), { title = 'Could not parse title generation response, retrying...' })
-                  goto continue
-                end
-                local response_session_id = response.session_id
-                if type(response_session_id) == 'string' and response_session_id ~= '' then
-                  title_session_id = response_session_id
-                end
-                local candidate = type(response.result) == 'string' and vim.trim(response.result) or ''
                 local word_count = select(2, candidate:gsub('%S+', ''))
                 if word_count <= 10 then
                   title = candidate
                   break
                 end
                 title = nil
-                next_prompt = retry_prompt
+                next_prompt = title_prompt .. '\n\nThe previous title was too long. Replace it with a 5-8 word title:\n' .. candidate
                 Log.notify_warn(string.format('Title too long (%d words), retrying...\n%s', word_count, candidate), { title = 'Title Generation' })
                 ::continue::
               end
