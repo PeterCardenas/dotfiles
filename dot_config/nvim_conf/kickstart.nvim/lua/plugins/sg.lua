@@ -524,7 +524,6 @@ return {
                   '--thinking',
                   'low',
                   '--no-tools',
-                  '--no-extensions',
                   '--no-skills',
                   '--no-prompt-templates',
                   '--no-context-files',
