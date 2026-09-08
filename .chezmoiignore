@@ -1,3 +1,5 @@
+{{ include ".gitignore" }}
+
 README.md
 .git-blame-ignore-revs
 .gitignore
