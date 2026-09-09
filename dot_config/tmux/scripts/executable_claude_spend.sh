@@ -56,7 +56,7 @@ history_file="${XDG_DATA_HOME:-$HOME/.local/share}/claude-spend/history"
 # exponent and Claude's own severity rating. `extra_usage` is the fallback,
 # being the shape the CLI itself parses.
 fetch_usage() {
-  local creds token body headers status retry_after
+  local creds token body headers status retry_after claude_version
   creds="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/.credentials.json"
   [ -f "$creds" ] || return 0
   token=$(jq -r '.claudeAiOauth.accessToken // empty' "$creds" 2>/dev/null)
@@ -64,10 +64,14 @@ fetch_usage() {
 
   body=$(mktemp) || return 0
   headers=$(mktemp) || { rm -f "$body"; return 0; }
+  claude_version=$(claude --version 2>/dev/null | awk 'NR == 1 { print $1 }')
+  [ -n "$claude_version" ] || claude_version=unknown
   status=$(curl -sS --max-time 5 -o "$body" -D "$headers" -w '%{http_code}' \
     "https://api.anthropic.com/api/oauth/usage" \
     -H "Authorization: Bearer $token" \
-    -H "Content-Type: application/json" 2>/dev/null)
+    -H "Content-Type: application/json" \
+    -H "User-Agent: claude-code/$claude_version" \
+    -H "anthropic-beta: oauth-2025-04-20" 2>/dev/null)
   # A rate-limited response says how long it wants to be left alone; obeying it
   # beats guessing, especially since every Claude Code session on this machine
   # shares the token's budget.

@@ -46,6 +46,9 @@ for arg in "$@"; do
   [ "$prev" = "-D" ] && headers=$arg
   prev=$arg
 done
+if [ -n "${FAKE_CURL_ARGS:-}" ]; then
+  printf '%s\n' "$@" >"$FAKE_CURL_ARGS"
+fi
 if [ -n "${FAKE_CURL_COUNT:-}" ]; then
   printf 'request\n' >>"$FAKE_CURL_COUNT"
   sleep 0.2
@@ -62,6 +65,12 @@ fi
 printf '%s' "${FAKE_HTTP_STATUS:-200}"
 EOF
 chmod +x "$tmp/bin/curl"
+
+cat >"$tmp/bin/claude" <<'EOF'
+#!/usr/bin/env bash
+printf '2.1.260 (Claude Code)\n'
+EOF
+chmod +x "$tmp/bin/claude"
 
 write_credentials() {
   mkdir -p "$CLAUDE_CONFIG_DIR"
@@ -135,6 +144,16 @@ check "the limit is not rendered" "no" \
   "$(grep -q '\$1500.00' <<<"$out" && echo yes || echo no)"
 check "severity warning colors the amount orange" "yes" \
   "$(grep -q 'fg=#ff9e64\]\$1210.74' <<<"$out" && echo yes || echo no)"
+
+# Requests use Claude Code's OAuth headers so they share its rate-limit bucket.
+reset_state
+stage_usage 121074 150000 81 warning
+export FAKE_CURL_ARGS="$tmp/curl-args"
+"$script" >/dev/null
+check "usage request identifies Claude Code" "yes" \
+  "$(grep -Fxq 'User-Agent: claude-code/2.1.260' "$FAKE_CURL_ARGS" && \
+    grep -Fxq 'anthropic-beta: oauth-2025-04-20' "$FAKE_CURL_ARGS" && echo yes || echo no)"
+unset FAKE_CURL_ARGS
 
 # --- 2. --short shows the used amount alone, still colored ---
 reset_state
