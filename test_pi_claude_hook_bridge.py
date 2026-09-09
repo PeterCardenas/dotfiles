@@ -20,7 +20,7 @@ class PiClaudeHookBridgeTest(unittest.TestCase):
         settings = json.loads(template)
         self.assertEqual(settings["extensions"], ["~/.pi/agent/extensions/claude-compat.ts"])
         self.assertTrue(settings["quietStartup"])
-        self.assertEqual(settings["packages"], ["npm:pi-web-access", "git:github.com/peter-cardenas-ai/pi-subagents"])
+        self.assertEqual(settings["packages"], ["npm:pi-web-access", "git:github.com/PeterCardenas/pi-subagents"])
         self.assertNotIn("/home/pcardenas", template)
 
     def test_claude_compat_registers_and_contributes_agent_roots_behaviorally(self) -> None:
