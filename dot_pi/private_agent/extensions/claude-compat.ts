@@ -193,6 +193,9 @@ async function appendClaudeInstructions(event: {
 }
 
 export default function (pi: ExtensionAPI) {
+	// A Stop-hook follow-up re-enters as a prompt of the run it triggers, so the run's own messages
+	// identify the recursion. A follow-up that was cancelled or never delivered simply never appears.
+	let lastFollowUpText: string | undefined;
 	pi.events.on("subagents:agents:request", contributeClaudeAgentRoots);
 	pi.on("resources_discover", (event) => ({
 		skillPaths: [
@@ -226,17 +229,19 @@ export default function (pi: ExtensionAPI) {
 	pi.on("tool_result", async (event, ctx) => handleToolResult(event, ctx.cwd));
 
 	pi.on("agent_end", async (event, ctx) => {
+		const textOf = (candidate: (typeof event.messages)[number]) => candidate.content.filter((block) => block.type === "text").map((block) => block.text).join("\n");
 		const message = [...event.messages].reverse().find((candidate) => candidate.role === "assistant");
 		if (!message) return undefined;
-		const text = message.content.filter((block) => block.type === "text").map((block) => block.text).join("\n");
+		const text = textOf(message);
 		const sessionId = ctx.sessionManager.getSessionId();
 		let response: BridgeResponse;
 		try {
 			const stopReason = claudeStopReason(message.stopReason);
+			const stopHookActive = event.messages.some((candidate) => candidate.role === "user" && textOf(candidate) === lastFollowUpText);
 			response = await runBridge({
 				event_type: "stop",
 				cwd: ctx.cwd,
-				event: { last_assistant_message: text, stop_reason: stopReason, cwd: ctx.cwd, working_directory: ctx.cwd, session_id: sessionId, conversation_id: sessionId, workspace_roots: [ctx.cwd] },
+				event: { last_assistant_message: text, stop_reason: stopReason, stop_hook_active: stopHookActive, cwd: ctx.cwd, working_directory: ctx.cwd, session_id: sessionId, conversation_id: sessionId, workspace_roots: [ctx.cwd] },
 			});
 		} catch (error) {
 			const reason = error instanceof Error ? error.message : String(error);
@@ -248,8 +253,8 @@ export default function (pi: ExtensionAPI) {
 				? [response.reason ?? "Blocked by Claude-compatible Pi hook bridge"]
 				: [];
 		if (!reasons.length) return undefined;
-		// Each agent_end callback gets exactly one follow-up; later turns must be checked again.
-		await pi.sendUserMessage(`Address all Stop-hook feedback by continuing the prior task:\n${reasons.map((reason) => `- ${reason}`).join("\n")}`, { deliverAs: "followUp" });
+		lastFollowUpText = `Address all Stop-hook feedback by continuing the prior task:\n${reasons.map((reason) => `- ${reason}`).join("\n")}`;
+		pi.sendUserMessage(lastFollowUpText, { deliverAs: "followUp" });
 		return undefined;
 	});
 }

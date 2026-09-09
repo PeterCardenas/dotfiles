@@ -152,12 +152,80 @@ handlers.get("tool_result")({toolName:"edit", input:{path:"tracked.txt"}, conten
         ):
             self.assertIn(f'case "{pi_reason}": return "{claude_reason}";', source)
 
-    def test_agent_end_stop_follow_up_awaits_send_user_message(self) -> None:
+    def test_agent_end_stop_follow_up_sends_user_message(self) -> None:
         source = EXTENSION.read_text(encoding="utf-8")
-        self.assertIn(
-            'await pi.sendUserMessage(`Address all Stop-hook feedback by continuing the prior task:',
-            source,
+        self.assertIn("lastFollowUpText = `Address all Stop-hook feedback by continuing the prior task:", source)
+        self.assertIn('pi.sendUserMessage(lastFollowUpText, { deliverAs: "followUp" });', source)
+
+    def _run_lifecycle(self, lifecycle: str) -> dict:
+        """Drive the real extension's agent_end handler against a recording bridge.
+
+        agentEnd(prompts) models one agent-loop run: Pi seeds newMessages with the run's prompt
+        messages (agent-loop.js runAgentLoop), so a delivered follow-up appears as a user message.
+        """
+        script = r'''const fs = require("node:fs");
+const path = require("node:path");
+const { createJiti } = require("jiti");
+const extension = createJiti(__filename)(process.argv[2]);
+const handlers = new Map();
+const sent = [];
+const pi = { events: { on(name, fn) { handlers.set(name, fn); } }, on(name, fn) { handlers.set(name, fn); }, sendUserMessage(message, options) { sent.push({message, options}); }, registerTool() {}, registerCommand() {}, registerEntryRenderer() {}, registerFlag() {}, registerMessageRenderer() {} };
+extension.default(pi);
+const payloadsPath = path.join(process.env.HOME, "payloads.jsonl");
+const bridge = path.join(process.env.HOME, ".local/bin/pi-claude-hook-bridge");
+fs.mkdirSync(path.dirname(bridge), {recursive:true});
+fs.writeFileSync(bridge, `#!/usr/bin/env python3
+import json, sys
+p = json.load(sys.stdin)
+with open('${payloadsPath}', 'a') as f: f.write(json.dumps(p['event']) + '\\n')
+print(json.dumps({'action': 'allow'} if p['event'].get('stop_hook_active') else {'action': 'follow_up', 'reasons': ['missing links']}))
+`); fs.chmodSync(bridge, 0o755);
+const assistant = {role:"assistant", stopReason:"stop", content:[{type:"text", text:"A sufficiently long response that does not contain any links and should trigger the stop hook feedback for testing."}]};
+const userMessage = (text) => ({role:"user", content:[{type:"text", text}]});
+const ctx = {cwd: process.cwd(), sessionManager:{getSessionId(){return "session-1";}}};
+const agentEnd = (prompts = []) => handlers.get("agent_end")({messages:[...prompts, assistant]}, ctx);
+const lastSentText = () => sent[sent.length - 1].message;
+(async () => {
+__LIFECYCLE__
+const payloads = fs.existsSync(payloadsPath) ? fs.readFileSync(payloadsPath, "utf8").trim().split("\n").map(JSON.parse) : [];
+console.log(JSON.stringify({sent, payloads}));
+})();'''
+        script = script.replace("__LIFECYCLE__", lifecycle)
+        workspace = EXTENSION.parent
+        with tempfile.TemporaryDirectory(dir=workspace) as temp_dir, tempfile.TemporaryDirectory() as home:
+            harness = Path(temp_dir) / "harness.cjs"
+            harness.write_text(script, encoding="utf-8")
+            try:
+                result = subprocess.run(["node", str(harness), str(EXTENSION)], cwd=workspace, capture_output=True, text=True, env={**os.environ, "HOME": home})
+            finally:
+                harness.unlink(missing_ok=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)
+
+    def test_delivered_follow_up_run_is_marked_active_and_later_runs_are_not(self) -> None:
+        observed = self._run_lifecycle(
+            "await agentEnd(); await agentEnd([userMessage(lastSentText())]); await agentEnd();"
         )
+        self.assertEqual([payload["stop_hook_active"] for payload in observed["payloads"]], [False, True, False])
+        self.assertEqual(len(observed["sent"]), 2)
+
+    def test_unrelated_extension_follow_up_does_not_mark_run_active(self) -> None:
+        observed = self._run_lifecycle(
+            'await agentEnd(); await agentEnd([userMessage("unrelated extension follow-up")]);'
+        )
+        self.assertEqual([payload["stop_hook_active"] for payload in observed["payloads"]], [False, False])
+
+    def test_cancelled_follow_up_does_not_mark_later_run_active(self) -> None:
+        observed = self._run_lifecycle("await agentEnd(); await agentEnd();")
+        self.assertEqual([payload["stop_hook_active"] for payload in observed["payloads"]], [False, False])
+
+    def test_real_stop_hook_blocks_normal_permits_active_then_blocks_later_normal(self) -> None:
+        command = f"{sys.executable} {str(Path(__file__).parent / 'dot_claude/hooks/executable_stop_check_links.py')}"
+        settings = {"hooks": {"Stop": [{"hooks": [{"command": command}]}]}}
+        long_message = "A response with enough detail to exceed one hundred and twenty characters without including any URL or references heading, so the link hook should request a follow-up."
+        self.assertEqual(self._run("stop", {"last_assistant_message": long_message, "stop_reason": "end_turn"}, settings)["action"], "follow_up")
+        self.assertEqual(self._run("stop", {"last_assistant_message": long_message, "stop_reason": "end_turn", "stop_hook_active": True}, settings)["action"], "allow")
+        self.assertEqual(self._run("stop", {"last_assistant_message": long_message, "stop_reason": "end_turn"}, settings)["action"], "follow_up")
 
     def test_agent_end_bridges_empty_text_with_session_context(self) -> None:
         source = EXTENSION.read_text(encoding="utf-8")

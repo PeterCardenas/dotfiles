@@ -192,6 +192,10 @@ def _main() -> None:
     except json.JSONDecodeError:
         return _output()
 
+    # Claude uses this flag to prevent a Stop-hook follow-up from recursively re-triggering it.
+    if input_data.get("stop_hook_active") is True:
+        return _output()
+
     # Only check end_turn stops; tool_use stops are mid-turn, not final responses.
     if input_data.get("stop_reason") not in ("end_turn", None, ""):
         return _output()
