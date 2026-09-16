@@ -1,6 +1,6 @@
 ---
 name: pr-branch-ops
-description: "Use this skill whenever changing GitHub PR branch history or topology: rebasing a PR onto master or another base, amending and force-pushing, splitting or retargeting PR branches, deleting a PR branch, or operating on a dependent PR stack. It detects dependents first, uses lease-protected pushes, verifies the resulting PR, and applies stricter bottom-up safeguards for stacks and CODEOWNERS recovery. Do not use for ordinary local-only Git work that does not affect a PR branch."
+description: "MUST use for repository-specific questions about whether multiple GitHub PRs need to be stacked, and whenever a task involves a PR stack or a PR that may have dependents—including CI or generated-artifact repair, rebasing, amending, force-pushing, splitting, retargeting, deleting, merging, or CODEOWNERS recovery. It maps dependents first, keeps fixes and validation in their earliest owning layer, uses lease-protected pushes, and verifies each PR independently. Do not use for local-only Git work, conceptual questions about stacks, or confirmed standalone PR work."
 ---
 
 # PR Branch Operations
@@ -62,6 +62,8 @@ Before rewriting the stack:
    git log --oneline --name-status origin/base..origin/head
    ```
 4. Do not temporarily rewind or delete a branch used as an open PR's base.
+
+For CI fixes and generated artifacts, repair bottom-up. At each layer, reproduce the failure, commit only that layer's delta, and prove that layer passes before advancing. Never generate once at the tip and distribute the result afterward; that obscures ownership and leaves earlier PRs failing.
 
 To amend an earlier stack commit:
 
