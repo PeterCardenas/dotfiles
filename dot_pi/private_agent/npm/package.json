@@ -2,6 +2,8 @@
   "name": "pi-extensions",
   "private": true,
   "dependencies": {
+    "@earendil-works/pi-coding-agent": "0.85.1",
+    "pi-subagents": "^0.70.0",
     "pi-web-access": "^0.27.0"
   }
 }

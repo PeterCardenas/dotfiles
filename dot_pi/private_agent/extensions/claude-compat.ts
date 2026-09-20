@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 
 import {
 	isToolCallEventType,
@@ -129,38 +129,6 @@ async function handleToolResult(event: ToolResultEvent, cwd: string) {
 
 const claudeInstructionsPath = join(homedir(), "CLAUDE.md");
 
-type AgentRootRequest = {
-	cwd: string;
-	projectTrusted: boolean;
-	contributions: unknown[];
-};
-
-function isAgentRootRequest(value: unknown): value is AgentRootRequest {
-	if (!value || typeof value !== "object") return false;
-	return "cwd" in value && "projectTrusted" in value && "contributions" in value
-		&& typeof value.cwd === "string" && typeof value.projectTrusted === "boolean" && Array.isArray(value.contributions);
-}
-
-function projectAgentRoots(cwd: string): string[] {
-	const roots: string[] = [];
-	let directory = cwd;
-	while (true) {
-		roots.push(join(directory, ".claude", "agents"));
-		if (existsSync(join(directory, ".git")) || dirname(directory) === directory) break;
-		directory = dirname(directory);
-	}
-	return roots.reverse();
-}
-
-function contributeClaudeAgentRoots(value: unknown): void {
-	if (!isAgentRootRequest(value)) return;
-	value.contributions.push({ path: join(homedir(), ".claude", "agents"), scope: "global", source: "claude-compat" });
-	if (!value.projectTrusted) return;
-	for (const path of projectAgentRoots(value.cwd)) {
-		value.contributions.push({ path, scope: "project", source: "claude-compat" });
-	}
-}
-
 async function appendClaudeInstructions(event: {
 	systemPrompt: string;
 	systemPromptOptions: {
@@ -196,7 +164,6 @@ export default function (pi: ExtensionAPI) {
 	// A Stop-hook follow-up re-enters as a prompt of the run it triggers, so the run's own messages
 	// identify the recursion. A follow-up that was cancelled or never delivered simply never appears.
 	let lastFollowUpText: string | undefined;
-	pi.events.on("subagents:agents:request", contributeClaudeAgentRoots);
 	pi.on("resources_discover", (event) => ({
 		skillPaths: [
 			join(homedir(), ".claude", "skills"),

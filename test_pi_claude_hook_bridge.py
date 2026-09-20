@@ -20,45 +20,25 @@ class PiClaudeHookBridgeTest(unittest.TestCase):
         settings = json.loads(template)
         self.assertEqual(settings["extensions"], ["~/.pi/agent/extensions/claude-compat.ts"])
         self.assertTrue(settings["quietStartup"])
-        self.assertEqual(settings["packages"], ["npm:pi-web-access", "git:github.com/PeterCardenas/pi-subagents"])
+        self.assertEqual(settings["packages"], ["npm:pi-web-access", "npm:pi-subagents"])
+        self.assertEqual(settings["subagents"]["defaultModel"], "gpt-5.6-luna")
+        self.assertEqual(settings["subagents"]["defaultThinking"], "xhigh")
+        self.assertEqual(settings["subagents"]["agentScanDirs"], ["~/.claude/agents"])
+        self.assertEqual(settings["subagents"]["agentOverrides"], {"reviewer": {"model": "gpt-5.6-sol", "thinking": "medium"}})
+        self.assertNotIn("defaultProvider", settings["subagents"])
         self.assertNotIn("/home/pcardenas", template)
 
-    def test_claude_compat_registers_and_contributes_agent_roots_behaviorally(self) -> None:
-        script = r'''const fs = require("node:fs");
-const os = require("node:os");
-const path = require("node:path");
-const { createJiti } = require("jiti");
-const extension = createJiti(__filename)(process.argv[2]);
-const handlers = new Map();
-const pi = { events: { on(name, fn) { handlers.set(name, fn); } }, on() {}, registerTool() {}, registerCommand() {}, registerEntryRenderer() {}, registerFlag() {}, registerMessageRenderer() {} };
-extension.default(pi);
-const request = (cwd, trusted) => { const contributions = []; handlers.get("subagents:agents:request")({cwd, projectTrusted: trusted, contributions}); return contributions; };
-const root = fs.mkdtempSync(path.join(os.tmpdir(), "claude-roots-"));
-fs.mkdirSync(path.join(root, "a", "b"), {recursive:true}); fs.writeFileSync(path.join(root, "a", "b", ".git"), "gitdir: /tmp/worktree");
-const cwd = path.join(root, "a", "b", "c"); fs.mkdirSync(cwd, {recursive:true});
-const trusted = request(cwd, true), untrusted = request(cwd, false), globalRoots = trusted.filter(x => x.scope === "global");
-console.log(JSON.stringify({trusted, untrusted, globalRoots, root, cwd}));'''
-        workspace = EXTENSION.parent
-        with tempfile.TemporaryDirectory(dir=workspace) as temp_dir:
-            harness = Path(temp_dir) / "harness.cjs"
-            harness.write_text(script, encoding="utf-8")
-            try:
-                result = subprocess.run(["node", str(harness), str(EXTENSION)], cwd=workspace, capture_output=True, text=True, env={**os.environ, "HOME": tempfile.mkdtemp()})
-            finally:
-                harness.unlink(missing_ok=True)
-        if result.returncode != 0:
-            self.fail(f"portable producer failed (exit {result.returncode}):\\n{result.stderr}")
-        self.assertTrue(result.stdout, result.stderr)
-        observed = json.loads(result.stdout)
-        self.assertEqual([item["scope"] for item in observed["trusted"]], ["global", "project", "project"])
-        self.assertEqual(observed["untrusted"], observed["globalRoots"])
-        project_paths = [item["path"] for item in observed["trusted"] if item["scope"] == "project"]
-        self.assertEqual(project_paths, sorted(project_paths))
-        self.assertEqual(project_paths, [
-            str(Path(observed["root"]) / "a" / "b" / ".claude" / "agents"),
-            str(Path(observed["cwd"]) / ".claude" / "agents"),
-        ])
-        self.assertTrue(all(Path(path).parent.name == ".claude" for path in project_paths))
+    def test_claude_compat_does_not_register_fork_specific_agent_root_listener(self) -> None:
+        source = EXTENSION.read_text(encoding="utf-8")
+        self.assertNotIn('subagents:agents:request', source)
+        self.assertNotIn('contributeClaudeAgentRoots', source)
+        self.assertNotIn('type AgentRootRequest', source)
+
+    def test_claude_compat_retains_resources_discover_skills_behavior(self) -> None:
+        source = EXTENSION.read_text(encoding="utf-8")
+        self.assertIn('pi.on("resources_discover"', source)
+        self.assertIn('join(homedir(), ".claude", "skills")', source)
+        self.assertIn('join(event.cwd, ".claude", "skills")', source)
 
     def test_claude_compat_reads_home_claude_instructions(self) -> None:
         source = EXTENSION.read_text(encoding="utf-8")
