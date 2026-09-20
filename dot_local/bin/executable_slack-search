@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import argparse
+import base64
+from dataclasses import dataclass
+import hashlib
+import json
 from pathlib import Path
+import subprocess
 import sys
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
-from connector_delegate import run_entrypoint
+from connector_delegate import build_claude_command, run_entrypoint
 
 
 ALLOWED_TOOLS = (
@@ -25,6 +31,107 @@ ALLOWED_TOOLS = (
     "mcp__claude_ai_Slack__slack_search_users",
 )
 
+DOWNLOAD_TOOLS = ("mcp__claude_ai_Slack__slack_read_file",)
+
+
+@dataclass(frozen=True)
+class DownloadRequest:
+    file_id: str
+    output: Path
+    max_budget_usd: str
+
+
+def parse_download_request(argv: list[str]) -> DownloadRequest:
+    parser = argparse.ArgumentParser(prog="slack-search")
+    parser.add_argument("--download-file", required=True)
+    parser.add_argument("--output", required=True)
+    parser.add_argument("--max-budget-usd", default="1")
+    args = parser.parse_args(argv)
+    return DownloadRequest(
+        file_id=args.download_file,
+        output=Path(args.output).expanduser().resolve(),
+        max_budget_usd=args.max_budget_usd,
+    )
+
+
+def build_download_prompt(request: DownloadRequest) -> str:
+    return (
+        f"Call slack_read_file once for Slack file ID {request.file_id}. Do not inspect "
+        "or interpret the file content. The connector may return either a local blob "
+        "path or inline base64. Return exactly one JSON object and no other text: "
+        '`{"blob_path":"<absolute path from the tool result>"}` or '
+        '`{"base64_payload":"<exact base64 from the tool result>"}`.'
+    )
+
+
+def extract_download_payload(stdout: str) -> dict[str, str]:
+    envelope = json.loads(stdout)
+    result = envelope.get("result")
+    if not isinstance(result, str):
+        raise ValueError("Slack delegate returned no result")
+    start = result.find("{")
+    end = result.rfind("}")
+    if start < 0 or end < start:
+        raise ValueError("Slack delegate did not return a JSON download payload")
+    payload = json.loads(result[start : end + 1])
+    if not isinstance(payload, dict):
+        raise ValueError("Slack download payload must be an object")
+    blob_path = payload.get("blob_path")
+    base64_payload = payload.get("base64_payload")
+    if isinstance(blob_path, str) and not base64_payload:
+        return {"blob_path": blob_path}
+    if isinstance(base64_payload, str) and not blob_path:
+        return {"base64_payload": base64_payload}
+    raise ValueError("Slack download payload must contain exactly one supported source")
+
+
+def materialize_download(payload: dict[str, str], output: Path) -> dict[str, int | str]:
+    if "blob_path" in payload:
+        source = Path(payload["blob_path"]).expanduser().resolve(strict=True)
+        if "tool-results" not in source.parts:
+            raise ValueError("Slack delegate returned a path outside its tool-results directory")
+        content = source.read_bytes()
+    else:
+        content = base64.b64decode(payload["base64_payload"], validate=True)
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    temporary_output = output.with_name(f".{output.name}.tmp")
+    temporary_output.write_bytes(content)
+    temporary_output.replace(output)
+    return {
+        "output": str(output),
+        "size": len(content),
+        "sha256": hashlib.sha256(content).hexdigest(),
+        "signature": content[:4].hex(),
+    }
+
+
+def run_download(request: DownloadRequest) -> int:
+    command = build_claude_command(
+        allowed_tools=DOWNLOAD_TOOLS,
+        prompt=build_download_prompt(request),
+        max_budget_usd=request.max_budget_usd,
+    )
+    delegate = subprocess.run(
+        command,
+        stdin=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if delegate.returncode != 0:
+        sys.stderr.write(delegate.stderr)
+        return delegate.returncode
+    try:
+        metadata = materialize_download(
+            extract_download_payload(delegate.stdout), request.output
+        )
+    except (ValueError, OSError, json.JSONDecodeError) as error:
+        print(f"slack-search: download failed: {error}", file=sys.stderr)
+        return 1
+    print(json.dumps({"result": metadata}))
+    return 0
+
 
 def build_prompt(query: str) -> str:
     return (
@@ -39,9 +146,12 @@ def build_prompt(query: str) -> str:
 
 
 if __name__ == "__main__":
+    argv = sys.argv[1:]
+    if "--download-file" in argv:
+        raise SystemExit(run_download(parse_download_request(argv)))
     raise SystemExit(
         run_entrypoint(
-            argv=sys.argv[1:],
+            argv=argv,
             program=Path(sys.argv[0]).name,
             allowed_tools=ALLOWED_TOOLS,
             build_prompt=build_prompt,
