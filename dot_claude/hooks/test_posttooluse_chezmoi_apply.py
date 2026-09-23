@@ -89,6 +89,80 @@ class PostToolUseChezmoiApplyTest(unittest.TestCase):
                 [f"--source {source} apply --source-path {edited}"],
             )
 
+    def test_applies_entries_that_include_an_edited_shared_template(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source"
+            (source / ".chezmoitemplates").mkdir(parents=True)
+            (source / "dot_pi/private_agent").mkdir(parents=True)
+            edited = source / ".chezmoitemplates/shared-fragment.json"
+            edited.write_text('{"providers": {}}', encoding="utf-8")
+            including = source / "dot_pi/private_agent/modify_models.json.tmpl"
+            including.write_text('{{ template "shared-fragment.json" . }}\n', encoding="utf-8")
+            unrelated = source / "dot_pi/private_agent/modify_settings.json.tmpl"
+            unrelated.write_text('{{ template "other-fragment.json" . }}\n', encoding="utf-8")
+            log = root / "chezmoi.log"
+            fake_bin = root / "bin"
+            fake_bin.mkdir()
+            fake = fake_bin / "chezmoi"
+            fake.write_text(
+                "#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$CHEZMOI_TEST_LOG\"\n", encoding="utf-8"
+            )
+            fake.chmod(0o755)
+            result = subprocess.run(
+                [sys.executable, str(HOOK), "--source-base64", base64.b64encode(str(source).encode()).decode()],
+                input=json.dumps(
+                    {
+                        "tool_name": "Edit",
+                        "tool_input": {"file_path": str(edited)},
+                        "tool_result": {"is_error": False},
+                    }
+                ),
+                text=True,
+                capture_output=True,
+                env={**os.environ, "PATH": f"{fake_bin}:{os.environ['PATH']}", "CHEZMOI_TEST_LOG": str(log)},
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(
+                log.read_text(encoding="utf-8").splitlines(),
+                [f"--source {source} apply --source-path {including}"],
+            )
+            self.assertNotIn(str(unrelated), result.stdout)
+
+    def test_reports_shared_template_without_including_entries(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source"
+            (source / ".chezmoitemplates").mkdir(parents=True)
+            edited = source / ".chezmoitemplates/orphan.json"
+            edited.write_text("{}", encoding="utf-8")
+            log = root / "chezmoi.log"
+            fake_bin = root / "bin"
+            fake_bin.mkdir()
+            fake = fake_bin / "chezmoi"
+            fake.write_text(
+                "#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$CHEZMOI_TEST_LOG\"\n", encoding="utf-8"
+            )
+            fake.chmod(0o755)
+            result = subprocess.run(
+                [sys.executable, str(HOOK), "--source-base64", base64.b64encode(str(source).encode()).decode()],
+                input=json.dumps(
+                    {
+                        "tool_name": "Edit",
+                        "tool_input": {"file_path": str(edited)},
+                        "tool_result": {"is_error": False},
+                    }
+                ),
+                text=True,
+                capture_output=True,
+                env={**os.environ, "PATH": f"{fake_bin}:{os.environ['PATH']}", "CHEZMOI_TEST_LOG": str(log)},
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertFalse(log.exists())
+            self.assertIn("nothing to apply", result.stdout)
+
     def test_ignores_symlink_inside_source_resolving_outside(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

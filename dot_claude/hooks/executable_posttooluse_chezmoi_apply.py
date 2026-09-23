@@ -14,6 +14,35 @@ from pathlib import Path
 from hook_context import deny_hook_response
 
 
+SHARED_TEMPLATE_DIR = ".chezmoitemplates"
+UNSCANNED_DIRS = frozenset({".git", "node_modules"})
+
+
+def _shared_template_dependents(source_root: Path, edited: Path) -> list[str]:
+    """Source entries that include a shared template.
+
+    `.chezmoitemplates` files are not targets, so `apply --source-path` rejects them.
+    Applying the entries that `{{ template "<name>" }}` them is what refreshes the targets.
+    """
+    reference = f'template "{edited.relative_to(source_root / SHARED_TEMPLATE_DIR).as_posix()}"'
+    dependents: list[str] = []
+    for directory, subdirectories, files in os.walk(source_root):
+        subdirectories[:] = sorted(
+            name for name in subdirectories if name not in UNSCANNED_DIRS
+        )
+        if Path(directory) == source_root and SHARED_TEMPLATE_DIR in subdirectories:
+            subdirectories.remove(SHARED_TEMPLATE_DIR)
+        for name in sorted(files):
+            candidate = Path(directory) / name
+            try:
+                contents = candidate.read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError):
+                continue
+            if reference in contents:
+                dependents.append(str(candidate))
+    return dependents
+
+
 def _main() -> None:
     if len(sys.argv) != 3 or sys.argv[1] != "--source-base64":
         return
@@ -59,35 +88,52 @@ def _main() -> None:
     if not inside_source:
         return
 
-    try:
-        apply_result = subprocess.run(
-            ["chezmoi", "--source", source_path, "apply", "--source-path", absolute_path],
-            capture_output=True,
-            text=True,
-            timeout=30,
-            check=False,
-        )
-    except (FileNotFoundError, subprocess.TimeoutExpired) as error:
-        json.dump(
-            deny_hook_response(f"chezmoi apply failed for {absolute_path}: {error}", "PostToolUse"),
-            sys.stdout,
-        )
-        return
+    source_root = Path(source_path)
+    edited = Path(absolute_path)
+    if edited.is_relative_to(source_root / SHARED_TEMPLATE_DIR):
+        apply_paths = _shared_template_dependents(source_root, edited)
+        if not apply_paths:
+            json.dump(
+                deny_hook_response(
+                    f"No source entry includes {absolute_path}; nothing to apply.",
+                    "PostToolUse",
+                ),
+                sys.stdout,
+            )
+            return
+    else:
+        apply_paths = [absolute_path]
 
-    if apply_result.returncode != 0:
-        details = (apply_result.stderr or apply_result.stdout).strip()
-        json.dump(
-            deny_hook_response(
-                f"chezmoi apply failed for {absolute_path}: {details or 'unknown error'}",
-                "PostToolUse",
-            ),
-            sys.stdout,
-        )
-        return
+    for apply_path in apply_paths:
+        try:
+            apply_result = subprocess.run(
+                ["chezmoi", "--source", source_path, "apply", "--source-path", apply_path],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+        except (FileNotFoundError, subprocess.TimeoutExpired) as error:
+            json.dump(
+                deny_hook_response(f"chezmoi apply failed for {apply_path}: {error}", "PostToolUse"),
+                sys.stdout,
+            )
+            return
+
+        if apply_result.returncode != 0:
+            details = (apply_result.stderr or apply_result.stdout).strip()
+            json.dump(
+                deny_hook_response(
+                    f"chezmoi apply failed for {apply_path}: {details or 'unknown error'}",
+                    "PostToolUse",
+                ),
+                sys.stdout,
+            )
+            return
 
     json.dump(
         deny_hook_response(
-            f"Applied {absolute_path} with chezmoi; do not run a manual apply.",
+            f"Synced {', '.join(apply_paths)} with chezmoi; do not run a manual apply.",
             "PostToolUse",
         ),
         sys.stdout,
