@@ -56,9 +56,9 @@ git:
   overrideGpg: true
   # TODO: use branchPrefix but specific to repos
   # TODO: commitPrefix but specific to repos
-  pagers:
+  diffRenderers:
     - colorArg: always
-      pager: delta --dark --paging=never
+      command: delta --dark --paging=never
 # TODO: does not chnage bottom prompt when entering patch commit message, or use editor
 # TODO: checkout freezes the gui
 notARepository: 'skip'
