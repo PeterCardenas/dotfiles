@@ -1,7 +1,4 @@
 {
   "providers": {
-    "openai": {
-      "apiKey": "!tr -d \"\\r\\n\" < ~/.local/share/openai/api_key"
-    }
   }
 }
