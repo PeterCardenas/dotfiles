@@ -6,7 +6,7 @@
   ],
   "extensions": ["~/.pi/agent/extensions/claude-compat.ts"],
   "subagents": {
-    "defaultModel": "gpt-5.6-luna",
+    "defaultModel": "gpt-6-luna",
     "defaultThinking": "xhigh",
     "agentScanDirs": ["~/.claude/agents"],
     "agentOverrides": {"reviewer": {"model": "gpt-5.6-sol", "thinking": "medium"}}

@@ -21,7 +21,7 @@ class PiClaudeHookBridgeTest(unittest.TestCase):
         self.assertEqual(settings["extensions"], ["~/.pi/agent/extensions/claude-compat.ts"])
         self.assertTrue(settings["quietStartup"])
         self.assertEqual(settings["packages"], ["npm:pi-web-access", "npm:pi-subagents"])
-        self.assertEqual(settings["subagents"]["defaultModel"], "gpt-5.6-luna")
+        self.assertEqual(settings["subagents"]["defaultModel"], "gpt-6-luna")
         self.assertEqual(settings["subagents"]["defaultThinking"], "xhigh")
         self.assertEqual(settings["subagents"]["agentScanDirs"], ["~/.claude/agents"])
         self.assertEqual(settings["subagents"]["agentOverrides"], {"reviewer": {"model": "gpt-5.6-sol", "thinking": "medium"}})
