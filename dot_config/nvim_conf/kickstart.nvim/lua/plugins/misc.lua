@@ -1461,6 +1461,11 @@ return {
           end
         end, { nargs = 0 })
       end
+      -- Herdr reads pane-local files before forwarding images to remote clients,
+      -- so avoid Snacks' slower inline SSH transport inside Herdr panes.
+      if vim.env.HERDR_ENV == '1' then
+        vim.env.SNACKS_SSH = 'false'
+      end
       ---@type snacks.image.Env
       local tmux_env = vim.iter(require('snacks.image.terminal').envs()):find(function(env)
         return env.name == 'tmux'
