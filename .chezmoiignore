@@ -5,6 +5,11 @@ README.md
 .gitignore
 gnome-settings.conf
 setup.sh
+# Repo-root test suites belong to the source tree, not to $HOME. Anchored so
+# tests shipping next to real scripts (hooks, skills) keep reaching the target.
+/test_*.py
+/.pytest_cache
+/.ruff_cache
 # Ignore config files specific to linux
 {{- if ne .chezmoi.os "linux" }}
 .local/bin/fishify
