@@ -10,6 +10,7 @@ setup.sh
 /test_*.py
 /.pytest_cache
 /.ruff_cache
+test_setup_dependencies.py
 # Ignore config files specific to linux
 {{- if ne .chezmoi.os "linux" }}
 .local/bin/fishify

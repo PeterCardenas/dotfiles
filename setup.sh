@@ -39,7 +39,7 @@ function setup_ubuntu() {
 		openssh-server
 		gnupg2
 		pinentry-tty
-		pip
+		python3
 		et
 		python3.10-venv
 		jq
@@ -136,6 +136,10 @@ function setup_ubuntu() {
 	cp commitmsgfmt-*-unknown-linux-musl/commitmsgfmt.1 "$HOME/.local/share/man/man1/"
 	rm -rf commitmsgfmt-*-unknown-linux-musl
 	popd
+}
+
+function install_kislyuk_yq() {
+	uv tool install --force "yq==3.4.3"
 }
 
 function setup_macos_defaults() {
@@ -273,6 +277,7 @@ EOF
 		git-lfs
 		gnupg2
 		go
+		jq
 		ffmpeg
 		python312
 		pip312
@@ -301,7 +306,6 @@ EOF
 	sudo -B port -N install "${ports[@]}"
 	sudo -B port -N select --set python python312
 	sudo -B port -N select --set pip pip312
-
 	# Install commitmsgfmt
 	pushd "$HOME/thirdparty"
 	gh release download --repo commonquail/commitmsgfmt -p 'commitmsgfmt-*-unknown-linux-musl.tar.gz'
@@ -359,7 +363,7 @@ function setup_unix() {
 	fi
 
 	mkdir -p "$HOME/.local/bin"
-	export PATH="$PATH:$HOME/.local/bin"
+	export PATH="$HOME/.local/bin:$PATH"
 
 	# Install tmux
 	if ! command -v tmux >/dev/null 2>&1 || [[ "$(tmux -V 2>/dev/null | cut -d' ' -f2)" != "3.5a" && "$(tmux -V 2>/dev/null | cut -d' ' -f2)" != "next-3.6" ]]; then
@@ -471,6 +475,7 @@ EOF
 		# TODO: use bitwarden for storing a shared ssh key
 		gh ssh-key add "$HOME/.ssh/id_ed25519_personal.pub" --title "Automated ssh key upload"
 	fi
+	install_kislyuk_yq
 	chezmoi init --apply personal-github.com:PeterCardenas/dotfiles.git
 	chezmoi git -- lfs install --local
 	chezmoi git lfs pull
