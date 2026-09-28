@@ -1,0 +1,22 @@
+[
+  {"query":"Reproduce this Herdr workspace resize bug in an isolated disposable session and clean it up afterward.","should_trigger":true},
+  {"query":"Benchmark Kitty image transport inside a temporary Herdr TUI without touching my default session.","should_trigger":true},
+  {"query":"Validate this modified Herdr config and keybinding in a fresh named test session.","should_trigger":true},
+  {"query":"Create a disposable Herdr session, drive ctrl+f, capture the screen, and remove all test state.","should_trigger":true},
+  {"query":"Use an isolated Herdr environment to test workspace switching end to end.","should_trigger":true},
+  {"query":"I need a temporary Herdr reproduction with a private HOME and deterministic cleanup.","should_trigger":true},
+  {"query":"Run Neovim within a throwaway Herdr session and measure its resize events.","should_trigger":true},
+  {"query":"Test Herdr startup failure handling while preserving diagnostics from the disposable session.","should_trigger":true},
+  {"query":"Inspect the agents currently running in my existing Herdr workspace.","should_trigger":false},
+  {"query":"Prompt the reviewer agent in the pane beside me using Herdr.","should_trigger":false},
+  {"query":"List the workspaces in my current Herdr session.","should_trigger":false},
+  {"query":"Close the currently focused Herdr workspace.","should_trigger":false},
+  {"query":"Test lazygit in a disposable tmux session; Herdr is not involved.","should_trigger":false},
+  {"query":"Automate Neovim in private tmux and capture its screen.","should_trigger":false},
+  {"query":"Explain how Herdr persistent sessions work without running one.","should_trigger":false},
+  {"query":"Review my Herdr config file statically and suggest improvements.","should_trigger":false},
+  {"query":"Start a permanent Herdr session for daily work.","should_trigger":false},
+  {"query":"Run a headless Herdr unit test with cargo; no interactive session is needed.","should_trigger":false},
+  {"query":"Connect to an existing Herdr session on a saved remote machine.","should_trigger":false},
+  {"query":"Take a browser screenshot of the Herdr documentation website.","should_trigger":false}
+]

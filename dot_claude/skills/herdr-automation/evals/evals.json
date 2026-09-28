@@ -1,0 +1,29 @@
+{
+  "skill_name": "herdr-automation",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Reproduce a Herdr workspace rendering problem in a completely isolated disposable Herdr session. Drive the TUI, capture evidence, and clean up everything you create without touching my default Herdr session.",
+      "expected_output": "Uses herdr-automation create/herdr/terminal/wait-screen/close, targets the generated named session, and avoids direct built-in Herdr or tmux-automation lifecycle commands.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Benchmark this terminal program in an isolated tmux session; Herdr is not involved.",
+      "expected_output": "Does not trigger herdr-automation and uses tmux-automation instead.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Use Herdr to inspect the agents already running in my current workspace and read the reviewer's output.",
+      "expected_output": "Does not trigger herdr-automation and uses the built-in Herdr skill because the request targets an existing live session.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Validate a modified Herdr config in a temporary session, including a keybinding interaction and a deterministic screen assertion. Preserve diagnostics if startup fails, otherwise remove the named session and temporary state.",
+      "expected_output": "Uses herdr-automation with --config, bounded wait-screen, separate capture, and close in a separate cleanup step.",
+      "files": []
+    }
+  ]
+}
