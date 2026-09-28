@@ -5,7 +5,12 @@ local timer
 local enabled = true
 local unpublished = {}
 local tmux_published = unpublished
-local herdr_published = unpublished
+local herdr_confirmed
+local herdr_desired
+local herdr_in_flight = false
+local herdr_reported = false
+local herdr_generation = 0
+local herdr_sequence = vim.uv.hrtime()
 local prompted_sessions = {}
 
 local function tmux_args()
@@ -35,28 +40,38 @@ local function publish_tmux(value)
   return true
 end
 
+local herdr_source = 'agentic.nvim:' .. owner()
+
+local function herdr_args(state)
+  -- Sequences prevent a delayed release from undoing a newer report from this process.
+  herdr_sequence = math.max(herdr_sequence + 1, vim.uv.hrtime())
+  local args = { vim.env.HERDR_BIN_PATH or 'herdr', 'pane', state and 'report-agent' or 'release-agent', vim.env.HERDR_PANE_ID, '--source', herdr_source, '--agent', 'agentic.nvim' }
+  if state then vim.list_extend(args, { '--state', state }) end
+  vim.list_extend(args, { '--seq', string.format('%.0f', herdr_sequence) })
+  return args
+end
+
+local function flush_herdr()
+  if herdr_in_flight or herdr_desired == herdr_confirmed then return end
+  local state = herdr_desired
+  local generation = herdr_generation
+  herdr_in_flight = true
+  local started = pcall(vim.system, herdr_args(state), {}, vim.schedule_wrap(function(result)
+    if generation ~= herdr_generation then return end
+    herdr_in_flight = false
+    if result.code ~= 0 then return end -- The next timer tick retries without spinning.
+    herdr_confirmed = state
+    herdr_reported = state ~= nil
+    if herdr_desired ~= state then flush_herdr() end
+  end))
+  if not started then herdr_in_flight = false; return end
+  if state then herdr_reported = true end
+end
+
 local function publish_herdr(state)
-  if state == herdr_published then return true end
   if vim.env.HERDR_ENV ~= '1' or not vim.env.HERDR_PANE_ID then return end
-  local herdr = vim.env.HERDR_BIN_PATH or 'herdr'
-  local args
-  if state then
-    args = { herdr, 'pane', 'report-agent', vim.env.HERDR_PANE_ID, '--source', 'agentic.nvim', '--agent', 'agentic.nvim', '--state', state }
-  else
-    args = { herdr, 'pane', 'release-agent', vim.env.HERDR_PANE_ID, '--source', 'agentic.nvim', '--agent', 'agentic.nvim' }
-  end
-  if not state then
-    local started = pcall(vim.system, args, { detach = true })
-    if not started then return false end
-    herdr_published = state
-    return true
-  end
-  local started, process = pcall(vim.system, args)
-  if not started then return false end
-  local result = process:wait(1000)
-  if not result or result.code ~= 0 then return false end
-  herdr_published = state
-  return true
+  herdr_desired = state
+  flush_herdr()
 end
 
 function M.rename_workspace(title, tab_page_id, session_id)
@@ -151,9 +166,15 @@ function M.clear()
   enabled = false
   if timer then timer:stop(); timer:close(); timer = nil end
   tmux_published = unpublished
-  herdr_published = unpublished
   publish_tmux(nil)
-  publish_herdr(nil)
+  herdr_generation = herdr_generation + 1
+  herdr_in_flight = false
+  herdr_confirmed = nil
+  herdr_desired = nil
+  if herdr_reported and vim.env.HERDR_ENV == '1' and vim.env.HERDR_PANE_ID then
+    pcall(vim.system, herdr_args(nil), { detach = true })
+    herdr_reported = false
+  end
 end
 
 local function start_timer()
@@ -165,7 +186,7 @@ end
 local function resume()
   enabled = true
   tmux_published = unpublished
-  herdr_published = unpublished
+  herdr_confirmed = nil
   start_timer()
   M.recompute()
 end
