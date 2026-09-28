@@ -1,21 +1,11 @@
 ---@class ConfigStaleness
 local M = {}
 
-local function canonical(path)
-  return vim.uv.fs_realpath(path) or vim.fn.fnamemodify(path, ':p'):gsub('/+$', '')
-end
-
-local config_root = canonical(vim.fn.stdpath('config'))
+local config_root = vim.uv.fs_realpath(vim.fn.stdpath('config')) or vim.fn.stdpath('config')
 ---@type table<string, { sec: integer, nsec: integer, size: integer }>
 local snapshots = {}
 local stale = false
 local timer = vim.uv.new_timer()
-
----@param path string
----@return boolean
-local function is_config_path(path)
-  return path == config_root or vim.startswith(path, config_root .. '/')
-end
 
 ---@param path string
 ---@return { sec: integer, nsec: integer, size: integer }?
@@ -28,18 +18,11 @@ local function snapshot(path)
 end
 
 ---@return string[]
-local function loaded_config_files()
-  local files = {}
-  for _, script in ipairs(vim.fn.getscriptinfo()) do
-    local path = script.name
-    if path then
-      path = canonical(path)
-      if is_config_path(path) and path:sub(-4) == '.lua' then
-        table.insert(files, path)
-      end
-    end
-  end
-  return files
+local function config_files()
+  -- Lazy loads plugin specs with loadfile(), which getscriptinfo() does not record.
+  return vim.fs.find(function(name)
+    return name:sub(-4) == '.lua'
+  end, { path = config_root, type = 'file', limit = math.huge })
 end
 
 local function mark_stale()
@@ -54,17 +37,18 @@ local function mark_stale()
 end
 
 local function check()
-  local paths = loaded_config_files()
-  for path in pairs(snapshots) do
-    table.insert(paths, path)
-  end
-  for _, path in ipairs(paths) do
+  for _, path in ipairs(config_files()) do
     local current = snapshot(path)
     local previous = snapshots[path]
-    if not previous then
-      snapshots[path] = current
-    elseif not current or current.sec ~= previous.sec or current.nsec ~= previous.nsec or current.size ~= previous.size then
+    if not previous or not current or current.sec ~= previous.sec or current.nsec ~= previous.nsec or current.size ~= previous.size then
       mark_stale()
+      return
+    end
+  end
+  for path in pairs(snapshots) do
+    if not snapshot(path) then
+      mark_stale()
+      return
     end
   end
 end
@@ -81,11 +65,11 @@ function M.component()
   return stale and '' or ''
 end
 
-for _, path in ipairs(loaded_config_files()) do
+for _, path in ipairs(config_files()) do
   snapshots[path] = snapshot(path)
 end
 
-timer:start(1000, 1000, vim.schedule_wrap(check))
+timer:start(10000, 10000, vim.schedule_wrap(check))
 vim.api.nvim_create_autocmd('VimLeavePre', {
   callback = function()
     if not timer:is_closing() then
