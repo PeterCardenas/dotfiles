@@ -123,9 +123,10 @@ several simultaneous clients — a local terminal and an SSH attach can both be
 connected — so a value recorded once at attach time describes the wrong client
 as soon as another one arrives. `herdr-client-connection` inspects the live
 client processes of this session and reports the `SSH_CONNECTION` of the one
-whose controlling tty was read most recently, which is the client receiving
-keystrokes. Pane shells adopt it at startup and before every command, and the
-focused Neovim polls it every second while background workspaces pause polling.
+whose input was read most recently: a local client's controlling tty or the
+stdin pipe of a `herdr --remote` SSH bridge. Pane shells adopt it at startup
+and before every command, and the focused Neovim polls it every second while
+background workspaces pause polling.
 Tools that branch on `SSH_CONNECTION` — `wl-paste` reading
 the macOS clipboard, `osc52_copy` choosing a passthrough — therefore target the
 machine the user is actually sitting at.

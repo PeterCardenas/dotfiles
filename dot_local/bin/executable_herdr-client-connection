@@ -7,10 +7,10 @@ terminal plus an SSH attach). "Am I in an SSH session?" is therefore only
 answerable per client, not per host: recording the value once at launch goes
 stale as soon as another client attaches.
 
-The client whose controlling tty was read most recently is the one receiving
-keystrokes, so its origin is what pane shells should report. Herdr keeps
-redrawing every attached client, which bumps each tty's mtime above its atime
-and so keeps relatime updating atime on the next read.
+The client whose input was read most recently is the one receiving keystrokes:
+a local client's controlling tty, or the stdin pipe of an SSH remote-client-bridge.
+Herdr keeps redrawing clients, which bumps input mtime above atime and keeps
+relatime updating atime on the next read.
 """
 
 import os
@@ -45,9 +45,10 @@ def _parse_session(args: list[str]) -> str | None:
     """Return the session an attach invocation targets, or None if it is not one.
 
     Both attach spellings count: `herdr [--session <name>]` and the explicit
-    `herdr session attach <name>`. Any other positional means a subcommand such
-    as `herdr server` or `herdr api snapshot`, and `--remote` drives another
-    host's server, so neither is a client of the server running this pane.
+    `herdr session attach <name>`. A remote attach runs
+    `herdr [--session <name>] remote-client-bridge` on this host; the
+    `herdr --remote` process itself runs on the other host.
+    Other positionals are CLI subcommands, not attached clients.
     """
     if args[:2] == ["session", "attach"]:
         return args[2] if len(args) == 3 else None
@@ -61,6 +62,11 @@ def _parse_session(args: list[str]) -> str | None:
             index += 2
         elif argument.startswith("--remote"):
             return None
+        elif argument == "remote-client-bridge" and args[index + 1 :] in (
+            [],
+            ["--idle-timeout-v1"],
+        ):
+            return session
         elif argument.startswith("-"):
             index += 1
         else:
@@ -78,8 +84,15 @@ def _environment(proc_entry: Path) -> dict[str, str]:
     return environment
 
 
-def _last_input(proc_entry: Path) -> float | None:
-    """Return when the process last read from its controlling terminal."""
+def _last_input(proc_entry: Path, remote_bridge: bool = False) -> float | None:
+    """Return the atime of the client's input tty or remote bridge pipe."""
+    if remote_bridge:
+        # Remote attach has no controlling tty on the server; SSH feeds stdin
+        # through a pipe whose atime advances as the bridge reads input.
+        try:
+            return (proc_entry / "fd" / "0").stat().st_atime
+        except OSError:
+            return None
     for descriptor in ("0", "1", "2"):
         try:
             tty = os.readlink(proc_entry / "fd" / descriptor)
@@ -110,7 +123,7 @@ def attached_clients(proc_root: Path = Path("/proc")) -> list[HerdrClient]:
         # A `herdr` run from inside a pane is a CLI call, not an attached client.
         if "HERDR_ENV" in environment:
             continue
-        last_input = _last_input(proc_entry)
+        last_input = _last_input(proc_entry, "remote-client-bridge" in args[1:])
         if last_input is None:
             continue
         clients.append(

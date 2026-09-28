@@ -57,6 +57,15 @@ class HerdrClientConnectionTest(unittest.TestCase):
         os.utime(tty, (last_input, last_input))
         return tty
 
+    def make_pipe(self, last_input: float) -> str:
+        """Stand in for the stdin pipe of a remote-client-bridge."""
+        reader, writer = os.pipe()
+        self.addCleanup(os.close, reader)
+        self.addCleanup(os.close, writer)
+        pipe = f"/proc/self/fd/{reader}"
+        os.utime(pipe, (last_input, last_input))
+        return pipe
+
     def active_connection(self, session: str = "default") -> str | None:
         client = DETECTOR.active_client(
             DETECTOR.attached_clients(self.proc.root), session
@@ -127,6 +136,49 @@ class HerdrClientConnectionTest(unittest.TestCase):
         self.add_local_client(104, last_input=1000.0)
 
         self.assertEqual(DETECTOR.attached_clients(self.proc.root)[0].pid, 104)
+        self.assertIsNone(self.active_connection())
+
+    def test_remote_bridge_in_use_wins_over_an_idle_local_client(self):
+        self.add_local_client(101, last_input=1000.0)
+        self.proc.add(
+            102,
+            ["herdr", "remote-client-bridge"],
+            {"SSH_CONNECTION": SSH_CLIENT_CONNECTION},
+            self.make_pipe(2000.0),
+        )
+
+        self.assertEqual(self.active_connection(), SSH_CLIENT_CONNECTION)
+
+    def test_named_remote_bridge_is_only_a_client_of_its_session(self):
+        self.proc.add(
+            101,
+            ["herdr", "--session", "work", "remote-client-bridge"],
+            {"SSH_CONNECTION": SSH_CLIENT_CONNECTION},
+            self.make_pipe(2000.0),
+        )
+
+        self.assertIsNone(self.active_connection())
+        self.assertEqual(self.active_connection("work"), SSH_CLIENT_CONNECTION)
+
+    def test_named_remote_bridge_with_idle_timeout_is_a_client(self):
+        self.proc.add(
+            101,
+            ["herdr", "--session", "work", "remote-client-bridge", "--idle-timeout-v1"],
+            {"SSH_CONNECTION": SSH_CLIENT_CONNECTION},
+            self.make_pipe(2000.0),
+        )
+
+        self.assertEqual(self.active_connection("work"), SSH_CLIENT_CONNECTION)
+
+    def test_local_client_in_use_wins_over_an_idle_remote_bridge(self):
+        self.proc.add(
+            101,
+            ["herdr", "remote-client-bridge"],
+            {"SSH_CONNECTION": SSH_CLIENT_CONNECTION},
+            self.make_pipe(1000.0),
+        )
+        self.add_local_client(102, last_input=2000.0)
+
         self.assertIsNone(self.active_connection())
 
     def test_remote_attach_is_not_a_client_of_this_server(self):
