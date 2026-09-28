@@ -100,6 +100,24 @@ return {
       'nvim-treesitter/nvim-treesitter',
     },
     config = function()
+      vim.api.nvim_create_autocmd('FileType', {
+        pattern = { 'AgenticChat', 'AgenticInput', 'AgenticCode', 'AgenticFiles', 'AgenticDiagnostics', 'AgenticTodos' },
+        callback = function(args)
+          vim.keymap.set('n', '<leader>gi', function()
+            require('lazy').load({ plugins = { 'octo.nvim' } })
+            local octo = require('octo.utils')
+            local repo, number = octo.extract_issue_at_cursor(octo.get_current_repo())
+            if not repo or not number then
+              return
+            end
+            local winid = require('agentic').editor_window_for_navigation()
+            if not winid then
+              return
+            end
+            octo.open_buffer(repo, number, { winid = winid })
+          end, { buffer = args.buf, desc = 'Open issue or PR in editor window' })
+        end,
+      })
       Pending.setup()
       -- Track the in-flight title generation per chat session so a newer
       -- response for the same session supersedes the previous one: its spinner
