@@ -227,10 +227,10 @@ class HerdrConfigContractTest(unittest.TestCase):
             "switch_tab": "prefix+1..9",
             "close_tab": "prefix+ampersand",
             "copy_mode": "prefix+[",
-            "focus_pane_left": ["prefix+h", "prefix+left"],
-            "focus_pane_down": ["prefix+j", "prefix+down"],
-            "focus_pane_up": ["prefix+k", "prefix+up"],
-            "focus_pane_right": ["prefix+l", "prefix+right"],
+            "focus_pane_left": "",
+            "focus_pane_down": "",
+            "focus_pane_up": "",
+            "focus_pane_right": "",
             "cycle_pane_next": "prefix+o",
             "last_pane": "prefix+semicolon",
             "split_vertical": "prefix+percent",
@@ -244,6 +244,14 @@ class HerdrConfigContractTest(unittest.TestCase):
             "ctrl+j": ("shell", "~/.local/bin/herdr-navigate down"),
             "ctrl+k": ("shell", "~/.local/bin/herdr-navigate up"),
             "ctrl+l": ("shell", "~/.local/bin/herdr-navigate right"),
+            "prefix+h": ("shell", "~/.local/bin/herdr-navigate left --force"),
+            "prefix+j": ("shell", "~/.local/bin/herdr-navigate down --force"),
+            "prefix+k": ("shell", "~/.local/bin/herdr-navigate up --force"),
+            "prefix+l": ("shell", "~/.local/bin/herdr-navigate right --force"),
+            "prefix+left": ("shell", "~/.local/bin/herdr-navigate left --force"),
+            "prefix+down": ("shell", "~/.local/bin/herdr-navigate down --force"),
+            "prefix+up": ("shell", "~/.local/bin/herdr-navigate up --force"),
+            "prefix+right": ("shell", "~/.local/bin/herdr-navigate right --force"),
             "prefix+s": ("plugin_action", "RooseveltAdvisors.herdr-leap.open"),
             "ctrl+f": ("shell", "herdr plugin pane open --plugin local.worktree-tools --entrypoint workspace-switcher"),
             "prefix+shift+g": ("shell", "herdr plugin pane open --plugin local.worktree-tools --entrypoint new-worktree"),
@@ -746,6 +754,47 @@ class HerdrConfigContractTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, "pane send-keys w-test:p1 ctrl+h\n")
         self.assertNotIn("--current", result.stdout)
+
+    def test_prefix_hjkl_forces_unzoom_before_focusing_even_with_nvim_foreground(self):
+        parsed = tomllib.loads(SOURCE.read_text())
+        keys = parsed["keys"]
+        commands = {entry["key"]: (entry["type"], entry["command"]) for entry in keys["command"]}
+        directions = {"h": "left", "j": "down", "k": "up", "l": "right"}
+        for key, direction in directions.items():
+            self.assertEqual(commands[f"prefix+{key}"], ("shell", f"~/.local/bin/herdr-navigate {direction} --force"))
+
+        with tempfile.TemporaryDirectory() as bin_dir:
+            herdr = Path(bin_dir) / "herdr"
+            herdr.write_text(
+                "#!/bin/sh\n"
+                "if [ \"$1 $2\" = 'pane process-info' ]; then\n"
+                "  printf '%s\\n' '{\"result\":{\"process_info\":{\"foreground_processes\":[{\"name\":\"nvim\"}]}}}'\n"
+                "else\n"
+                "  printf '%s\\n' \"$*\"\n"
+                "fi\n"
+            )
+            herdr.chmod(0o755)
+            env = {**os.environ, "HERDR_BIN_PATH": str(herdr), "HERDR_ACTIVE_PANE_ID": "w-test:p1"}
+            env.pop("HERDR_PANE_ID", None)
+            for direction in directions.values():
+                with self.subTest(direction=direction):
+                    result = subprocess.run(
+                        ["/bin/bash", str(NAVIGATE), direction, "--force"],
+                        env=env, text=True, capture_output=True,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(result.stdout, f"pane zoom --off --pane w-test:p1\npane focus --direction {direction} --pane w-test:p1\n")
+
+    def test_prefix_arrows_force_unzoom_before_focusing(self):
+        keys = tomllib.loads(SOURCE.read_text())["keys"]
+        commands = {entry["key"]: (entry["type"], entry["command"]) for entry in keys["command"]}
+        for direction in ("left", "down", "up", "right"):
+            with self.subTest(direction=direction):
+                self.assertEqual(keys[f"focus_pane_{direction}"], "")
+                self.assertEqual(
+                    commands[f"prefix+{direction}"],
+                    ("shell", f"~/.local/bin/herdr-navigate {direction} --force"),
+                )
 
     def test_direct_navigation_unzooms_only_when_crossing_herdr_panes(self):
         parsed = tomllib.loads(SOURCE.read_text())

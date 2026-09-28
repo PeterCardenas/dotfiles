@@ -18,7 +18,7 @@ vim_re='^g?(view|l?n?vim?x?)(diff)?$'
 passthrough_re="${HERDR_NAV_PASSTHROUGH_RE:-}"
 forward=0
 
-if [ -n "$pane" ] && command -v jq >/dev/null 2>&1; then
+if [ "${2:-}" != "--force" ] && [ -n "$pane" ] && command -v jq >/dev/null 2>&1; then
   if "$herdr" pane process-info --pane "$pane" 2>/dev/null \
     | jq -e --arg vim "$vim_re" --arg pass "$passthrough_re" \
       '.result.process_info.foreground_processes[]?.name

@@ -43,10 +43,10 @@ next_tab = "prefix+n"
 switch_tab = "prefix+1..9"
 close_tab = "prefix+ampersand"
 copy_mode = "prefix+["
-focus_pane_left = ["prefix+h", "prefix+left"]
-focus_pane_down = ["prefix+j", "prefix+down"]
-focus_pane_up = ["prefix+k", "prefix+up"]
-focus_pane_right = ["prefix+l", "prefix+right"]
+focus_pane_left = ""
+focus_pane_down = ""
+focus_pane_up = ""
+focus_pane_right = ""
 cycle_pane_next = "prefix+o"
 last_pane = "prefix+semicolon"
 split_vertical = "prefix+percent"
@@ -74,6 +74,46 @@ command = "~/.local/bin/herdr-navigate up"
 key = "ctrl+l"
 type = "shell"
 command = "~/.local/bin/herdr-navigate right"
+
+[[keys.command]]
+key = "prefix+h"
+type = "shell"
+command = "~/.local/bin/herdr-navigate left --force"
+
+[[keys.command]]
+key = "prefix+j"
+type = "shell"
+command = "~/.local/bin/herdr-navigate down --force"
+
+[[keys.command]]
+key = "prefix+k"
+type = "shell"
+command = "~/.local/bin/herdr-navigate up --force"
+
+[[keys.command]]
+key = "prefix+l"
+type = "shell"
+command = "~/.local/bin/herdr-navigate right --force"
+
+[[keys.command]]
+key = "prefix+left"
+type = "shell"
+command = "~/.local/bin/herdr-navigate left --force"
+
+[[keys.command]]
+key = "prefix+down"
+type = "shell"
+command = "~/.local/bin/herdr-navigate down --force"
+
+[[keys.command]]
+key = "prefix+up"
+type = "shell"
+command = "~/.local/bin/herdr-navigate up --force"
+
+[[keys.command]]
+key = "prefix+right"
+type = "shell"
+command = "~/.local/bin/herdr-navigate right --force"
 
 [[keys.command]]
 key = "ctrl+f"

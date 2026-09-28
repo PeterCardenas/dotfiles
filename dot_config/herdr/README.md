@@ -80,7 +80,8 @@ plugin is linked; reloading config does not start it.
 - Direct `ctrl+h/j/k/l` bindings use `~/.local/bin/herdr-navigate`, which preserves
   Vim split navigation and clears pane zoom immediately before crossing into another
   Herdr pane. The `prefix+h/j/k/l` bindings are an explicit escape hatch for forced
-  navigation with Herdr's native focus controls. There is no fallback path.
+  navigation through the same helper, clearing zoom even when Vim is active.
+  Prefix-arrow bindings use the same forced navigation. There is no fallback path.
 - Layout, focus, and cwds: **SUPPORTED NATIVELY** by Herdr session snapshots;
   autosave is part of the native session behavior.
 - Persistence: **SUPPORTED NATIVELY** by session snapshots.
