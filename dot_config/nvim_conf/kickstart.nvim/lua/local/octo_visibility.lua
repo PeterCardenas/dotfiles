@@ -67,12 +67,14 @@ end
 function M.setup()
   local polling = require('octo.polling')
   local pending = false
+  local hidden_since
   local function update()
     if pending then
       return
     end
     local status = polling.status()
     if status.tracked_count == 0 then
+      hidden_since = nil
       if status.enabled then
         polling.set_enabled(false)
       end
@@ -89,8 +91,17 @@ function M.setup()
         end
       end
       local should_poll = visible and has_visible_buffer
-      if should_poll ~= polling.status().enabled then
-        polling.set_enabled(should_poll)
+      if should_poll then
+        hidden_since = nil
+        if not polling.status().enabled then
+          polling.set_enabled(true)
+        end
+      elseif polling.status().enabled then
+        -- Brief tab/pane switches should not restart Octo's polling timer.
+        hidden_since = hidden_since or vim.uv.now()
+        if vim.uv.now() - hidden_since >= 5000 then
+          polling.set_enabled(false)
+        end
       end
     end)
   end

@@ -59,11 +59,19 @@ assert(
 )
 vim.api.nvim_win_set_buf(0, vim.api.nvim_create_buf(true, false))
 vim.api.nvim_exec_autocmds('BufWinEnter', {})
+vim.wait(300)
+assert(enabled, 'briefly hidden tracked buffer keeps polling')
+vim.api.nvim_win_set_buf(0, tracked)
+vim.api.nvim_exec_autocmds('BufWinEnter', {})
+vim.wait(5500)
+assert(enabled, 'returning to the tracked buffer cancels the pending stop')
+vim.api.nvim_win_set_buf(0, vim.api.nvim_create_buf(true, false))
+vim.api.nvim_exec_autocmds('BufWinEnter', {})
 assert(
-  vim.wait(1000, function()
+  vim.wait(6500, function()
     return not enabled
   end),
-  'hidden tracked buffer stops polling'
+  'hidden tracked buffer eventually stops polling'
 )
 tracked_buffers = {}
 enabled = true
