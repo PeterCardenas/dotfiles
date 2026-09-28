@@ -502,9 +502,12 @@ return {
       require('octo').setup({
         timeout = math.huge,
         poll = {
-          enabled = true,
+          enabled = false,
           notify_on_refresh = false,
           notify_on_change = true,
+          should_poll_buffer = function(bufnr)
+            return require('local.octo_visibility').buffer_visible(bufnr)
+          end,
         },
         debug = {
           notify_missing_timeline_items = false,
@@ -563,6 +566,7 @@ return {
           },
         },
       })
+      require('local.octo_visibility').setup()
     end,
   },
   {
