@@ -103,4 +103,4 @@ tab_bar_right_separator = " | "
 
 # Herdr also uses overlay0 for tree connectors, so brighten only agent metadata.
 [ui.sidebar.agents]
-rows = [["state_icon", "machine", "workspace", { token = "tab", fg = "#818bad" }], [{ token = "agent", fg = "#818bad" }]]
+rows = [["state_icon", "machine", "workspace"], [{ token = "tab", fg = "#818bad" }]]

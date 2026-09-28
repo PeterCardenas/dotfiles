@@ -178,13 +178,11 @@ class HerdrConfigContractTest(unittest.TestCase):
         self.assertGreater((background + 0.05) / (luminance("#24283b") + 0.05), 1.2)
         rows = parsed["ui"]["sidebar"]["agents"]["rows"]
         self.assertEqual([[item if isinstance(item, str) else item["token"] for item in row] for row in rows],
-                         [["state_icon", "machine", "workspace", "tab"], ["agent"]])
-        for token in ("tab", "agent"):
-            with self.subTest(token=token):
-                style = next(item for row in rows for item in row if isinstance(item, dict) and item["token"] == token)
-                muted = luminance(style["fg"])
-                self.assertGreaterEqual((muted + 0.05) / (background + 0.05), 3)
-                self.assertLess(muted, luminance("#a9b1d6"))  # Tokyo Night subtext0
+                         [["state_icon", "machine", "workspace"], ["tab"]])
+        style = rows[1][0]
+        muted = luminance(style["fg"])
+        self.assertGreaterEqual((muted + 0.05) / (background + 0.05), 3)
+        self.assertLess(muted, luminance("#a9b1d6"))  # Tokyo Night subtext0
 
     def test_agent_status_indicators_are_red_when_idle_and_green_when_working(self):
         custom = tomllib.loads(SOURCE.read_text())["theme"]["custom"]
