@@ -4,7 +4,8 @@ local option = '@agentic_pending'
 local timer
 local enabled = true
 local unpublished = {}
-local published = unpublished
+local tmux_published = unpublished
+local herdr_published = unpublished
 local prompted_sessions = {}
 
 local function tmux_args()
@@ -23,15 +24,68 @@ local function owner()
   return tostring(pid) .. ':' .. (fields and fields[20] or '0')
 end
 
-local function publish(value)
-  if value == published then return true end
+local function publish_tmux(value)
+  if value == tmux_published then return true end
   local args = tmux_args(); if not args then return end
   vim.list_extend(args, { 'set-option', '-p', '-t', vim.env.TMUX_PANE })
   if value then vim.list_extend(args, { option, value }) else vim.list_extend(args, { '-u', option }) end
   local result = vim.system(vim.list_extend({ 'tmux' }, args)):wait(1000)
   if not result or result.code ~= 0 then return false end
-  published = value
+  tmux_published = value
   return true
+end
+
+local function publish_herdr(state)
+  if state == herdr_published then return true end
+  if vim.env.HERDR_ENV ~= '1' or not vim.env.HERDR_PANE_ID then return end
+  local herdr = vim.env.HERDR_BIN_PATH or 'herdr'
+  local args
+  if state then
+    args = { herdr, 'pane', 'report-agent', vim.env.HERDR_PANE_ID, '--source', 'agentic.nvim', '--agent', 'agentic.nvim', '--state', state }
+  else
+    args = { herdr, 'pane', 'release-agent', vim.env.HERDR_PANE_ID, '--source', 'agentic.nvim', '--agent', 'agentic.nvim' }
+  end
+  if not state then
+    local started = pcall(vim.system, args, { detach = true })
+    if not started then return false end
+    herdr_published = state
+    return true
+  end
+  local started, process = pcall(vim.system, args)
+  if not started then return false end
+  local result = process:wait(1000)
+  if not result or result.code ~= 0 then return false end
+  herdr_published = state
+  return true
+end
+
+function M.rename_workspace(title, tab_page_id, session_id)
+  if type(title) ~= 'string' then return false end
+  local workspace_title = vim.trim(vim.fn.strcharpart(vim.trim(title), 0, 20))
+  if workspace_title == '' then return false end
+  if vim.env.HERDR_ENV ~= '1' or not vim.env.HERDR_WORKSPACE_ID then return end
+  if tab_page_id ~= vim.api.nvim_get_current_tabpage() then return end
+  local registry = package.loaded['agentic.session_registry']
+  local session = registry and registry.sessions and registry.sessions[tab_page_id]
+  if not session or session.session_id ~= session_id then return end
+
+  local herdr = vim.env.HERDR_BIN_PATH or 'herdr'
+  local listed = vim.system({ herdr, 'worktree', 'list', '--workspace', vim.env.HERDR_WORKSPACE_ID }):wait(1000)
+  if not listed or listed.code ~= 0 then return false end
+  local ok, worktree_list = pcall(vim.json.decode, listed.stdout)
+  if not ok then return false end
+  local current_is_linked, has_sibling_workspace = false, false
+  -- worktree list is scoped to the current repo; unopened checkouts are not workspace siblings.
+  for _, worktree in ipairs(worktree_list.result and worktree_list.result.worktrees or {}) do
+    if worktree.open_workspace_id == vim.env.HERDR_WORKSPACE_ID then
+      current_is_linked = worktree.is_linked_worktree and not worktree.is_bare
+    elseif worktree.open_workspace_id and not worktree.is_bare then
+      has_sibling_workspace = true
+    end
+  end
+  if not current_is_linked or not has_sibling_workspace then return false end
+  local renamed = vim.system({ herdr, 'workspace', 'rename', vim.env.HERDR_WORKSPACE_ID, workspace_title }):wait(1000)
+  return renamed and renamed.code == 0
 end
 
 function M.mark_prompt(data)
@@ -66,18 +120,40 @@ local function counts()
   return working, idle
 end
 
+-- A session only becomes actionable after a prompt from this tab's current session.
+function M.tab_dots()
+  local registry = package.loaded['agentic.session_registry']
+  local sessions = registry and registry.sessions or {}
+  local current = vim.api.nvim_get_current_tabpage()
+  local dots = {}
+  local default_hl = require('lualine.highlight').format_highlight('x', true)
+  for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
+    local session = sessions[tab]
+    local color = ''
+    if type(session) == 'table' and type(session.session_id) == 'string' and prompted_sessions[tab] == session.session_id then
+      color = session.is_generating and '%#DiagnosticOk#' or '%#DiagnosticError#'
+    end
+    dots[#dots + 1] = color .. (tab == current and '' or '') .. default_hl
+  end
+  return table.concat(dots, ' ')
+end
+
 function M.recompute()
-  if not enabled or not tmux_args() then return end
+  if not enabled then return end
   local working, idle = counts()
   local value = working + idle > 0 and ('v1:' .. owner() .. ':' .. working .. ':' .. idle) or nil
-  publish(value)
+  publish_tmux(value)
+  publish_herdr(working > 0 and 'working' or (idle > 0 and 'idle' or nil))
+  vim.cmd.redrawstatus()
 end
 
 function M.clear()
   enabled = false
   if timer then timer:stop(); timer:close(); timer = nil end
-  published = unpublished
-  publish(nil)
+  tmux_published = unpublished
+  herdr_published = unpublished
+  publish_tmux(nil)
+  publish_herdr(nil)
 end
 
 local function start_timer()
@@ -88,7 +164,8 @@ end
 
 local function resume()
   enabled = true
-  published = unpublished
+  tmux_published = unpublished
+  herdr_published = unpublished
   start_timer()
   M.recompute()
 end

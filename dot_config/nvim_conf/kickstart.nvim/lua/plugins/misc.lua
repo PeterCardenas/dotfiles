@@ -559,6 +559,7 @@ return {
             },
           },
           lualine_x = {
+            { require('utils.agentic_pending').tab_dots, separator = '' },
             {
               require('utils.config_staleness').component,
               cond = require('utils.config_staleness').is_stale,
