@@ -9,6 +9,6 @@
     "defaultModel": "gpt-6-luna",
     "defaultThinking": "xhigh",
     "agentScanDirs": ["~/.claude/agents"],
-    "agentOverrides": {"reviewer": {"model": "gpt-5.6-sol", "thinking": "medium"}}
+    "agentOverrides": {"reviewer": {"model": "gpt-6-sol", "thinking": "medium"}}
   }
 }

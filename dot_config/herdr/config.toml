@@ -1,0 +1,106 @@
+onboarding = false
+
+[theme]
+name = "tokyo-night"
+
+[theme.custom]
+green = "#f7768e"
+yellow = "#9ece6a"
+
+[session]
+resume_agents_on_restore = false
+
+[experimental]
+pane_history = false
+
+[update]
+channel = "stable"
+version_check = false
+manifest_check = false
+
+[terminal]
+new_cwd = "follow"
+
+[keys]
+prefix = "ctrl+b"
+help = "prefix+?"
+settings = "prefix+shift+s"
+detach = "prefix+d"
+workspace_picker = "prefix+w"
+new_worktree = ""
+close_workspace = ""
+rename_workspace = "prefix+$"
+new_tab = "prefix+c"
+rename_tab = "prefix+comma"
+previous_tab = "prefix+p"
+next_tab = "prefix+n"
+switch_tab = "prefix+1..9"
+close_tab = "prefix+ampersand"
+copy_mode = "prefix+["
+focus_pane_left = ["prefix+h", "prefix+left"]
+focus_pane_down = ["prefix+j", "prefix+down"]
+focus_pane_up = ["prefix+k", "prefix+up"]
+focus_pane_right = ["prefix+l", "prefix+right"]
+cycle_pane_next = "prefix+o"
+last_pane = "prefix+semicolon"
+split_vertical = "prefix+percent"
+split_horizontal = "prefix+double_quote"
+close_pane = "prefix+x"
+zoom = ["prefix+z", "prefix+ctrl+z"]
+resize_mode = "prefix+r"
+
+[[keys.command]]
+key = "ctrl+h"
+type = "shell"
+command = "~/.local/bin/herdr-navigate left"
+
+[[keys.command]]
+key = "ctrl+j"
+type = "shell"
+command = "~/.local/bin/herdr-navigate down"
+
+[[keys.command]]
+key = "ctrl+k"
+type = "shell"
+command = "~/.local/bin/herdr-navigate up"
+
+[[keys.command]]
+key = "ctrl+l"
+type = "shell"
+command = "~/.local/bin/herdr-navigate right"
+
+[[keys.command]]
+key = "ctrl+f"
+type = "popup"
+command = "fish -c manage_herdr_sessions"
+description = "Search Herdr spaces and agents"
+width = "80%"
+height = "80%"
+
+[[keys.command]]
+key = "prefix+shift+g"
+type = "popup"
+command = "fish -c herdr_new_worktree"
+description = "Create a linked worktree from the default branch"
+width = "60%"
+height = 8
+
+[[keys.command]]
+key = "prefix+shift+d"
+type = "popup"
+command = "fish -c herdr_close_workspace"
+description = "Close workspace or remove linked worktree"
+width = "60%"
+height = 8
+
+[[keys.command]]
+key = "prefix+s"
+type = "plugin_action"
+command = "RooseveltAdvisors.herdr-leap.open"
+description = "Jump to a visible word start"
+
+[ui]
+mouse_capture = true
+copy_on_select = true
+tab_bar_right = [{ type = "command", command = "~/.config/tmux/scripts/status_metrics.sh --format herdr --short", interval_seconds = 10, timeout_seconds = 25 }]
+tab_bar_right_separator = " | "
