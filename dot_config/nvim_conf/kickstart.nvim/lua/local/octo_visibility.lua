@@ -68,14 +68,29 @@ function M.setup()
   local polling = require('octo.polling')
   local pending = false
   local function update()
-    if pending or polling.status().tracked_count == 0 then
+    if pending then
+      return
+    end
+    local status = polling.status()
+    if status.tracked_count == 0 then
+      if status.enabled then
+        polling.set_enabled(false)
+      end
       return
     end
     pending = true
     query_visibility(function(visible)
       pending = false
-      if visible ~= polling.status().enabled then
-        polling.set_enabled(visible)
+      local has_visible_buffer = false
+      for bufnr in pairs(polling.status().buffers) do
+        if M.buffer_visible(bufnr) then
+          has_visible_buffer = true
+          break
+        end
+      end
+      local should_poll = visible and has_visible_buffer
+      if should_poll ~= polling.status().enabled then
+        polling.set_enabled(should_poll)
       end
     end)
   end
