@@ -119,7 +119,13 @@ function M.on_attach(client, bufnr)
     -- Trigger setup
     require('lsplinks')
     nmap('gx', function()
-      require('lsplinks').gx()
+      local lsplinks = require('lsplinks')
+      local uri = lsplinks.current()
+      if uri then
+        lsplinks.open(uri)
+      else
+        require('utils.open').gx()
+      end
     end, 'Go to document link under cursor')
   end
 

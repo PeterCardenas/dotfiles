@@ -12,6 +12,7 @@ vim.g.maplocalleader = ' '
 
 -- Space now does nothing
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
+vim.keymap.set('n', 'gx', require('utils.open').gx, { desc = 'Open filepath or URL under cursor' })
 -- Stay in indent mode
 vim.keymap.set('v', '<', '<gv', { desc = 'unindent line' })
 vim.keymap.set('v', '>', '>gv', { desc = 'indent line' })
