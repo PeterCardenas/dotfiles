@@ -1,20 +1,19 @@
 ---
 name: subagent-workflow
-description: Orchestrates substantial work by requiring all task execution to happen in context-isolated subagents.
+description: Use for tasks with meaningful complexity, such as multi-step implementation, work spanning multiple files or components, or work needing independent validation and review; also use when the user explicitly requests /subagent-workflow or subagents. Keep simple tasks direct. Orchestrate the complex work in context-isolated children.
 ---
 
 # Subagent Workflow
 
-- Do all task execution in subagents. The parent agent only scopes, launches, resumes, verifies, and synthesizes subagent work.
-- Use the smallest useful set of focused subagents.
-- Stage substantial work as research → plan → implement → validate → adversarial review.
-- Give each subagent the necessary context, artifacts, and deliverable; tell it not to delegate further.
-- Parallelize only independent scopes; otherwise run sequentially.
-- Resume only for same-task follow-ups, verify and synthesize results, and iterate fixes with relevant real-workflow or CI checks until green.
-- Treat `validate` and `adversarial review` as mandatory gates, not optional phases.
-- The validation subagent must run the most relevant real workflow or test command, record the exact command and outcome, and identify pre-existing failures separately from regressions.
-- The adversarial-review subagent must independently inspect the resulting diff, tests, and stated assumptions for correctness, regressions, scope creep, and missing coverage; it must return explicit findings or state that none were found.
-- Do not report the task complete until both gates have returned. The parent must verify their results, resolve findings, and rerun validation and review when fixes are made.
+- The user's standing preference authorizes delegation for meaningfully complex tasks, even without an explicit /subagent-workflow request. Keep simple tasks direct. Once invoked, do task execution in subagents; the parent scopes, routes, arbitrates, verifies evidence, and synthesizes results without taking over child-owned implementation.
+- Use the smallest useful set of focused subagents. Research and planning are conditional on what the task needs, not mandatory stages.
+- Give each subagent the necessary context, repo/cwd/ref, edit boundary, deliverable, checks, and stop conditions; do not grant nested delegation by default.
+- Parallelize only independent scopes, with one writer per cwd/worktree; otherwise run sequentially. Resume a child only for same-task follow-ups.
+- For Pi, read the `pi-subagents` guidance and list executable agents before launch. An authorized multi-step workflow uses one top-level async `subagent` workflow call with child steps inside it; bind durable output on child runs. Use the model and thinking defaults from Pi settings unless the user requests an override; check `action: "models"` before overriding. Yield for native async completion; do not poll or use `bg_wait` just to wait for an ordinary child. Treat child/tool/launch failures as infrastructure blockers, not permission to switch to a different execution mode.
+- Treat validation and independent adversarial review as required gates for implementation work in this workflow. Keep them separate from the writer and resolve findings before completion; for read-only advice, use only the checks that answer the request.
+- For implementation, the validation subagent must run the most relevant real workflow or test command, record the exact command and outcome, and identify pre-existing failures separately from regressions.
+- For implementation, a fresh-context read-only reviewer must independently inspect the resulting diff, tests, and assumptions for correctness, regressions, scope creep, and missing coverage; it must return explicit findings or state that none were found.
+- Do not report implementation complete until both gates have returned. The parent must verify their results, resolve findings through the owning child, and rerun validation and review when fixes are made.
 
 - **Verify the requested outcome at its real boundary.** Do not mark work complete until the requested result has been directly verified: rendered preview for UI work, consumed artifact for build/package work, actual API response for API work, deployed target for deployment work, and merge/release state for delivery work.
 
