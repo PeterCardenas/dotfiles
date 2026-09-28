@@ -1,5 +1,5 @@
 #!/bin/bash
-jq -s 'reduce .[] as $settings ({}; . * $settings)' /dev/stdin <(cat <<'FRAGMENT'
+{ cat; cat <<'FRAGMENT'
 {{ template "pi-settings.json" . }}
 FRAGMENT
-)
+} | jq -s 'reduce .[] as $settings ({}; . * $settings)'
