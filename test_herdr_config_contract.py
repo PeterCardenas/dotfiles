@@ -29,6 +29,14 @@ LEAP_COMMIT = "be238808187636a080b46c547b95cbac9ee9988e"
 
 
 class HerdrConfigContractTest(unittest.TestCase):
+    def test_native_workspace_picker_uses_arrows_and_jk_for_workspace_navigation(self):
+        keys = tomllib.loads(SOURCE.read_text())["keys"]
+        self.assertEqual(keys["workspace_picker"], "prefix+w")
+        self.assertEqual(keys.get("navigate_workspace_up"), ["up", "k"])
+        self.assertEqual(keys.get("navigate_workspace_down"), ["down", "j"])
+        self.assertEqual(keys.get("navigate_pane_down"), "ctrl+j")
+        self.assertEqual(keys.get("navigate_pane_up"), "ctrl+k")
+
     def test_metrics_default_and_explicit_tmux_formats_are_equivalent(self):
         with tempfile.TemporaryDirectory() as scripts_dir:
             for name, output in {
@@ -205,6 +213,10 @@ class HerdrConfigContractTest(unittest.TestCase):
             "settings": "prefix+shift+s",
             "detach": "prefix+d",
             "workspace_picker": "prefix+w",
+            "navigate_workspace_up": ["up", "k"],
+            "navigate_workspace_down": ["down", "j"],
+            "navigate_pane_up": "ctrl+k",
+            "navigate_pane_down": "ctrl+j",
             "new_worktree": "",
             "close_workspace": "",
             "rename_workspace": "prefix+$",
