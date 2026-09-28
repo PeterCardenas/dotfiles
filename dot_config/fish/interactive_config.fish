@@ -73,7 +73,7 @@ end
 # OS Specific
 set -l os (uname -s)
 # WSL
-if uname -a | grep -q WSL2
+if string match -q -- '*WSL2*' (uname -a)
     set -gx BROWSER "/mnt/c/Program\ Files/Mozilla\ Firefox/firefox.exe"
 else if test $os = Darwin
     set -gx BROWSER "/Applications/Arc.app/Contents/MacOS/Arc"
