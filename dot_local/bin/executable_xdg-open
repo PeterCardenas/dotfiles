@@ -6,5 +6,16 @@ if [[ -n "$SSH_CONNECTION" ]]; then
 fi
 
 # xdg-open doesn't exist when not using X11.
+# Neovim may be started outside the graphical user manager's environment.
+# Recover only missing values so an explicitly configured session wins.
+if [[ -z "${DISPLAY:-}" || -z "${WAYLAND_DISPLAY:-}" ]]; then
+    while IFS= read -r setting; do
+        case "$setting" in
+            DISPLAY=*) [[ -n "${DISPLAY:-}" ]] || export DISPLAY="${setting#DISPLAY=}" ;;
+            WAYLAND_DISPLAY=*) [[ -n "${WAYLAND_DISPLAY:-}" ]] || export WAYLAND_DISPLAY="${setting#WAYLAND_DISPLAY=}" ;;
+        esac
+    done < <(systemctl --user show-environment 2>/dev/null || true)
+fi
+
 # This is specific for the GNOME desktop environment.
 gio open "$@"

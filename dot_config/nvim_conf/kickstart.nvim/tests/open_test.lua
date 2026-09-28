@@ -7,5 +7,6 @@ assert(Open.resolve_gx_target('localhost:3000/path', 'localhost') == 'http://loc
 assert(Open.resolve_gx_target('127.0.0.1:8080/api', '127.0.0.1') == 'http://127.0.0.1:8080/api')
 assert(Open.resolve_gx_target('[::1]:5173/', '1') == 'http://[::1]:5173/')
 assert(Open.resolve_gx_target('README.md:4', 'README.md') == 'README.md')
+assert(Open.resolve_gx_target('vendor.local/config', 'vendor.local/config') == 'vendor.local/config')
 
 print('open: ok')
