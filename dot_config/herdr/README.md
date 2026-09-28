@@ -74,9 +74,9 @@ plugin is linked; reloading config does not start it.
 - CPU/disk/RAM status: **SUPPORTED / VALIDATED**.
 - Cursor status: **SUPPORTED / VALIDATED**.
 - Current-directory following and workspace switching: **SUPPORTED**.
-- Navigation: **SUPPORTED**. Native Neovim navigation is
-  installed by the canonical run-onchange installer, pinned to reviewed MIT
-  commit `79679dacc791f70fc34de8b29a3cf9706c0f5b2f`.
+- Navigation: **SUPPORTED**. Native Neovim navigation uses the
+  `vim-herdr-navigation` plugin, pinned to reviewed MIT commit
+  `79679dacc791f70fc34de8b29a3cf9706c0f5b2f`.
 - Direct `ctrl+h/j/k/l` bindings use `~/.local/bin/herdr-navigate`, which preserves
   Vim split navigation and clears pane zoom immediately before crossing into another
   Herdr pane. The `prefix+h/j/k/l` bindings are an explicit escape hatch for forced
@@ -96,8 +96,7 @@ plugin is linked; reloading config does not start it.
   pinned to reviewed MIT commit `be238808187636a080b46c547b95cbac9ee9988e`
   (version `0.2.1`). `herdr plugin list --json` reports each plugin's matching
   `requested_ref`, `resolved_commit`, version, enabled state, and actions.
-  Installers require an explicit `--ref` commit and `-y`; no plugin code is
-  vendored.
+  Plugins are managed outside chezmoi; no plugin code is vendored.
 - Local mouse selection to clipboard write: **SUPPORTED / CONFIGURED** by
   Herdr's native `mouse_capture = true` and `copy_on_select = true` settings.
   ordinary paste remains terminal-native.

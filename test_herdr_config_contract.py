@@ -19,7 +19,6 @@ STATUS_COMMAND = ["/bin/bash", "-lc", "~/.config/tmux/scripts/status_metrics.sh 
 METRICS_SOURCE = ROOT / "dot_config/tmux/scripts/executable_status_metrics.sh"
 FISH_CONFIG = ROOT / "dot_config/fish/config.fish"
 FISH_INTERACTIVE_CONFIG = ROOT / "dot_config/fish/interactive_config.fish"
-PLUGIN_INSTALLER = ROOT / "dot_config/herdr/run_onchange_after_herdr-plugins-install.sh.tmpl"
 WORKTREE_PLUGIN = ROOT / "dot_config/herdr/plugins/worktree-tools/herdr-plugin.toml"
 NAVIGATE = ROOT / "dot_local/bin/executable_herdr-navigate"
 MANAGE_HERDR = ROOT / "dot_config/fish/functions/manage_herdr_sessions.fish"
@@ -443,7 +442,6 @@ class HerdrConfigContractTest(unittest.TestCase):
         self.assertEqual(pane["width"], "60%")
         self.assertEqual(pane["height"], 8)
         self.assertIn("herdr_new_worktree", " ".join(pane["command"]))
-        self.assertIn('herdr plugin link "$HOME/.config/herdr/plugins/worktree-tools"', PLUGIN_INSTALLER.read_text())
 
     def test_worktree_popup_rejects_plain_workspace_opened_in_a_linked_checkout(self):
         with tempfile.TemporaryDirectory() as bin_dir:
@@ -756,12 +754,6 @@ class HerdrConfigContractTest(unittest.TestCase):
         self.assertLess(script.index("pane zoom --off"), script.index("pane focus"))
         self.assertLess(script.index('if [ "$forward" -eq 1 ]'), script.index("pane zoom --off"))
 
-    def test_herdr_plugins_are_pinned_and_installed_canonically(self):
-        installer_text = PLUGIN_INSTALLER.read_text()
-        self.assertIn("herdr plugin install paulbkim-dev/vim-herdr-navigation --ref 79679dacc791f70fc34de8b29a3cf9706c0f5b2f -y", installer_text)
-        self.assertIn(f"herdr plugin install RooseveltAdvisors/herdr-leap --ref {LEAP_COMMIT} -y", installer_text)
-        self.assertNotRegex(installer_text, r"--ref (main|master|latest)\\b")
-
     def test_easyjump_migration_keeps_prefix_s_and_jump_mode(self):
         parsed = tomllib.loads(SOURCE.read_text())
         leap = next(entry for entry in parsed["keys"]["command"] if entry["command"] == "RooseveltAdvisors.herdr-leap.open")
@@ -821,7 +813,7 @@ class HerdrConfigContractTest(unittest.TestCase):
         self.assertFalse(parsed["experimental"]["pane_history"])
         self.assertEqual(parsed["update"], {"channel": "stable", "version_check": False, "manifest_check": False})
         text = README.read_text()
-        for requirement in ("0.9.1", "CPU/disk/RAM", "Cursor", "SUPPORTED", "VALIDATED", "SUPPORTED NATIVELY", "session snapshots", "process", "agent", "screen", "pane_history", "Ghostty", "clipboard", "--ref", "requested_ref", "resolved_commit", "version", "actions", "enabled", "no tmux fallback", "no external picker", "no process replay", "no agent replay", "no screen replay", "mouse selection", "clipboard write", "ordinary paste", "remote image paste", "UNVERIFIED", "BLOCKED", "OSC52"):
+        for requirement in ("0.9.1", "CPU/disk/RAM", "Cursor", "SUPPORTED", "VALIDATED", "SUPPORTED NATIVELY", "session snapshots", "process", "agent", "screen", "pane_history", "Ghostty", "clipboard", "requested_ref", "resolved_commit", "version", "actions", "enabled", "no tmux fallback", "no external picker", "no process replay", "no agent replay", "no screen replay", "mouse selection", "clipboard write", "ordinary paste", "remote image paste", "UNVERIFIED", "BLOCKED", "OSC52"):
             self.assertIn(requirement, text)
 
     def test_config_contains_no_unsupported_fallback_or_replay_features(self):
