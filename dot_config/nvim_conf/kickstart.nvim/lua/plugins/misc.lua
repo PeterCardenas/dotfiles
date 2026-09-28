@@ -1493,6 +1493,7 @@ return {
       -- returning 404 forever.
       ---@type table<string, { url: string, exp: number? }>
       local resolved_url_cache = {}
+      local extract_attachment_images = Async.wrap(require('utils.github_attachment_images').extract, 2)
       -- Refresh slightly before the real expiry so the download finishes while the
       -- signature is still valid.
       local resolved_url_expiry_margin = 30
@@ -1697,51 +1698,9 @@ return {
                   end
                 end
               end
-              -- TODO: Automatically parse injected languages
-              local languages = { 'markdown', 'markdown_inline', 'html' }
-              for _, body in ipairs(bodies) do
-                local urls_with_range = {} ---@type [string, number, number][]
-                for _, language in ipairs(languages) do
-                  local parser = vim.treesitter.get_string_parser(body.md, language)
-                  parser:parse()
-                  parser:for_each_tree(function(tstree, tree)
-                    local query = vim.treesitter.query.get(tree:lang(), 'images')
-                    if not query then
-                      goto continue
-                    end
-                    for _, match, _ in query:iter_matches(tstree:root(), body.md, 0, -1) do
-                      for capture_id, nodes in pairs(match) do
-                        local name = query.captures[capture_id]
-                        if name == 'image.src' then
-                          local url = vim.treesitter.get_node_text(nodes[1], body.md)
-                          local row, col = nodes[1]:range()
-                          urls_with_range[#urls_with_range + 1] = { url, row, col }
-                        end
-                      end
-                    end
-                    ::continue::
-                  end)
-                end
-                table.sort(urls_with_range, function(a, b)
-                  if a[2] == b[2] then
-                    return a[3] < b[3]
-                  end
-                  return a[2] < b[2]
-                end)
-                local imageURLsFromMd = {} ---@type string[]
-                for _, u in ipairs(urls_with_range) do
-                  imageURLsFromMd[#imageURLsFromMd + 1] = u[1]
-                end
-                local imageURLsFromHTML = {} ---@type string[]
-                for imageURL in body.html:gmatch(' src="([^"]+)"') do
-                  imageURLsFromHTML[#imageURLsFromHTML + 1] = imageURL
-                end
-                for idx, imageURL in ipairs(imageURLsFromMd) do
-                  local resolved = imageURLsFromHTML[idx]
-                  if resolved then
-                    cache_resolved_url(imageURL, resolved)
-                  end
-                end
+              local mappings = extract_attachment_images(bodies)
+              for imageURL, resolved in pairs(mappings) do
+                cache_resolved_url(imageURL, resolved)
               end
               on_complete(get_cached_resolved_url(src))
             end)
