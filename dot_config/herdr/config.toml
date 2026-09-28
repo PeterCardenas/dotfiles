@@ -6,6 +6,7 @@ name = "tokyo-night"
 [theme.custom]
 green = "#f7768e"
 yellow = "#9ece6a"
+active_row_bg = "#414868"
 
 [session]
 resume_agents_on_restore = false
@@ -71,27 +72,21 @@ command = "~/.local/bin/herdr-navigate right"
 
 [[keys.command]]
 key = "ctrl+f"
-type = "popup"
-command = "fish -c manage_herdr_sessions"
-description = "Search Herdr spaces and agents"
-width = "80%"
-height = "80%"
+type = "shell"
+command = "herdr plugin pane open --plugin local.worktree-tools --entrypoint workspace-switcher"
+description = "Switch workspaces"
 
 [[keys.command]]
 key = "prefix+shift+g"
-type = "popup"
-command = "fish -c herdr_new_worktree"
+type = "shell"
+command = "herdr plugin pane open --plugin local.worktree-tools --entrypoint new-worktree"
 description = "Create a linked worktree from the default branch"
-width = "60%"
-height = 8
 
 [[keys.command]]
 key = "prefix+shift+d"
-type = "popup"
-command = "fish -c herdr_close_workspace"
+type = "shell"
+command = "herdr plugin pane open --plugin local.worktree-tools --entrypoint close-workspace"
 description = "Close workspace or remove linked worktree"
-width = "60%"
-height = 8
 
 [[keys.command]]
 key = "prefix+s"

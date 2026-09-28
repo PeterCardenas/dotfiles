@@ -1,6 +1,7 @@
 """Contract tests for the approved Herdr 0.9.1 configuration boundary."""
 import os
 import re
+import select
 import shutil
 import subprocess
 import tempfile
@@ -12,12 +13,14 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 SOURCE = ROOT / "dot_config/herdr/config.toml"
 README = ROOT / "dot_config/herdr/README.md"
-HERDR = Path("/home/pcardenas/.local/bin/herdr")
+HERDR = Path.home() / ".local/bin/herdr"
+HERDR_AUTOMATION = Path.home() / ".claude/skills/herdr-automation/scripts/herdr_automation.py"
 STATUS_COMMAND = ["/bin/bash", "-lc", "~/.config/tmux/scripts/status_metrics.sh --format herdr --short"]
 METRICS_SOURCE = ROOT / "dot_config/tmux/scripts/executable_status_metrics.sh"
 FISH_CONFIG = ROOT / "dot_config/fish/config.fish"
 FISH_INTERACTIVE_CONFIG = ROOT / "dot_config/fish/interactive_config.fish"
 PLUGIN_INSTALLER = ROOT / "dot_config/herdr/run_onchange_after_herdr-plugins-install.sh.tmpl"
+WORKTREE_PLUGIN = ROOT / "dot_config/herdr/plugins/worktree-tools/herdr-plugin.toml"
 NAVIGATE = ROOT / "dot_local/bin/executable_herdr-navigate"
 MANAGE_HERDR = ROOT / "dot_config/fish/functions/manage_herdr_sessions.fish"
 PREVIEW_HERDR = ROOT / "dot_config/fish/functions/preview_herdr_target.fish"
@@ -160,6 +163,10 @@ class HerdrConfigContractTest(unittest.TestCase):
         parsed = tomllib.loads(SOURCE.read_text())
         self.assertEqual(parsed["theme"]["name"], "tokyo-night")
 
+    def test_selected_workspace_and_agent_use_a_contrasting_tokyo_night_background(self):
+        custom = tomllib.loads(SOURCE.read_text())["theme"]["custom"]
+        self.assertEqual(custom["active_row_bg"], "#414868")
+
     def test_agent_status_indicators_are_red_when_idle_and_green_when_working(self):
         custom = tomllib.loads(SOURCE.read_text())["theme"]["custom"]
         self.assertEqual(custom["green"], "#f7768e")
@@ -209,17 +216,147 @@ class HerdrConfigContractTest(unittest.TestCase):
             "ctrl+k": ("shell", "~/.local/bin/herdr-navigate up"),
             "ctrl+l": ("shell", "~/.local/bin/herdr-navigate right"),
             "prefix+s": ("plugin_action", "RooseveltAdvisors.herdr-leap.open"),
-            "ctrl+f": ("popup", "fish -c manage_herdr_sessions"),
-            "prefix+shift+g": ("popup", "fish -c herdr_new_worktree"),
-            "prefix+shift+d": ("popup", "fish -c herdr_close_workspace"),
+            "ctrl+f": ("shell", "herdr plugin pane open --plugin local.worktree-tools --entrypoint workspace-switcher"),
+            "prefix+shift+g": ("shell", "herdr plugin pane open --plugin local.worktree-tools --entrypoint new-worktree"),
+            "prefix+shift+d": ("shell", "herdr plugin pane open --plugin local.worktree-tools --entrypoint close-workspace"),
         })
+
+    def test_custom_herdr_popups_use_named_plugin_panes(self):
+        parsed = tomllib.loads(SOURCE.read_text())
+        commands = {entry["key"]: entry for entry in parsed["keys"]["command"]}
+        panes = {pane["id"]: pane for pane in tomllib.loads(WORKTREE_PLUGIN.read_text())["panes"]}
+        self.assertNotIn("popup", {command["type"] for command in commands.values()})
+
+        expected = {
+            "ctrl+f": ("workspace-switcher", "Workspace switcher", ""),
+            "prefix+shift+d": ("close-workspace", "Close workspace", ""),
+            "prefix+shift+g": ("new-worktree", "New linked worktree", ""),
+        }
+        for key, (pane_id, title, arguments) in expected.items():
+            self.assertEqual(
+                commands[key]["command"],
+                f"herdr plugin pane open --plugin local.worktree-tools --entrypoint {pane_id}{arguments}",
+            )
+            self.assertEqual(panes[pane_id]["title"], title)
+            self.assertEqual(panes[pane_id]["placement"], "popup")
 
     def test_close_workspace_key_uses_context_aware_popup(self):
         parsed = tomllib.loads(SOURCE.read_text())
         command = next(entry for entry in parsed["keys"]["command"] if entry["key"] == "prefix+shift+d")
-        self.assertEqual(command["type"], "popup")
-        self.assertEqual(command["command"], "fish -c herdr_close_workspace")
+        self.assertEqual(command["type"], "shell")
+        self.assertEqual(
+            command["command"],
+            "herdr plugin pane open --plugin local.worktree-tools --entrypoint close-workspace",
+        )
         self.assertEqual(parsed["keys"]["close_workspace"], "")
+        pane = next(
+            pane
+            for pane in tomllib.loads(WORKTREE_PLUGIN.read_text())["panes"]
+            if pane["id"] == "close-workspace"
+        )
+        self.assertIn("HERDR_PLUGIN_CONTEXT_JSON", " ".join(pane["command"]))
+        self.assertIn(".workspace_id", " ".join(pane["command"]))
+
+    def test_close_popup_removes_linked_worktree_checkout_end_to_end(self):
+        name = f"wtclose{os.getpid() % 100000}"
+        controller = ["python3", str(HERDR_AUTOMATION)]
+        created = None
+        try:
+            create = subprocess.run(
+                [*controller, "create", name, "--config", str(SOURCE)],
+                text=True,
+                capture_output=True,
+                timeout=20,
+            )
+            self.assertEqual(create.returncode, 0, create.stderr)
+            created = __import__("json").loads(create.stdout)
+            home = Path(created["home"])
+            config_home = home.parent / "c"
+            repository = home / "repo"
+            linked_checkout = home / "linked"
+            repository.mkdir(parents=True)
+            subprocess.run(["git", "-C", str(repository), "init", "-b", "main"], check=True, capture_output=True)
+            subprocess.run(
+                ["git", "-C", str(repository), "-c", "user.name=E2E", "-c", "user.email=e2e@example.com", "commit", "--allow-empty", "-m", "test: initialize fixture"],
+                check=True,
+                capture_output=True,
+            )
+            subprocess.run(
+                ["git", "-C", str(repository), "worktree", "add", "-b", "linked", str(linked_checkout)],
+                check=True,
+                capture_output=True,
+            )
+            plugin = config_home / "herdr/plugins/worktree-tools"
+            shutil.copytree(WORKTREE_PLUGIN.parent, plugin)
+            functions = config_home / "fish/functions"
+            functions.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(CLOSE_WORKSPACE, functions / CLOSE_WORKSPACE.name)
+            shutil.copyfile(CREATE_WORKTREE, functions / CREATE_WORKTREE.name)
+
+            def herdr(*arguments):
+                return subprocess.run(
+                    [*controller, "herdr", name, "--", *arguments],
+                    text=True,
+                    capture_output=True,
+                    timeout=20,
+                )
+
+            linked = herdr("plugin", "link", str(plugin))
+            self.assertEqual(linked.returncode, 0, linked.stderr)
+            opened = herdr("worktree", "open", "--cwd", str(repository), "--path", str(linked_checkout), "--focus")
+            self.assertEqual(opened.returncode, 0, opened.stderr)
+            workspace_id = __import__("json").loads(opened.stdout)["result"]["workspace"]["workspace_id"]
+            create_popup = herdr("plugin", "pane", "open", "--plugin", "local.worktree-tools", "--entrypoint", "new-worktree", "--focus")
+            self.assertEqual(create_popup.returncode, 0, create_popup.stderr)
+            branch_prompt = subprocess.run(
+                [*controller, "wait-screen", "--regex", "Branch name:", "--duration", "0.2", "--wait-timeout", "5", name],
+                text=True,
+                capture_output=True,
+                timeout=10,
+            )
+            self.assertEqual(branch_prompt.returncode, 0, branch_prompt.stderr or branch_prompt.stdout)
+            dismissed = subprocess.run(
+                [*controller, "terminal", name, "--", "send-keys", "-t", created["pane_id"], "Enter"],
+                text=True,
+                capture_output=True,
+                timeout=10,
+            )
+            self.assertEqual(dismissed.returncode, 0, dismissed.stderr)
+            deadline = time.monotonic() + 5
+            while True:
+                popup = herdr("plugin", "pane", "open", "--plugin", "local.worktree-tools", "--entrypoint", "close-workspace", "--focus")
+                if popup.returncode == 0 or time.monotonic() >= deadline:
+                    break
+                time.sleep(0.1)
+            self.assertEqual(popup.returncode, 0, popup.stderr)
+            prompt = subprocess.run(
+                [*controller, "wait-screen", "--regex", "Remove linked worktree", "--duration", "0.2", "--wait-timeout", "5", name],
+                text=True,
+                capture_output=True,
+                timeout=10,
+            )
+            self.assertEqual(prompt.returncode, 0, prompt.stderr or prompt.stdout)
+            confirmed = subprocess.run(
+                [*controller, "terminal", name, "--", "send-keys", "-t", created["pane_id"], "y", "Enter"],
+                text=True,
+                capture_output=True,
+                timeout=10,
+            )
+            self.assertEqual(confirmed.returncode, 0, confirmed.stderr)
+            deadline = time.monotonic() + 10
+            while time.monotonic() < deadline:
+                workspaces = herdr("workspace", "list")
+                self.assertEqual(workspaces.returncode, 0, workspaces.stderr)
+                ids = {entry["workspace_id"] for entry in __import__("json").loads(workspaces.stdout)["result"]["workspaces"]}
+                if workspace_id not in ids and not linked_checkout.exists():
+                    break
+                time.sleep(0.1)
+            self.assertNotIn(workspace_id, ids)
+            self.assertFalse(linked_checkout.exists())
+        finally:
+            if created is not None:
+                closed = subprocess.run([*controller, "close", name], text=True, capture_output=True, timeout=20)
+                self.assertEqual(closed.returncode, 0, closed.stderr)
 
     def test_close_popup_removes_linked_worktree_checkout(self):
         with tempfile.TemporaryDirectory() as bin_dir:
@@ -268,12 +405,187 @@ class HerdrConfigContractTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(calls, ["workspace close w-plain"])
 
-    def test_linked_worktree_key_opens_branch_creation_popup(self):
+    def test_linked_worktree_key_opens_titled_branch_creation_popup(self):
         parsed = tomllib.loads(SOURCE.read_text())
         command = next(entry for entry in parsed["keys"]["command"] if entry["key"] == "prefix+shift+g")
-        self.assertEqual(command["type"], "popup")
-        self.assertEqual(command["command"], "fish -c herdr_new_worktree")
+        self.assertEqual(command["type"], "shell")
+        self.assertEqual(
+            command["command"],
+            "herdr plugin pane open --plugin local.worktree-tools --entrypoint new-worktree",
+        )
         self.assertEqual(parsed["keys"]["new_worktree"], "")
+
+        plugin = tomllib.loads(WORKTREE_PLUGIN.read_text())
+        pane = next(entry for entry in plugin["panes"] if entry["id"] == "new-worktree")
+        self.assertEqual(pane["id"], "new-worktree")
+        self.assertEqual(pane["title"], "New linked worktree")
+        self.assertEqual(pane["placement"], "popup")
+        self.assertEqual(pane["width"], "60%")
+        self.assertEqual(pane["height"], 8)
+        self.assertIn("herdr_new_worktree", " ".join(pane["command"]))
+        self.assertIn('herdr plugin link "$HOME/.config/herdr/plugins/worktree-tools"', PLUGIN_INSTALLER.read_text())
+
+    def test_worktree_popup_rejects_plain_workspace_opened_in_a_linked_checkout(self):
+        with tempfile.TemporaryDirectory() as bin_dir:
+            log = Path(bin_dir) / "calls"
+            herdr = Path(bin_dir) / "herdr"
+            herdr.write_text(
+                "#!/bin/sh\n"
+                f"printf '%s\\n' \"$*\" >> {log}\n"
+                "if [ \"$1 $2\" = 'workspace get' ]; then\n"
+                "  printf '%s\\n' '{\"result\":{\"workspace\":{\"workspace_id\":\"w-plain\",\"label\":\"review\"}}}'\n"
+                "elif [ \"$1 $2\" = 'worktree list' ]; then\n"
+                "  printf '%s\\n' '{\"result\":{\"source\":{\"source_workspace_id\":\"w-parent\"},\"worktrees\":[{\"open_workspace_id\":\"w-plain\",\"path\":\"/repo/review\",\"is_linked_worktree\":true,\"is_bare\":false}]}}'\n"
+                "fi\n"
+            )
+            herdr.chmod(0o755)
+            result = subprocess.run(
+                ["fish", "--no-config", "-c", f"set fish_function_path {CREATE_WORKTREE.parent}; herdr_new_worktree"],
+                input="\n",
+                env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "HERDR_ACTIVE_WORKSPACE_ID": "w-plain"},
+                text=True,
+                capture_output=True,
+                timeout=10,
+            )
+            calls = log.read_text().splitlines()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("This workspace is not a linked worktree workspace.", result.stderr)
+        self.assertNotIn("Branch name:", result.stderr)
+        self.assertEqual(calls, ["workspace get w-plain"])
+
+    def test_worktree_popup_rejects_plain_workspace_in_linked_checkout_end_to_end(self):
+        name = f"wtguard{os.getpid() % 100000}"
+        controller = ["python3", str(HERDR_AUTOMATION)]
+        created = None
+        try:
+            create = subprocess.run(
+                [*controller, "create", name, "--config", str(SOURCE)],
+                text=True,
+                capture_output=True,
+                timeout=20,
+            )
+            self.assertEqual(create.returncode, 0, create.stderr)
+            created = __import__("json").loads(create.stdout)
+            home = Path(created["home"])
+            config_home = home.parent / "c"
+            repository = home / "repo"
+            linked_checkout = home / "review"
+            repository.mkdir(parents=True)
+            subprocess.run(["git", "-C", str(repository), "init", "-b", "main"], check=True, capture_output=True)
+            subprocess.run(
+                ["git", "-C", str(repository), "-c", "user.name=E2E", "-c", "user.email=e2e@example.com", "commit", "--allow-empty", "-m", "test: initialize fixture"],
+                check=True,
+                capture_output=True,
+            )
+            subprocess.run(
+                ["git", "-C", str(repository), "worktree", "add", "-b", "review", str(linked_checkout)],
+                check=True,
+                capture_output=True,
+            )
+            plugin = config_home / "herdr/plugins/worktree-tools"
+            shutil.copytree(WORKTREE_PLUGIN.parent, plugin)
+            functions = config_home / "fish/functions"
+            functions.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(CREATE_WORKTREE, functions / CREATE_WORKTREE.name)
+
+            def herdr(*arguments):
+                return subprocess.run(
+                    [*controller, "herdr", name, "--", *arguments],
+                    text=True,
+                    capture_output=True,
+                    timeout=20,
+                )
+
+            linked = herdr("plugin", "link", str(plugin))
+            self.assertEqual(linked.returncode, 0, linked.stderr)
+            workspace = herdr("workspace", "create", "--cwd", str(linked_checkout), "--label", "review", "--focus")
+            self.assertEqual(workspace.returncode, 0, workspace.stderr)
+            workspace_id = __import__("json").loads(workspace.stdout)["result"]["workspace"]["workspace_id"]
+            inspected = herdr("workspace", "get", workspace_id)
+            self.assertEqual(inspected.returncode, 0, inspected.stderr)
+            self.assertNotIn("worktree", __import__("json").loads(inspected.stdout)["result"]["workspace"])
+            popup = herdr("plugin", "pane", "open", "--plugin", "local.worktree-tools", "--entrypoint", "new-worktree", "--focus")
+            self.assertEqual(popup.returncode, 0, popup.stderr)
+            rejected = subprocess.run(
+                [*controller, "wait-screen", "--regex", "not a linked worktree workspace", "--duration", "0.2", "--wait-timeout", "5", name],
+                text=True,
+                capture_output=True,
+                timeout=10,
+            )
+            self.assertEqual(rejected.returncode, 0, rejected.stderr or rejected.stdout)
+            screen = subprocess.run(
+                [*controller, "terminal", name, "--", "capture-pane", "-p", "-t", created["pane_id"]],
+                text=True,
+                capture_output=True,
+                timeout=10,
+            )
+            self.assertEqual(screen.returncode, 0, screen.stderr)
+            self.assertNotIn("Branch name:", screen.stdout)
+        finally:
+            if created is not None:
+                closed = subprocess.run([*controller, "close", name], text=True, capture_output=True, timeout=20)
+                self.assertEqual(closed.returncode, 0, closed.stderr)
+
+    def test_worktree_popup_reports_non_linked_workspace(self):
+        with tempfile.TemporaryDirectory() as bin_dir:
+            herdr = Path(bin_dir) / "herdr"
+            herdr.write_text(
+                "#!/bin/sh\n"
+                "printf '%s\\n' '{\"result\":{\"workspace\":{\"workspace_id\":\"w-primary\",\"worktree\":{\"is_linked_worktree\":false}}}}'\n"
+            )
+            herdr.chmod(0o755)
+            result = subprocess.run(
+                ["fish", "--no-config", "-c", f"set fish_function_path {CREATE_WORKTREE.parent}; herdr_new_worktree"],
+                input="\n",
+                env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "HERDR_ACTIVE_WORKSPACE_ID": "w-primary"},
+                text=True,
+                capture_output=True,
+                timeout=10,
+            )
+        self.assertIn("This workspace is not a linked worktree workspace.", result.stderr)
+        self.assertNotIn("cannot overwrite", result.stderr)
+        self.assertNotIn("Branch name:", result.stderr)
+
+    def test_worktree_popup_escape_cancels(self):
+        with tempfile.TemporaryDirectory() as bin_dir:
+            log = Path(bin_dir) / "calls"
+            herdr = Path(bin_dir) / "herdr"
+            herdr.write_text(
+                "#!/bin/sh\n"
+                "if [ \"$1 $2\" = 'workspace get' ]; then\n"
+                "  printf '%s\\n' '{\"result\":{\"workspace\":{\"workspace_id\":\"w-linked\",\"worktree\":{\"is_linked_worktree\":true}}}}'\n"
+                "elif [ \"$1 $2\" = 'worktree list' ]; then\n"
+                "  printf '%s\\n' '{\"result\":{\"source\":{\"source_workspace_id\":\"w-parent\"},\"worktrees\":[{\"open_workspace_id\":\"w-linked\",\"path\":\"/repo/task\",\"is_linked_worktree\":true,\"is_bare\":false}]}}'\n"
+                "else\n"
+                f"  printf '%s\\n' \"$*\" >> {log}\n"
+                "fi\n"
+            )
+            herdr.chmod(0o755)
+            master_fd, slave_fd = os.openpty()
+            process = subprocess.Popen(
+                ["fish", "--no-config", "-c", f"set fish_function_path {CREATE_WORKTREE.parent}; herdr_new_worktree"],
+                stdin=slave_fd,
+                stdout=slave_fd,
+                stderr=slave_fd,
+                env={**os.environ, "TERM": "dumb", "PATH": f"{bin_dir}:{os.environ['PATH']}", "HERDR_ACTIVE_WORKSPACE_ID": "w-linked"},
+                close_fds=True,
+            )
+            os.close(slave_fd)
+            output = b""
+            try:
+                while b"Branch name: " not in output:
+                    ready, _, _ = select.select([master_fd], [], [], 2)
+                    self.assertTrue(ready, output.decode(errors="replace"))
+                    output += os.read(master_fd, 4096)
+                os.write(master_fd, b"\x1b")
+                process.wait(timeout=2)
+            finally:
+                if process.poll() is None:
+                    process.terminate()
+                    process.wait(timeout=2)
+                os.close(master_fd)
+            calls = log.read_text().splitlines() if log.exists() else []
+        self.assertEqual(calls, [], output.decode(errors="replace"))
 
     def test_worktree_popup_branches_from_remote_default_branch(self):
         with tempfile.TemporaryDirectory() as bin_dir:
@@ -281,7 +593,9 @@ class HerdrConfigContractTest(unittest.TestCase):
             herdr = Path(bin_dir) / "herdr"
             herdr.write_text(
                 "#!/bin/sh\n"
-                "if [ \"$1 $2\" = 'worktree list' ]; then\n"
+                "if [ \"$1 $2\" = 'workspace get' ]; then\n"
+                "  printf '%s\\n' '{\"result\":{\"workspace\":{\"workspace_id\":\"w-linked\",\"worktree\":{\"is_linked_worktree\":true}}}}'\n"
+                "elif [ \"$1 $2\" = 'worktree list' ]; then\n"
                 "  printf '%s\\n' '{\"result\":{\"source\":{\"source_workspace_id\":\"w-parent\"},\"worktrees\":[{\"open_workspace_id\":\"w-linked\",\"path\":\"/repo/task\",\"is_linked_worktree\":true,\"is_bare\":false}]}}'\n"
                 "else\n"
                 f"  printf '%s\\n' \"$*\" >> {log}\n"
@@ -289,7 +603,14 @@ class HerdrConfigContractTest(unittest.TestCase):
             )
             herdr.chmod(0o755)
             git = Path(bin_dir) / "git"
-            git.write_text("#!/bin/sh\nprintf '%s\\n' origin/trunk\n")
+            git.write_text(
+                "#!/bin/sh\n"
+                "if [ \"$3\" = 'symbolic-ref' ]; then\n"
+                "  printf '%s\\n' origin/trunk\n"
+                "elif [ \"$3 $4\" = 'rev-parse --path-format=absolute' ]; then\n"
+                "  printf '%s\\n' /repo/.bare\n"
+                "fi\n"
+            )
             git.chmod(0o755)
             result = subprocess.run(
                 ["fish", "--no-config", "-c", f"set fish_function_path {CREATE_WORKTREE.parent}; herdr_new_worktree"],
@@ -303,24 +624,69 @@ class HerdrConfigContractTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(
             calls,
-            ["worktree create --workspace w-parent --branch feature/new-worktree --base origin/trunk --focus"],
+            [
+                "worktree create --workspace w-parent --branch feature/new-worktree --base origin/trunk "
+                "--path /repo/feature-new-worktree --focus"
+            ],
         )
 
-    def test_herdr_session_popup_searches_and_focuses_spaces_and_agents(self):
-        manage = MANAGE_HERDR.read_text()
-        preview = PREVIEW_HERDR.read_text()
-        self.assertIn("herdr workspace list", manage)
-        self.assertIn("herdr agent list", manage)
-        self.assertIn("fzf", manage)
-        self.assertIn("--header", manage)
-        self.assertIn("TYPE", manage)
-        self.assertIn("STATUS", manage)
-        self.assertIn("SPACE", manage)
-        self.assertIn("TARGET", manage)
-        self.assertIn("herdr workspace focus", manage)
-        self.assertIn("herdr agent focus", manage)
-        self.assertIn("preview_herdr_target", manage)
-        self.assertIn("herdr pane read", preview)
+    def test_herdr_session_popup_lists_only_workspaces_by_most_recent_access(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp = Path(temp_dir)
+            bin_dir = temp / "bin"
+            bin_dir.mkdir()
+            calls = temp / "calls"
+            captured = temp / "captured"
+            herdr = bin_dir / "herdr"
+            herdr.write_text(
+                "#!/bin/sh\n"
+                f"printf '%s\\n' \"$*\" >> {calls}\n"
+                "if [ \"$1 $2\" = 'workspace list' ]; then\n"
+                "  printf '%s\\n' '{\"result\":{\"workspaces\":[{\"workspace_id\":\"w1\",\"label\":\"Older\",\"number\":1,\"agent_status\":\"idle\",\"focused\":false},{\"workspace_id\":\"w2\",\"label\":\"Recent\",\"number\":2,\"agent_status\":\"working\",\"focused\":false},{\"workspace_id\":\"w3\",\"label\":\"Current\",\"number\":3,\"agent_status\":\"blocked\",\"focused\":true},{\"workspace_id\":\"w4\",\"label\":\"Bare group\",\"number\":4,\"worktree\":{\"repo_key\":\"bare-repo\",\"is_linked_worktree\":false,\"checkout_path\":\"/repo/.bare\"}},{\"workspace_id\":\"w5\",\"label\":\"Bare child\",\"number\":5,\"worktree\":{\"repo_key\":\"bare-repo\",\"is_linked_worktree\":true}},{\"workspace_id\":\"w6\",\"label\":\"Primary group\",\"number\":6,\"worktree\":{\"repo_key\":\"primary-repo\",\"is_linked_worktree\":false,\"checkout_path\":\"/repo/main\"}},{\"workspace_id\":\"w7\",\"label\":\"Primary child\",\"number\":7,\"worktree\":{\"repo_key\":\"primary-repo\",\"is_linked_worktree\":true}},{\"workspace_id\":\"w8\",\"label\":\"Standalone\",\"number\":8,\"worktree\":{\"repo_key\":\"standalone\",\"is_linked_worktree\":false}}]}}'\n"
+                "elif [ \"$1 $2\" = 'agent list' ]; then\n"
+                "  printf '%s\\n' '{\"result\":{\"agents\":[{\"pane_id\":\"w1:p1\",\"agent_status\":\"idle\",\"workspace_id\":\"w1\",\"agent\":\"pi\"}]}}'\n"
+                "fi\n"
+            )
+            herdr.chmod(0o755)
+            fzf = bin_dir / "fzf"
+            fzf.write_text(f"#!/bin/sh\ntee {captured} | head -n 1\n")
+            fzf.chmod(0o755)
+            log_dir = temp / ".config" / "herdr"
+            log_dir.mkdir(parents=True)
+            (log_dir / "herdr-server.log").write_text(
+                '2026-01-01 workspace focused event="workspace.focus" workspace_id="w1"\n'
+                '2026-01-02 workspace focused event="workspace.focus" workspace_id="w2"\n'
+                '2026-01-03 workspace focused event="workspace.focus" workspace_id="w3"\n'
+            )
+            result = subprocess.run(
+                ["fish", "--no-config", "-c", f"set fish_function_path {MANAGE_HERDR.parent}; manage_herdr_sessions"],
+                env={**os.environ, "HOME": temp_dir, "PATH": f"{bin_dir}:{os.environ['PATH']}"},
+                text=True,
+                capture_output=True,
+                timeout=10,
+            )
+            rows = captured.read_text().splitlines() if captured.exists() else []
+            invoked = calls.read_text().splitlines() if calls.exists() else []
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual([row.split("\t")[0] for row in rows], ["w2", "w1", "w5", "w7", "w8"])
+        self.assertTrue(all(len(row.split("\t")) == 2 for row in rows))
+        self.assertIn("\x1b[38;2;158;206;106mRecent\x1b[0m", rows[0])
+        self.assertNotIn("working", rows[0])
+        self.assertNotIn("Current", "\n".join(rows))
+        self.assertEqual(invoked, ["workspace list", "workspace focus w2"])
+        picker = MANAGE_HERDR.read_text()
+        self.assertIn("preview_herdr_target", picker)
+        self.assertNotIn("--border=rounded", picker)
+        self.assertNotIn("--input-border", picker)
+        self.assertNotIn("--list-border", picker)
+        self.assertIn("--preview-window='right,60%,border-left'", picker)
+        self.assertIn("herdr pane read", PREVIEW_HERDR.read_text())
+
+    def test_herdr_session_popup_is_compact(self):
+        plugin = tomllib.loads(WORKTREE_PLUGIN.read_text())
+        pane = next(entry for entry in plugin["panes"] if entry["id"] == "workspace-switcher")
+        self.assertEqual(pane["width"], "65%")
+        self.assertEqual(pane["height"], "60%")
 
     def test_shell_navigation_forwards_to_the_active_nvim_pane(self):
         with tempfile.TemporaryDirectory() as bin_dir:
@@ -390,7 +756,10 @@ class HerdrConfigContractTest(unittest.TestCase):
         result = subprocess.run([str(HERDR), "plugin", "list", "--json"], text=True, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         plugin = __import__("json").loads(result.stdout)["result"]["plugins"]
-        self.assertEqual({entry["plugin_id"] for entry in plugin}, {"vim-herdr-navigation", "RooseveltAdvisors.herdr-leap"})
+        self.assertEqual(
+            {entry["plugin_id"] for entry in plugin},
+            {"vim-herdr-navigation", "RooseveltAdvisors.herdr-leap", "local.worktree-tools", "local.recent-worktrees"},
+        )
         navigation = next(entry for entry in plugin if entry["plugin_id"] == "vim-herdr-navigation")
         self.assertEqual(navigation["source"]["requested_ref"], "79679dacc791f70fc34de8b29a3cf9706c0f5b2f")
         self.assertEqual(navigation["source"]["resolved_commit"], "79679dacc791f70fc34de8b29a3cf9706c0f5b2f")
@@ -403,6 +772,16 @@ class HerdrConfigContractTest(unittest.TestCase):
         self.assertEqual(leap["version"], "0.2.1")
         self.assertTrue(leap["enabled"])
         self.assertIn("open", {action["id"] for action in leap["actions"]})
+        worktree_tools = next(entry for entry in plugin if entry["plugin_id"] == "local.worktree-tools")
+        self.assertTrue(worktree_tools["enabled"])
+        self.assertEqual(worktree_tools["source"]["kind"], "local")
+        self.assertEqual(
+            {pane["title"] for pane in worktree_tools["panes"]},
+            {"Workspace switcher", "Close workspace", "New linked worktree"},
+        )
+        recent_worktrees = next(entry for entry in plugin if entry["plugin_id"] == "local.recent-worktrees")
+        self.assertTrue(recent_worktrees["enabled"])
+        self.assertEqual(recent_worktrees["startup"][0]["command"], ["python3", "watch.py"])
 
 
     def test_cursor_spend_output_is_present_in_aggregate_status_when_nonempty(self):

@@ -1,0 +1,36 @@
+function manage_herdr_sessions -d "Navigate Herdr workspaces"
+    set -l workspace_json (command herdr workspace list); or return 1
+    set -l server_log ~/.config/herdr/herdr-server.log
+    test -r "$server_log"; or set server_log /dev/null
+    set -l rows
+
+    for row in (printf '%s\n' "$workspace_json" | jq -r --rawfile log "$server_log" '
+        ($log | [scan("workspace focused[^\n]*workspace_id=\"([^\"]+)\"")] | map(.[0]) | to_entries | reduce .[] as $entry ({}; .[$entry.value] = $entry.key)) as $recent
+        | .result.workspaces as $workspaces
+        | $workspaces
+        | sort_by(-($recent[.workspace_id] // -1), .number)
+        | .[]
+        | select(.focused != true)
+        | . as $workspace
+        | select(.worktree.is_linked_worktree != false or .worktree.repo_key == null or
+            (any($workspaces[]; .worktree.repo_key == $workspace.worktree.repo_key and .worktree.is_linked_worktree == true) | not))
+        | [.workspace_id, .label, .agent_status]
+        | @tsv
+    ')
+        set -l fields (string split \t -- "$row")
+        set -l color 169 177 214
+        switch $fields[3]
+            case working; set color 158 206 106
+            case blocked; set color 224 175 104
+            case idle done; set color 247 118 142
+        end
+        set -l display (printf '\e[38;2;%s;%s;%sm%s\e[0m' $color "$fields[2]")
+        set -a rows (printf '%s\t%s' "$fields[1]" "$display")
+    end
+
+    set -l selection (printf '%s\n' $rows | fzf --ansi --cycle --layout=reverse --delimiter='\t' --with-nth=2 --preview-window='right,60%,border-left' --preview-label=' Preview ' --preview 'preview_herdr_target workspace {1}')
+    test -n "$selection"; or return
+
+    set -l fields (string split \t -- "$selection")
+    command herdr workspace focus "$fields[1]"
+end

@@ -11,8 +11,9 @@ also mirrors tmux where Herdr has an equivalent: `prefix+c/,/p/n/1..9/&/[` for
 tabs and copy mode, `prefix+h/j/k/l` plus arrows for pane focus,
 `prefix+o/;/%/\"/x/r` for pane cycling, last-pane, splitting, closing, and
 resizing, both `prefix+z` and `prefix+ctrl+z` for zooming, `prefix+d` to detach,
-with `prefix+w` for workspace navigation and `ctrl+f` for an 80% searchable
-spaces-and-agents popup. Herdr-only actions remain on non-tmux chords.
+with `prefix+w` for workspace navigation and `ctrl+f` for a compact 65% × 60%
+searchable workspace popup sorted by most recent access. Herdr-only actions
+remain on non-tmux chords.
 
 The desktop tab bar has one mandatory status command:
 `~/.config/tmux/scripts/status_metrics.sh --format herdr --short`. The collector
@@ -28,27 +29,45 @@ separated by ` | `.
 
 `agentic.nvim` reports its aggregate prompted-session lifecycle directly from
 Neovim to the enclosing `HERDR_PANE_ID` as `working` or `idle`, and releases the
-authority on suspend/exit. The active Agentic session's generated title renames
-the enclosing `HERDR_WORKSPACE_ID` only when it is a linked-worktree workspace;
-switching Neovim tabs reapplies that tab's existing title. Primary and non-Git
-workspaces retain their labels. Herdr keeps renamed workspaces in their existing
-Git worktree group because renaming changes only the label. This is
-provider-independent and
+authority on suspend/exit. After each response, it independently generates a
+workspace label from the full conversation's completed work and renames the
+enclosing `HERDR_WORKSPACE_ID` only when it is a linked-worktree workspace
+alongside another open, non-bare worktree workspace for the same repository.
+The label is limited to 20 Unicode characters and does not replace Agentic's
+chat title. Primary, solitary linked, and non-Git workspaces retain their
+labels. Herdr keeps renamed workspaces in their existing Git worktree group
+because renaming changes only the label. This is provider-independent and
 covers embedded ACP providers that Herdr cannot detect as foreground terminal
 agents. The installed Pi/Claude/Codex/OpenCode/Cursor integrations still cover
 those harnesses when they run as standalone foreground processes; they are not
 the authority for ACP children hosted inside Neovim.
 
-`ctrl+f` opens an fzf popup modeled on the tmux `manage_sessions` picker. It
-searches both Space and Agent rows, previews the selected target's pane, and
-focuses the selected workspace or agent on Enter. `prefix+w` retains Herdr's
-native workspace navigation. In a linked-worktree workspace, `prefix+shift+g`
-asks for a branch name and creates a focused sibling worktree from the remote's
+`ctrl+f` opens the named **Workspace switcher** fzf popup modeled on the tmux
+`manage_sessions` picker. All custom popups are declared as plugin panes, where
+Herdr requires a title, so new popup commands cannot silently fall back to a
+command-derived name. It lists every workspace except the current one and
+repository grouping workspaces with linked children, ordered by the most recent
+focus event in Herdr's server log. Each row is only the
+status-colored workspace name; the popup previews the selected workspace's pane
+and focuses it on Enter. `prefix+w` retains Herdr's native workspace navigation.
+In a linked-worktree workspace, `prefix+shift+g`
+asks for a branch name and creates a focused sibling worktree in the repository
+container (the directory containing the shared Git directory), using a
+slash-to-hyphen branch slug for its directory name. It starts from the remote's
 default branch, falling back to local `main` or `master` when `origin/HEAD` is
 unavailable. `prefix+shift+d` asks for confirmation, removes the checkout when
 the active workspace is a linked worktree, and otherwise performs a normal
 workspace close. Refused dirty-worktree removal requires a second explicit
 confirmation before retrying with `--force`.
+
+The local **Recent worktrees** plugin restores each group's child order from
+its session's `herdr-server.log` on startup. Children without a recorded focus
+keep their existing relative order; missing logs leave the order unchanged.
+Afterward, focusing a linked worktree promotes it directly below its repository
+parent. It polls every two seconds because Herdr 0.9.1 does not deliver
+UI-driven focus changes to plugin event hooks. Top-level groups retain their
+relative order. Its watcher starts on the next Herdr server startup after the
+plugin is linked; reloading config does not start it.
 
 ## 0.9.1 support matrix
 
@@ -100,11 +119,17 @@ When no live inherited agent exists, fish starts one at the stable path. This is
 the same indirection used for persistent tmux sessions; Herdr 0.9.1 does not
 natively refresh client environment variables in its long-lived server.
 
-Fish applies the same bridge to `SSH_CONNECTION`. The `herdr` fish wrapper
-records the attaching shell's value in `~/.ssh/ssh-connection.$hostname`, or
-removes that state for a local attach. Persistent Herdr shells load it at startup
-and before every command, so a newly attached SSH client updates existing panes
-without restarting their shells.
+`SSH_CONNECTION` is resolved per client instead of per host. Herdr allows
+several simultaneous clients — a local terminal and an SSH attach can both be
+connected — so a value recorded once at attach time describes the wrong client
+as soon as another one arrives. `herdr-client-connection` inspects the live
+client processes of this session and reports the `SSH_CONNECTION` of the one
+whose controlling tty was read most recently, which is the client receiving
+keystrokes. Pane shells adopt it at startup and before every command, and the
+focused Neovim polls it every second while background workspaces pause polling.
+Tools that branch on `SSH_CONNECTION` — `wl-paste` reading
+the macOS clipboard, `osc52_copy` choosing a passthrough — therefore target the
+machine the user is actually sitting at.
 
 Fish shells discard an inherited `TMUX`/`TMUX_PANE` pair only when the
 referenced tmux socket is already gone. This prevents commands and prompt hooks

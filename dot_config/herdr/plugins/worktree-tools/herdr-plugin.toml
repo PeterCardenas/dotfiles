@@ -1,0 +1,30 @@
+id = "local.worktree-tools"
+name = "Workspace tools"
+version = "0.1.0"
+min_herdr_version = "0.9.1"
+description = "Named workspace popup commands"
+platforms = ["linux", "macos"]
+
+[[panes]]
+id = "workspace-switcher"
+title = "Workspace switcher"
+placement = "popup"
+width = "65%"
+height = "60%"
+command = ["fish", "-c", "manage_herdr_sessions"]
+
+[[panes]]
+id = "close-workspace"
+title = "Close workspace"
+placement = "popup"
+width = "60%"
+height = 8
+command = ["fish", "-c", "set -lx HERDR_ACTIVE_WORKSPACE_ID (printf '%s\\n' \"$HERDR_PLUGIN_CONTEXT_JSON\" | jq -r '.workspace_id // empty'); herdr_close_workspace"]
+
+[[panes]]
+id = "new-worktree"
+title = "New linked worktree"
+placement = "popup"
+width = "60%"
+height = 8
+command = ["fish", "-c", "set -lx HERDR_ACTIVE_WORKSPACE_ID (printf '%s\\n' \"$HERDR_PLUGIN_CONTEXT_JSON\" | jq -r '.workspace_id // empty'); herdr_new_worktree"]

@@ -1,0 +1,9 @@
+id = "local.recent-worktrees"
+name = "Recent worktrees"
+version = "0.1.0"
+min_herdr_version = "0.9.1"
+description = "Promote focused linked worktrees without moving their sidebar groups"
+platforms = ["linux", "macos"]
+
+[[startup]]
+command = ["python3", "watch.py"]
