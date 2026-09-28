@@ -11,6 +11,11 @@ return {
       plugins = {
         all = true,
       },
+      on_highlights = function(highlights, colors)
+        local blend = require('tokyonight.util').blend
+        highlights.AgenticTabWorking = { fg = blend(colors.green, 0.7, colors.bg_statusline) }
+        highlights.AgenticTabIdle = { fg = blend(colors.error, 0.7, colors.bg_statusline) }
+      end,
     })
     vim.cmd('colorscheme tokyonight-storm')
 

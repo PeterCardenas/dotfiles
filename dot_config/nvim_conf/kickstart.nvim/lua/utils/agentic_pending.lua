@@ -131,7 +131,7 @@ function M.tab_dots()
     local session = sessions[tab]
     local color = ''
     if type(session) == 'table' and type(session.session_id) == 'string' and prompted_sessions[tab] == session.session_id then
-      color = session.is_generating and '%#DiagnosticOk#' or '%#DiagnosticError#'
+      color = session.is_generating and '%#AgenticTabWorking#' or '%#AgenticTabIdle#'
     end
     dots[#dots + 1] = color .. (tab == current and '' or '') .. default_hl
   end
