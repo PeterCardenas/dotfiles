@@ -673,6 +673,7 @@ class HerdrConfigContractTest(unittest.TestCase):
                 '2026-01-01 workspace focused event="workspace.focus" workspace_id="w1"\n'
                 '2026-01-02 workspace focused event="workspace.focus" workspace_id="w2"\n'
                 '2026-01-03 workspace focused event="workspace.focus" workspace_id="w3"\n'
+                '2026-01-04 workspace focused event="workspace.focus" workspace_id="w1"\n'
             )
             result = subprocess.run(
                 ["fish", "--no-config", "-c", f"set fish_function_path {MANAGE_HERDR.parent}; manage_herdr_sessions"],
@@ -684,13 +685,15 @@ class HerdrConfigContractTest(unittest.TestCase):
             rows = captured.read_text().splitlines() if captured.exists() else []
             invoked = calls.read_text().splitlines() if calls.exists() else []
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual([row.split("\t")[0] for row in rows], ["w2", "w1", "w5", "w7", "w8"])
+        self.assertEqual([row.split("\t")[0] for row in rows], ["w1", "w2", "w5", "w7", "w8"])
         self.assertTrue(all(len(row.split("\t")) == 2 for row in rows))
-        self.assertIn("\x1b[38;2;158;206;106mRecent\x1b[0m", rows[0])
+        self.assertIn("\x1b[38;2;158;206;106mRecent\x1b[0m", rows[1])
         self.assertNotIn("working", rows[0])
         self.assertNotIn("Current", "\n".join(rows))
-        self.assertEqual(invoked, ["workspace list", "workspace focus w2"])
+        self.assertEqual(invoked, ["workspace list", "workspace focus w1"])
         picker = MANAGE_HERDR.read_text()
+        self.assertIn("jq -R -n", picker)
+        self.assertNotIn("--rawfile log", picker)
         self.assertIn("preview_herdr_target", picker)
         self.assertNotIn("--border=rounded", picker)
         self.assertNotIn("--input-border", picker)

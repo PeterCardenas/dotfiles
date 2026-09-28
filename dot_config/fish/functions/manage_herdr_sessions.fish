@@ -4,9 +4,10 @@ function manage_herdr_sessions -d "Navigate Herdr workspaces"
     test -r "$server_log"; or set server_log /dev/null
     set -l rows
 
-    for row in (printf '%s\n' "$workspace_json" | jq -r --rawfile log "$server_log" '
-        ($log | [scan("workspace focused[^\n]*workspace_id=\"([^\"]+)\"")] | map(.[0]) | to_entries | reduce .[] as $entry ({}; .[$entry.value] = $entry.key)) as $recent
-        | .result.workspaces as $workspaces
+    for row in (jq -R -n -r --argjson workspace_data "$workspace_json" '
+        ([inputs | select(contains("workspace focused")) | capture("workspace focused[^\n]*workspace_id=\"(?<id>[^\"]+)\"")? | .id]
+            | to_entries | reduce .[] as $entry ({}; .[$entry.value] = $entry.key)) as $recent
+        | $workspace_data.result.workspaces as $workspaces
         | $workspaces
         | sort_by(-($recent[.workspace_id] // -1), .number)
         | .[]
@@ -16,7 +17,7 @@ function manage_herdr_sessions -d "Navigate Herdr workspaces"
             (any($workspaces[]; .worktree.repo_key == $workspace.worktree.repo_key and .worktree.is_linked_worktree == true) | not))
         | [.workspace_id, .label, .agent_status]
         | @tsv
-    ')
+    ' "$server_log")
         set -l fields (string split \t -- "$row")
         set -l color 169 177 214
         switch $fields[3]
