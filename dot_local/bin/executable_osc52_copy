@@ -1,7 +1,12 @@
 #!/usr/bin/env fish
 
+set -l tmux_passthrough 0
+if set -q TMUX; and not test "$HERDR_ENV" = 1
+    set tmux_passthrough 1
+end
+
 set -l pty
-if set -q TMUX
+if test "$tmux_passthrough" = 1
     set pty (tmux display -p '#{pane_tty}')
 else
     set pty (tty)
@@ -24,7 +29,7 @@ end
 # Unescape backticks that callers (e.g. lazygit via sh -c) may have escaped
 set contents (string replace -a "\\`" "`" "$contents" | string collect)
 set -l osc_prefix
-if set -q TMUX
+if test "$tmux_passthrough" = 1
     if set -q SSH_CONNECTION
         set osc_prefix "\x1bPtmux;\x1b\x1bPtmux;\x1b\x1b\x1b\x1b"
     else
@@ -34,7 +39,7 @@ else
     set osc_prefix "\x1b"
 end
 set -l osc_suffix
-if set -q TMUX
+if test "$tmux_passthrough" = 1
     if set -q SSH_CONNECTION
         set osc_suffix '\a\x1b\x1b\\\\\x1b\\'
     else

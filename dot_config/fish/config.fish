@@ -1,6 +1,15 @@
 set -gx PYTHONDONTWRITEBYTECODE 1
 set -gx BINSTALL_DISABLE_STRATEGIES quick-install
 
+# Discard an inherited TMUX value once its server is gone so fish hooks do not
+# keep addressing a stale socket (for example after a migration test exits).
+if set -q TMUX
+    set -l tmux_socket (string split -m 1 ',' -- "$TMUX")[1]
+    if string match -q '*/*' -- "$tmux_socket"; and not test -S "$tmux_socket"
+        set -e TMUX TMUX_PANE
+    end
+end
+
 if status is-interactive
     source $HOME/.config/fish/interactive_config.fish
 end

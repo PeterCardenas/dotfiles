@@ -235,7 +235,7 @@ return {
   -- Easy navigation between splits.
   'alexghergh/nvim-tmux-navigation',
   cond = function()
-    return vim.env.TMUX_PANE and vim.env.TMUX
+    return vim.env.HERDR_ENV ~= '1' and vim.env.TMUX_PANE and vim.env.TMUX
   end,
   event = 'VeryLazy',
   config = function()

@@ -1,0 +1,159 @@
+#!/usr/bin/env python3
+"""Print the SSH_CONNECTION of the Herdr client the user is actively driving.
+
+Herdr's server outlives every client, so pane shells cannot inherit a client's
+environment, and several clients can be attached at once (for example a local
+terminal plus an SSH attach). "Am I in an SSH session?" is therefore only
+answerable per client, not per host: recording the value once at launch goes
+stale as soon as another client attaches.
+
+The client whose controlling tty was read most recently is the one receiving
+keystrokes, so its origin is what pane shells should report. Herdr keeps
+redrawing every attached client, which bumps each tty's mtime above its atime
+and so keeps relatime updating atime on the next read.
+"""
+
+import os
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+DEFAULT_SESSION = "default"
+CLIENT_COMMAND = "herdr"
+
+
+@dataclass(frozen=True)
+class HerdrClient:
+    """An attached Herdr client process."""
+
+    pid: int
+    session: str
+    ssh_connection: str | None
+    last_input: float
+
+
+def _read_null_separated(path: Path) -> list[str]:
+    """Read a NUL-separated /proc file, returning an empty list if it is gone."""
+    try:
+        raw = path.read_bytes()
+    except OSError:
+        return []
+    return [field for field in raw.decode(errors="replace").split("\0") if field]
+
+
+def _parse_session(args: list[str]) -> str | None:
+    """Return the session an attach invocation targets, or None if it is not one.
+
+    Both attach spellings count: `herdr [--session <name>]` and the explicit
+    `herdr session attach <name>`. Any other positional means a subcommand such
+    as `herdr server` or `herdr api snapshot`, and `--remote` drives another
+    host's server, so neither is a client of the server running this pane.
+    """
+    if args[:2] == ["session", "attach"]:
+        return args[2] if len(args) == 3 else None
+
+    session = DEFAULT_SESSION
+    index = 0
+    while index < len(args):
+        argument = args[index]
+        if argument == "--session" and index + 1 < len(args):
+            session = args[index + 1]
+            index += 2
+        elif argument.startswith("--remote"):
+            return None
+        elif argument.startswith("-"):
+            index += 1
+        else:
+            return None
+    return session
+
+
+def _environment(proc_entry: Path) -> dict[str, str]:
+    """Read a process environment as a mapping."""
+    environment: dict[str, str] = {}
+    for field in _read_null_separated(proc_entry / "environ"):
+        name, separator, value = field.partition("=")
+        if separator:
+            environment[name] = value
+    return environment
+
+
+def _last_input(proc_entry: Path) -> float | None:
+    """Return when the process last read from its controlling terminal."""
+    for descriptor in ("0", "1", "2"):
+        try:
+            tty = os.readlink(proc_entry / "fd" / descriptor)
+        except OSError:
+            continue
+        if not tty.startswith("/dev/"):
+            continue
+        try:
+            return os.stat(tty).st_atime
+        except OSError:
+            continue
+    return None
+
+
+def attached_clients(proc_root: Path = Path("/proc")) -> list[HerdrClient]:
+    """Collect every attached Herdr client process."""
+    clients: list[HerdrClient] = []
+    for proc_entry in proc_root.iterdir():
+        if not proc_entry.name.isdigit():
+            continue
+        args = _read_null_separated(proc_entry / "cmdline")
+        if not args or os.path.basename(args[0]) != CLIENT_COMMAND:
+            continue
+        session = _parse_session(args[1:])
+        if session is None:
+            continue
+        environment = _environment(proc_entry)
+        # A `herdr` run from inside a pane is a CLI call, not an attached client.
+        if "HERDR_ENV" in environment:
+            continue
+        last_input = _last_input(proc_entry)
+        if last_input is None:
+            continue
+        clients.append(
+            HerdrClient(
+                pid=int(proc_entry.name),
+                session=session,
+                ssh_connection=environment.get("SSH_CONNECTION") or None,
+                last_input=last_input,
+            )
+        )
+    return clients
+
+
+def active_client(clients: list[HerdrClient], session: str) -> HerdrClient | None:
+    """Return the most recently used client attached to the given session."""
+    candidates = [client for client in clients if client.session == session]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda client: client.last_input)
+
+
+def current_session(socket_path: str | None) -> str:
+    """Derive the session name from the socket path Herdr exported to the pane.
+
+    The default session lives at `<config>/herdr.sock`; a named session lives at
+    `<config>/sessions/<name>/herdr.sock`, so the name is the directory, never
+    the socket file.
+    """
+    if not socket_path:
+        return DEFAULT_SESSION
+    directory = Path(socket_path).parent
+    if directory.parent.name == "sessions":
+        return directory.name
+    return DEFAULT_SESSION
+
+
+def main() -> None:
+    """Entry point for herdr-client-connection."""
+    session = current_session(os.environ.get("HERDR_SOCKET_PATH"))
+    client = active_client(attached_clients(), session)
+    if client and client.ssh_connection:
+        sys.stdout.write(client.ssh_connection)
+
+
+if __name__ == "__main__":
+    main()

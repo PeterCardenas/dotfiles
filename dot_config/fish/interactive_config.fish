@@ -31,8 +31,15 @@ set -gx JQ_COLORS "0;36:0;39:0;39:0;39:0;32:1;39:1;39"
 
 source $HOME/.config/fish/completion_utils.fish
 
-# Set the SSH_AUTH_SOCK variable.
-set -gx SSH_AUTH_SOCK $HOME/.ssh/ssh-agent.$hostname.sock
+# Keep one stable agent socket path across tmux and Herdr sessions. Outside
+# Herdr, retarget it to the current forwarded agent before attaching.
+set -l stable_ssh_auth_sock $HOME/.ssh/ssh-agent.$hostname.sock
+if set -q SSH_AUTH_SOCK; and not set -q HERDR_ENV; and test "$SSH_AUTH_SOCK" != "$stable_ssh_auth_sock"; and test -S "$SSH_AUTH_SOCK"
+    mkdir -p $HOME/.ssh
+    rm -f $stable_ssh_auth_sock
+    ln -s "$SSH_AUTH_SOCK" "$stable_ssh_auth_sock"
+end
+set -gx SSH_AUTH_SOCK $stable_ssh_auth_sock
 ssh-add -l &>/dev/null
 if test $status -ge 2
     rm -f $SSH_AUTH_SOCK
@@ -46,8 +53,11 @@ if test -e $GHOSTTY_COMPLETION_PATH
     cp $GHOSTTY_COMPLETION_PATH $HOME/.config/fish/completions/ghostty.fish
 end
 
-# Add tmux variables to fish shell before a command is executed.
-function refresh_tmux_vars --on-event fish_preexec
+# Add multiplexer variables to fish before a command is executed.
+if set -q HERDR_ENV; and not set -q TMUX
+    sync_herdr_ssh_connection
+end
+function refresh_multiplexer_vars --on-event fish_preexec
     if set -q TMUX
         set -e SSH_CONNECTION
         set -e SSH_TTY
@@ -55,6 +65,8 @@ function refresh_tmux_vars --on-event fish_preexec
         tmux showenv | string replace -rf '^((?:WAYLAND_DISPLAY|SSH_CONNECTION|SSH_TTY|SSH_AUTH_SOCK).*?)=(.*?)$' 'set -gx $1 "$2"' | source
         # Update the GPG_TTY variable.
         set -gx GPG_TTY (tty)
+    else if set -q HERDR_ENV
+        sync_herdr_ssh_connection
     end
 end
 

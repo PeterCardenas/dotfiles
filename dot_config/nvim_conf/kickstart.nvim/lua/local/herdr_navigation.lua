@@ -26,22 +26,35 @@ local function is_floating_non_fzf()
   return config.relative ~= '' and vim.bo.filetype ~= 'fzf'
 end
 
-local function poll_ssh_connection()
-  Async.run(
-    ---@async
-    function()
-      local _, output = Shell.async_cmd('fish', {
-        '-c',
-        'sync_herdr_ssh_connection; if set -q SSH_CONNECTION; printf "%s\\n" "$SSH_CONNECTION"; else; printf "\\n"; end',
-      })
-      local ssh_connection = output[1]
-      vim.schedule(function()
-        vim.env.SSH_CONNECTION = ssh_connection ~= '' and ssh_connection or nil
-      end)
-      Shell.sleep(1000)
-    end,
-    poll_ssh_connection
-  )
+-- Keep vim.env in step with whichever Herdr client is being driven, so tools
+-- that branch on SSH_CONNECTION (wl-paste, osc52_copy) target that client's
+-- machine instead of the one this pane happened to start under.
+---@async
+local function refresh_ssh_connection()
+  local success, output = Shell.async_cmd('herdr-client-connection', {})
+  local ssh_connection = success and output[1] or nil
+  vim.schedule(function()
+    vim.env.SSH_CONNECTION = (ssh_connection and ssh_connection ~= '') and ssh_connection or nil
+  end)
+end
+
+local connection_poll_generation = 0
+
+local function start_ssh_connection_polling()
+  connection_poll_generation = connection_poll_generation + 1
+  local generation = connection_poll_generation
+  local function poll()
+    Async.run(refresh_ssh_connection, function()
+      if generation == connection_poll_generation then
+        vim.defer_fn(poll, 1000)
+      end
+    end)
+  end
+  poll()
+end
+
+local function stop_ssh_connection_polling()
+  connection_poll_generation = connection_poll_generation + 1
 end
 
 function M.navigate(direction)
@@ -61,7 +74,23 @@ function M.navigate(direction)
 end
 
 function M.setup()
-  Async.void(poll_ssh_connection)
+  local group = vim.api.nvim_create_augroup('herdr_client_connection', { clear = true })
+  -- Only the visible Neovim needs to follow the active Herdr client. Polling
+  -- every hidden workspace creates enough processes to delay workspace redraws.
+  vim.api.nvim_create_autocmd('VimEnter', {
+    group = group,
+    callback = function()
+      Async.void(refresh_ssh_connection)
+    end,
+  })
+  vim.api.nvim_create_autocmd('FocusGained', {
+    group = group,
+    callback = start_ssh_connection_polling,
+  })
+  vim.api.nvim_create_autocmd('FocusLost', {
+    group = group,
+    callback = stop_ssh_connection_polling,
+  })
   for direction, key in pairs(directions) do
     vim.keymap.set({ 'n', 'i' }, '<C-' .. key .. '>', function()
       M.navigate(direction)

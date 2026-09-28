@@ -40,12 +40,16 @@ class HerdrNvimNavigationContractTest(unittest.TestCase):
         self.assertIn("vim.keymap.set({ 'n', 'i' }", text)
         self.assertIn("vim.keymap.set('t'", text)
 
-    def test_herdr_port_refreshes_ssh_connection(self):
+    def test_herdr_port_refreshes_ssh_connection_on_focus_without_polling(self):
         text = MODULE.read_text()
-        self.assertIn("sync_herdr_ssh_connection", text)
+        self.assertIn("herdr-client-connection", text)
         self.assertIn("vim.env.SSH_CONNECTION", text)
-        self.assertIn("Shell.sleep(1000)", text)
-        self.assertIn("Async.void", text)
+        self.assertIn("FocusGained", text)
+        self.assertIn("FocusLost", text)
+        self.assertIn("VimEnter", text)
+        self.assertIn("vim.defer_fn", text)
+        self.assertNotIn("Shell.sleep", text)
+        self.assertIn("Async.run", text)
 
     def test_ghostty_navigation_does_not_compete_inside_herdr(self):
         self.assertIn("vim.env.HERDR_ENV", GHOSTTY.read_text())

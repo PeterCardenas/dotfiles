@@ -41,6 +41,10 @@ require('options')
 require('local')
 require('lazy_setup')
 
+if vim.env.HERDR_ENV == '1' and vim.env.HERDR_PANE_ID then
+  require('local.herdr_navigation').setup()
+end
+
 -- Native undo-tree UI (`:Undotree`). Optional pack: runtime/pack/dist/opt/nvim.undotree (Neovim 0.12+).
 if vim.fn.has('nvim-0.12') == 1 then
   local ok, err = pcall(vim.cmd.packadd, 'nvim.undotree')
