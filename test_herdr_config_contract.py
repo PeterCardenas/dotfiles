@@ -163,9 +163,29 @@ class HerdrConfigContractTest(unittest.TestCase):
         parsed = tomllib.loads(SOURCE.read_text())
         self.assertEqual(parsed["theme"]["name"], "tokyo-night")
 
-    def test_selected_workspace_and_agent_use_a_contrasting_tokyo_night_background(self):
-        custom = tomllib.loads(SOURCE.read_text())["theme"]["custom"]
-        self.assertEqual(custom["active_row_bg"], "#414868")
+    def test_selected_agents_are_readable_without_brightening_tree_connectors(self):
+        parsed = tomllib.loads(SOURCE.read_text())
+        custom = parsed["theme"]["custom"]
+        self.assertNotIn("overlay0", custom)  # Herdr also uses overlay0 for tree connectors.
+        self.assertNotIn("overlay1", custom)
+        self.assertNotIn("spaces", parsed["ui"].get("sidebar", {}))
+
+        def luminance(color):
+            channels = (int(color[index:index + 2], 16) / 255 for index in (1, 3, 5))
+            linear = (value / 12.92 if value <= 0.04045 else ((value + 0.055) / 1.055) ** 2.4 for value in channels)
+            return sum(value * weight for value, weight in zip(linear, (0.2126, 0.7152, 0.0722)))
+
+        background = luminance(custom["active_row_bg"])
+        self.assertGreater((background + 0.05) / (luminance("#24283b") + 0.05), 1.2)
+        rows = parsed["ui"]["sidebar"]["agents"]["rows"]
+        self.assertEqual([[item if isinstance(item, str) else item["token"] for item in row] for row in rows],
+                         [["state_icon", "machine", "workspace", "tab"], ["agent"]])
+        for token in ("tab", "agent"):
+            with self.subTest(token=token):
+                style = next(item for row in rows for item in row if isinstance(item, dict) and item["token"] == token)
+                muted = luminance(style["fg"])
+                self.assertGreaterEqual((muted + 0.05) / (background + 0.05), 3)
+                self.assertLess(muted, luminance("#a9b1d6"))  # Tokyo Night subtext0
 
     def test_agent_status_indicators_are_red_when_idle_and_green_when_working(self):
         custom = tomllib.loads(SOURCE.read_text())["theme"]["custom"]

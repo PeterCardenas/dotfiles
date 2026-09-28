@@ -6,7 +6,8 @@ name = "tokyo-night"
 [theme.custom]
 green = "#f7768e"
 yellow = "#9ece6a"
-active_row_bg = "#414868"
+# Darken the selected row without changing the tree connector palette.
+active_row_bg = "#353b55"
 
 [session]
 resume_agents_on_restore = false
@@ -99,3 +100,7 @@ mouse_capture = true
 copy_on_select = true
 tab_bar_right = [{ type = "command", command = "~/.config/tmux/scripts/status_metrics.sh --format herdr --short", interval_seconds = 10, timeout_seconds = 25 }]
 tab_bar_right_separator = " | "
+
+# Herdr also uses overlay0 for tree connectors, so brighten only agent metadata.
+[ui.sidebar.agents]
+rows = [["state_icon", "machine", "workspace", { token = "tab", fg = "#818bad" }], [{ token = "agent", fg = "#818bad" }]]
