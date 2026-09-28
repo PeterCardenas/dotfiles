@@ -100,6 +100,7 @@ mouse_capture = true
 copy_on_select = true
 tab_bar_right = [{ type = "command", command = "~/.config/tmux/scripts/status_metrics.sh --format herdr --short", interval_seconds = 10, timeout_seconds = 25 }]
 tab_bar_right_separator = " | "
+sidebar_width = 36
 
 # Herdr also uses overlay0 for tree connectors, so brighten only agent metadata.
 [ui.sidebar.agents]
