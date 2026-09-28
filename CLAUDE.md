@@ -30,6 +30,8 @@ Use conventional commit messages.
 
 Use PR template if it exists.
 
+When referencing a PR from a different repository than the current one, write its number as `org/repo#number`, not just `#number`.
+
 When using Bash or terminal tools:
 - use `;` instead of newlines to separate commands
 - do not put comments
