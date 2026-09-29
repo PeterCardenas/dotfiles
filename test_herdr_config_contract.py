@@ -25,6 +25,7 @@ MANAGE_HERDR = ROOT / "dot_config/fish/functions/manage_herdr_sessions.fish"
 PREVIEW_HERDR = ROOT / "dot_config/fish/functions/preview_herdr_target.fish"
 CREATE_WORKTREE = ROOT / "dot_config/fish/functions/herdr_new_worktree.fish"
 CLOSE_WORKSPACE = ROOT / "dot_config/fish/functions/herdr_close_workspace.fish"
+POPUP_READ = ROOT / "dot_config/fish/functions/herdr_popup_read.fish"
 LEAP_COMMIT = "be238808187636a080b46c547b95cbac9ee9988e"
 
 
@@ -277,6 +278,22 @@ class HerdrConfigContractTest(unittest.TestCase):
             self.assertEqual(panes[pane_id]["title"], title)
             self.assertEqual(panes[pane_id]["placement"], "popup")
 
+    def test_popup_prompts_share_wrapping_and_cancel_behavior(self):
+        for source in (CREATE_WORKTREE, CLOSE_WORKSPACE):
+            text = source.read_text()
+            self.assertIn("herdr_popup_read", text)
+            self.assertNotIn("read --prompt-str", text)
+        helper = POPUP_READ.read_text()
+        self.assertIn("bind escape exit", helper)
+        self.assertIn("bind ctrl-c exit", helper)
+        self.assertIn("printf '%s\\n'", helper)
+        self.assertIn("--prompt-str '> '", helper)
+
+    def test_workspace_switcher_wraps_rows_and_preview(self):
+        picker = MANAGE_HERDR.read_text()
+        self.assertIn("--wrap=word", picker)
+        self.assertIn("wrap-word", picker)
+
     def test_close_workspace_key_uses_context_aware_popup(self):
         parsed = tomllib.loads(SOURCE.read_text())
         command = next(entry for entry in parsed["keys"]["command"] if entry["key"] == "prefix+shift+d")
@@ -310,7 +327,7 @@ class HerdrConfigContractTest(unittest.TestCase):
             home = Path(created["home"])
             config_home = home.parent / "c"
             repository = home / "repo"
-            linked_checkout = home / "linked"
+            linked_checkout = home / ("linked-" + "long-path-segment-" * 12)
             repository.mkdir(parents=True)
             subprocess.run(["git", "-C", str(repository), "init", "-b", "main"], check=True, capture_output=True)
             subprocess.run(
@@ -329,6 +346,7 @@ class HerdrConfigContractTest(unittest.TestCase):
             functions.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(CLOSE_WORKSPACE, functions / CLOSE_WORKSPACE.name)
             shutil.copyfile(CREATE_WORKTREE, functions / CREATE_WORKTREE.name)
+            shutil.copyfile(POPUP_READ, functions / POPUP_READ.name)
 
             def herdr(*arguments):
                 return subprocess.run(
@@ -352,13 +370,25 @@ class HerdrConfigContractTest(unittest.TestCase):
                 timeout=10,
             )
             self.assertEqual(branch_prompt.returncode, 0, branch_prompt.stderr or branch_prompt.stdout)
-            dismissed = subprocess.run(
-                [*controller, "terminal", name, "--", "send-keys", "-t", created["pane_id"], "Enter"],
-                text=True,
-                capture_output=True,
-                timeout=10,
-            )
-            self.assertEqual(dismissed.returncode, 0, dismissed.stderr)
+            for cancel_key in ("Escape", "C-c"):
+                dismissed = subprocess.run(
+                    [*controller, "terminal", name, "--", "send-keys", "-t", created["pane_id"], cancel_key],
+                    text=True, capture_output=True, timeout=10,
+                )
+                self.assertEqual(dismissed.returncode, 0, dismissed.stderr)
+                deadline = time.monotonic() + 5
+                while True:
+                    reopened = herdr("plugin", "pane", "open", "--plugin", "local.worktree-tools", "--entrypoint", "new-worktree", "--focus")
+                    if reopened.returncode == 0 or time.monotonic() >= deadline:
+                        break
+                    time.sleep(0.1)
+                self.assertEqual(reopened.returncode, 0, reopened.stderr)
+                branch_prompt = subprocess.run(
+                    [*controller, "wait-screen", "--regex", "Branch name:", "--duration", "0.2", "--wait-timeout", "5", name],
+                    text=True, capture_output=True, timeout=10,
+                )
+                self.assertEqual(branch_prompt.returncode, 0, branch_prompt.stderr or branch_prompt.stdout)
+            subprocess.run([*controller, "terminal", name, "--", "send-keys", "-t", created["pane_id"], "Escape"], check=True, capture_output=True, timeout=10)
             deadline = time.monotonic() + 5
             while True:
                 popup = herdr("plugin", "pane", "open", "--plugin", "local.worktree-tools", "--entrypoint", "close-workspace", "--focus")
@@ -373,6 +403,38 @@ class HerdrConfigContractTest(unittest.TestCase):
                 timeout=10,
             )
             self.assertEqual(prompt.returncode, 0, prompt.stderr or prompt.stdout)
+            screen = subprocess.run(
+                [*controller, "terminal", name, "--", "capture-pane", "-p", "-t", created["pane_id"]],
+                text=True, capture_output=True, timeout=10,
+            )
+            self.assertEqual(screen.returncode, 0, screen.stderr)
+            prompt_lines = screen.stdout.split("Remove linked worktree ", 1)[1].split("? [y/N]", 1)[0]
+            path_lines = prompt_lines.splitlines()
+            wrapped_path = path_lines[0].split("│", 1)[0].rstrip() + "".join(
+                line.rsplit("│", 2)[-2].strip() for line in path_lines[1:-1]
+            ) + path_lines[-1].rsplit("│", 1)[-1].strip()
+            self.assertEqual(wrapped_path, str(linked_checkout))
+            self.assertGreaterEqual(len(path_lines), 3)
+            self.assertNotIn("…", prompt_lines)
+            for cancel_key in ("Escape", "C-c"):
+                cancelled = subprocess.run(
+                    [*controller, "terminal", name, "--", "send-keys", "-t", created["pane_id"], cancel_key],
+                    text=True, capture_output=True, timeout=10,
+                )
+                self.assertEqual(cancelled.returncode, 0, cancelled.stderr)
+                deadline = time.monotonic() + 5
+                while True:
+                    popup = herdr("plugin", "pane", "open", "--plugin", "local.worktree-tools", "--entrypoint", "close-workspace", "--focus")
+                    if popup.returncode == 0 or time.monotonic() >= deadline:
+                        break
+                    time.sleep(0.1)
+                self.assertEqual(popup.returncode, 0, popup.stderr)
+                prompt = subprocess.run(
+                    [*controller, "wait-screen", "--regex", "Remove linked worktree", "--duration", "0.2", "--wait-timeout", "5", name],
+                    text=True, capture_output=True, timeout=10,
+                )
+                self.assertEqual(prompt.returncode, 0, prompt.stderr or prompt.stdout)
+                self.assertTrue(linked_checkout.exists())
             confirmed = subprocess.run(
                 [*controller, "terminal", name, "--", "send-keys", "-t", created["pane_id"], "y", "Enter"],
                 text=True,
@@ -458,7 +520,7 @@ class HerdrConfigContractTest(unittest.TestCase):
         self.assertEqual(pane["title"], "New linked worktree")
         self.assertEqual(pane["placement"], "popup")
         self.assertEqual(pane["width"], "60%")
-        self.assertEqual(pane["height"], 8)
+        self.assertEqual(pane["height"], "40%")
         self.assertIn("herdr_new_worktree", " ".join(pane["command"]))
 
     def test_worktree_popup_rejects_plain_workspace_opened_in_a_linked_checkout(self):
@@ -523,6 +585,7 @@ class HerdrConfigContractTest(unittest.TestCase):
             functions = config_home / "fish/functions"
             functions.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(CREATE_WORKTREE, functions / CREATE_WORKTREE.name)
+            shutil.copyfile(POPUP_READ, functions / POPUP_READ.name)
 
             def herdr(*arguments):
                 return subprocess.run(
@@ -609,7 +672,7 @@ class HerdrConfigContractTest(unittest.TestCase):
             os.close(slave_fd)
             output = b""
             try:
-                while b"Branch name: " not in output:
+                while b"Branch name:" not in output:
                     ready, _, _ = select.select([master_fd], [], [], 2)
                     self.assertTrue(ready, output.decode(errors="replace"))
                     output += os.read(master_fd, 4096)
@@ -718,8 +781,62 @@ class HerdrConfigContractTest(unittest.TestCase):
         self.assertNotIn("--border=rounded", picker)
         self.assertNotIn("--input-border", picker)
         self.assertNotIn("--list-border", picker)
-        self.assertIn("--preview-window='right,60%,border-left'", picker)
+        self.assertIn("--preview-window='right,60%,border-left,wrap-word'", picker)
         self.assertIn("herdr pane read", PREVIEW_HERDR.read_text())
+
+    def test_workspace_switcher_wraps_long_labels_and_cancels_end_to_end(self):
+        name = f"wtswitch{os.getpid() % 100000}"
+        controller = ["python3", str(HERDR_AUTOMATION)]
+        created = None
+        try:
+            create = subprocess.run([*controller, "create", name, "--config", str(SOURCE)], text=True, capture_output=True, timeout=20)
+            self.assertEqual(create.returncode, 0, create.stderr)
+            created = __import__("json").loads(create.stdout)
+            config_home = Path(created["home"]).parent / "c"
+            plugin = config_home / "herdr/plugins/worktree-tools"
+            shutil.copytree(WORKTREE_PLUGIN.parent, plugin)
+            functions = config_home / "fish/functions"
+            functions.mkdir(parents=True, exist_ok=True)
+            for source in (MANAGE_HERDR, PREVIEW_HERDR):
+                shutil.copyfile(source, functions / source.name)
+
+            def herdr(*arguments):
+                return subprocess.run([*controller, "herdr", name, "--", *arguments], text=True, capture_output=True, timeout=20)
+
+            linked = herdr("plugin", "link", str(plugin))
+            self.assertEqual(linked.returncode, 0, linked.stderr)
+            label = "long-workspace-name-" * 10
+            workspace = herdr("workspace", "create", "--label", label)
+            self.assertEqual(workspace.returncode, 0, workspace.stderr)
+            for cancel_key in ("Escape", "C-c"):
+                deadline = time.monotonic() + 5
+                while True:
+                    popup = herdr("plugin", "pane", "open", "--plugin", "local.worktree-tools", "--entrypoint", "workspace-switcher", "--focus")
+                    if popup.returncode == 0 or time.monotonic() >= deadline:
+                        break
+                    time.sleep(0.1)
+                self.assertEqual(popup.returncode, 0, popup.stderr)
+                shown = subprocess.run([*controller, "wait-screen", "--regex", "long-workspace-name", "--duration", "0.2", "--wait-timeout", "5", name], text=True, capture_output=True, timeout=10)
+                self.assertEqual(shown.returncode, 0, shown.stderr or shown.stdout)
+                screen = subprocess.run([*controller, "terminal", name, "--", "capture-pane", "-p", "-t", created["pane_id"]], text=True, capture_output=True, timeout=10)
+                self.assertEqual(screen.returncode, 0, screen.stderr)
+                row_lines = [line.split("│▌ ", 1)[-1].split(" │", 1)[0].rstrip() for line in screen.stdout.splitlines() if "│▌ " in line]
+                wrapped_label = "".join(line.removeprefix("↳ ") for line in row_lines)
+                self.assertEqual(wrapped_label, label)
+                self.assertGreater(len(row_lines), 1)
+                cancelled = subprocess.run([*controller, "terminal", name, "--", "send-keys", "-t", created["pane_id"], cancel_key], text=True, capture_output=True, timeout=10)
+                self.assertEqual(cancelled.returncode, 0, cancelled.stderr)
+            deadline = time.monotonic() + 5
+            while True:
+                reopened = herdr("plugin", "pane", "open", "--plugin", "local.worktree-tools", "--entrypoint", "workspace-switcher", "--focus")
+                if reopened.returncode == 0 or time.monotonic() >= deadline:
+                    break
+                time.sleep(0.1)
+            self.assertEqual(reopened.returncode, 0, reopened.stderr)
+        finally:
+            if created is not None:
+                closed = subprocess.run([*controller, "close", name], text=True, capture_output=True, timeout=20)
+                self.assertEqual(closed.returncode, 0, closed.stderr)
 
     def test_herdr_session_popup_is_compact(self):
         plugin = tomllib.loads(WORKTREE_PLUGIN.read_text())

@@ -3,8 +3,7 @@ function herdr_new_worktree --description "Create a sibling Herdr worktree from 
 
     set -l workspace (command herdr workspace get "$HERDR_ACTIVE_WORKSPACE_ID" 2>/dev/null)
     if test $status -ne 0; or not printf '%s\n' "$workspace" | jq -e '.result.workspace.worktree.is_linked_worktree == true' >/dev/null
-        printf '%s\n' 'This workspace is not a linked worktree workspace.' >&2
-        read --prompt-str 'Press Enter or Escape to close. ' dismiss
+        herdr_popup_read 'This workspace is not a linked worktree workspace. Press Enter, Escape or Ctrl-C to close.' >/dev/null
         return 1
     end
 
@@ -17,14 +16,12 @@ function herdr_new_worktree --description "Create a sibling Herdr worktree from 
         set parent_workspace (printf '%s\n' "$listing" | jq -r '.result.source.source_workspace_id // empty')
     end
 
-    bind escape exit
     if test -z "$checkout"; or test -z "$parent_workspace"
-        printf '%s\n' 'This workspace is not a linked worktree.' >&2
-        read --prompt-str 'Press Enter or Escape to close. ' dismiss
+        herdr_popup_read 'This workspace is not a linked worktree. Press Enter, Escape or Ctrl-C to close.' >/dev/null
         return 1
     end
 
-    read --prompt-str 'Branch name: ' branch; or return
+    set -l branch (herdr_popup_read 'Branch name:'); or return
     set branch (string trim -- "$branch")
     test -n "$branch"; or return
 

@@ -18,7 +18,7 @@ id = "close-workspace"
 title = "Close workspace"
 placement = "popup"
 width = "60%"
-height = 8
+height = "40%"
 command = ["fish", "-c", "set -lx HERDR_ACTIVE_WORKSPACE_ID (printf '%s\\n' \"$HERDR_PLUGIN_CONTEXT_JSON\" | jq -r '.workspace_id // empty'); herdr_close_workspace"]
 
 [[panes]]
@@ -26,5 +26,5 @@ id = "new-worktree"
 title = "New linked worktree"
 placement = "popup"
 width = "60%"
-height = 8
+height = "40%"
 command = ["fish", "-c", "set -lx HERDR_ACTIVE_WORKSPACE_ID (printf '%s\\n' \"$HERDR_PLUGIN_CONTEXT_JSON\" | jq -r '.workspace_id // empty'); herdr_new_worktree"]

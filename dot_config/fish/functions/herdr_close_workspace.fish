@@ -8,16 +8,16 @@ function herdr_close_workspace --description "Close a workspace and remove linke
     end
 
     if test -n "$linked_path"
-        read --prompt-str "Remove linked worktree $linked_path? [y/N] " confirm; or return
+        set -l confirm (herdr_popup_read "Remove linked worktree $linked_path? [y/N]"); or return
         string match --quiet --regex '^[Yy]$' "$confirm"; or return
         command herdr worktree remove --workspace "$HERDR_ACTIVE_WORKSPACE_ID"; and return
-        read --prompt-str 'Worktree removal was refused. Force removal? [y/N] ' confirm; or return 1
+        set confirm (herdr_popup_read 'Worktree removal was refused. Force removal? [y/N]'); or return 1
         string match --quiet --regex '^[Yy]$' "$confirm"; or return 1
         command herdr worktree remove --workspace "$HERDR_ACTIVE_WORKSPACE_ID" --force
         return
     end
 
-    read --prompt-str 'Close workspace? [y/N] ' confirm; or return
+    set -l confirm (herdr_popup_read 'Close workspace? [y/N]'); or return
     string match --quiet --regex '^[Yy]$' "$confirm"; or return
     command herdr workspace close "$HERDR_ACTIVE_WORKSPACE_ID"
 end

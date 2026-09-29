@@ -58,7 +58,9 @@ default branch, falling back to local `main` or `master` when `origin/HEAD` is
 unavailable. `prefix+shift+d` asks for confirmation, removes the checkout when
 the active workspace is a linked worktree, and otherwise performs a normal
 workspace close. Refused dirty-worktree removal requires a second explicit
-confirmation before retrying with `--force`.
+confirmation before retrying with `--force`. The custom popups wrap long
+workspace names, previews, and confirmation messages rather than abbreviating
+them; Escape or Ctrl-C cancels each one.
 
 The local **Recent worktrees** plugin restores each group's child order from
 its session's `herdr-server.log` on startup. Children without a recorded focus

@@ -29,7 +29,7 @@ function manage_herdr_sessions -d "Navigate Herdr workspaces"
         set -a rows (printf '%s\t%s' "$fields[1]" "$display")
     end
 
-    set -l selection (printf '%s\n' $rows | fzf --ansi --cycle --layout=reverse --delimiter='\t' --with-nth=2 --preview-window='right,60%,border-left' --preview-label=' Preview ' --preview 'preview_herdr_target workspace {1}')
+    set -l selection (printf '%s\n' $rows | fzf --ansi --cycle --wrap=word --layout=reverse --delimiter='\t' --with-nth=2 --preview-window='right,60%,border-left,wrap-word' --preview-label=' Preview ' --preview 'preview_herdr_target workspace {1}')
     test -n "$selection"; or return
 
     set -l fields (string split \t -- "$selection")
