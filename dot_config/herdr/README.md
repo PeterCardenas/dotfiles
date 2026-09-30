@@ -50,8 +50,14 @@ repository grouping workspaces with linked children, ordered by the most recent
 focus event in Herdr's server log. Each row is only the
 status-colored workspace name; the popup previews the selected workspace's pane
 and focuses it on Enter. `prefix+w` retains Herdr's native workspace navigation.
-In a linked-worktree workspace, `prefix+shift+g`
-asks for a branch name and creates a focused sibling worktree in the repository
+From any workspace, `prefix+shift+g` first asks which open worktree group
+should receive the linked worktree. Only repository base workspaces that
+actually have linked children appear; a standalone Git workspace is not a
+group. If the current workspace belongs to a group, that group is selected by
+default (Enter accepts it; arrows or search choose another). Outside a group,
+the selection starts empty and requires choosing a group. If none is open,
+creation cannot continue. After selection, it asks for a branch name and
+creates a focused worktree in the chosen repository
 container (the directory containing the shared Git directory), using a
 slash-to-hyphen branch slug for its directory name. It starts from the remote's
 default branch, falling back to local `main` or `master` when `origin/HEAD` is
