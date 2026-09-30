@@ -34,3 +34,6 @@ venv/
 **/.DS_Store
 
 **/.pi-subagents/
+
+# Lavish review artifacts
+.lavish/
