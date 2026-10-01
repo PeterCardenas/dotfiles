@@ -98,7 +98,8 @@ plugin is linked; reloading config does not start it.
 - Detach keeps running processes. A full Herdr restart restores the session
   shape and cwds, not processes.
 - `pane_history = false`: **SUPPORTED** policy; no screen replay is configured.
-- `resume_agents_on_restore = false`: agent resume remains excluded.
+- `resume_agents_on_restore = true`: eligible reported agent sessions can resume
+  after a server restart; this does not restore Neovim state by itself.
 - Native agent integrations: **SUPPORTED / VALIDATED** where installed. Current installed integration versions: pi v9, claude v10, codex v8, opencode v12, cursor v1.
 - Plugins: **SUPPORTED** for navigation and visible-buffer jumping.
   `vim-herdr-navigation` is pinned to reviewed MIT commit
@@ -148,5 +149,5 @@ from repeatedly trying a stale migration/test socket while preserving live
 nested tmux sessions.
 
 The configuration intentionally contains no tmux fallback, no external picker,
-no process replay, no agent replay, or screen replay. Native integrations use
-no fallback path.
+no process replay or screen replay. Eligible reported agents can resume from
+saved sessions; native integrations use no fallback path.

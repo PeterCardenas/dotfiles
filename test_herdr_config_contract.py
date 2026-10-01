@@ -1092,11 +1092,11 @@ class HerdrConfigContractTest(unittest.TestCase):
 
     def test_policy_and_readme_match_091_contract(self):
         parsed = tomllib.loads(SOURCE.read_text())
-        self.assertFalse(parsed["session"]["resume_agents_on_restore"])
+        self.assertTrue(parsed["session"]["resume_agents_on_restore"])
         self.assertFalse(parsed["experimental"]["pane_history"])
         self.assertEqual(parsed["update"], {"channel": "stable", "version_check": False, "manifest_check": False})
         text = README.read_text()
-        for requirement in ("0.9.1", "CPU/disk/RAM", "Cursor", "SUPPORTED", "VALIDATED", "SUPPORTED NATIVELY", "session snapshots", "process", "agent", "screen", "pane_history", "Ghostty", "clipboard", "requested_ref", "resolved_commit", "version", "actions", "enabled", "no tmux fallback", "no external picker", "no process replay", "no agent replay", "no screen replay", "mouse selection", "clipboard write", "ordinary paste", "remote image paste", "UNVERIFIED", "BLOCKED", "OSC52"):
+        for requirement in ("0.9.1", "CPU/disk/RAM", "Cursor", "SUPPORTED", "VALIDATED", "SUPPORTED NATIVELY", "session snapshots", "process", "agent", "screen", "pane_history", "Ghostty", "clipboard", "requested_ref", "resolved_commit", "version", "actions", "enabled", "no tmux fallback", "no external picker", "no process replay", "saved sessions", "screen replay", "mouse selection", "clipboard write", "ordinary paste", "remote image paste", "UNVERIFIED", "BLOCKED", "OSC52"):
             self.assertIn(requirement, text)
 
     def test_config_contains_no_unsupported_fallback_or_replay_features(self):
