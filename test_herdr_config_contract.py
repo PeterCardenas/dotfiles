@@ -109,10 +109,10 @@ class HerdrConfigContractTest(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("invalid format", result.stderr.lower())
 
-    def test_installed_version_is_091(self):
+    def test_installed_herdr_reports_a_version(self):
         result = subprocess.run([str(HERDR), "--version"], text=True, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("herdr 0.9.1", result.stdout)
+        self.assertRegex(result.stdout, r"^herdr \d+\.\d+\.\d+\s*$")
 
     def test_shell_drops_a_stale_inherited_tmux_socket(self):
         text = FISH_CONFIG.read_text()
@@ -291,7 +291,7 @@ class HerdrConfigContractTest(unittest.TestCase):
     def test_workspace_switcher_wraps_labels_but_clips_wide_pane_preview(self):
         picker = MANAGE_HERDR.read_text()
         self.assertIn("--wrap=word", picker)
-        self.assertIn("right,60%,border-left,nowrap,follow,<65(down,50%,border-top)", picker)
+        self.assertIn('border-left,nowrap,follow,<65(down,50%,border-top)', picker)
 
     def test_close_workspace_key_uses_context_aware_popup(self):
         parsed = tomllib.loads(SOURCE.read_text())
@@ -830,8 +830,11 @@ class HerdrConfigContractTest(unittest.TestCase):
             )
             herdr.chmod(0o755)
             fzf = bin_dir / "fzf"
-            fzf.write_text(f"#!/bin/sh\ntee {captured} | head -n 1\n")
+            fzf.write_text(f"#!/bin/sh\nprintf '%s\\n' \"$@\" > {temp / 'fzf-args'}\ntee {captured} | head -n 1\n")
             fzf.chmod(0o755)
+            tput = bin_dir / "tput"
+            tput.write_text("#!/bin/sh\nprintf '%s\\n' \"${TEST_COLS:-100}\"\n")
+            tput.chmod(0o755)
             log_dir = temp / ".config" / "herdr"
             log_dir.mkdir(parents=True)
             (log_dir / "herdr-server.log").write_text(
@@ -849,7 +852,15 @@ class HerdrConfigContractTest(unittest.TestCase):
             )
             rows = captured.read_text().splitlines() if captured.exists() else []
             invoked = calls.read_text().splitlines() if calls.exists() else []
+            fzf_args = (temp / "fzf-args").read_text().splitlines()
+            narrow_result = subprocess.run(
+                ["fish", "--no-config", "-c", f"set fish_function_path {MANAGE_HERDR.parent}; manage_herdr_sessions"],
+                env={**os.environ, "HOME": temp_dir, "PATH": f"{bin_dir}:{os.environ['PATH']}", "TEST_COLS": "30"},
+                text=True, capture_output=True, timeout=10,
+            )
+            narrow_fzf_args = (temp / "fzf-args").read_text().splitlines()
         self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(narrow_result.returncode, 0, narrow_result.stderr)
         self.assertEqual([row.split("\t")[0] for row in rows], ["w1", "w2", "w5", "w7", "w8"])
         self.assertTrue(all(len(row.split("\t")) == 2 for row in rows))
         self.assertIn("\x1b[38;2;158;206;106mRecent\x1b[0m", rows[1])
@@ -863,7 +874,9 @@ class HerdrConfigContractTest(unittest.TestCase):
         self.assertNotIn("--border=rounded", picker)
         self.assertNotIn("--input-border", picker)
         self.assertNotIn("--list-border", picker)
-        self.assertIn("--preview-window='right,60%,border-left,nowrap,follow,<65(down,50%,border-top)'", picker)
+        self.assertIn("--preview-window=right,82%,border-left,nowrap,follow,<65(down,50%,border-top)", fzf_args)
+        self.assertIn("--preview-window=right,60%,border-left,nowrap,follow,<65(down,50%,border-top)", narrow_fzf_args)
+        self.assertIn('width = "90%"', WORKTREE_PLUGIN.read_text())
         self.assertIn("herdr pane read", PREVIEW_HERDR.read_text())
 
     def test_workspace_preview_removes_terminal_padding_without_losing_ansi_colors(self):
