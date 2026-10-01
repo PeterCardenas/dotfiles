@@ -9,8 +9,8 @@ platforms = ["linux", "macos"]
 id = "workspace-switcher"
 title = "Workspace switcher"
 placement = "popup"
-width = "65%"
-height = "60%"
+width = "90%"
+height = "85%"
 command = ["fish", "-c", "manage_herdr_sessions"]
 
 [[panes]]

@@ -65,8 +65,10 @@ unavailable. `prefix+shift+d` asks for confirmation, removes the checkout when
 the active workspace is a linked worktree, and otherwise performs a normal
 workspace close. Refused dirty-worktree removal requires a second explicit
 confirmation before retrying with `--force`. The custom popups wrap long
-workspace names, previews, and confirmation messages rather than abbreviating
-them; Escape or Ctrl-C cancels each one.
+workspace names and confirmation messages; the workspace preview clips wide
+pane rows to fit without wrapping blank terminal padding. It sits beside the
+workspace list on wide terminals and below it on narrow ones. Escape or Ctrl-C
+cancels each one.
 
 The local **Recent worktrees** plugin restores each group's child order from
 its session's `herdr-server.log` on startup. Children without a recorded focus

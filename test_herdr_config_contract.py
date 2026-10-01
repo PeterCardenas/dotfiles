@@ -288,10 +288,10 @@ class HerdrConfigContractTest(unittest.TestCase):
         self.assertIn("printf '%s\\n'", helper)
         self.assertIn("--prompt-str '> '", helper)
 
-    def test_workspace_switcher_wraps_rows_and_preview(self):
+    def test_workspace_switcher_wraps_labels_but_clips_wide_pane_preview(self):
         picker = MANAGE_HERDR.read_text()
         self.assertIn("--wrap=word", picker)
-        self.assertIn("wrap-word", picker)
+        self.assertIn("right,60%,border-left,nowrap,follow,<65(down,50%,border-top)", picker)
 
     def test_close_workspace_key_uses_context_aware_popup(self):
         parsed = tomllib.loads(SOURCE.read_text())
@@ -863,8 +863,30 @@ class HerdrConfigContractTest(unittest.TestCase):
         self.assertNotIn("--border=rounded", picker)
         self.assertNotIn("--input-border", picker)
         self.assertNotIn("--list-border", picker)
-        self.assertIn("--preview-window='right,60%,border-left,wrap-word'", picker)
+        self.assertIn("--preview-window='right,60%,border-left,nowrap,follow,<65(down,50%,border-top)'", picker)
         self.assertIn("herdr pane read", PREVIEW_HERDR.read_text())
+
+    def test_workspace_preview_removes_terminal_padding_without_losing_ansi_colors(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            herdr = Path(temp_dir) / "herdr"
+            calls = Path(temp_dir) / "calls"
+            herdr.write_text(
+                "#!/bin/sh\n"
+                "printf '%s\\n' \"$*\" >> \"$CALLS\"\n"
+                "if [ \"$1 $2\" = 'pane read' ]; then\n"
+                "  printf '\\033[31mHeading\\033[0m\\033[48;2;36;40;59m       \\033[0m\\r\\n\\033[32mstatus bar\\033[0m\\r\\n'\n"
+                "else\n  printf '%s\\n' \"$*\"\nfi\n"
+            )
+            herdr.chmod(0o755)
+            result = subprocess.run(
+                ["fish", "--no-config", "-c", f"set fish_function_path {PREVIEW_HERDR.parent}; preview_herdr_target agent w1:p1"],
+                env={**os.environ, "PATH": f"{temp_dir}:{os.environ['PATH']}", "CALLS": str(calls)},
+                text=True, capture_output=True,
+            )
+            invoked = calls.read_text().splitlines()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(invoked, ["pane read w1:p1 --source recent-unwrapped --lines 200 --format ansi"])
+        self.assertEqual(result.stdout, "\x1b[31mHeading\x1b[0m\n\x1b[32mstatus bar\x1b[0m\n")
 
     def test_workspace_switcher_wraps_long_labels_and_cancels_end_to_end(self):
         name = f"wtswitch{os.getpid() % 100000}"
@@ -920,11 +942,11 @@ class HerdrConfigContractTest(unittest.TestCase):
                 closed = subprocess.run([*controller, "close", name], text=True, capture_output=True, timeout=20)
                 self.assertEqual(closed.returncode, 0, closed.stderr)
 
-    def test_herdr_session_popup_is_compact(self):
+    def test_herdr_session_popup_uses_most_of_the_terminal(self):
         plugin = tomllib.loads(WORKTREE_PLUGIN.read_text())
         pane = next(entry for entry in plugin["panes"] if entry["id"] == "workspace-switcher")
-        self.assertEqual(pane["width"], "65%")
-        self.assertEqual(pane["height"], "60%")
+        self.assertEqual(pane["width"], "90%")
+        self.assertEqual(pane["height"], "85%")
 
     def test_shell_navigation_forwards_to_the_active_nvim_pane(self):
         with tempfile.TemporaryDirectory() as bin_dir:

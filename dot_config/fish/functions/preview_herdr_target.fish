@@ -8,5 +8,6 @@ function preview_herdr_target -d "Preview a Herdr space or agent" -a kind target
     end
 
     test -n "$target"; or return
-    command herdr pane read "$target" --source recent --lines 200 --format ansi
+    # Herdr pads snapshot rows to the original pane width; fzf would wrap that padding.
+    command herdr pane read "$target" --source recent-unwrapped --lines 200 --format ansi | string replace -r '([[:space:]]|\e\[[0-9;]*m)+$' '\e[0m'
 end
