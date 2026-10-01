@@ -853,6 +853,12 @@ class HerdrConfigContractTest(unittest.TestCase):
             rows = captured.read_text().splitlines() if captured.exists() else []
             invoked = calls.read_text().splitlines() if calls.exists() else []
             fzf_args = (temp / "fzf-args").read_text().splitlines()
+            session_result = subprocess.run(
+                ["fish", "--no-config", "-c", f"set fish_function_path {MANAGE_HERDR.parent}; manage_herdr_sessions"],
+                env={**os.environ, "HOME": temp_dir, "PATH": f"{bin_dir}:{os.environ['PATH']}", "TEST_COLS": "80"},
+                text=True, capture_output=True, timeout=10,
+            )
+            session_fzf_args = (temp / "fzf-args").read_text().splitlines()
             narrow_result = subprocess.run(
                 ["fish", "--no-config", "-c", f"set fish_function_path {MANAGE_HERDR.parent}; manage_herdr_sessions"],
                 env={**os.environ, "HOME": temp_dir, "PATH": f"{bin_dir}:{os.environ['PATH']}", "TEST_COLS": "30"},
@@ -860,6 +866,7 @@ class HerdrConfigContractTest(unittest.TestCase):
             )
             narrow_fzf_args = (temp / "fzf-args").read_text().splitlines()
         self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(session_result.returncode, 0, session_result.stderr)
         self.assertEqual(narrow_result.returncode, 0, narrow_result.stderr)
         self.assertEqual([row.split("\t")[0] for row in rows], ["w1", "w2", "w5", "w7", "w8"])
         self.assertTrue(all(len(row.split("\t")) == 2 for row in rows))
@@ -874,7 +881,8 @@ class HerdrConfigContractTest(unittest.TestCase):
         self.assertNotIn("--border=rounded", picker)
         self.assertNotIn("--input-border", picker)
         self.assertNotIn("--list-border", picker)
-        self.assertIn("--preview-window=right,82%,border-left,nowrap,follow,<65(down,50%,border-top)", fzf_args)
+        self.assertIn("--preview-window=right,78%,border-left,nowrap,follow,<65(down,50%,border-top)", fzf_args)
+        self.assertIn("--preview-window=right,72%,border-left,nowrap,follow,<65(down,50%,border-top)", session_fzf_args)
         self.assertIn("--preview-window=right,60%,border-left,nowrap,follow,<65(down,50%,border-top)", narrow_fzf_args)
         self.assertIn('width = "90%"', WORKTREE_PLUGIN.read_text())
         self.assertIn("herdr pane read", PREVIEW_HERDR.read_text())

@@ -37,8 +37,8 @@ function manage_herdr_sessions -d "Navigate Herdr workspaces"
     set -l preview_percent 60
     set -l columns (tput cols 2>/dev/null)
     if string match -qr '^[1-9][0-9]*$' -- "$columns"
-        # Keep fzf's row marker and padding outside the label, and reserve at least 60% for the preview.
-        set preview_percent (math "max(60, min(99, floor(100 * ($columns - $name_width - 5) / $columns)))")
+        # Leave four columns beyond fzf's marker and padding; reserve at least 60% for preview.
+        set preview_percent (math "max(60, min(99, floor(100 * ($columns - $name_width - 9) / $columns)))")
     end
 
     set -l selection (printf '%s\n' $rows | fzf --ansi --cycle --wrap=word --layout=reverse --delimiter='\t' --with-nth=2 --preview-window="right,$preview_percent%,border-left,nowrap,follow,<65(down,50%,border-top)" --preview-label=' Preview ' --preview 'preview_herdr_target workspace {1}')
