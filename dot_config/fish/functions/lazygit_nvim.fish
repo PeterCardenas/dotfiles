@@ -16,9 +16,14 @@ function lazygit_nvim
         end
         return
     end
-    if test -z "$line"
-        nvim --server "$NVIM" --remote-expr "execute(\"lua vim.cmd([[e $file_or_dir]])\")"
-        return
+    # Resolve relative to LazyGit's cwd, which may differ from Neovim's cwd.
+    set -l filename (path resolve -- "$file_or_dir")
+    set -l quoted_filename (string replace -a "'" "''" -- "$filename")
+    set -l edit_command edit
+    if test -n "$line"
+        string match -qr '^[0-9]+$' -- "$line"; or return 1
+        set edit_command "edit +$line"
     end
-    nvim --server "$NVIM" --remote-expr "execute(\"lua vim.cmd([[e +$line $file_or_dir]])\")"
+    # fnameescape prevents Ex from expanding filename characters such as # and %.
+    nvim --headless --server "$NVIM" --remote-expr "execute('$edit_command ' . fnameescape('$quoted_filename'))"
 end

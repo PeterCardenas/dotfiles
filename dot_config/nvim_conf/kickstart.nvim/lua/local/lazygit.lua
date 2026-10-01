@@ -44,6 +44,11 @@ local function setup_lazygit_buffer()
       end, { buffer = bufnr })
       vim.bo[bufnr].buflisted = false
 
+      local function send_to_lazygit(keys)
+        -- Refresh input belongs to LazyGit's PTY, not Neovim's global typeahead.
+        vim.api.nvim_chan_send(vim.b[bufnr].terminal_job_id, keys)
+      end
+
       local function refresh_lazygit_files()
         -- TODO: consider shpool for backgrounding the process and sharing lazygit session
         local first_line_content = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1]
@@ -55,7 +60,7 @@ local function setup_lazygit_buffer()
         end
 
         -- Focus the files panel, go to the top, and refresh it.
-        vim.api.nvim_feedkeys('2<R', 't', false)
+        send_to_lazygit('2<R')
         -- Switch back to the panel before the files panel.
         local panel_content_title_to_keys = {
           ['Unstaged changes'] = '2',
@@ -69,7 +74,7 @@ local function setup_lazygit_buffer()
         }
         local panel_key = panel_content_title_to_keys[panel_content_title]
         if panel_key then
-          vim.api.nvim_feedkeys(panel_key, 't', false)
+          send_to_lazygit(panel_key)
           local buffer_content = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
           local cur_panel_index ---@type integer?
           local panel_to_selected_indices = {} ---@type table<integer, integer>
@@ -89,16 +94,16 @@ local function setup_lazygit_buffer()
           end
           if next(panel_to_selected_indices) then
             for panel_index, _ in pairs(panel_to_selected_indices) do
-              vim.api.nvim_feedkeys(panel_index .. '<', 't', false)
+              send_to_lazygit(panel_index .. '<')
             end
             for panel_index, selected_index in pairs(panel_to_selected_indices) do
-              vim.api.nvim_feedkeys(tostring(panel_index), 't', false)
+              send_to_lazygit(tostring(panel_index))
               local input = string.rep('j', selected_index - 1)
-              vim.api.nvim_feedkeys(input, 't', false)
+              send_to_lazygit(input)
               -- Preview window doesn't update sometimes, so switch between previous and current to force update.
-              vim.api.nvim_feedkeys('kj', 't', false)
+              send_to_lazygit('kj')
             end
-            vim.api.nvim_feedkeys(panel_key, 't', false)
+            send_to_lazygit(panel_key)
           end
         end
       end
@@ -117,7 +122,7 @@ local function setup_lazygit_buffer()
         stop_refresh_timer()
         donate_timer = Spinner.create_timer()
         donate_timer.start(function()
-          if not vim.api.nvim_buf_is_valid(bufnr) then
+          if not vim.api.nvim_buf_is_valid(bufnr) or vim.api.nvim_get_current_buf() ~= bufnr then
             stop_refresh_timer()
             return
           end
@@ -135,6 +140,10 @@ local function setup_lazygit_buffer()
           vim.cmd('startinsert')
           start_refresh_timer()
         end,
+      })
+      vim.api.nvim_create_autocmd('BufLeave', {
+        buffer = bufnr,
+        callback = stop_refresh_timer,
       })
     end,
   })
