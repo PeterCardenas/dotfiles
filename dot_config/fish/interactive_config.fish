@@ -36,8 +36,9 @@ source $HOME/.config/fish/completion_utils.fish
 set -l stable_ssh_auth_sock $HOME/.ssh/ssh-agent.$hostname.sock
 if set -q SSH_AUTH_SOCK; and not set -q HERDR_ENV; and test "$SSH_AUTH_SOCK" != "$stable_ssh_auth_sock"; and test -S "$SSH_AUTH_SOCK"
     mkdir -p $HOME/.ssh
-    rm -f $stable_ssh_auth_sock
-    ln -s "$SSH_AUTH_SOCK" "$stable_ssh_auth_sock"
+    # Publish atomically so concurrent shell startups cannot claim the path between unlink and ln.
+    set -l pending_ssh_auth_sock "$stable_ssh_auth_sock".$fish_pid
+    ln -s "$SSH_AUTH_SOCK" "$pending_ssh_auth_sock"; and mv -f "$pending_ssh_auth_sock" "$stable_ssh_auth_sock"
 end
 set -gx SSH_AUTH_SOCK $stable_ssh_auth_sock
 ssh-add -l &>/dev/null

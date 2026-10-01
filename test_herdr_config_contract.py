@@ -127,7 +127,8 @@ class HerdrConfigContractTest(unittest.TestCase):
         self.assertIn('set -l stable_ssh_auth_sock $HOME/.ssh/ssh-agent.$hostname.sock', text)
         self.assertIn('not set -q HERDR_ENV', text)
         self.assertIn('test -S "$SSH_AUTH_SOCK"', text)
-        self.assertIn('ln -s "$SSH_AUTH_SOCK" "$stable_ssh_auth_sock"', text)
+        self.assertIn('ln -s "$SSH_AUTH_SOCK" "$pending_ssh_auth_sock"', text)
+        self.assertIn('mv -f "$pending_ssh_auth_sock" "$stable_ssh_auth_sock"', text)
         self.assertIn('set -gx SSH_AUTH_SOCK $stable_ssh_auth_sock', text)
 
     def test_onboarding_is_disabled_at_top_level(self):
