@@ -85,20 +85,31 @@ function M.rename_workspace(title, tab_page_id, session_id)
   if not session or session.session_id ~= session_id then return end
 
   local herdr = vim.env.HERDR_BIN_PATH or 'herdr'
-  local listed = vim.system({ herdr, 'worktree', 'list', '--workspace', vim.env.HERDR_WORKSPACE_ID }):wait(1000)
+  local listed = vim.system({ herdr, 'workspace', 'list' }):wait(1000)
   if not listed or listed.code ~= 0 then return false end
-  local ok, worktree_list = pcall(vim.json.decode, listed.stdout)
-  if not ok then return false end
-  local current_is_linked, has_sibling_workspace = false, false
-  -- worktree list is scoped to the current repo; unopened checkouts are not workspace siblings.
-  for _, worktree in ipairs(worktree_list.result and worktree_list.result.worktrees or {}) do
-    if worktree.open_workspace_id == vim.env.HERDR_WORKSPACE_ID then
-      current_is_linked = worktree.is_linked_worktree and not worktree.is_bare
-    elseif worktree.open_workspace_id and not worktree.is_bare then
-      has_sibling_workspace = true
+  local ok, workspace_list = pcall(vim.json.decode, listed.stdout)
+  if not ok or type(workspace_list) ~= 'table' then return false end
+  local workspaces = workspace_list.result and workspace_list.result.workspaces or {}
+  local repo_key
+  for _, workspace in ipairs(workspaces) do
+    if workspace.workspace_id == vim.env.HERDR_WORKSPACE_ID then
+      local worktree = workspace.worktree
+      if not worktree or not worktree.is_linked_worktree then return false end
+      repo_key = worktree.repo_key
+      break
     end
   end
-  if not current_is_linked or not has_sibling_workspace then return false end
+  if not repo_key then return false end
+  -- A checkout can be open without belonging to a sidebar group; require its base workspace.
+  local has_base = false
+  for _, workspace in ipairs(workspaces) do
+    local worktree = workspace.worktree
+    if workspace.workspace_id ~= vim.env.HERDR_WORKSPACE_ID and worktree and worktree.repo_key == repo_key and worktree.is_linked_worktree == false then
+      has_base = true
+      break
+    end
+  end
+  if not has_base then return false end
   local renamed = vim.system({ herdr, 'workspace', 'rename', vim.env.HERDR_WORKSPACE_ID, workspace_title }):wait(1000)
   return renamed and renamed.code == 0
 end

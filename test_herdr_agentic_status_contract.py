@@ -27,10 +27,11 @@ class HerdrAgenticStatusContractTest(unittest.TestCase):
             vim.system = function(argv)
               table.insert(calls, argv)
               local stdout = ''
-              if argv[2] == 'worktree' then
-                stdout = vim.json.encode({{ result = {{ worktrees = {{
-                  {{ open_workspace_id = 'w1', is_linked_worktree = true, is_bare = false }},
-                  {{ open_workspace_id = 'w2', is_linked_worktree = true, is_bare = false }},
+              if argv[2] == 'workspace' and argv[3] == 'list' then
+                stdout = vim.json.encode({{ result = {{ workspaces = {{
+                  {{ workspace_id = 'base', worktree = {{ repo_key = 'repo', is_linked_worktree = false }} }},
+                  {{ workspace_id = 'w1', worktree = {{ repo_key = 'repo', is_linked_worktree = true }} }},
+                  {{ workspace_id = 'w2', worktree = {{ repo_key = 'repo', is_linked_worktree = true }} }},
                 }} }} }})
               end
               return {{ wait = function() return {{ code = 0, stdout = stdout }} end }}
@@ -70,7 +71,7 @@ class HerdrAgenticStatusContractTest(unittest.TestCase):
         self.assertNotIn("Pending.rename_workspace(data.prompt, data.tab_page_id, data.session_id)", config)
         self.assertNotIn("Pending.rename_workspace(title, data.tab_page_id, data.session_id)", config)
 
-    def test_linked_worktree_without_another_open_worktree_workspace_is_not_renamed(self):
+    def test_checkout_visible_in_worktree_list_but_not_grouped_workspace_is_not_renamed(self):
         lua = textwrap.dedent(
             f"""
             local calls = {{}}
@@ -80,7 +81,42 @@ class HerdrAgenticStatusContractTest(unittest.TestCase):
               table.insert(calls, argv)
               local stdout = vim.json.encode({{ result = {{ worktrees = {{
                 {{ open_workspace_id = 'w1', is_linked_worktree = true, is_bare = false }},
-                {{ is_linked_worktree = true, is_bare = false }},
+                {{ open_workspace_id = 'w2', is_linked_worktree = true, is_bare = false }},
+              }}, workspaces = {{
+                {{ workspace_id = 'base', worktree = {{ repo_key = 'repo', is_linked_worktree = false }} }},
+                {{ workspace_id = 'w2', worktree = {{ repo_key = 'repo', is_linked_worktree = true }} }},
+                {{ workspace_id = 'w1', label = 'review' }},
+              }} }} }})
+              return {{ wait = function() return {{ code = 0, stdout = stdout }} end }}
+            end
+            dofile({str(MODULE)!r}).rename_workspace('Do Not Rename', tab, 'active')
+            vim.fn.writefile({{ vim.json.encode(calls) }}, vim.env.HERDR_TEST_OUTPUT)
+            """
+        )
+        with tempfile.NamedTemporaryFile("w", suffix=".lua") as script, tempfile.NamedTemporaryFile() as output:
+            script.write(lua)
+            script.flush()
+            result = subprocess.run(
+                ["nvim", "--clean", "--headless", "-u", "NONE", "-i", "NONE", "-l", script.name],
+                env={**os.environ, "HERDR_ENV": "1", "HERDR_WORKSPACE_ID": "w1", "HERDR_TEST_OUTPUT": output.name},
+                text=True,
+                capture_output=True,
+                timeout=10,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            calls = __import__("json").loads(Path(output.name).read_text())
+        self.assertFalse(any(call[1:3] == ["workspace", "rename"] for call in calls))
+
+    def test_linked_worktree_without_another_open_worktree_workspace_is_not_renamed(self):
+        lua = textwrap.dedent(
+            f"""
+            local calls = {{}}
+            local tab = vim.api.nvim_get_current_tabpage()
+            package.loaded['agentic.session_registry'] = {{ sessions = {{ [tab] = {{ session_id = 'active' }} }} }}
+            vim.system = function(argv)
+              table.insert(calls, argv)
+              local stdout = vim.json.encode({{ result = {{ workspaces = {{
+                {{ workspace_id = 'w1', worktree = {{ repo_key = 'repo', is_linked_worktree = true }} }},
               }} }} }})
               return {{ wait = function() return {{ code = 0, stdout = stdout }} end }}
             end
@@ -110,8 +146,9 @@ class HerdrAgenticStatusContractTest(unittest.TestCase):
             package.loaded['agentic.session_registry'] = {{ sessions = {{ [tab] = {{ session_id = 'active' }} }} }}
             vim.system = function(argv)
               table.insert(calls, argv)
-              local stdout = vim.json.encode({{ result = {{ worktrees = {{
-                {{ open_workspace_id = 'w1', is_linked_worktree = false, is_bare = false }},
+              local stdout = vim.json.encode({{ result = {{ workspaces = {{
+                {{ workspace_id = 'w1', worktree = {{ repo_key = 'repo', is_linked_worktree = false }} }},
+                {{ workspace_id = 'w2', worktree = {{ repo_key = 'repo', is_linked_worktree = true }} }},
               }} }} }})
               return {{ wait = function() return {{ code = 0, stdout = stdout }} end }}
             end

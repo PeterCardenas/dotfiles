@@ -31,8 +31,9 @@ separated by ` | `.
 Neovim to the enclosing `HERDR_PANE_ID` as `working` or `idle`, and releases the
 authority on suspend/exit. After each response, it independently generates a
 workspace label from the full conversation's completed work and renames the
-enclosing `HERDR_WORKSPACE_ID` only when it is a linked-worktree workspace
-alongside another open, non-bare worktree workspace for the same repository.
+enclosing `HERDR_WORKSPACE_ID` only when Herdr's workspace list marks it as a
+linked worktree with an open base workspace in the same repository group.
+An open checkout alone does not establish sidebar group membership.
 The label is limited to 20 Unicode characters and does not replace Agentic's
 chat title. Primary, solitary linked, and non-Git workspaces retain their
 labels. Herdr keeps renamed workspaces in their existing Git worktree group
