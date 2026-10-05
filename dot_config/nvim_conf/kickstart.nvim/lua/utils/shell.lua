@@ -16,6 +16,7 @@ end
 ---@field cwd? string
 ---@field stdin? string
 ---@field detach? boolean
+---@field capture_output? boolean
 
 ---@class ShellCmdOutput: string[]
 ---@field stdout string[]
@@ -86,8 +87,8 @@ M.async_cmd = Async.wrap(
       cwd = opts.cwd,
       stdin = opts.stdin,
       detach = opts.detach,
-      stdout = make_stream_handler(output, 'stdout'),
-      stderr = make_stream_handler(output, 'stderr'),
+      stdout = opts.capture_output ~= false and make_stream_handler(output, 'stdout') or false,
+      stderr = opts.capture_output ~= false and make_stream_handler(output, 'stderr') or false,
       -- vim.system merges this into the inherited environment (unless
       -- clear_env is set), so there is no need to copy vim.fn.environ()
       -- ourselves as the old plenary.job path did.

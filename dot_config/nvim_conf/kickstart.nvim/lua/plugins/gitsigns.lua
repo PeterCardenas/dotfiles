@@ -268,9 +268,10 @@ vim.api.nvim_create_user_command('CopyPR', function()
       local html = string.format('<a href="%s">%s</a> (+%d/-%d)', pr.url, html_escape(pr.title), pr.additions, pr.deletions)
       local markdown_escaped_title = pr.title:gsub('%[', '\\['):gsub('%]', '\\]')
       local markdown = string.format('[%s](%s) (+%d/-%d)', markdown_escaped_title, pr.url, pr.additions, pr.deletions)
-      local success, output = Shell.async_cmd('wl-copy', { '--type', 'text/html' }, { stdin = html })
+      -- wl-copy forks a clipboard server; its inherited output pipes stay open after the parent exits.
+      local success = Shell.async_cmd('wl-copy', { '--type', 'text/html' }, { stdin = html, capture_output = false })
       if not success then
-        Log.notify_error('wl-copy failed:\n' .. table.concat(output, '\n'), { title = 'Octo' })
+        Log.notify_error('wl-copy failed', { title = 'Octo' })
         return
       end
       Log.notify_info('Copied PR as markdown:\n' .. markdown, { title = 'Octo' })
