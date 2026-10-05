@@ -1,10 +1,7 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 command_timeout = 2000
 add_newline = true
-format = """
-$git_branch\
-$git_state\
-$git_metrics"""
+format = """$git_branch"""
 
 [git_branch]
 format = "[$symbol$branch(:$remote_branch)]($style) "
