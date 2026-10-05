@@ -34,6 +34,29 @@ fi
 
 if [ -n "$pane" ]; then
   "$herdr" pane zoom --off --pane "$pane"
+  if command -v jq >/dev/null 2>&1; then
+    if neighbor=$("$herdr" pane neighbor --direction "$direction" --pane "$pane" 2>/dev/null | jq -r '.result.neighbor.neighbor_pane_id // empty'); then
+      if [ -z "$neighbor" ]; then
+        case "$direction" in
+          left) opposite=right ;;
+          right) opposite=left ;;
+          up) opposite=down ;;
+          down) opposite=up ;;
+        esac
+        # Walk the opposite edge without moving focus; focus only the final pane.
+        previous="$pane"
+        while :; do
+          neighbor=$("$herdr" pane neighbor --direction "$opposite" --pane "$previous" | jq -r '.result.neighbor.neighbor_pane_id // empty')
+          [ -n "$neighbor" ] || break
+          before_last="$previous"
+          previous="$neighbor"
+        done
+        if [ "$previous" != "$pane" ]; then
+          exec "$herdr" pane focus --direction "$opposite" --pane "$before_last"
+        fi
+      fi
+    fi
+  fi
   exec "$herdr" pane focus --direction "$direction" --pane "$pane"
 fi
 

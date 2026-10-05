@@ -1027,6 +1027,54 @@ class HerdrConfigContractTest(unittest.TestCase):
                     self.assertEqual(result.returncode, 0, result.stderr)
                     self.assertEqual(result.stdout, f"pane zoom --off --pane w-test:p1\npane focus --direction {direction} --pane w-test:p1\n")
 
+    def test_shell_navigation_wraps_at_pane_edge(self):
+        with tempfile.TemporaryDirectory() as bin_dir:
+            herdr = Path(bin_dir) / "herdr"
+            herdr.write_text(
+                "#!/bin/sh\n"
+                "case \"$1 $2 $3 $4 $5\" in\n"
+                "  'pane neighbor --direction right --pane')\n"
+                "    case \"$6\" in w1:p1) id=w1:p2 ;; w1:p2) id=w1:p3 ;; *) id=$6 ;; esac\n"
+                "    if [ \"$id\" = \"$6\" ]; then\n"
+                "      printf '{\"result\":{\"neighbor\":{\"pane_id\":\"%s\"}}}\\n' \"$6\"\n"
+                "    else\n"
+                "      printf '{\"result\":{\"neighbor\":{\"pane_id\":\"%s\",\"neighbor_pane_id\":\"%s\"}}}\\n' \"$6\" \"$id\"\n"
+                "    fi ;;\n"
+                "  'pane neighbor --direction left --pane')\n"
+                "    case \"$6\" in\n"
+                "      w1:p3) id=w1:p2 ;;\n"
+                "      w1:p2) id=w1:p1 ;;\n"
+                "      w1:p1) id=w1:p1 ;;\n"
+                "    esac\n"
+                "    if [ \"$id\" = \"$6\" ]; then\n"
+                "      printf '{\"result\":{\"neighbor\":{\"pane_id\":\"%s\"}}}\\n' \"$6\"\n"
+                "    else\n"
+                "      printf '{\"result\":{\"neighbor\":{\"pane_id\":\"%s\",\"neighbor_pane_id\":\"%s\"}}}\\n' \"$6\" \"$id\"\n"
+                "    fi ;;\n"
+                "  *) printf '%s\\n' \"$*\" ;;\n"
+                "esac\n"
+            )
+            herdr.chmod(0o755)
+            env = {**os.environ, "HERDR_BIN_PATH": str(herdr), "HERDR_PANE_ID": "w1:p3"}
+            result = subprocess.run(
+                ["/bin/bash", str(NAVIGATE), "right", "--force"],
+                env=env, text=True, capture_output=True,
+            )
+            normal = subprocess.run(
+                ["/bin/bash", str(NAVIGATE), "right", "--force"],
+                env={**env, "HERDR_PANE_ID": "w1:p1"}, text=True, capture_output=True,
+            )
+            reverse = subprocess.run(
+                ["/bin/bash", str(NAVIGATE), "left", "--force"],
+                env={**env, "HERDR_PANE_ID": "w1:p1"}, text=True, capture_output=True,
+            )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, "pane zoom --off --pane w1:p3\npane focus --direction left --pane w1:p2\n")
+        self.assertEqual(normal.returncode, 0, normal.stderr)
+        self.assertEqual(normal.stdout, "pane zoom --off --pane w1:p1\npane focus --direction right --pane w1:p1\n")
+        self.assertEqual(reverse.returncode, 0, reverse.stderr)
+        self.assertEqual(reverse.stdout, "pane zoom --off --pane w1:p1\npane focus --direction right --pane w1:p2\n")
+
     def test_prefix_arrows_force_unzoom_before_focusing(self):
         keys = tomllib.loads(SOURCE.read_text())["keys"]
         commands = {entry["key"]: (entry["type"], entry["command"]) for entry in keys["command"]}
