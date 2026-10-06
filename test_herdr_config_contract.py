@@ -776,6 +776,80 @@ class HerdrConfigContractTest(unittest.TestCase):
             ],
         )
 
+    def test_worktree_popup_fetches_default_before_creating_branch(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            checkout, latest = self._worktree_popup_remote(root)
+            result, calls = self._run_worktree_popup(root, checkout, "feature/new\n")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(subprocess.check_output(["git", "-C", str(checkout), "rev-parse", "origin/main"], text=True).strip(), latest)
+            self.assertEqual(len(calls), 1)
+            self.assertIn("--branch feature/new --base origin/main", calls[0])
+
+    def test_worktree_popup_stops_if_fetch_fails(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            checkout, _ = self._worktree_popup_remote(root)
+            shutil.rmtree(root / "remote.git")
+            result, calls = self._run_worktree_popup(root, checkout, "feature/new\n")
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(calls, [])
+            self.assertFalse((root / "feature-new").exists())
+
+    def test_worktree_popup_empty_branch_requires_confirmation_and_opens_detached_head(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            checkout, latest = self._worktree_popup_remote(root)
+            declined, calls = self._run_worktree_popup(root, checkout, "\nn\n")
+            self.assertEqual(calls, [])
+            self.assertFalse(any(path.name.startswith("main-") for path in root.iterdir() if path.is_dir()))
+            confirmed, calls = self._run_worktree_popup(root, checkout, "\ny\n")
+            self.assertEqual(confirmed.returncode, 0, confirmed.stderr)
+            self.assertIn("Use latest origin/main commit without a branch", confirmed.stderr)
+            self.assertEqual(len(calls), 1)
+            self.assertIn("worktree open --workspace w-parent --path ", calls[0])
+            path = Path(calls[0].split(" --path ", 1)[1].split(" --focus", 1)[0])
+            self.assertEqual(subprocess.check_output(["git", "-C", str(path), "rev-parse", "HEAD"], text=True).strip(), latest)
+            self.assertNotEqual(subprocess.run(["git", "-C", str(path), "symbolic-ref", "-q", "HEAD"], capture_output=True).returncode, 0)
+
+    def _worktree_popup_remote(self, root):
+        remote, checkout, other = (root / name for name in ("remote.git", "repo", "other"))
+        subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(remote)], check=True)
+        subprocess.run(["git", "clone", "-q", str(remote), str(checkout)], check=True)
+        subprocess.run(["git", "-C", str(checkout), "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-q", "--allow-empty", "-m", "initial"], check=True)
+        subprocess.run(["git", "-C", str(checkout), "push", "-q", "origin", "main"], check=True)
+        subprocess.run(["git", "-C", str(checkout), "remote", "set-head", "origin", "-a"], check=True, capture_output=True)
+        subprocess.run(["git", "clone", "-q", str(remote), str(other)], check=True)
+        subprocess.run(["git", "-C", str(other), "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-q", "--allow-empty", "-m", "latest"], check=True)
+        subprocess.run(["git", "-C", str(other), "push", "-q", "origin", "main"], check=True)
+        latest = subprocess.check_output(["git", "-C", str(other), "rev-parse", "HEAD"], text=True).strip()
+        return checkout, latest
+
+    def _run_worktree_popup(self, root, checkout, answer):
+        bin_dir = root / "bin"
+        bin_dir.mkdir(exist_ok=True)
+        log = root / "calls"
+        log.unlink(missing_ok=True)
+        herdr = bin_dir / "herdr"
+        herdr.write_text(
+            "#!/bin/sh\n"
+            "case \"$1 $2\" in\n"
+            "  'workspace list') printf '%s\\n' '{\"result\":{\"workspaces\":[{\"workspace_id\":\"w-parent\",\"label\":\"repo\",\"worktree\":{\"repo_key\":\"repo\",\"is_linked_worktree\":false}},{\"workspace_id\":\"w-child\",\"worktree\":{\"repo_key\":\"repo\",\"is_linked_worktree\":true}}]}}' ;;\n"
+            "  'worktree list') printf '%s\\n' \"{\\\"result\\\":{\\\"source\\\":{\\\"source_workspace_id\\\":\\\"w-parent\\\",\\\"source_checkout_path\\\":\\\"$CHECKOUT\\\"}}}\" ;;\n"
+            "  *) printf '%s\\n' \"$*\" >> \"$CALLS\" ;;\n"
+            "esac\n"
+        )
+        herdr.chmod(0o755)
+        fzf = bin_dir / "fzf"
+        fzf.write_text("#!/bin/sh\nhead -n 1\n")
+        fzf.chmod(0o755)
+        result = subprocess.run(
+            ["fish", "--no-config", "-c", f"set fish_function_path {CREATE_WORKTREE.parent}; herdr_new_worktree"],
+            input=answer, text=True, capture_output=True, timeout=10,
+            env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "CHECKOUT": str(checkout), "CALLS": str(log), "HERDR_ACTIVE_WORKSPACE_ID": "w-child"},
+        )
+        return result, log.read_text().splitlines() if log.exists() else []
+
     def test_worktree_popup_can_override_default_group(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -783,6 +857,11 @@ class HerdrConfigContractTest(unittest.TestCase):
             for repo in repos:
                 subprocess.run(["git", "init", "-q", "-b", "main", str(repo)], check=True)
                 subprocess.run(["git", "-C", str(repo), "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-q", "--allow-empty", "-m", "init"], check=True)
+                remote = root / f"{repo.name}.git"
+                subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(remote)], check=True)
+                subprocess.run(["git", "-C", str(repo), "remote", "add", "origin", str(remote)], check=True)
+                subprocess.run(["git", "-C", str(repo), "push", "-q", "-u", "origin", "main"], check=True)
+                subprocess.run(["git", "-C", str(repo), "remote", "set-head", "origin", "-a"], check=True, capture_output=True)
             bin_dir = root / "bin"
             bin_dir.mkdir()
             calls = root / "calls"
@@ -808,7 +887,7 @@ class HerdrConfigContractTest(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertTrue((root / "default").read_text().startswith("first\t"))
             self.assertEqual(calls.read_text().splitlines(), [
-                f"worktree create --workspace second --branch cross/repo --base main --path {repos[1] / 'cross-repo'} --focus"
+                f"worktree create --workspace second --branch cross/repo --base origin/main --path {repos[1] / 'cross-repo'} --focus"
             ])
 
     def test_herdr_session_popup_lists_only_workspaces_by_most_recent_access(self):

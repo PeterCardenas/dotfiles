@@ -32,24 +32,39 @@ function herdr_new_worktree --description "Create a Herdr worktree in a chosen r
     set -l listing (command herdr worktree list --workspace "$group" 2>/dev/null); or return 1
     set -l checkout (printf '%s\n' "$listing" | jq -r '.result.source.source_checkout_path // empty')
     test -n "$checkout"; or return 1
-    set -l branch (herdr_popup_read 'Branch name:'); or return
+    set -l branch (herdr_popup_read 'Branch name: (empty for detached default commit)'); or return 1
     set branch (string trim -- "$branch")
-    test -n "$branch"; or return
 
     set -l base (command git -C "$checkout" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)
-    if test -z "$base"
-        for candidate in main master
-            if command git -C "$checkout" show-ref --verify --quiet "refs/heads/$candidate"
-                set base $candidate
-                break
-            end
-        end
+    if not string match -qr '^origin/.+' -- "$base"
+        printf '%s\n' 'Cannot determine origin default branch (origin/HEAD is missing).' >&2
+        return 1
     end
-    test -n "$base"; or return 1
+    if test -z "$branch"
+        set -l confirmation (herdr_popup_read "Use latest $base commit without a branch? [y/N]"); or return 1
+        test (string lower -- (string trim -- "$confirmation")) = y; or return 1
+    end
+
+    set -l default_name (string replace 'origin/' '' -- "$base")
+    command git -C "$checkout" fetch origin "$default_name"; or return 1
 
     set -l common_dir (command git -C "$checkout" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
     test -n "$common_dir"; or return 1
-    set -l worktree_path (path dirname "$common_dir")/(string replace --all / - -- "$branch")
-
-    command herdr worktree create --workspace "$group" --branch "$branch" --base "$base" --path "$worktree_path" --focus
+    set -l worktree_dir (path dirname "$common_dir")
+    if test -n "$branch"
+        set -l worktree_path "$worktree_dir"/(string replace --all / - -- "$branch")
+        command herdr worktree create --workspace "$group" --branch "$branch" --base "$base" --path "$worktree_path" --focus
+    else
+        # Herdr create invents a branch when --branch is omitted; Git must make the detached checkout.
+        set -l default_slug (string replace --all / - -- "$default_name")
+        set -l worktree_path (command mktemp -d "$worktree_dir/$default_slug-XXXXXX"); or return 1
+        if not command git -C "$checkout" worktree add --detach "$worktree_path" "$base"
+            command rmdir "$worktree_path" 2>/dev/null
+            return 1
+        end
+        if not command herdr worktree open --workspace "$group" --path "$worktree_path" --focus
+            printf 'Detached checkout remains at %s\n' "$worktree_path" >&2
+            return 1
+        end
+    end
 end
