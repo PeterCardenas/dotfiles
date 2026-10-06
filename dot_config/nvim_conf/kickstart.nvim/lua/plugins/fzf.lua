@@ -51,6 +51,15 @@ return {
         winopts = {
           height = 0.98,
           width = 0.98,
+          on_create = function(win)
+            if not win.bufnr then
+              return
+            end
+            -- Neovim's terminal sends Ctrl-Backspace as ordinary Backspace; forward fzf's word-delete key instead.
+            vim.keymap.set('t', '<C-BS>', function()
+              vim.api.nvim_chan_send(vim.bo[win.bufnr].channel, '\27\127')
+            end, { buffer = win.bufnr })
+          end,
           preview = {
             wrap = true,
           },
