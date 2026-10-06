@@ -17,7 +17,8 @@ class PiMigrationFollowupsTest(unittest.TestCase):
         dependencies = manifest["dependencies"]
         self.assertIn("pi-web-access", dependencies)
         self.assertIn("pi-subagents", dependencies)
-        self.assertEqual(dependencies["pi-subagents"], "^0.70.0")
+        self.assertEqual(dependencies["pi-subagents"], "0.76.1")
+        self.assertEqual(dependencies["pi-web-access"], "0.37.0")
         installed_pi_version = subprocess.check_output(
             ["pi", "--version"], text=True
         ).strip()

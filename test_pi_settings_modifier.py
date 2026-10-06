@@ -45,7 +45,7 @@ class PiSettingsModifierTest(unittest.TestCase):
             settings = json.loads(result.stdout)
             self.assertTrue(settings["quietStartup"])
             self.assertEqual(settings["packages"], ["npm:pi-web-access", "npm:pi-subagents"])
-            self.assertEqual(settings["subagents"], {"defaultModel": "gpt-6-luna", "defaultThinking": "xhigh", "agentScanDirs": ["~/.claude/agents"], "agentOverrides": {"reviewer": {"model": "gpt-5.6-sol", "thinking": "medium"}}})
+            self.assertEqual(settings["subagents"], {"defaultModel": "gpt-6-luna", "defaultThinking": "xhigh", "agentScanDirs": ["~/.claude/agents"], "agentOverrides": {"reviewer": {"model": "gpt-6-sol", "thinking": "medium"}}})
             self.assertNotIn("defaultProvider", settings["subagents"])
             self.assertEqual(settings["extensions"], ["~/.pi/agent/extensions/claude-compat.ts"])
             self.assertEqual(settings["theme"], "dark")
@@ -66,7 +66,7 @@ class PiSettingsModifierTest(unittest.TestCase):
         settings = json.loads(result.stdout)
         self.assertTrue(settings["quietStartup"])
         self.assertEqual(settings["packages"], ["npm:pi-web-access", "npm:pi-subagents"])
-        self.assertEqual(settings["subagents"], {"defaultModel": "gpt-6-luna", "defaultThinking": "xhigh", "agentScanDirs": ["~/.claude/agents"], "agentOverrides": {"reviewer": {"model": "gpt-5.6-sol", "thinking": "medium"}}})
+        self.assertEqual(settings["subagents"], {"defaultModel": "gpt-6-luna", "defaultThinking": "xhigh", "agentScanDirs": ["~/.claude/agents"], "agentOverrides": {"reviewer": {"model": "gpt-6-sol", "thinking": "medium"}}})
         self.assertNotIn("defaultProvider", settings["subagents"])
         self.assertEqual(settings["extensions"], ["~/.pi/agent/extensions/claude-compat.ts"])
 

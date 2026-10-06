@@ -11,6 +11,7 @@ from pathlib import Path
 
 BRIDGE = Path(__file__).parent / "dot_local/bin/executable_pi-claude-hook-bridge"
 EXTENSION = Path(__file__).parent / "dot_pi/private_agent/extensions/claude-compat.ts"
+REVIEWER = Path(__file__).parent / "dot_pi/private_agent/agents/reviewer.md"
 PI_SETTINGS_TEMPLATE = Path(__file__).parent / ".chezmoitemplates/pi-settings.json"
 
 
@@ -24,9 +25,23 @@ class PiClaudeHookBridgeTest(unittest.TestCase):
         self.assertEqual(settings["subagents"]["defaultModel"], "gpt-6-luna")
         self.assertEqual(settings["subagents"]["defaultThinking"], "xhigh")
         self.assertEqual(settings["subagents"]["agentScanDirs"], ["~/.claude/agents"])
-        self.assertEqual(settings["subagents"]["agentOverrides"], {"reviewer": {"model": "gpt-5.6-sol", "thinking": "medium"}})
+        self.assertEqual(settings["subagents"]["agentOverrides"], {"reviewer": {"model": "gpt-6-sol", "thinking": "medium"}})
         self.assertNotIn("defaultProvider", settings["subagents"])
         self.assertNotIn("/home/pcardenas", template)
+
+    def test_reviewer_model_and_thinking_are_owned_by_settings(self) -> None:
+        frontmatter = REVIEWER.read_text(encoding="utf-8").split("---", 2)[1]
+        self.assertNotIn("model:", frontmatter)
+        self.assertNotIn("thinking:", frontmatter)
+
+    def test_claude_compat_strictly_typechecks_against_installed_pi(self) -> None:
+        result = subprocess.run(
+            ["tsc", "--noEmit", "--strict", "--skipLibCheck", "--target", "ES2022", "--module", "NodeNext", "--moduleResolution", "NodeNext", "--types", "node", EXTENSION.name],
+            cwd=EXTENSION.parent,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_claude_compat_does_not_register_fork_specific_agent_root_listener(self) -> None:
         source = EXTENSION.read_text(encoding="utf-8")
@@ -189,6 +204,18 @@ console.log(JSON.stringify({sent, payloads}));
         self.assertEqual([payload["stop_hook_active"] for payload in observed["payloads"]], [False, True, False])
         self.assertEqual(len(observed["sent"]), 2)
 
+    def test_non_conversation_messages_do_not_interrupt_stop_hook_matching(self) -> None:
+        observed = self._run_lifecycle(
+            'await agentEnd(); await agentEnd([{role:"bashExecution", command:"pwd", output:"."}, userMessage(lastSentText())]);'
+        )
+        self.assertEqual([payload["stop_hook_active"] for payload in observed["payloads"]], [False, True])
+
+    def test_string_user_content_marks_delivered_follow_up_active(self) -> None:
+        observed = self._run_lifecycle(
+            'await agentEnd(); await agentEnd([{role:"user", content:lastSentText()}]);'
+        )
+        self.assertEqual([payload["stop_hook_active"] for payload in observed["payloads"]], [False, True])
+
     def test_unrelated_extension_follow_up_does_not_mark_run_active(self) -> None:
         observed = self._run_lifecycle(
             'await agentEnd(); await agentEnd([userMessage("unrelated extension follow-up")]);'
@@ -265,7 +292,8 @@ console.log(JSON.stringify({sent, payloads}));
             script = "from pathlib import Path; import sys; Path(sys.argv[1]).open('a').write(sys.argv[2]+'\\n')"
             def command(label: str) -> str:
                 return f"{sys.executable} -c {json.dumps(script)} {marker} {label}"
-            make = lambda label: {"hooks": [{"command": command(label)}]}
+            def make(label: str) -> dict:
+                return {"hooks": [{"command": command(label)}]}
             response = self._run("tool_call", {"toolName": "bash", "input": {}}, {"hooks": {"PreToolUse": [{"matcher": ".*", "hooks": make("user")["hooks"]}]}}, remote={"hooks": {"PreToolUse": [{"matcher": ".*", "hooks": make("remote")["hooks"]}]}}, endpoint={"hooks": {"PreToolUse": [{"matcher": ".*", "hooks": make("endpoint")["hooks"]}]}})
             self.assertEqual(response, {"action": "allow"})
             self.assertEqual(marker.read_text().splitlines(), ["endpoint", "remote", "user"])

@@ -196,7 +196,11 @@ export default function (pi: ExtensionAPI) {
 	pi.on("tool_result", async (event, ctx) => handleToolResult(event, ctx.cwd));
 
 	pi.on("agent_end", async (event, ctx) => {
-		const textOf = (candidate: (typeof event.messages)[number]) => candidate.content.filter((block) => block.type === "text").map((block) => block.text).join("\n");
+		const textOf = (candidate: (typeof event.messages)[number]) => {
+			if (!("content" in candidate)) return "";
+			if (typeof candidate.content === "string") return candidate.content;
+			return candidate.content.filter((block) => block.type === "text").map((block) => block.text).join("\n");
+		};
 		const message = [...event.messages].reverse().find((candidate) => candidate.role === "assistant");
 		if (!message) return undefined;
 		const text = textOf(message);
