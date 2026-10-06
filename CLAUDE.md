@@ -17,6 +17,7 @@ Key References:
 
 
 Prefer local file path over GitHub URLs.
+Ensure file paths are either absolute or relative to the current working directory; do not use paths relative to an unspecified location.
 
 When fetching documentation from a website, first check if `{origin}/llms.txt` exists and prefer URLs listed there. Also try `{url}.md` or `{path}.md` variants of the page — many documentation sites serve LLM-optimized markdown versions at these paths.
 
