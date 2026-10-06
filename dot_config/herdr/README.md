@@ -67,8 +67,13 @@ If `origin/HEAD` is missing or the fetch fails, creation stops rather than using
 a stale local commit. `prefix+shift+d` asks for confirmation, removes the checkout when
 the active workspace is a linked worktree, and otherwise performs a normal
 workspace close. Refused dirty-worktree removal requires a second explicit
-confirmation before retrying with `--force`. The custom popups wrap long
-workspace names and confirmation messages; the workspace preview clips wide
+confirmation before retrying with `--force`. If Git has already discarded a
+checkout's registration during a failed removal, explicit force confirmation
+removes the verified leftover directory and then closes its workspace. A
+still-registered checkout is never purged directly. Other failures leave the
+workspace intact and keep the error visible until acknowledged. The custom
+popups wrap long workspace names and confirmation messages; the workspace
+preview clips wide
 pane rows to fit without wrapping blank terminal padding. It sits beside the
 workspace list on wide terminals and below it on narrow ones. Escape or Ctrl-C
 cancels each one.
