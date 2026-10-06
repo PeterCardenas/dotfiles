@@ -39,6 +39,7 @@ return {
             ['ctrl-k'] = 'up',
             ['ctrl-left'] = 'backward-word',
             ['ctrl-right'] = 'forward-word',
+            ['ctrl-backspace'] = 'backward-kill-word',
             ['ctrl-d'] = 'preview-page-down',
             ['ctrl-u'] = 'preview-page-up',
             ['change'] = 'first',
