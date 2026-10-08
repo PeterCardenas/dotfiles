@@ -96,7 +96,8 @@ return {
     branch = 'exclude-pattern-config',
     upstream = 'brenoprata10/nvim-highlight-colors',
     upstream_branch = 'main',
-    event = { 'BufReadPre', 'BufNewFile' },
+    -- setup scans buffers; loading it inside BufReadPre can switch buffers (E201).
+    event = 'VeryLazy',
     config = function()
       require('nvim-highlight-colors').setup({
         -- TODO: Change upstream to work for more complex ansi colors.
@@ -609,7 +610,8 @@ return {
     -- Add indentation guides even on blank lines
     'lukas-reineke/indent-blankline.nvim',
     main = 'ibl',
-    event = { 'BufReadPre', 'BufNewFile' },
+    -- setup refreshes every window; it must run before file-read autocommands.
+    event = 'VeryLazy',
     config = function()
       require('ibl').setup({
         scope = {
