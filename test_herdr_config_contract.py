@@ -423,7 +423,7 @@ class HerdrConfigContractTest(unittest.TestCase):
                 time.sleep(0.1)
             self.assertEqual(popup.returncode, 0, popup.stderr)
             prompt = subprocess.run(
-                [*controller, "wait-screen", "--regex", "Remove linked worktree", "--duration", "0.2", "--wait-timeout", "5", name],
+                [*controller, "wait-screen", "--regex", "Force-remove linked worktree", "--duration", "0.2", "--wait-timeout", "5", name],
                 text=True,
                 capture_output=True,
                 timeout=10,
@@ -434,7 +434,7 @@ class HerdrConfigContractTest(unittest.TestCase):
                 text=True, capture_output=True, timeout=10,
             )
             self.assertEqual(screen.returncode, 0, screen.stderr)
-            prompt_lines = screen.stdout.split("Remove linked worktree ", 1)[1].split("? [y/N]", 1)[0]
+            prompt_lines = screen.stdout.split("Force-remove linked worktree ", 1)[1].split("? [y/N]", 1)[0]
             path_lines = prompt_lines.splitlines()
             wrapped_path = path_lines[0].split("│", 1)[0].rstrip() + "".join(
                 line.rsplit("│", 2)[-2].strip() for line in path_lines[1:-1]
@@ -456,7 +456,7 @@ class HerdrConfigContractTest(unittest.TestCase):
                     time.sleep(0.1)
                 self.assertEqual(popup.returncode, 0, popup.stderr)
                 prompt = subprocess.run(
-                    [*controller, "wait-screen", "--regex", "Remove linked worktree", "--duration", "0.2", "--wait-timeout", "5", name],
+                    [*controller, "wait-screen", "--regex", "Force-remove linked worktree", "--duration", "0.2", "--wait-timeout", "5", name],
                     text=True, capture_output=True, timeout=10,
                 )
                 self.assertEqual(prompt.returncode, 0, prompt.stderr or prompt.stdout)
@@ -506,7 +506,8 @@ class HerdrConfigContractTest(unittest.TestCase):
             )
             calls = log.read_text().splitlines() if log.exists() else []
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(calls, ["worktree remove --workspace w-linked"])
+        self.assertEqual(calls, ["worktree remove --workspace w-linked --force"])
+        self.assertIn("terminates its pane processes", result.stderr.lower())
 
     def test_close_popup_does_not_close_linked_workspace_when_worktree_lookup_fails(self):
         with tempfile.TemporaryDirectory() as bin_dir:
@@ -529,6 +530,206 @@ class HerdrConfigContractTest(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertFalse(log.exists(), "a failed lookup must not close a linked workspace")
             self.assertIn("press Enter", result.stderr)
+
+    def test_close_popup_recovers_pointerless_checkout_after_native_removal_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repository = root / "repo.git"
+            checkout = root / "linked"
+            subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(repository)], check=True)
+            tree = subprocess.check_output(["git", "-C", str(repository), "mktree"], input=b"").decode().strip()
+            commit = subprocess.check_output(
+                ["git", "-C", str(repository), "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit-tree", tree, "-m", "initial"]
+            ).decode().strip()
+            subprocess.run(["git", "-C", str(repository), "update-ref", "refs/heads/main", commit], check=True)
+            subprocess.run(["git", "-C", str(repository), "worktree", "add", "-qb", "linked", str(checkout)], check=True)
+            leftovers = [
+                checkout / "apps/design-system-docs/.vite/deps_temp_e688cad9/package.json",
+                checkout / "apps/design-system-docs/node_modules/.vite/deps_temp_e688cad9/package.json",
+            ]
+            for leftover in leftovers:
+                leftover.parent.mkdir(parents=True)
+                leftover.write_text("cache data")
+            bin_dir = root / "bin"
+            bin_dir.mkdir()
+            log = root / "calls"
+            herdr = bin_dir / "herdr"
+            herdr.write_text(
+                "#!/bin/sh\n"
+                "case \"$1 $2\" in\n"
+                f"  'worktree list') printf '%s\\n' '{{\"result\":{{\"source\":{{\"repo_key\":\"{repository}\"}},\"worktrees\":[{{\"open_workspace_id\":\"w-linked\",\"path\":\"{checkout}\",\"is_linked_worktree\":true,\"is_bare\":false}}]}}}}' ;;\n"
+                f"  'workspace list') printf '%s\\n' '{{\"result\":{{\"workspaces\":[{{\"workspace_id\":\"w-linked\",\"worktree\":{{\"is_linked_worktree\":true,\"checkout_path\":\"{checkout}\",\"repo_key\":\"{repository}\"}}}}]}}}}' ;;\n"
+                f"  'worktree remove') rm -f '{checkout}/.git'; git -C '{repository}' worktree prune --expire now; printf '%s\\n' '{{\"error\":{{\"code\":\"worktree_remove_failed\"}}}}' >&2; exit 1 ;;\n"
+                f"  *) printf '%s\\n' \"$*\" >> {log} ;;\n"
+                "esac\n"
+            )
+            herdr.chmod(0o755)
+            result = subprocess.run(
+                ["fish", "--no-config", "-c", f"set fish_function_path {CLOSE_WORKSPACE.parent}; herdr_close_workspace"],
+                input="y\n\ny\ny\n", text=True, capture_output=True, timeout=10,
+                env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "HERDR_ACTIVE_WORKSPACE_ID": "w-linked"},
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertFalse(checkout.exists())
+            self.assertTrue(all(not leftover.exists() for leftover in leftovers))
+            self.assertEqual(log.read_text().splitlines(), ["workspace close w-linked"])
+            self.assertIn("permanently delete all remaining checkout files", result.stderr.lower())
+
+    def test_close_popup_recovers_pointerless_checkout_after_force_removal_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repository = root / "repo.git"
+            checkout = root / "linked"
+            subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(repository)], check=True)
+            tree = subprocess.check_output(["git", "-C", str(repository), "mktree"], input=b"").decode().strip()
+            commit = subprocess.check_output(
+                ["git", "-C", str(repository), "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit-tree", tree, "-m", "initial"]
+            ).decode().strip()
+            subprocess.run(["git", "-C", str(repository), "update-ref", "refs/heads/main", commit], check=True)
+            subprocess.run(["git", "-C", str(repository), "worktree", "add", "-qb", "linked", str(checkout)], check=True)
+            leftover = checkout / "apps/design-system-docs/.vite/deps_temp_e688cad9/package.json"
+            leftover.parent.mkdir(parents=True)
+            leftover.write_text("cache data")
+            bin_dir = root / "bin"
+            bin_dir.mkdir()
+            log = root / "calls"
+            herdr = bin_dir / "herdr"
+            herdr.write_text(
+                "#!/bin/sh\n"
+                "case \"$1 $2\" in\n"
+                f"  'worktree list') printf '%s\\n' '{{\"result\":{{\"source\":{{\"repo_key\":\"{repository}\"}},\"worktrees\":[{{\"open_workspace_id\":\"w-linked\",\"path\":\"{checkout}\",\"is_linked_worktree\":true,\"is_bare\":false}}]}}}}' ;;\n"
+                f"  'workspace list') printf '%s\\n' '{{\"result\":{{\"workspaces\":[{{\"workspace_id\":\"w-linked\",\"worktree\":{{\"is_linked_worktree\":true,\"checkout_path\":\"{checkout}\",\"repo_key\":\"{repository}\"}}}}]}}}}' ;;\n"
+                f"  'worktree remove') if [ \"$5\" != '--force' ]; then printf '%s\\n' '{{\"error\":{{\"code\":\"dirty_worktree_requires_force\"}}}}' >&2; exit 1; fi; rm -f '{checkout}/.git'; git -C '{repository}' worktree prune --expire now; printf '%s\\n' '{{\"error\":{{\"code\":\"worktree_remove_failed\",\"message\":\"error: failed to delete checkout: Directory not empty\"}}}}' >&2; exit 1 ;;\n"
+                f"  *) printf '%s\\n' \"$*\" >> {log} ;;\n"
+                "esac\n"
+            )
+            herdr.chmod(0o755)
+            result = subprocess.run(
+                ["fish", "--no-config", "-c", f"set fish_function_path {CLOSE_WORKSPACE.parent}; herdr_close_workspace"],
+                input="y\ny\ny\n", text=True, capture_output=True, timeout=10,
+                env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "HERDR_ACTIVE_WORKSPACE_ID": "w-linked"},
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertFalse(checkout.exists())
+            self.assertEqual(log.read_text().splitlines(), ["workspace close w-linked"])
+            self.assertIn("permanently delete all remaining checkout files", result.stderr.lower())
+            self.assertIn("Worktree removal failed: error: failed to delete checkout: Directory not empty", result.stderr)
+            self.assertIn("Git has unregistered checkout", result.stderr)
+            self.assertIn("concurrent writer can cause Directory not empty", result.stderr)
+
+    def test_close_popup_declines_pointerless_checkout_deletion_after_native_removal_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repository = root / "repo.git"
+            checkout = root / "linked"
+            subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(repository)], check=True)
+            tree = subprocess.check_output(["git", "-C", str(repository), "mktree"], input=b"").decode().strip()
+            commit = subprocess.check_output(
+                ["git", "-C", str(repository), "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit-tree", tree, "-m", "initial"]
+            ).decode().strip()
+            subprocess.run(["git", "-C", str(repository), "update-ref", "refs/heads/main", commit], check=True)
+            subprocess.run(["git", "-C", str(repository), "worktree", "add", "-qb", "linked", str(checkout)], check=True)
+            leftover = checkout / "apps/design-system-docs/.vite/deps_temp_e688cad9/package.json"
+            leftover.parent.mkdir(parents=True)
+            leftover.write_text("cache data")
+            bin_dir = root / "bin"
+            bin_dir.mkdir()
+            log = root / "calls"
+            herdr = bin_dir / "herdr"
+            herdr.write_text(
+                "#!/bin/sh\n"
+                "case \"$1 $2\" in\n"
+                f"  'worktree list') printf '%s\\n' '{{\"result\":{{\"source\":{{\"repo_key\":\"{repository}\"}},\"worktrees\":[{{\"open_workspace_id\":\"w-linked\",\"path\":\"{checkout}\",\"is_linked_worktree\":true,\"is_bare\":false}}]}}}}' ;;\n"
+                f"  'workspace list') printf '%s\\n' '{{\"result\":{{\"workspaces\":[{{\"workspace_id\":\"w-linked\",\"worktree\":{{\"is_linked_worktree\":true,\"checkout_path\":\"{checkout}\",\"repo_key\":\"{repository}\"}}}}]}}}}' ;;\n"
+                f"  'worktree remove') rm -f '{checkout}/.git'; git -C '{repository}' worktree prune --expire now; printf '%s\\n' '{{\"error\":{{\"code\":\"worktree_remove_failed\"}}}}' >&2; exit 1 ;;\n"
+                f"  *) printf '%s\\n' \"$*\" >> {log} ;;\n"
+                "esac\n"
+            )
+            herdr.chmod(0o755)
+            result = subprocess.run(
+                ["fish", "--no-config", "-c", f"set fish_function_path {CLOSE_WORKSPACE.parent}; herdr_close_workspace"],
+                input="y\n\nn\n\n", text=True, capture_output=True, timeout=10,
+                env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "HERDR_ACTIVE_WORKSPACE_ID": "w-linked"},
+
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertTrue(leftover.exists())
+            self.assertFalse(log.exists())
+            self.assertIn("permanently delete all remaining checkout files", result.stderr.lower())
+            self.assertNotIn("files and workspace were retained", result.stderr.lower())
+            self.assertIn("inspect their current state before retrying", result.stderr.lower())
+
+    def test_close_popup_cancellation_of_failure_diagnostic_skips_pointerless_recovery(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repository = root / "repo.git"
+            checkout = root / "linked"
+            subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(repository)], check=True)
+            tree = subprocess.check_output(["git", "-C", str(repository), "mktree"], input=b"").decode().strip()
+            commit = subprocess.check_output(
+                ["git", "-C", str(repository), "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit-tree", tree, "-m", "initial"]
+            ).decode().strip()
+            subprocess.run(["git", "-C", str(repository), "update-ref", "refs/heads/main", commit], check=True)
+            subprocess.run(["git", "-C", str(repository), "worktree", "add", "-qb", "linked", str(checkout)], check=True)
+            leftover = checkout / "leftover.txt"
+            leftover.write_text("preserve")
+            bin_dir = root / "bin"
+            bin_dir.mkdir()
+            log = root / "calls"
+            herdr = bin_dir / "herdr"
+            herdr.write_text(
+                "#!/bin/sh\n"
+                "case \"$1 $2\" in\n"
+                f"  'worktree list') printf '%s\\n' '{{\"result\":{{\"source\":{{\"repo_key\":\"{repository}\"}},\"worktrees\":[{{\"open_workspace_id\":\"w-linked\",\"path\":\"{checkout}\",\"is_linked_worktree\":true,\"is_bare\":false}}]}}}}' ;;\n"
+                f"  'workspace list') printf '%s\\n' '{{\"result\":{{\"workspaces\":[{{\"workspace_id\":\"w-linked\",\"worktree\":{{\"is_linked_worktree\":true,\"checkout_path\":\"{checkout}\",\"repo_key\":\"{repository}\"}}}}]}}}}' ;;\n"
+                f"  'worktree remove') rm -f '{checkout}/.git'; git -C '{repository}' worktree prune --expire now; printf '%s\\n' '{{\"error\":{{\"code\":\"worktree_remove_failed\"}}}}' >&2; exit 1 ;;\n"
+                f"  *) printf '%s\\n' \"$*\" >> {log} ;;\n"
+                "esac\n"
+            )
+            herdr.chmod(0o755)
+            result = subprocess.run(
+                ["fish", "--no-config", "-c", f"function herdr_popup_read; set -g popup_reads (math $popup_reads + 1); printf '%s\\n' $argv[1] >&2; if test $popup_reads -eq 1; printf 'y\\n'; else return 1; end; end; set -g popup_reads 0; set fish_function_path {CLOSE_WORKSPACE.parent}; herdr_close_workspace"],
+                text=True, capture_output=True, timeout=10,
+                env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "HERDR_ACTIVE_WORKSPACE_ID": "w-linked"},
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertTrue(leftover.exists())
+            self.assertFalse(log.exists())
+            self.assertIn("Worktree removal failed:", result.stderr)
+            self.assertNotIn("Git has unregistered checkout", result.stderr)
+            self.assertNotIn("Permanently delete all remaining checkout files", result.stderr)
+
+    def test_close_popup_force_removes_pointerless_unregistered_checkout_and_closes_workspace(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repository = root / "repo.git"
+            checkout = root / "orphan"
+            subprocess.run(["git", "init", "-q", "--bare", str(repository)], check=True)
+            checkout.mkdir()
+            leftover = checkout / "apps/design-system-docs/.vite/deps_temp_e688cad9/package.json"
+            leftover.parent.mkdir(parents=True)
+            leftover.write_text("cache data")
+            bin_dir = root / "bin"
+            bin_dir.mkdir()
+            log = root / "calls"
+            herdr = bin_dir / "herdr"
+            herdr.write_text(
+                "#!/bin/sh\n"
+                "if [ \"$1 $2\" = 'worktree list' ]; then printf '%s\\n' '{\"result\":{\"worktrees\":[]}}'; "
+                "elif [ \"$1 $2\" = 'workspace list' ]; then "
+                f"printf '%s\\n' '{{\"result\":{{\"workspaces\":[{{\"workspace_id\":\"w-orphan\",\"worktree\":{{\"is_linked_worktree\":true,\"checkout_path\":\"{checkout}\",\"repo_key\":\"{repository}\"}}}}]}}}}' ; "
+                f"else printf '%s\\n' \"$*\" >> {log}; fi\n"
+            )
+            herdr.chmod(0o755)
+            result = subprocess.run(
+                ["fish", "--no-config", "-c", f"set fish_function_path {CLOSE_WORKSPACE.parent}; herdr_close_workspace"],
+                input="y\n", text=True, capture_output=True, timeout=10,
+                env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "HERDR_ACTIVE_WORKSPACE_ID": "w-orphan"},
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertFalse(checkout.exists(), "confirmed recovery must remove the orphan checkout")
+            self.assertEqual(log.read_text().splitlines(), ["workspace close w-orphan"])
+            self.assertIn("permanently delete all remaining checkout files", result.stderr.lower())
 
     def test_close_popup_force_purges_unregistered_linked_checkout_and_closes_workspace(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -585,8 +786,8 @@ class HerdrConfigContractTest(unittest.TestCase):
             herdr.chmod(0o755)
             result = subprocess.run(
                 ["fish", "--no-config", "-c", f"set fish_function_path {CLOSE_WORKSPACE.parent}; herdr_close_workspace"],
-                input="y\ny\n", text=True, capture_output=True, timeout=10,
-                env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "HERDR_ACTIVE_WORKSPACE_ID": "w-partial"},
+                input="y\n\ny\ny\n", text=True, capture_output=True, timeout=10,
+                env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "HERDR_ACTIVE_WORKSPACE_ID": "w-partial"}
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertFalse(checkout.exists())
@@ -616,12 +817,13 @@ class HerdrConfigContractTest(unittest.TestCase):
             herdr.chmod(0o755)
             result = subprocess.run(
                 ["fish", "--no-config", "-c", f"set fish_function_path {CLOSE_WORKSPACE.parent}; herdr_close_workspace"],
-                input="y\ny\n", text=True, capture_output=True, timeout=10,
+                input="y\ny\ny\n", text=True, capture_output=True, timeout=10,
                 env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "HERDR_ACTIVE_WORKSPACE_ID": "w-partial"},
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertFalse(checkout.exists())
             self.assertEqual(log.read_text().splitlines(), ["workspace close w-partial"])
+            self.assertIn("Force delete remaining files and close workspace? [y/N]", result.stderr)
 
     def test_close_popup_refuses_filesystem_purge_when_checkout_is_still_registered(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -658,6 +860,129 @@ class HerdrConfigContractTest(unittest.TestCase):
             self.assertFalse(log.exists())
             self.assertIn("still registered", result.stderr)
 
+    def test_close_popup_refuses_pointerless_checkout_still_registered_with_git(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repository = root / "repo.git"
+            checkout = root / "linked"
+            subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(repository)], check=True)
+            tree = subprocess.check_output(["git", "-C", str(repository), "mktree"], input=b"").decode().strip()
+            commit = subprocess.check_output(
+                ["git", "-C", str(repository), "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit-tree", tree, "-m", "initial"]
+            ).decode().strip()
+            subprocess.run(["git", "-C", str(repository), "update-ref", "refs/heads/main", commit], check=True)
+            subprocess.run(["git", "-C", str(repository), "worktree", "add", "-qb", "linked", str(checkout)], check=True)
+            (checkout / ".git").unlink()
+            bin_dir = root / "bin"
+            bin_dir.mkdir()
+            log = root / "calls"
+            herdr = bin_dir / "herdr"
+            herdr.write_text(
+                "#!/bin/sh\n"
+                "case \"$1 $2\" in\n"
+                "  'worktree list') printf '%s\\n' '{\"result\":{\"worktrees\":[]}}' ;;\n"
+                f"  'workspace list') printf '%s\\n' '{{\"result\":{{\"workspaces\":[{{\"workspace_id\":\"w-linked\",\"worktree\":{{\"is_linked_worktree\":true,\"checkout_path\":\"{checkout}\",\"repo_key\":\"{repository}\"}}}}]}}}}' ;;\n"
+                f"  *) printf '%s\\n' \"$*\" >> {log} ;;\n"
+                "esac\n"
+            )
+            herdr.chmod(0o755)
+            result = subprocess.run(
+                ["fish", "--no-config", "-c", f"set fish_function_path {CLOSE_WORKSPACE.parent}; herdr_close_workspace"],
+                input="y\n\n", text=True, capture_output=True, timeout=10,
+                env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "HERDR_ACTIVE_WORKSPACE_ID": "w-linked"},
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertTrue(checkout.exists())
+            calls = log.read_text().splitlines() if log.exists() else []
+            self.assertNotIn("workspace close w-linked", calls)
+            self.assertIn("still registered", result.stderr)
+
+    def test_close_popup_refuses_pointerless_checkout_with_mismatched_fresh_workspace_metadata(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repository = root / "repo.git"
+            checkout = root / "linked"
+            unrelated_checkout = root / "other-linked"
+            subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(repository)], check=True)
+            tree = subprocess.check_output(["git", "-C", str(repository), "mktree"], input=b"").decode().strip()
+            commit = subprocess.check_output(
+                ["git", "-C", str(repository), "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit-tree", tree, "-m", "initial"]
+            ).decode().strip()
+            subprocess.run(["git", "-C", str(repository), "update-ref", "refs/heads/main", commit], check=True)
+            subprocess.run(["git", "-C", str(repository), "worktree", "add", "-qb", "linked", str(checkout)], check=True)
+            (checkout / ".git").unlink()
+            leftover = checkout / "leftover.txt"
+            leftover.write_text("preserve")
+            subprocess.run(["git", "-C", str(repository), "worktree", "prune", "--expire", "now"], check=True)
+            bin_dir = root / "bin"
+            bin_dir.mkdir()
+            log = root / "calls"
+            herdr = bin_dir / "herdr"
+            herdr.write_text(
+                "#!/bin/sh\n"
+                "case \"$1 $2\" in\n"
+                f"  'worktree list') printf '%s\\n' '{{\"result\":{{\"source\":{{\"repo_key\":\"{repository}\"}},\"worktrees\":[{{\"open_workspace_id\":\"w-linked\",\"path\":\"{checkout}\",\"is_linked_worktree\":true,\"is_bare\":false}}]}}}}' ;;\n"
+                f"  'workspace list') printf '%s\\n' '{{\"result\":{{\"workspaces\":[{{\"workspace_id\":\"w-linked\",\"worktree\":{{\"is_linked_worktree\":true,\"checkout_path\":\"{unrelated_checkout}\",\"repo_key\":\"{repository}\"}}}}]}}}}' ;;\n"
+                "  'worktree remove') printf '%s\\n' '{\"error\":{\"code\":\"worktree_remove_failed\"}}' >&2; exit 1 ;;\n"
+                f"  *) printf '%s\\n' \"$*\" >> {log} ;;\n"
+                "esac\n"
+            )
+            herdr.chmod(0o755)
+            result = subprocess.run(
+                ["fish", "--no-config", "-c", f"set fish_function_path {CLOSE_WORKSPACE.parent}; herdr_close_workspace"],
+                input="y\n\n", text=True, capture_output=True, timeout=10,
+                env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "HERDR_ACTIVE_WORKSPACE_ID": "w-linked"},
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertTrue(leftover.exists())
+            calls = log.read_text().splitlines() if log.exists() else []
+            self.assertNotIn("workspace close w-linked", calls)
+            self.assertIn("worktree_remove_failed", result.stderr)
+            self.assertNotIn("Permanently delete all remaining", result.stderr)
+
+    def test_close_popup_refuses_duplicate_workspace_id_with_conflicting_pointerless_metadata(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repository = root / "repo.git"
+            checkout = root / "linked"
+            unrelated_checkout = root / "other-linked"
+            subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(repository)], check=True)
+            tree = subprocess.check_output(["git", "-C", str(repository), "mktree"], input=b"").decode().strip()
+            commit = subprocess.check_output(
+                ["git", "-C", str(repository), "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit-tree", tree, "-m", "initial"]
+            ).decode().strip()
+            subprocess.run(["git", "-C", str(repository), "update-ref", "refs/heads/main", commit], check=True)
+            subprocess.run(["git", "-C", str(repository), "worktree", "add", "-qb", "linked", str(checkout)], check=True)
+            (checkout / ".git").unlink()
+            leftover = checkout / "leftover.txt"
+            leftover.write_text("preserve")
+            subprocess.run(["git", "-C", str(repository), "worktree", "prune", "--expire", "now"], check=True)
+            bin_dir = root / "bin"
+            bin_dir.mkdir()
+            log = root / "calls"
+            herdr = bin_dir / "herdr"
+            herdr.write_text(
+                "#!/bin/sh\n"
+                "case \"$1 $2\" in\n"
+                f"  'worktree list') printf '%s\\n' '{{\"result\":{{\"source\":{{\"repo_key\":\"{repository}\"}},\"worktrees\":[{{\"open_workspace_id\":\"w-linked\",\"path\":\"{checkout}\",\"is_linked_worktree\":true,\"is_bare\":false}}]}}}}' ;;\n"
+                f"  'workspace list') printf '%s\\n' '{{\"result\":{{\"workspaces\":[{{\"workspace_id\":\"w-linked\",\"worktree\":{{\"is_linked_worktree\":true,\"checkout_path\":\"{checkout}\",\"repo_key\":\"{repository}\"}}}},{{\"workspace_id\":\"w-linked\",\"worktree\":{{\"is_linked_worktree\":true,\"checkout_path\":\"{unrelated_checkout}\",\"repo_key\":\"{repository}\"}}}}]}}}}' ;;\n"
+                "  'worktree remove') printf '%s\\n' '{\"error\":{\"code\":\"worktree_remove_failed\"}}' >&2; exit 1 ;;\n"
+                f"  *) printf '%s\\n' \"$*\" >> {log} ;;\n"
+                "esac\n"
+            )
+            herdr.chmod(0o755)
+            result = subprocess.run(
+                ["fish", "--no-config", "-c", f"set fish_function_path {CLOSE_WORKSPACE.parent}; herdr_close_workspace"],
+                input="y\n\n", text=True, capture_output=True, timeout=10,
+                env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "HERDR_ACTIVE_WORKSPACE_ID": "w-linked"},
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertTrue(leftover.exists())
+            calls = log.read_text().splitlines() if log.exists() else []
+            self.assertNotIn("workspace close w-linked", calls)
+            self.assertIn("worktree_remove_failed", result.stderr)
+            self.assertNotIn("Permanently delete all remaining", result.stderr)
+
     def test_close_popup_does_not_offer_force_for_unrelated_removal_failure(self):
         with tempfile.TemporaryDirectory() as bin_dir:
             log = Path(bin_dir) / "calls"
@@ -668,7 +993,7 @@ class HerdrConfigContractTest(unittest.TestCase):
                 "  printf '%s\\n' '{\"result\":{\"worktrees\":[{\"open_workspace_id\":\"w-linked\",\"path\":\"/repo/task\",\"is_linked_worktree\":true,\"is_bare\":false}]}}'\n"
                 "else\n"
                 f"  printf '%s\\n' \"$*\" >> {log}\n"
-                "  printf '%s\\n' '{\"error\":{\"code\":\"worktree_remove_failed\"}}' >&2\n"
+                "  printf '%s\\n' '{\"error\":{\"code\":\"worktree_remove_failed\",\"message\":\"repository is unavailable\"}}' >&2\n"
                 "  exit 1\n"
                 "fi\n"
             )
@@ -679,7 +1004,9 @@ class HerdrConfigContractTest(unittest.TestCase):
                 env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "HERDR_ACTIVE_WORKSPACE_ID": "w-linked"},
             )
             self.assertNotEqual(result.returncode, 0)
-            self.assertEqual(log.read_text().splitlines(), ["worktree remove --workspace w-linked"])
+            self.assertEqual(log.read_text().splitlines(), ["worktree remove --workspace w-linked --force"])
+            self.assertIn("Worktree removal failed: repository is unavailable", result.stderr)
+            self.assertNotIn("Force delete remaining files", result.stderr)
 
     def test_close_popup_keeps_force_failure_visible_until_acknowledged(self):
         with tempfile.TemporaryDirectory() as bin_dir:
@@ -707,25 +1034,27 @@ class HerdrConfigContractTest(unittest.TestCase):
             )
             try:
                 assert process.stdin is not None
-                process.stdin.write("y\ny\n")
+                process.stdin.write("y\n")
                 process.stdin.flush()
                 deadline = time.monotonic() + 2
-                while (not log.exists() or len(log.read_text().splitlines()) < 2) and time.monotonic() < deadline:
+                while (not log.exists() or len(log.read_text().splitlines()) < 1) and time.monotonic() < deadline:
                     time.sleep(0.01)
-                self.assertEqual(len(log.read_text().splitlines()), 2)
+                self.assertEqual(len(log.read_text().splitlines()), 1)
                 self.assertIsNone(process.poll(), "force failure closed the popup before the error could be read")
                 process.stdin.write("\n")
                 process.stdin.flush()
                 stdout, stderr = process.communicate(timeout=5)
                 self.assertNotEqual(process.returncode, 0, stdout)
                 self.assertIn("locked checkout", stderr)
-                self.assertIn("press Enter", stderr)
+                self.assertIn("Press Enter to dismiss", stderr)
+                self.assertIn("inspect their current state before retrying", stderr)
+                self.assertNotIn("files and workspace were retained", stderr)
             finally:
                 if process.poll() is None:
                     process.kill()
                     process.communicate(timeout=5)
 
-    def test_close_popup_only_forces_a_dirty_worktree_after_confirmation(self):
+    def test_close_popup_force_removes_linked_worktree_after_confirmation(self):
         with tempfile.TemporaryDirectory() as bin_dir:
             log = Path(bin_dir) / "calls"
             herdr = Path(bin_dir) / "herdr"
@@ -744,14 +1073,12 @@ class HerdrConfigContractTest(unittest.TestCase):
             herdr.chmod(0o755)
             result = subprocess.run(
                 ["fish", "--no-config", "-c", f"set fish_function_path {CLOSE_WORKSPACE.parent}; herdr_close_workspace"],
-                input="y\ny\n", text=True, capture_output=True, timeout=10,
+                input="y\n", text=True, capture_output=True, timeout=10,
                 env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "HERDR_ACTIVE_WORKSPACE_ID": "w-linked"},
             )
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual(log.read_text().splitlines(), [
-                "worktree remove --workspace w-linked",
-                "worktree remove --workspace w-linked --force",
-            ])
+            self.assertEqual(log.read_text().splitlines(), ["worktree remove --workspace w-linked --force"])
+            self.assertIn("terminates its pane processes", result.stderr.lower())
 
     def test_close_popup_uses_normal_close_for_non_git_workspace(self):
         with tempfile.TemporaryDirectory() as bin_dir:

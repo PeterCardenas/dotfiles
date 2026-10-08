@@ -66,12 +66,25 @@ a detached worktree at the latest default-branch commit in a unique directory.
 If `origin/HEAD` is missing or the fetch fails, creation stops rather than using
 a stale local commit. `prefix+shift+d` asks for confirmation, removes the checkout when
 the active workspace is a linked worktree, and otherwise performs a normal
-workspace close. Refused dirty-worktree removal requires a second explicit
-confirmation before retrying with `--force`. If Git has already discarded a
-checkout's registration during a failed removal, explicit force confirmation
-removes the verified leftover directory and then closes its workspace. A
-still-registered checkout is never purged directly. Other failures leave the
-workspace intact and keep the error visible until acknowledged. The custom
+workspace close. After a single explicit confirmation, linked worktrees are
+removed with `--force`, which terminates pane processes and permanently deletes
+uncommitted and ignored files; unsaved work is lost. This avoids a preliminary
+unforced removal racing with active file writers. If Git has already discarded a
+checkout's registration and its `.git` pointer is missing, an explicit force
+confirmation can permanently delete the remaining checkout files and close the
+workspace. This path requires matching linked-workspace metadata, a bare repo
+key and successful Git registration check, with checkout and repo as canonical
+siblings. Ambiguous paths, symlinks, lookup failures, and still-registered
+checkouts are refused. When the `.git` pointer still verifies an unregistered
+worktree, a separate explicit confirmation can remove its leftover directory
+before closing the workspace. After a removal failure, the popup shows Herdr's
+error message (or its non-JSON output) before any recovery prompt. Recovery
+explains that Git has unregistered the checkout but files remain; a concurrent
+writer can cause `Directory not empty`, but the cause is not assumed. If
+ownership or Git state cannot be established, recovery is refused without further
+filesystem deletion. If recovery is declined or fails, the popup asks you to
+inspect the current checkout and workspace state before retrying. Other failures
+keep the error visible until acknowledged. The custom
 popups wrap long workspace names and confirmation messages; the workspace
 preview clips wide
 pane rows to fit without wrapping blank terminal padding. It sits beside the
