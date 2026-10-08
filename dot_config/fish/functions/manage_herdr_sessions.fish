@@ -16,21 +16,34 @@ function manage_herdr_sessions -d "Navigate Herdr workspaces"
         | . as $workspace
         | select(.worktree.is_linked_worktree != false or .worktree.repo_key == null or
             (any($workspaces[]; .worktree.repo_key == $workspace.worktree.repo_key and .worktree.is_linked_worktree == true) | not))
-        | [.workspace_id, .label, .agent_status]
+        | [.workspace_id, .label, .agent_status,
+            (.worktree.is_linked_worktree == true and .worktree.checkout_path != null
+                and .label == (.worktree.checkout_path | split("/")[-1])
+                and any($workspaces[]; .worktree.repo_key == $workspace.worktree.repo_key and .worktree.is_linked_worktree == false))]
         | @tsv
     ' "$server_log")
         set -l fields (string split \t -- "$row")
+        set -l display_name $fields[2]
+        if test "$fields[4]" = true
+            # TODO(herdr 0.9.3): replace this heuristic when the API exposes custom_label or the sidebar name.
+            # Sidebar rule: https://github.com/herdrdev/herdr/blob/v0.9.3/src/client/shell/sidebar.rs#L626-L641
+            # Missing API field: https://github.com/herdrdev/herdr/blob/v0.9.3/src/api/schema/workspaces.rs#L62-L76
+            set -l branch (command herdr worktree list --workspace "$fields[1]" 2>/dev/null | jq -r --arg id "$fields[1]" 'first(.result.worktrees[]? | select(.open_workspace_id == $id) | .branch // empty) | sub("^worktree/"; "")' 2>/dev/null)
+            if test -n "$branch"
+                set display_name $branch
+            end
+        end
         set -l color 169 177 214
         switch $fields[3]
             case working; set color 158 206 106
             case blocked; set color 224 175 104
             case idle done; set color 247 118 142
         end
-        set -l width (string length --visible -- "$fields[2]")
+        set -l width (string length --visible -- "$display_name")
         if test "$width" -gt "$name_width"
             set name_width $width
         end
-        set -l display (printf '\e[38;2;%s;%s;%sm%s\e[0m' $color "$fields[2]")
+        set -l display (printf '\e[38;2;%s;%s;%sm%s\e[0m' $color "$display_name")
         set -a rows (printf '%s\t%s' "$fields[1]" "$display")
     end
 
