@@ -502,6 +502,7 @@ return {
       require('octo.utils').state_icon_map.COMMENTED = ' '
       require('octo').setup({
         timeout = math.huge,
+        enable_native_completion = false,
         poll = {
           enabled = false,
           notify_on_refresh = false,
