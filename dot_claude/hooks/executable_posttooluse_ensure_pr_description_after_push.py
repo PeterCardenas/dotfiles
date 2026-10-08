@@ -214,6 +214,12 @@ def _advisory(pr_details: dict) -> dict:
         "Required before completing this task: inspect the PR with "
         f"`gh pr view {pr_url} --json title,body`, compare it with the pushed changes, "
         "and, if either field is stale, update it with `gh pr edit`. "
+        "Make the title describe the result; keep the description concise while explaining "
+        "the rationale, what alternatives were investigated, and why the chosen approach won. "
+        "For visual fixes, upload screenshots or a screen recording of the latest fixed state "
+        "to the PR description so reviewers can see the result; replace outdated evidence. "
+        "Consult available browser-evidence and pr-add-screenshots skills for capture, "
+        "verification, and upload (do not install skills). "
         "Do not merely acknowledge this reminder; complete the review and any needed update."
     )
     return {
