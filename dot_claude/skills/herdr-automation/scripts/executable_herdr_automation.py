@@ -6,7 +6,9 @@ import fcntl
 import json
 import math
 import os
+import pwd
 import re
+import shlex
 import shutil
 import stat
 import subprocess
@@ -76,12 +78,17 @@ class Wrapper:
         self.source_config = Path(config).expanduser() if config else None
         self.state_dir = self.root / name
         self.home = self.state_dir / "h"
+        account = pwd.getpwuid(os.getuid())
+        self.pane_home = Path(account.pw_dir)
+        self.pane_shell = account.pw_shell or "/bin/sh"
+        self.pane_shell_path = self.state_dir / "pane-shell"
         self.config_home = self.state_dir / "c"
         self.data_home = self.state_dir / "d"
         self.cache_home = self.state_dir / "k"
         self.config_path = self.config_home / "herdr" / "config.toml"
         self.metadata_path = self.state_dir / "metadata.json"
         self.lock_path = self.root / ".locks" / f"{name}.lock"
+        self.cleanup_path = self.root / ".locks" / f"{name}.cleanup.json"
         self.tmux_runtime = self.state_dir / "tmux-runtime"
         self.transport_name = f"herdr-{name}"
         self.session_name = f"ha-{name}"
@@ -147,6 +154,7 @@ class Wrapper:
             environment.pop(variable, None)
         environment.update(
             HOME=str(self.home),
+            SHELL=str(self.pane_shell_path),
             XDG_CONFIG_HOME=str(self.config_home),
             XDG_DATA_HOME=str(self.data_home),
             XDG_CACHE_HOME=str(self.cache_home),
@@ -213,9 +221,26 @@ class Wrapper:
     def initialize_state(self):
         self.validate_socket_capacity()
         self.ensure_root(True)
-        if self.state_dir.exists() or self.state_dir.is_symlink():
-            raise AutomationError("state directory already exists; refusing adoption")
+        if self.state_dir.exists() or self.state_dir.is_symlink() or self.cleanup_path.exists() or self.cleanup_path.is_symlink():
+            raise AutomationError("state or pending cleanup already exists; close it before creating")
+        self.home.mkdir(mode=0o700, parents=True)
+        self.home.chmod(0o700)
         self.config_path.parent.mkdir(mode=0o700, parents=True)
+        (self.home / ".config").symlink_to(self.config_home)
+        # Herdr stays private; only interactive pane shells regain the user's
+        # normal HOME/XDG paths (and therefore normal app config and auth).
+        self.pane_shell_path.write_text(
+            "#!/bin/sh\n"
+            + "\n".join(f"export {name}={shlex.quote(value)}" for name, value in {
+                "HOME": str(self.pane_home),
+                "XDG_CONFIG_HOME": str(self.pane_home / ".config"),
+                "XDG_DATA_HOME": str(self.pane_home / ".local/share"),
+                "XDG_CACHE_HOME": str(self.pane_home / ".cache"),
+                "SHELL": self.pane_shell,
+            }.items())
+            + f"\nexec {shlex.quote(self.pane_shell)} \"$@\"\n"
+        )
+        self.pane_shell_path.chmod(0o700)
         self.data_home.mkdir(mode=0o700, parents=True)
         self.cache_home.mkdir(mode=0o700, parents=True)
         self.state_dir.chmod(0o700)
@@ -238,6 +263,7 @@ class Wrapper:
             "transport_name": self.transport_name,
             "pane_id": pane_id,
             "home": str(self.home),
+            "pane_home": str(self.pane_home),
             "tmux_runtime": str(self.tmux_runtime),
         }
 
@@ -295,8 +321,54 @@ class Wrapper:
             raise AutomationError("Herdr automation is stale")
         return metadata
 
+    def read_cleanup(self):
+        if self.cleanup_path.is_symlink() or not self.cleanup_path.is_file():
+            raise AutomationError("invalid Herdr cleanup marker")
+        info = self.cleanup_path.stat()
+        value = json.loads(self.cleanup_path.read_text())
+        if not isinstance(value, dict):
+            raise AutomationError("invalid Herdr cleanup marker")
+        if (
+            info.st_uid != os.getuid()
+            or stat.S_IMODE(info.st_mode) != 0o600
+            or value.get("kind") != "herdr-automation-cleanup"
+            or value.get("session_name") != self.session_name
+            or value.get("state_dir") != str(self.state_dir)
+            or type(value.get("fallback")) is not bool
+        ):
+            raise AutomationError("invalid Herdr cleanup marker")
+        return value
+
+    def remove_private_state(self):
+        if self.state_dir.is_symlink() or not self.state_dir.is_dir():
+            raise AutomationError("invalid Herdr state directory")
+        info = self.state_dir.stat()
+        if info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o700:
+            raise AutomationError("unsafe Herdr state directory")
+
+        def reject_walk_error(error):
+            raise error
+
+        # Go modules and similar caches can contain read-only directories. Only
+        # restore write access on owned directories inside the private tree.
+        for directory, _, _ in os.walk(self.state_dir, followlinks=False, onerror=reject_walk_error):
+            info = os.lstat(directory)
+            if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid():
+                raise AutomationError("unsafe directory in Herdr state")
+            if not info.st_mode & stat.S_IWUSR:
+                os.chmod(directory, stat.S_IMODE(info.st_mode) | stat.S_IWUSR | stat.S_IXUSR)
+        shutil.rmtree(self.state_dir)
+
     def close(self):
-        if not self.ensure_root(False) or not self.state_dir.exists():
+        if not self.ensure_root(False):
+            return {"deleted": False, "fallback": False}
+        if self.cleanup_path.exists() or self.cleanup_path.is_symlink():
+            fallback = self.read_cleanup()["fallback"]
+            if self.state_dir.exists() or self.state_dir.is_symlink():
+                self.remove_private_state()
+            self.cleanup_path.unlink()
+            return {"deleted": True, "fallback": fallback}
+        if not self.state_dir.exists() and not self.state_dir.is_symlink():
             return {"deleted": False, "fallback": False}
         metadata = self.read_metadata()
         if metadata.get("status") not in ("starting", "active"):
@@ -308,14 +380,24 @@ class Wrapper:
         deleted = self.run(["herdr", "session", "delete", self.session_name, "--json"], env=environment)
         if deleted.returncode and "not found" not in deleted.stderr.lower():
             raise AutomationError(deleted.stderr.strip() or "unable to delete Herdr session")
-        transport = self.run(self.transport_argv("close"))
+        # The transport first waits for natural exit, then may need its own full
+        # timeout to kill and verify the private tmux server.
+        transport = self.run(self.transport_argv("close"), timeout=self.timeout * 2 + 1)
         if transport.returncode:
             raise AutomationError(transport.stderr.strip() or "unable to close tmux transport")
         try:
             fallback = bool(json.loads(transport.stdout).get("fallback"))
         except json.JSONDecodeError as error:
             raise AutomationError("invalid tmux transport close response") from error
-        shutil.rmtree(self.state_dir)
+        self.cleanup_path.parent.mkdir(mode=0o700, exist_ok=True)
+        write_json_atomic(self.cleanup_path, {
+            "kind": "herdr-automation-cleanup",
+            "session_name": self.session_name,
+            "state_dir": str(self.state_dir),
+            "fallback": fallback,
+        })
+        self.remove_private_state()
+        self.cleanup_path.unlink()
         return {"deleted": True, "fallback": fallback}
 
 

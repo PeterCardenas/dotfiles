@@ -1,11 +1,11 @@
 ---
 name: tmux-automation
-description: Use whenever automating or testing a disposable interactive terminal UI/TUI (including Neovim, lazygit, k9s, fzf, curses, or ncurses) through a wrapper or isolated private tmux server, including observing or capturing its screen. Always use it for requests to inspect, attach, resize, rename, or kill an existing user tmux session so it can enforce the non-execution/refusal boundary; ordinary noninteractive commands and conceptual tmux explanations do not trigger it.
+description: Use for tmux-specific disposable TUI tests, or as a fallback for interactive CLI/TUI automation when an isolated Herdr session is unavailable. Prefer herdr-automation for ordinary disposable Neovim, lazygit, k9s, fzf, and other TUI workflows. Always use this skill for requests to inspect, attach, resize, rename, or kill an existing user tmux session so it can enforce the non-execution/refusal boundary; ordinary noninteractive commands and conceptual tmux explanations do not trigger it.
 ---
 
 # tmux automation
 
-Use `scripts/executable_tmux_automation.py` only for disposable terminal UI workflows. It owns an exact private socket under a `0700` runtime/state directory, uses an atomic metadata replacement while holding a per-name lock, bounded subprocesses, and removes ambient `TMUX` variables.
+Prefer herdr-automation for ordinary disposable CLI/TUI automation when normal user app state is acceptable. Use this skill for tmux-specific tests, or explain why Herdr cannot satisfy the task before selecting this fallback. Neither option isolates writes made by pane applications. Use `scripts/executable_tmux_automation.py` only for disposable terminal UI workflows. It owns an exact private socket under a `0700` runtime/state directory, uses an atomic metadata replacement while holding a per-name lock, bounded subprocesses, and removes ambient `TMUX` variables.
 
 | Contract | Behavior |
 |---|---|

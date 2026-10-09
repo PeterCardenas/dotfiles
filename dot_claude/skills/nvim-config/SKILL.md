@@ -5,7 +5,7 @@ description: Use when editing, debugging, or testing Neovim configuration or plu
 
 ## Delegation
 
-For disposable interactive terminal workflows, delegate lifecycle and raw tmux operations to the local skill at `../tmux-automation/SKILL.md`. This skill owns Neovim configuration and validation; tmux-automation owns private server safety, IDs, waiting, capture, and cleanup.
+For disposable interactive terminal workflows, prefer herdr-automation (`../herdr-automation/SKILL.md`) to own the isolated Herdr lifecycle, input, capture, and cleanup. Pane shells use the user's real HOME, so Neovim uses the normal config and may write normal app state. This skill owns Neovim configuration and validation. Use tmux-automation (`../tmux-automation/SKILL.md`) only for tmux-specific behavior or if Herdr is unavailable; explain that fallback first.
 
 # Neovim Config Guidelines
 
@@ -40,7 +40,7 @@ For disposable interactive terminal workflows, delegate lifecycle and raw tmux o
 
 ### Launching Neovim for testing
 
-Use the `tmux-automation` skill for disposable TUI lifecycle and raw tmux commands. It provides a private socket, bounded cleanup, and stable pane metadata; do not administer a user's existing tmux server. Always launch disposable Neovim instances with `-i NONE`, use the real config when behavior depends on it, and preserve red/green checks and real model turns when semantically required. Exit with `Escape`, `:qa!`, `Enter` before wrapper cleanup.
+Prefer herdr-automation for disposable Neovim tests; its Herdr session is private but Neovim sees the user's real HOME. Use tmux-automation for tmux-specific tests or when Herdr is unavailable. Never administer a user's existing session. Always launch disposable Neovim instances with `-i NONE`, use the real config when behavior depends on it, and preserve red/green checks and real model turns when semantically required. Exit with `Escape`, `:qa!`, `Enter` before wrapper cleanup.
 
 ## Profiling
 

@@ -1,17 +1,17 @@
 ---
 name: herdr-automation
-description: Create, drive, inspect, and reliably clean up disposable isolated Herdr sessions for reproduction, benchmarking, E2E testing, configuration validation, or Herdr TUI experiments. Use this instead of the built-in Herdr skill whenever the task asks for an isolated, temporary, disposable, test, benchmark, or reproduction Herdr session. Use this instead of tmux-automation when Herdr itself is the application under test. Do not use it to control the user's existing Herdr session, workspace, panes, or agents.
+description: Prefer this for disposable interactive CLI/TUI automation and testing (Neovim, lazygit, fzf, k9s, or Herdr itself) in an isolated Herdr session. Herdr runs with private state while pane apps use the user's real HOME and config. Owns creation, keyboard/mouse input, capture, and cleanup. Use instead of tmux-automation except for tmux-specific tests or when Herdr is unavailable; never control the user's existing Herdr session, panes, or agents.
 ---
 
 # Herdr automation
 
-Use `scripts/herdr_automation.py` as the sole lifecycle owner for disposable Herdr experiments. It creates a private HOME/XDG tree, removes inherited Herdr and tmux context, selects an exact named Herdr session, hosts the TUI in a private tmux transport, and owns stop/delete/transport cleanup.
+Use `scripts/herdr_automation.py` as the sole lifecycle owner for disposable Herdr experiments. The Herdr server/client run under a private HOME/XDG tree with an exact named session and private socket; the TUI runs in a private tmux transport. New pane shells use a private launcher that restores the account's real HOME/XDG paths, so Neovim, Pi, and other pane apps read and **may write** normal user config, caches, and credentials. Only Herdr's session is isolated—not the app filesystem or model context. Do not claim that prompts, downloads, plugin updates, or agent sessions are sandboxed. The launcher leaves `HERDR_CONFIG_PATH` and `HERDR_SOCKET_PATH` pointed at the private session so pane-local Herdr commands remain scoped. No credential files are copied.
 
 This skill is separate from both neighboring tools:
 
 - Use the built-in **Herdr** skill to control the user's existing live Herdr session.
-- Use **tmux-automation** for disposable TUIs other than Herdr.
-- Use **herdr-automation** when Herdr itself needs an isolated session.
+- Prefer herdr-automation for disposable CLI/TUI workflows, including Neovim, when normal user app state is acceptable.
+- Use **tmux-automation** for tmux-specific behavior or when Herdr is unavailable. Neither tool provides full filesystem isolation; request a disposable VM when user files must stay untouched.
 
 Never use the built-in Herdr control workflow or invoke tmux-automation directly after this skill triggers. Doing so loses the ownership boundary that makes cleanup reliable.
 
@@ -35,7 +35,7 @@ Choose one safe, task-specific name and create exactly once:
 python3 "$script" create resize-repro
 ```
 
-`create` prints JSON containing the exact `session_name`, private `home`, transport `pane_id`, and `transport_name`. Parse those values rather than predicting Herdr workspace or pane IDs.
+`create` prints JSON containing the exact `session_name`, private Herdr `home`, real `pane_home`, transport `pane_id`, and `transport_name`. Parse those values rather than predicting Herdr workspace or pane IDs.
 
 To test a specific Herdr configuration:
 
@@ -74,7 +74,7 @@ python3 "$script" terminal resize-repro -- capture-pane -p -t %0
 
 Keep the separate capture after a successful wait when screen contents are evidence. `wait-screen` proves readiness; `capture-pane` records it.
 
-`terminal` intentionally exposes tmux commands because tmux is only the private terminal transport. The automation remains a Herdr lifecycle, and callers must not invoke the tmux-automation script directly.
+`terminal` intentionally exposes tmux commands because tmux is only the private terminal transport. For CLI/TUI tests, start the application inside a pane of the owned Herdr session and drive it through this wrapper, not a separate tmux server. The automation remains a Herdr lifecycle, and callers must not invoke the tmux-automation script directly.
 
 ### 4. Inspect ownership
 
@@ -92,7 +92,7 @@ Gracefully exit the application running inside a Herdr pane when the experiment 
 python3 "$script" close resize-repro
 ```
 
-`close` targets only the recorded named Herdr session, stops it, deletes it, closes the private tmux transport, and removes its private state after verified commands succeed. It is idempotent when state is already absent.
+`close` targets only the recorded named Herdr session, stops it, deletes it, closes the private tmux transport, and removes its private state after verified commands succeed. It is idempotent when state is already absent. After stopping owned resources it writes a private cleanup marker outside the removable tree; if removal fails (for example on read-only Go module directories), correct the private filesystem issue and retry the same `close` command. That marker authorizes cleanup only for the exact owned name and path; do not create a marker for legacy or unknown state.
 
 Run `close` in a separate tool call even after a failed wait or command. If close fails, report the error and preserve the private state as evidence; do not fall back to broad `pkill`, default-session commands, or `/tmp` scans.
 
