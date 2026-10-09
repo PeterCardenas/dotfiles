@@ -8,6 +8,7 @@ import os
 import shlex
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 import uuid
@@ -16,7 +17,8 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 SCRIPT = ROOT / "dot_config/tmux/scripts/executable_agentic_pending.sh"
 PID = str(os.getpid())
-STAT_START = Path(f"/proc/{PID}/stat").read_text().split(") ", 1)[1].split()[19]
+START_TOKEN = ROOT / "dot_local/bin/executable_process-start-token"
+STAT_START = subprocess.check_output(["sh", str(START_TOKEN), PID], text=True).strip()
 COLORS = ("#c0caf5", "#9ece6a", "#e0af68", "#f7768e")
 
 
@@ -27,6 +29,7 @@ def test_projected_runtime_matches_canonical_sources():
         (ROOT / "dot_config/nvim_conf/kickstart.nvim/lua/utils/agentic_pending.lua", Path.home() / ".config/nvim/lua/utils/agentic_pending.lua"),
         (ROOT / "dot_config/tmux/statusbar.conf", Path.home() / ".config/tmux/statusbar.conf"),
         (ROOT / "dot_config/tmux/scripts/executable_agentic_pending.sh", Path.home() / ".config/tmux/scripts/agentic_pending.sh"),
+        (START_TOKEN, Path.home() / ".local/bin/process-start-token"),
         (ROOT / "dot_config/fish/functions/manage_sessions.fish", Path.home() / ".config/fish/functions/manage_sessions.fish"),
     ]
     for canonical, runtime in pairs:
@@ -96,9 +99,15 @@ def check_statuses(mode, socket):
 
 def capture_attached_status(server, output):
     """Capture the actual terminal stream; format expansion is only real on attach."""
-    command = ["timeout", "5s", "script", "-qefc", f"tmux -L {shlex.quote(server)} attach-session -t render", "/dev/null"]
+    if sys.platform == "darwin":
+        command = ["script", "-q", "/dev/null", "tmux", "-L", server, "attach-session", "-t", "render"]
+    else:
+        command = ["script", "-qefc", f"tmux -L {shlex.quote(server)} attach-session -t render", "/dev/null"]
     with output.open("wb") as stream:
-        subprocess.run(command, stdout=stream, stderr=subprocess.DEVNULL, check=False)
+        try:
+            subprocess.run(command, stdout=stream, stderr=subprocess.DEVNULL, check=False, timeout=5)
+        except subprocess.TimeoutExpired:
+            pass
     return output.read_bytes()
 
 
@@ -319,7 +328,7 @@ vim.fn.writefile({{ "ready", debug.getinfo(pending.setup, "S").source }}, {str(r
             wait_for(lambda: marker() == "")
             assert pending(server, window, *COLORS) == "#[fg=#c0caf5]"
             nvim_pid = tmux("-L", server, "display-message", "-p", "-t", nvim_pane, "#{pane_pid}").stdout.strip()
-            nvim_start = Path(f"/proc/{nvim_pid}/stat").read_text().split(") ", 1)[1].split()[19]
+            nvim_start = subprocess.check_output(["sh", str(START_TOKEN), str(nvim_pid)], text=True).strip()
             tmux("-L", server, "set-option", "-p", "-t", nvim_pane, "@agentic_pending", f"v1:{nvim_pid}:{nvim_start}:0:1")
             tmux("-L", server, "send-keys", "-t", nvim_pane, ":ClearOnly", "Enter")
             wait_for(lambda: marker() == "")

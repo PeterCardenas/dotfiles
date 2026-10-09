@@ -17,12 +17,12 @@ $marker
 EOF
  [ "$version" = v1 ] && [ -z "$extra" ] || continue
  case "$pid" in ''|*[!0-9]*) continue ;; esac
- case "$start" in ''|*[!0-9]*) continue ;; esac
+ case "$start" in ''|*[!A-Za-z0-9]*) continue ;; esac
  case "$w" in 0|[1-9]|[1-9][0-9]*) ;; *) continue ;; esac
  case "$i" in 0|[1-9]|[1-9][0-9]*) ;; *) continue ;; esac
  [ "$w" -le 10000 ] 2>/dev/null && [ "$i" -le 10000 ] 2>/dev/null || continue
- [ -r "/proc/$pid/stat" ] && kill -0 "$pid" 2>/dev/null || continue
- actual=$(awk '{sub(/^[^)]*\) /,""); print $20}' "/proc/$pid/stat" 2>/dev/null)
+ kill -0 "$pid" 2>/dev/null || continue
+ actual=$(process-start-token "$pid" 2>/dev/null) || continue
  [ "$actual" = "$start" ] || continue
  [ "$w" -gt 0 ] && working=$((working+w))
  [ "$i" -gt 0 ] && idle=$((idle+i))

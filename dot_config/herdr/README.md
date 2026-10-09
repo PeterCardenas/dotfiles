@@ -158,9 +158,13 @@ connected — so a value recorded once at attach time describes the wrong client
 as soon as another one arrives. `herdr-client-connection` inspects the live
 client processes of this session and reports the `SSH_CONNECTION` of the one
 whose input was read most recently: a local client's controlling tty or the
-stdin pipe of a `herdr --remote` SSH bridge. Pane shells adopt it at startup
-and before every command, and the focused Neovim polls it every second while
-background workspaces pause polling.
+stdin pipe of a `herdr --remote` SSH bridge. On macOS, process and tty metadata
+come from `ps` and `/dev`; a remote bridge's pipe has no equivalent to Linux's
+`/proc/<pid>/fd/0` atime. A sole remote bridge is identifiable, but if it
+shares a session with other clients, detection fails explicitly and callers
+retain their last known `SSH_CONNECTION` rather than incorrectly clearing it.
+Pane shells adopt confirmed changes at startup and before every command, and
+the focused Neovim polls every second while background workspaces pause polling.
 Tools that branch on `SSH_CONNECTION` — `wl-paste` reading
 the macOS clipboard, `osc52_copy` choosing a passthrough — therefore target the
 machine the user is actually sitting at.

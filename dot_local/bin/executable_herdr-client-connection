@@ -14,12 +14,19 @@ relatime updating atime on the next read.
 """
 
 import os
+import re
+import shlex
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 DEFAULT_SESSION = "default"
 CLIENT_COMMAND = "herdr"
+
+
+class ClientDetectionUnavailable(RuntimeError):
+    """The active client cannot be determined safely on this platform."""
 
 
 @dataclass(frozen=True)
@@ -137,6 +144,77 @@ def attached_clients(proc_root: Path = Path("/proc")) -> list[HerdrClient]:
     return clients
 
 
+def _mac_ps(*args: str) -> str:
+    result = subprocess.run(["ps", *args], capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        raise ClientDetectionUnavailable(result.stderr.strip() or "ps failed")
+    return result.stdout
+
+
+def _mac_processes() -> list[tuple[int, str, str]]:
+    processes = []
+    for line in _mac_ps("-axo", "pid=,tty=,comm=").splitlines():
+        fields = line.split(maxsplit=2)
+        if len(fields) == 3 and fields[0].isdigit():
+            processes.append((int(fields[0]), fields[1], fields[2]))
+    return processes
+
+
+def _mac_command(pid: int) -> str:
+    return _mac_ps("-p", str(pid), "-ww", "-o", "command=").strip()
+
+
+def _mac_environment(pid: int) -> dict[str, str]:
+    # ps -E exposes the environment captured at process launch, like /proc/environ.
+    command_and_environment = _mac_ps("-E", "-p", str(pid), "-ww", "-o", "command=")
+    environment = {}
+    herdr_env = re.search(r"(?:^|\s)HERDR_ENV=(\S+)", command_and_environment)
+    ssh_connection = re.search(r"(?:^|\s)SSH_CONNECTION=(\S+(?: \S+){3})", command_and_environment)
+    if herdr_env:
+        environment["HERDR_ENV"] = herdr_env.group(1)
+    if ssh_connection:
+        environment["SSH_CONNECTION"] = ssh_connection.group(1)
+    return environment
+
+
+def attached_clients_mac(target_session: str | None = None) -> list[HerdrClient]:
+    """Find tty clients; a sole remote bridge needs no input-time comparison."""
+    clients: list[HerdrClient] = []
+    bridges: list[HerdrClient] = []
+    for pid, tty, command in _mac_processes():
+        if os.path.basename(command) != CLIENT_COMMAND:
+            continue
+        try:
+            args = shlex.split(_mac_command(pid))
+            if not args or os.path.basename(args[0]) != CLIENT_COMMAND:
+                continue
+            session = _parse_session(args[1:])
+            if session is None or (target_session is not None and session != target_session):
+                continue
+            environment = _mac_environment(pid)
+            if "HERDR_ENV" in environment:
+                continue
+            if "remote-client-bridge" in args[1:]:
+                if not environment.get("SSH_CONNECTION"):
+                    raise ClientDetectionUnavailable("remote bridge SSH origin is unavailable")
+                bridges.append(HerdrClient(pid, session, environment["SSH_CONNECTION"], 0))
+                continue
+            if tty == "??" or tty == "?":
+                raise ClientDetectionUnavailable("attached client has no readable tty")
+            last_input = os.stat("/dev/" + tty.removeprefix("/dev/")).st_atime
+        except ClientDetectionUnavailable:
+            raise
+        except (OSError, ValueError):
+            # A client exiting during enumeration is not an active candidate.
+            continue
+        clients.append(HerdrClient(pid, session, environment.get("SSH_CONNECTION"), last_input))
+    if bridges:
+        if clients or len(bridges) != 1:
+            raise ClientDetectionUnavailable("macOS cannot compare remote bridge input with other clients")
+        return bridges
+    return clients
+
+
 def active_client(clients: list[HerdrClient], session: str) -> HerdrClient | None:
     """Return the most recently used client attached to the given session."""
     candidates = [client for client in clients if client.session == session]
@@ -163,7 +241,12 @@ def current_session(socket_path: str | None) -> str:
 def main() -> None:
     """Entry point for herdr-client-connection."""
     session = current_session(os.environ.get("HERDR_SOCKET_PATH"))
-    client = active_client(attached_clients(), session)
+    try:
+        clients = attached_clients_mac(session) if sys.platform == "darwin" else attached_clients()
+        client = active_client(clients, session)
+    except ClientDetectionUnavailable as error:
+        print(f"herdr-client-connection: {error}", file=sys.stderr)
+        sys.exit(1)
     if client and client.ssh_connection:
         sys.stdout.write(client.ssh_connection)
 

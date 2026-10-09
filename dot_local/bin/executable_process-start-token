@@ -1,0 +1,17 @@
+#!/bin/sh
+# Preserve Linux's precise /proc start ticks; macOS exposes process start
+# time via ps instead. Both identify PID reuse without relying on elapsed time.
+case "${1:-}" in ''|*[!0-9]*) exit 1 ;; esac
+case "$(uname -s)" in
+  Linux)
+    [ -r "/proc/$1/stat" ] || exit 1
+    token=$(awk '{sub(/^[^)]*\) /,""); print $20}' "/proc/$1/stat") || exit 1
+    ;;
+  Darwin)
+    start=$(LC_ALL=C TZ=UTC0 ps -p "$1" -o lstart= 2>/dev/null) || exit 1
+    token=$(printf '%s' "$start" | tr -d '[:space:]:')
+    ;;
+  *) exit 1 ;;
+esac
+case "$token" in ''|*[!A-Za-z0-9]*) exit 1 ;; esac
+printf '%s\n' "$token"

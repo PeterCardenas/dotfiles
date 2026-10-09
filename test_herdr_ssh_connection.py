@@ -1,8 +1,10 @@
 import os
 import pty
 import subprocess
+import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from importlib.machinery import SourceFileLoader
 from pathlib import Path
 
@@ -62,9 +64,11 @@ class HerdrClientConnectionTest(unittest.TestCase):
         reader, writer = os.pipe()
         self.addCleanup(os.close, reader)
         self.addCleanup(os.close, writer)
-        pipe = f"/proc/self/fd/{reader}"
+        # A regular file models the fd's atime without relying on Linux /proc.
+        pipe = self.proc.root / f"pipe-{reader}"
+        pipe.touch()
         os.utime(pipe, (last_input, last_input))
-        return pipe
+        return str(pipe)
 
     def active_connection(self, session: str = "default") -> str | None:
         client = DETECTOR.active_client(
@@ -202,6 +206,51 @@ class HerdrClientConnectionTest(unittest.TestCase):
         self.assertIsNone(self.active_connection())
         self.assertEqual(self.active_connection("work"), SSH_CLIENT_CONNECTION)
 
+    def test_macos_local_client_does_not_require_proc(self):
+        tty = self.make_tty(2000.0)
+        with patch.object(DETECTOR, "_mac_processes", return_value=[(101, tty, "herdr")]), patch.object(
+            DETECTOR, "_mac_command", return_value="herdr"
+        ), patch.object(DETECTOR, "_mac_environment", return_value={}):
+            clients = DETECTOR.attached_clients_mac()
+        self.assertEqual(len(clients), 1)
+        self.assertIsNone(clients[0].ssh_connection)
+
+    def test_macos_ssh_client_with_newer_tty_wins(self):
+        local_tty = self.make_tty(1000.0)
+        ssh_tty = self.make_tty(2000.0)
+        with patch.object(DETECTOR, "_mac_processes", return_value=[(101, local_tty, "herdr"), (102, ssh_tty, "herdr")]), patch.object(
+            DETECTOR, "_mac_command", return_value="herdr"
+        ), patch.object(DETECTOR, "_mac_environment", side_effect=[{}, {"SSH_CONNECTION": SSH_CLIENT_CONNECTION}]):
+            client = DETECTOR.active_client(DETECTOR.attached_clients_mac(), "default")
+        self.assertEqual(client.ssh_connection, SSH_CLIENT_CONNECTION)
+
+    def test_macos_bridge_of_another_session_does_not_block_current_session(self):
+        with patch.object(DETECTOR, "_mac_processes", return_value=[(101, "??", "herdr")]), patch.object(
+            DETECTOR, "_mac_command", return_value="herdr --session work remote-client-bridge"
+        ), patch.object(DETECTOR, "_mac_environment", return_value={}):
+            self.assertEqual(DETECTOR.attached_clients_mac("default"), [])
+
+    @unittest.skipUnless(sys.platform == "darwin", "macOS ps -E integration")
+    def test_macos_ps_reads_environment_from_a_live_process(self):
+        with subprocess.Popen([sys.executable, "-c", "import time; time.sleep(5)"], env={**os.environ, "SSH_CONNECTION": SSH_CLIENT_CONNECTION}) as process:
+            self.assertEqual(DETECTOR._mac_environment(process.pid)["SSH_CONNECTION"], SSH_CLIENT_CONNECTION)
+            process.terminate()
+
+    def test_macos_single_remote_bridge_is_unambiguous(self):
+        with patch.object(DETECTOR, "_mac_processes", return_value=[(101, "??", "herdr")]), patch.object(
+            DETECTOR, "_mac_command", return_value="herdr remote-client-bridge"
+        ), patch.object(DETECTOR, "_mac_environment", return_value={"SSH_CONNECTION": SSH_CLIENT_CONNECTION}):
+            client = DETECTOR.active_client(DETECTOR.attached_clients_mac(), "default")
+        self.assertEqual(client.ssh_connection, SSH_CLIENT_CONNECTION)
+
+    def test_macos_remote_bridge_with_local_client_fails_closed(self):
+        tty = self.make_tty(1000.0)
+        with patch.object(DETECTOR, "_mac_processes", return_value=[(101, tty, "herdr"), (102, "??", "herdr")]), patch.object(
+            DETECTOR, "_mac_command", side_effect=["herdr", "herdr remote-client-bridge"]
+        ), patch.object(DETECTOR, "_mac_environment", side_effect=[{}, {"SSH_CONNECTION": SSH_CLIENT_CONNECTION}]):
+            with self.assertRaises(DETECTOR.ClientDetectionUnavailable):
+                DETECTOR.attached_clients_mac()
+
     def test_session_is_derived_from_the_pane_socket_path(self):
         self.assertEqual(DETECTOR.current_session(None), "default")
         self.assertEqual(
@@ -217,11 +266,11 @@ class HerdrClientConnectionTest(unittest.TestCase):
 
 
 class SyncHerdrSshConnectionTest(unittest.TestCase):
-    def run_fish(self, script: str, detector_output: str) -> str:
+    def run_fish(self, script: str, detector_output: str, detector_exit: int = 0) -> str:
         with tempfile.TemporaryDirectory() as temp_dir:
             bin_dir = Path(temp_dir)
             detector = bin_dir / "herdr-client-connection"
-            detector.write_text(f"#!/bin/sh\nprintf '%s' '{detector_output}'\n")
+            detector.write_text(f"#!/bin/sh\nprintf '%s' '{detector_output}'\nexit {detector_exit}\n")
             detector.chmod(0o755)
             env = {**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}"}
             result = subprocess.run(
@@ -244,6 +293,17 @@ class SyncHerdrSshConnectionTest(unittest.TestCase):
         )
 
         self.assertEqual(output.strip(), "unset")
+
+    def test_failed_detection_preserves_an_inherited_connection(self):
+        output = self.run_fish(
+            "set -gx HERDR_ENV 1; "
+            "set -gx SSH_CONNECTION 'client 1 server 2'; "
+            "sync_herdr_ssh_connection; "
+            "echo $SSH_CONNECTION",
+            detector_output="",
+            detector_exit=1,
+        )
+        self.assertEqual(output.strip(), "client 1 server 2")
 
     def test_ssh_client_replaces_an_inherited_connection(self):
         output = self.run_fish(

@@ -32,7 +32,8 @@ end
 ---@async
 local function refresh_ssh_connection()
   local success, output = Shell.async_cmd('herdr-client-connection', {})
-  local ssh_connection = success and output[1] or nil
+  if not success then return end -- Unknown client: retain the last confirmed origin.
+  local ssh_connection = output[1]
   vim.schedule(function()
     vim.env.SSH_CONNECTION = (ssh_connection and ssh_connection ~= '') and ssh_connection or nil
   end)
@@ -44,6 +45,7 @@ local function start_ssh_connection_polling()
   connection_poll_generation = connection_poll_generation + 1
   local generation = connection_poll_generation
   local function poll()
+    if generation ~= connection_poll_generation then return end
     Async.run(refresh_ssh_connection, function()
       if generation == connection_poll_generation then
         vim.defer_fn(poll, 1000)
@@ -75,13 +77,11 @@ end
 
 function M.setup()
   local group = vim.api.nvim_create_augroup('herdr_client_connection', { clear = true })
-  -- Only the visible Neovim needs to follow the active Herdr client. Polling
-  -- every hidden workspace creates enough processes to delay workspace redraws.
+  -- Start at VimEnter: Herdr can switch clients without sending FocusGained.
+  -- FocusLost stops polling so hidden workspaces do not delay redraws.
   vim.api.nvim_create_autocmd('VimEnter', {
     group = group,
-    callback = function()
-      Async.void(refresh_ssh_connection)
-    end,
+    callback = start_ssh_connection_polling,
   })
   vim.api.nvim_create_autocmd('FocusGained', {
     group = group,

@@ -26,6 +26,8 @@ assert(#calls == 1 and calls[1].args[3] == 'report-agent', 'prompt reports worki
 assert(type(calls[1].callback) == 'function', 'report is asynchronous')
 local source = calls[1].args[6]
 assert(source:find('agentic.nvim:', 1, true) == 1, 'reports use a process-specific source')
+local start_token = vim.fn.system({ 'process-start-token', tostring(vim.fn.getpid()) }):gsub('%s+', '')
+assert(vim.v.shell_error == 0 and source == 'agentic.nvim:' .. vim.fn.getpid() .. ':' .. start_token, 'source includes portable process start identity')
 local seq_index = vim.fn.index(calls[1].args, '--seq') + 1
 assert(calls[1].args[seq_index + 1]:match('^%d+$'), 'Herdr receives an integer sequence')
 

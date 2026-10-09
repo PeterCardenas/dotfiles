@@ -19,14 +19,17 @@ local function tmux_args()
   return socket:find('/', 1, true) and { '-S', socket } or { '-L', socket }
 end
 
+local process_owner
 local function owner()
+  if process_owner then return process_owner end
   local pid = vim.fn.getpid()
-  local file = io.open('/proc/' .. pid .. '/stat', 'r')
-  if not file then return tostring(pid) .. ':0' end
-  local contents = file:read('*a'); file:close()
-  local rest = contents:match('^%d+ %b() (.*)$')
-  local fields = rest and vim.split(rest, '%s+', { trimempty = true })
-  return tostring(pid) .. ':' .. (fields and fields[20] or '0')
+  local token = vim.fn.system({ 'process-start-token', tostring(pid) }):gsub('%s+', '')
+  -- Keep the Herdr source unique if ps is unavailable; tmux rejects unverifiable markers.
+  if vim.v.shell_error ~= 0 or not token:match('^[A-Za-z0-9]+$') then
+    token = tostring(vim.uv.hrtime())
+  end
+  process_owner = tostring(pid) .. ':' .. token
+  return process_owner
 end
 
 local function publish_tmux(value)
