@@ -3,6 +3,7 @@
   "private": true,
   "dependencies": {
     "@earendil-works/pi-coding-agent": "1.0.2",
+    "pi-cache-optimizer": "2.8.21",
     "pi-subagents": "0.76.1",
     "pi-web-access": "0.37.0"
   }
