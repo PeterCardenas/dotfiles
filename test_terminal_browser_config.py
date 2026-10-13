@@ -29,13 +29,22 @@ class TerminalBrowserConfigTest(unittest.TestCase):
         for command, keys in {
             "tab.new": "ctrl+p",
             "tab.close": "ctrl+w",
-            "url.edit": "alt+d",
-            "find": "alt+f",
-            "palette": "alt+k",
-            "devtools.console": "ctrl+shift+k",
-            "quit": "alt+q",
+            "url.edit": "f6",
+            "find": "f3",
+            "palette": "f2",
+            "devtools.console": "shift+f12",
+            "quit": "f10",
         }.items():
             self.assertEqual(shortcuts[command], keys)
+
+    def test_shortcuts_do_not_require_alt_or_super(self):
+        for command, value in self.load_shortcuts().items():
+            for chord in value if isinstance(value, list) else [value]:
+                modifiers, _ = normalize(chord)
+                self.assertTrue(
+                    set(modifiers) <= {"ctrl", "shift"},
+                    f"{command}: {chord} requires an unreliable terminal modifier",
+                )
 
     def test_shortcuts_are_unique_and_avoid_repo_terminal_bindings(self):
         shortcuts = self.load_shortcuts()
