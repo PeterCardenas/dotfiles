@@ -66,7 +66,12 @@ a detached worktree at the latest default-branch commit in a unique directory.
 If `origin/HEAD` is missing or the fetch fails, creation stops rather than using
 a stale local commit. `prefix+shift+d` asks for confirmation, removes the checkout when
 the active workspace is a linked worktree, and otherwise performs a normal
-workspace close. After a single explicit confirmation, linked worktrees are
+workspace close. Confirmed deletion selects the workspace immediately above it
+in sidebar order, including the previous linked sibling rather than always the
+group parent. Focus moves before closure because closing the workspace also
+terminates its popup; a failed removal restores the original workspace. The first
+sidebar row retains Herdr's native fallback because it has no row above it.
+After a single explicit confirmation, linked worktrees are
 removed with `--force`, which terminates pane processes and permanently deletes
 uncommitted and ignored files; unsaved work is lost. This avoids a preliminary
 unforced removal racing with active file writers. If Git has already discarded a

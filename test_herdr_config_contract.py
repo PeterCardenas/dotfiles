@@ -327,6 +327,7 @@ class HerdrConfigContractTest(unittest.TestCase):
             home = Path(created["home"])
             config_home = home.parent / "c"
             repository = home / "repo"
+            previous_checkout = home / "previous"
             linked_checkout = home / ("linked-" + "long-path-segment-" * 12)
             repository.mkdir(parents=True)
             subprocess.run(["git", "-C", str(repository), "init", "-b", "main"], check=True, capture_output=True)
@@ -360,6 +361,13 @@ class HerdrConfigContractTest(unittest.TestCase):
             self.assertEqual(linked.returncode, 0, linked.stderr)
             base_workspace = herdr("workspace", "create", "--cwd", str(repository), "--label", "repo")
             self.assertEqual(base_workspace.returncode, 0, base_workspace.stderr)
+            subprocess.run(
+                ["git", "-C", str(repository), "worktree", "add", "-b", "previous", str(previous_checkout)],
+                check=True, capture_output=True,
+            )
+            previous = herdr("worktree", "open", "--cwd", str(repository), "--path", str(previous_checkout))
+            self.assertEqual(previous.returncode, 0, previous.stderr)
+            previous_id = __import__("json").loads(previous.stdout)["result"]["workspace"]["workspace_id"]
             opened = herdr("worktree", "open", "--cwd", str(repository), "--path", str(linked_checkout), "--focus")
             self.assertEqual(opened.returncode, 0, opened.stderr)
             opened_result = __import__("json").loads(opened.stdout)["result"]
@@ -462,6 +470,9 @@ class HerdrConfigContractTest(unittest.TestCase):
                 )
                 self.assertEqual(prompt.returncode, 0, prompt.stderr or prompt.stdout)
                 self.assertTrue(linked_checkout.exists())
+            before = __import__("json").loads(herdr("workspace", "list").stdout)["result"]["workspaces"]
+            sidebar_ids = [entry["workspace_id"] for entry in before]
+            self.assertEqual(sidebar_ids[sidebar_ids.index(workspace_id) - 1], previous_id, sidebar_ids)
             confirmed = subprocess.run(
                 [*controller, "terminal", name, "--", "send-keys", "-t", created["pane_id"], "y", "Enter"],
                 text=True,
@@ -473,12 +484,15 @@ class HerdrConfigContractTest(unittest.TestCase):
             while time.monotonic() < deadline:
                 workspaces = herdr("workspace", "list")
                 self.assertEqual(workspaces.returncode, 0, workspaces.stderr)
-                ids = {entry["workspace_id"] for entry in __import__("json").loads(workspaces.stdout)["result"]["workspaces"]}
-                if workspace_id not in ids and not linked_checkout.exists():
+                rows = __import__("json").loads(workspaces.stdout)["result"]["workspaces"]
+                ids = {entry["workspace_id"] for entry in rows}
+                focused = [entry["workspace_id"] for entry in rows if entry.get("focused")]
+                if workspace_id not in ids and not linked_checkout.exists() and focused == [previous_id]:
                     break
                 time.sleep(0.1)
             self.assertNotIn(workspace_id, ids)
             self.assertFalse(linked_checkout.exists())
+            self.assertEqual(focused, [previous_id])
         finally:
             if created is not None:
                 closed = subprocess.run([*controller, "close", name], text=True, capture_output=True, timeout=20)
@@ -507,7 +521,7 @@ class HerdrConfigContractTest(unittest.TestCase):
             )
             calls = log.read_text().splitlines() if log.exists() else []
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(calls, ["worktree remove --workspace w-linked --force"])
+        self.assertEqual(calls, ["workspace list", "worktree remove --workspace w-linked --force"])
         self.assertIn("terminates its pane processes", result.stderr.lower())
 
     def test_close_popup_does_not_close_linked_workspace_when_worktree_lookup_fails(self):
@@ -792,7 +806,7 @@ class HerdrConfigContractTest(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertFalse(checkout.exists())
-            self.assertEqual(log.read_text().splitlines(), ["workspace close w-partial"])
+            self.assertEqual(log.read_text().splitlines(), ["workspace list", "workspace close w-partial"])
 
     def test_close_popup_force_failure_finishes_partial_git_removal(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -823,7 +837,7 @@ class HerdrConfigContractTest(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertFalse(checkout.exists())
-            self.assertEqual(log.read_text().splitlines(), ["workspace close w-partial"])
+            self.assertEqual(log.read_text().splitlines(), ["workspace list", "workspace close w-partial"])
             self.assertIn("Force delete remaining files and close workspace? [y/N]", result.stderr)
 
     def test_close_popup_refuses_filesystem_purge_when_checkout_is_still_registered(self):
@@ -1005,7 +1019,7 @@ class HerdrConfigContractTest(unittest.TestCase):
                 env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "HERDR_ACTIVE_WORKSPACE_ID": "w-linked"},
             )
             self.assertNotEqual(result.returncode, 0)
-            self.assertEqual(log.read_text().splitlines(), ["worktree remove --workspace w-linked --force"])
+            self.assertEqual(log.read_text().splitlines(), ["workspace list", "worktree remove --workspace w-linked --force"])
             self.assertIn("Worktree removal failed: repository is unavailable", result.stderr)
             self.assertNotIn("Force delete remaining files", result.stderr)
 
@@ -1078,8 +1092,53 @@ class HerdrConfigContractTest(unittest.TestCase):
                 env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "HERDR_ACTIVE_WORKSPACE_ID": "w-linked"},
             )
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual(log.read_text().splitlines(), ["worktree remove --workspace w-linked --force"])
+            self.assertEqual(log.read_text().splitlines(), ["workspace list", "worktree remove --workspace w-linked --force"])
             self.assertIn("terminates its pane processes", result.stderr.lower())
+
+    def test_close_popup_selects_previous_sidebar_row_only_after_confirmation(self):
+        for linked, first, confirm, failure in (
+            (True, False, "y", False),
+            (False, False, "y", False),
+            (True, True, "y", False),
+            (True, False, "n", False),
+            (True, False, "y", True),
+            (False, False, "y", True),
+        ):
+            with self.subTest(linked=linked, first=first, confirm=confirm, failure=failure), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                log = root / "calls"
+                rows = [{"workspace_id": "active", "worktree": {"is_linked_worktree": linked}}]
+                if not first:
+                    rows[:0] = [{"workspace_id": "parent"}, {"workspace_id": "previous"}]
+                listing = __import__("json").dumps({"result": {"workspaces": rows}})
+                worktrees = [{"open_workspace_id": "active", "path": "/repo/task", "is_linked_worktree": True}] if linked else []
+                worktree_listing = __import__("json").dumps({"result": {"worktrees": worktrees}})
+                herdr = root / "herdr"
+                herdr.write_text(
+                    "#!/bin/sh\n"
+                    "case \"$1 $2\" in\n"
+                    f"  'workspace list') printf '%s\\n' '{listing}'; exit 0 ;;\n"
+                    f"  'worktree list') printf '%s\\n' '{worktree_listing}'; exit 0 ;;\n"
+                    "esac\n"
+                    f"printf '%s\\n' \"$*\" >> {log}\n"
+                    f"if [ \"$2\" != focus ]; then exit {int(failure)}; fi\n"
+                )
+                herdr.chmod(0o755)
+                result = subprocess.run(
+                    ["fish", "--no-config", "-c", f"set fish_function_path {CLOSE_WORKSPACE.parent}; herdr_close_workspace"],
+                    input=f"{confirm}\n\nn\n\n", text=True, capture_output=True, timeout=10,
+                    env={**os.environ, "PATH": f"{root}:{os.environ['PATH']}", "HERDR_ACTIVE_WORKSPACE_ID": "active"},
+                )
+                calls = log.read_text().splitlines() if log.exists() else []
+                expected = []
+                if confirm == "y":
+                    if not first:
+                        expected.append("workspace focus previous")
+                    expected.append("worktree remove --workspace active --force" if linked else "workspace close active")
+                    if failure and not first:
+                        expected.append("workspace focus active")
+                    self.assertEqual(result.returncode == 0, not failure, result.stderr)
+                self.assertEqual(calls, expected)
 
     def test_close_popup_uses_normal_close_for_non_git_workspace(self):
         with tempfile.TemporaryDirectory() as bin_dir:
