@@ -1,0 +1,22 @@
+{
+  "palette": "alt+k",
+  "settings.open": "alt+,",
+  "tab.new": "ctrl+p",
+  "tab.close": "ctrl+w",
+  "url.edit": "alt+d",
+  "find": "alt+f",
+  "page.reload": ["ctrl+r", "f5"],
+  "page.back": ["alt+left", "ctrl+["],
+  "page.forward": ["alt+right", "ctrl+]"],
+  "devtools.toggle": "f12",
+  "devtools.console": "ctrl+shift+k",
+  "record.toggle": "alt+shift+r",
+  "grab.toggle": "alt+g",
+  "zoom.in": "alt+=",
+  "zoom.out": "alt+-",
+  "zoom.reset": "alt+0",
+  "ui.zoom.in": "alt+shift+=",
+  "ui.zoom.out": "alt+shift+-",
+  "ui.zoom.reset": "alt+shift+0",
+  "quit": "alt+q"
+}
