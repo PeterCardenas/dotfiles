@@ -1,6 +1,7 @@
 """Local Git regression tests for the bare-repository clone layout."""
 
 import os
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -31,15 +32,17 @@ class CloneCommonTest(unittest.TestCase):
             "-m",
             "initial",
         )
-        self.identity = self.home / "identity"
-        self.git("init", str(self.identity))
-        self.git("-C", str(self.identity), "config", "user.email", "peter@example.com")
-        self.git("-C", str(self.identity), "config", "user.signingkey", "test-key")
+        self.identity = self.home / ".config/git/identities/personal"
+        self.identity.parent.mkdir(parents=True)
+        self.identity.write_text(
+            "[user]\n\temail = peter@example.com\n\tsigningkey = test-key\n"
+        )
         self.projects = self.home / "projects"
         self.projects.mkdir()
         self.env = {
             **os.environ,
             "HOME": str(self.home),
+            "XDG_CONFIG_HOME": str(self.home / ".config"),
             "GIT_CONFIG_GLOBAL": str(self.home / ".gitconfig"),
             "GIT_CONFIG_NOSYSTEM": "1",
         }
@@ -58,6 +61,7 @@ class CloneCommonTest(unittest.TestCase):
 
     def clone(self, *args):
         script = """
+set fish_function_path (path dirname $argv[1]) $fish_function_path
 source $argv[1]
 function print_error
     echo $argv >&2
@@ -75,7 +79,7 @@ function gh
             printf '%s\n' $argv[3] > $HOME/default-repo
     end
 end
-clone-common test-github.com identity $argv[2..-1]
+clone-common test-github.com personal $argv[2..-1]
 or exit $status
 pwd > $HOME/clone-pwd
 """
@@ -130,6 +134,42 @@ pwd > $HOME/clone-pwd
         self.assertEqual(
             (self.home / "default-repo").read_text().strip(), "owner/example"
         )
+
+    def test_clone_uses_custom_xdg_config_home(self):
+        config_home = self.home / "custom config"
+        identity = config_home / "git/identities/personal"
+        identity.parent.mkdir(parents=True)
+        self.identity.rename(identity)
+        self.env["XDG_CONFIG_HOME"] = str(config_home)
+        result = self.clone()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            self.git("-C", str(self.projects / "example"), "config", "user.email"),
+            "peter@example.com",
+        )
+
+    def test_clone_defaults_to_home_config(self):
+        self.env.pop("XDG_CONFIG_HOME")
+        result = self.clone()
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_clone_rejects_missing_or_incomplete_identity(self):
+        for contents in (
+            None,
+            "[user]\nemail = peter@example.com\n",
+            "[user]\nsigningkey = key\n",
+        ):
+            with self.subTest(contents=contents):
+                if contents is None:
+                    self.identity.unlink()
+                else:
+                    self.identity.write_text(contents)
+                result = self.clone()
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(str(self.identity), result.stderr)
+                repo = self.projects / "example"
+                if repo.exists():
+                    shutil.rmtree(repo)
 
     def test_fetch_updates_remote_tracking_branches(self):
         result = self.clone()

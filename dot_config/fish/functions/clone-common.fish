@@ -1,5 +1,4 @@
-function clone-common --description 'Clone a repository' -a ssh_alias -a git_dir -a repo_name
-    set -l git_dir "$HOME/$git_dir/.git"
+function clone-common --description 'Clone a repository' -a ssh_alias -a identity -a repo_name
     set -l repo_matches (string match -gr '(.*)/(.*)' $repo_name)
     if test (count $repo_matches) -ne 2
         print_error "Failed to parse repo name: $repo_name"
@@ -20,17 +19,8 @@ function clone-common --description 'Clone a repository' -a ssh_alias -a git_dir
         print_error "No repo at $repo"
         return 1
     end
-    if test -d "$git_dir"
-        set -l user_email (git --git-dir="$git_dir" config --get user.email)
-        set -l signing_key (git --git-dir="$git_dir" config --get user.signingkey)
-        git config --local user.email "$user_email"
-        git config --local user.name "Peter Cardenas"
-        git config --local user.signingkey "$signing_key"
-        git config --local commit.gpgSign true
-    else
-        print_error "Known git dir not found: $git_dir"
-        return 1
-    end
+    git-config-identity "$identity"; or return 1
+    git config --local user.name "Peter Cardenas"; or return 1
     # Bare clones omit remote-tracking refs; restore normal fetch and pull behavior.
     git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'; or return 1
     git fetch origin; or return 1

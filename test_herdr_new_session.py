@@ -23,6 +23,7 @@ class HerdrNewSessionTest(unittest.TestCase):
         self.projects = self.home / "projects"
         self.env = {
             **os.environ, "HOME": str(self.home),
+            "XDG_CONFIG_HOME": str(self.home / ".config"),
             "PATH": f"{self.bin}:{os.environ['PATH']}",
             "GIT_CONFIG_GLOBAL": str(self.home / ".gitconfig"),
             "GIT_CONFIG_NOSYSTEM": "1",
@@ -32,10 +33,9 @@ class HerdrNewSessionTest(unittest.TestCase):
         self.git("init", "-q", "-b", "main", str(self.remote))
         self.git("-C", str(self.remote), "-c", "user.name=Test", "-c", "user.email=test@example.com",
                  "-c", "commit.gpgSign=false", "commit", "-q", "--allow-empty", "-m", "initial")
-        identity = self.home / ".local/share/chezmoi"
-        self.git("init", "-q", str(identity))
-        self.git("-C", str(identity), "config", "user.email", "test@example.com")
-        self.git("-C", str(identity), "config", "user.signingkey", "test-key")
+        identity = self.home / ".config/git/identities/personal"
+        identity.parent.mkdir(parents=True)
+        identity.write_text("[user]\nemail = test@example.com\nsigningkey = test-key\n")
         self.git("config", "--global", f"url.{self.home / 'remote'}/.insteadOf", "personal-github.com:owner/")
         self.executable("gh", "case \"$1 $2\" in 'api user') echo owner ;; esac\n")
         self.executable("fzf", f"tee '{self.rows}' | grep '^:new-session'\n")
