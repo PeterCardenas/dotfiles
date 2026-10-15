@@ -7,15 +7,14 @@ function clone-common --description 'Clone a repository' -a ssh_alias -a git_dir
     end
     set -l owner $repo_matches[1]
     set -l repo $repo_matches[2]
-    git clone "$ssh_alias:$repo_name" $argv[5..-1]
+    set repo (string replace -r '\.git$' '' -- "$repo")
+    mkdir "$repo"; or return 1
+    git clone --bare "$ssh_alias:$repo_name" $argv[4..-1] "$repo/.bare"
     if test $status -ne 0
         print_error "Failed to clone $repo_name"
         return 1
     end
-    set repo_matches (string match -gr '(.*)\.git' $repo)
-    if test (count $repo_matches) -eq 1
-        set repo $repo_matches[1]
-    end
+    printf 'gitdir: ./.bare\n' >"$repo/.git"; or return 1
     cd "$repo"
     if test $status -ne 0
         print_error "No repo at $repo"
@@ -32,6 +31,13 @@ function clone-common --description 'Clone a repository' -a ssh_alias -a git_dir
         print_error "Known git dir not found: $git_dir"
         return 1
     end
+    # Bare clones omit remote-tracking refs; restore normal fetch and pull behavior.
+    git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'; or return 1
+    git fetch origin; or return 1
+    set -l default_branch (git symbolic-ref --short HEAD); or return 1
+    git worktree add "$default_branch" "$default_branch"; or return 1
+    cd "$default_branch"; or return 1
+    git branch --set-upstream-to="origin/$default_branch" "$default_branch"; or return 1
     set -l existing_fork (gh api graphql -F owner="$owner" -F name="$repo" -f query='
 query GetUserForksForRepo($owner: String!, $name: String!) {
   repository(name: $name, owner: $owner) {
