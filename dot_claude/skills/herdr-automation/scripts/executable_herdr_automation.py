@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Own a disposable Herdr session and its private tmux transport."""
+"""Own a disposable Herdr session; use private tmux only for Herdr UI tests."""
 
 import argparse
 import fcntl
@@ -71,11 +71,12 @@ def write_json_atomic(path, value):
 
 
 class Wrapper:
-    def __init__(self, runtime_root, name, timeout=10, config=None):
+    def __init__(self, runtime_root, name, timeout=10, config=None, visual=False):
         self.root = Path(runtime_root).expanduser()
         self.name = validate_name(name)
         self.timeout = timeout
         self.source_config = Path(config).expanduser() if config else None
+        self.visual = visual
         self.state_dir = self.root / name
         self.home = self.state_dir / "h"
         account = pwd.getpwuid(os.getuid())
@@ -253,18 +254,19 @@ class Wrapper:
         else:
             self.config_path.write_text("")
         self.config_path.chmod(0o600)
-        self.write_metadata({"kind": "herdr-automation", "status": "starting", "session_name": self.session_name, "transport_name": self.transport_name})
+        self.write_metadata({**self.active_metadata(None), "status": "starting"})
 
     def active_metadata(self, pane_id):
         return {
             "kind": "herdr-automation",
             "status": "active",
             "session_name": self.session_name,
-            "transport_name": self.transport_name,
+            "mode": "visual" if self.visual else "app",
+            "transport_name": self.transport_name if self.visual else None,
             "pane_id": pane_id,
             "home": str(self.home),
             "pane_home": str(self.pane_home),
-            "tmux_runtime": str(self.tmux_runtime),
+            "tmux_runtime": str(self.tmux_runtime) if self.visual else None,
         }
 
     def write_metadata(self, value):
@@ -274,41 +276,51 @@ class Wrapper:
         if not self.metadata_path.is_file() or self.metadata_path.is_symlink():
             raise AutomationError("invalid Herdr automation metadata")
         value = json.loads(self.metadata_path.read_text())
-        if value.get("kind") != "herdr-automation" or value.get("session_name") != self.session_name or value.get("transport_name") != self.transport_name:
+        # Older controllers always created a visual transport; preserve cleanup.
+        mode = value.get("mode", "visual")
+        expected_transport = self.transport_name if mode == "visual" else None
+        if mode not in ("app", "visual") or value.get("kind") != "herdr-automation" or value.get("session_name") != self.session_name or value.get("transport_name") != expected_transport:
             raise AutomationError("invalid Herdr automation metadata")
         return value
 
     def create(self):
         self.initialize_state()
         environment = self.isolated_env()
-        launch = self.transport_argv("create")
-        launch.extend(
-            [
-                "--",
-                "env",
-                *[f"{key}={value}" for key, value in environment.items() if key in {"HOME", "XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_CACHE_HOME", "HERDR_CONFIG_PATH"}],
-                "herdr",
-                "--session",
-                self.session_name,
-            ]
-        )
-        result = self.run(launch, env=environment)
-        if result.returncode:
-            raise AutomationError(result.stderr.strip() or "unable to start Herdr transport")
-        try:
-            transport = json.loads(result.stdout)
-        except json.JSONDecodeError as error:
-            raise AutomationError("invalid tmux transport response") from error
+        pane_id = None
+        server = None
+        if self.visual:
+            launch = self.transport_argv("create")
+            # The transport is not under test; ignore user tmux configuration.
+            launch.extend(["--", "-f", "/dev/null", "herdr", "--session", self.session_name])
+            result = self.run(launch, env=environment)
+            if result.returncode:
+                raise AutomationError(result.stderr.strip() or "unable to start Herdr transport")
+            try:
+                pane_id = json.loads(result.stdout)["pane_id"]
+            except (json.JSONDecodeError, KeyError) as error:
+                raise AutomationError("invalid tmux transport response") from error
+        else:
+            with (self.state_dir / "server.log").open("w") as log:
+                server = subprocess.Popen(
+                    ["herdr", "--session", self.session_name, "server"],
+                    env=environment,
+                    stdin=subprocess.DEVNULL,
+                    stdout=log,
+                    stderr=log,
+                    start_new_session=True,
+                )
         deadline = time.monotonic() + self.timeout
         health = None
         while time.monotonic() < deadline:
+            if server is not None and server.poll() is not None:
+                raise AutomationError(f"Herdr server exited; inspect {self.state_dir / 'server.log'}")
             health = self.run_herdr(["workspace", "list"], timeout=min(1, max(0.05, deadline - time.monotonic())))
             if health.returncode == 0:
                 break
             time.sleep(0.05)
         if health is None or health.returncode:
             raise AutomationError((health.stderr if health else "").strip() or f"Herdr session {self.session_name} did not become ready")
-        metadata = self.active_metadata(transport.get("pane_id"))
+        metadata = self.active_metadata(pane_id)
         self.write_metadata(metadata)
         return metadata
 
@@ -380,15 +392,16 @@ class Wrapper:
         deleted = self.run(["herdr", "session", "delete", self.session_name, "--json"], env=environment)
         if deleted.returncode and "not found" not in deleted.stderr.lower():
             raise AutomationError(deleted.stderr.strip() or "unable to delete Herdr session")
-        # The transport first waits for natural exit, then may need its own full
-        # timeout to kill and verify the private tmux server.
-        transport = self.run(self.transport_argv("close"), timeout=self.timeout * 2 + 1)
-        if transport.returncode:
-            raise AutomationError(transport.stderr.strip() or "unable to close tmux transport")
-        try:
-            fallback = bool(json.loads(transport.stdout).get("fallback"))
-        except json.JSONDecodeError as error:
-            raise AutomationError("invalid tmux transport close response") from error
+        fallback = False
+        if metadata.get("mode", "visual") == "visual":
+            # The transport waits for natural exit before verified private-server cleanup.
+            transport = self.run(self.transport_argv("close"), timeout=self.timeout * 2 + 1)
+            if transport.returncode:
+                raise AutomationError(transport.stderr.strip() or "unable to close tmux transport")
+            try:
+                fallback = bool(json.loads(transport.stdout).get("fallback"))
+            except json.JSONDecodeError as error:
+                raise AutomationError("invalid tmux transport close response") from error
         self.cleanup_path.parent.mkdir(mode=0o700, exist_ok=True)
         write_json_atomic(self.cleanup_path, {
             "kind": "herdr-automation-cleanup",
@@ -409,6 +422,7 @@ def build_parser():
     create = actions.add_parser("create")
     create.add_argument("name")
     create.add_argument("--config")
+    create.add_argument("--visual", action="store_true", help="Use private tmux to test Herdr's rendered UI")
     for action in ("info", "close"):
         command = actions.add_parser(action)
         command.add_argument("name")
@@ -430,7 +444,7 @@ def main(argv=None):
         value = getattr(args, key, None)
         if value is not None and (not math.isfinite(value) or value < 0):
             raise AutomationError(f"{key.replace('_', '-')} must be finite and >= 0")
-    wrapper = Wrapper(args.runtime_root, args.name, args.timeout, getattr(args, "config", None))
+    wrapper = Wrapper(args.runtime_root, args.name, args.timeout, getattr(args, "config", None), getattr(args, "visual", False))
     if args.action == "close":
         if not wrapper.ensure_root(False):
             print(json.dumps({"deleted": False, "fallback": False}))
@@ -445,7 +459,9 @@ def main(argv=None):
         if args.action == "info":
             print(json.dumps(wrapper.load_active()))
             return 0
-        wrapper.load_active()
+        metadata = wrapper.load_active()
+        if args.action in ("terminal", "wait-screen") and metadata.get("mode", "visual") != "visual":
+            raise AutomationError("Herdr UI commands require create --visual; use native pane APIs for app tests")
         if args.action == "herdr":
             command = args.command[1:] if args.command[:1] == ["--"] else args.command
             if not command:

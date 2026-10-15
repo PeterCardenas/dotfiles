@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "Reproduce a Herdr workspace rendering problem in a completely isolated disposable Herdr session. Drive the TUI, capture evidence, and clean up everything you create without touching my default Herdr session.",
-      "expected_output": "Uses herdr-automation create/herdr/terminal/wait-screen/close, targets the generated named session, and avoids direct built-in Herdr or tmux-automation lifecycle commands.",
+      "expected_output": "Uses herdr-automation create --visual/herdr/terminal/wait-screen/close, targets the generated named session, and avoids direct built-in Herdr or tmux-automation lifecycle commands. Explains that Herdr session state is private but pane apps use normal user files.",
       "files": []
     },
     {
@@ -22,7 +22,13 @@
     {
       "id": 4,
       "prompt": "Validate a modified Herdr config in a temporary session, including a keybinding interaction and a deterministic screen assertion. Preserve diagnostics if startup fails, otherwise remove the named session and temporary state.",
-      "expected_output": "Uses herdr-automation with --config, bounded wait-screen, separate capture, and close in a separate cleanup step.",
+      "expected_output": "Uses herdr-automation create --visual with --config, bounded wait-screen, separate capture, and close in a separate cleanup step.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "Run Neovim in a disposable Herdr session, enter a deterministic marker, verify its visible terminal screen, then quit and clean up. I am testing Neovim, not Herdr's sidebar or client UI.",
+      "expected_output": "Uses create without --visual and native Herdr pane run/send-text/send-keys/wait-output/read through the controller. Parses Herdr app pane IDs, bounds waits, reads evidence separately, and closes in a separate step. Never starts tmux or uses terminal/wait-screen.",
       "files": []
     }
   ]

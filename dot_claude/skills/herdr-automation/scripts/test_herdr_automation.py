@@ -85,10 +85,83 @@ class HerdrAutomationTests(unittest.TestCase):
             environment = wrapper.run.call_args.kwargs["env"]
             self.assertNotIn("HERDR_SOCKET_PATH", environment)
 
+    def test_app_create_starts_headless_herdr_without_tmux(self):
+        with tempfile.TemporaryDirectory(dir="/tmp") as parent:
+            wrapper = module.Wrapper(Path(parent) / "runtime", "demo")
+            wrapper.run = Mock(return_value=subprocess.CompletedProcess([], 0, "{}\n", ""))
+            with patch.object(module.subprocess, "Popen") as start:
+                start.return_value.poll.return_value = None
+                metadata = wrapper.create()
+            self.assertEqual(metadata.get("mode"), "app")
+            self.assertIsNone(metadata["pane_id"])
+            self.assertIsNone(metadata["transport_name"])
+            self.assertFalse(wrapper.tmux_runtime.exists())
+            start.assert_called_once()
+            self.assertEqual(start.call_args.args[0], ["herdr", "--session", "ha-demo", "server"])
+            self.assertTrue(start.call_args.kwargs["start_new_session"])
+            for call in wrapper.run.call_args_list:
+                self.assertEqual(call.args[0][0], "herdr")
+
+    def test_app_close_never_invokes_tmux(self):
+        with tempfile.TemporaryDirectory(dir="/tmp") as parent:
+            wrapper = module.Wrapper(Path(parent) / "runtime", "demo")
+            wrapper.initialize_state()
+            metadata = wrapper.active_metadata(None)
+            metadata.update(mode="app", transport_name=None)
+            wrapper.write_metadata(metadata)
+            wrapper.run = Mock(return_value=subprocess.CompletedProcess([], 0, "{}\n", ""))
+            self.assertEqual(wrapper.close(), {"deleted": True, "fallback": False})
+            self.assertEqual(wrapper.run.call_count, 2)
+            self.assertFalse(wrapper.state_dir.exists())
+
+    def test_app_mode_rejects_visual_commands_before_transport_launch(self):
+        with tempfile.TemporaryDirectory(dir="/tmp") as parent:
+            wrapper = module.Wrapper(Path(parent) / "runtime", "demo")
+            wrapper.initialize_state()
+            metadata = wrapper.active_metadata(None)
+            metadata.update(mode="app", transport_name=None)
+            wrapper.write_metadata(metadata)
+            for action in (["terminal", "demo", "--", "capture-pane", "-p"],
+                           ["wait-screen", "--regex", "READY", "demo"]):
+                with patch.object(module.Wrapper, "run", return_value=subprocess.CompletedProcess([], 0, "{}\n", "")) as run:
+                    with self.assertRaisesRegex(module.AutomationError, "--visual"):
+                        module.main(["--runtime-root", str(wrapper.root), *action])
+                    self.assertTrue(all(call.args[0][0] == "herdr" for call in run.call_args_list))
+
+    def test_headless_startup_exit_preserves_diagnostics_and_app_cleanup(self):
+        with tempfile.TemporaryDirectory(dir="/tmp") as parent:
+            wrapper = module.Wrapper(Path(parent) / "runtime", "demo")
+            with patch.object(module.subprocess, "Popen") as start:
+                start.return_value.poll.return_value = 1
+                with self.assertRaisesRegex(module.AutomationError, "server.log"):
+                    wrapper.create()
+            self.assertTrue((wrapper.state_dir / "server.log").exists())
+            self.assertEqual(wrapper.read_metadata()["status"], "starting")
+            wrapper.run = Mock(return_value=subprocess.CompletedProcess([], 0, "{}\n", ""))
+            self.assertTrue(wrapper.close()["deleted"])
+            self.assertEqual(wrapper.run.call_count, 2)
+
+    def test_legacy_metadata_still_closes_its_private_transport(self):
+        with tempfile.TemporaryDirectory(dir="/tmp") as parent:
+            wrapper = module.Wrapper(Path(parent) / "runtime", "demo", visual=True)
+            wrapper.initialize_state()
+            metadata = wrapper.active_metadata("%1")
+            del metadata["mode"]
+            wrapper.write_metadata(metadata)
+            wrapper.run = Mock(return_value=subprocess.CompletedProcess([], 0, '{"fallback":false}\n', ""))
+            self.assertTrue(wrapper.close()["deleted"])
+            self.assertEqual(wrapper.run.call_count, 3)
+            self.assertIn(str(wrapper.transport_script), wrapper.run.call_args.args[0])
+
+    def test_visual_flag_is_explicit(self):
+        parser = module.build_parser()
+        self.assertFalse(parser.parse_args(["create", "demo"]).visual)
+        self.assertTrue(parser.parse_args(["create", "demo", "--visual"]).visual)
+
     def test_create_records_owned_session_and_transport(self):
         with tempfile.TemporaryDirectory(dir="/tmp") as parent:
             root = Path(parent) / "runtime"
-            wrapper = module.Wrapper(root, "demo")
+            wrapper = module.Wrapper(root, "demo", visual=True)
             responses = [
                 subprocess.CompletedProcess([], 0, json.dumps({"status": "active", "pane_id": "%1"}) + "\n", ""),
                 subprocess.CompletedProcess([], 0, '{"id":"cli:workspace:list","result":{"workspaces":[]}}\n', ""),
@@ -97,6 +170,7 @@ class HerdrAutomationTests(unittest.TestCase):
             metadata = wrapper.create()
             self.assertEqual(metadata["kind"], "herdr-automation")
             self.assertEqual(metadata["session_name"], "ha-demo")
+            self.assertEqual(metadata["mode"], "visual")
             self.assertEqual(metadata["transport_name"], "herdr-demo")
             self.assertEqual(stat.S_IMODE(wrapper.state_dir.stat().st_mode), 0o700)
             self.assertEqual(stat.S_IMODE(wrapper.metadata_path.stat().st_mode), 0o600)
@@ -104,6 +178,10 @@ class HerdrAutomationTests(unittest.TestCase):
             self.assertIn("herdr", launch)
             self.assertIn("--session", launch)
             self.assertIn("ha-demo", launch)
+            self.assertEqual(launch[launch.index("--") + 1:][:2], ["-f", "/dev/null"])
+            transport = Path(launch[1]).resolve()
+            self.assertEqual(transport.parent, SCRIPT.parents[2] / "tmux-automation/scripts")
+            self.assertIn(transport.name, ("executable_tmux_automation.py", "tmux_automation.py"))
             launch_environment = wrapper.run.call_args_list[0].kwargs["env"]
             self.assertNotIn("HERDR_ENV", launch_environment)
             self.assertNotIn("TMUX", launch_environment)
@@ -142,7 +220,7 @@ class HerdrAutomationTests(unittest.TestCase):
     def test_close_stops_deletes_and_closes_only_owned_resources(self):
         with tempfile.TemporaryDirectory(dir="/tmp") as parent:
             root = Path(parent) / "runtime"
-            wrapper = module.Wrapper(root, "demo")
+            wrapper = module.Wrapper(root, "demo", visual=True)
             wrapper.initialize_state()
             wrapper.write_metadata(wrapper.active_metadata("%1"))
             wrapper.run = Mock(
@@ -163,7 +241,7 @@ class HerdrAutomationTests(unittest.TestCase):
 
     def test_close_removes_read_only_package_directories(self):
         with tempfile.TemporaryDirectory(dir="/tmp") as parent:
-            wrapper = module.Wrapper(Path(parent) / "runtime", "demo")
+            wrapper = module.Wrapper(Path(parent) / "runtime", "demo", visual=True)
             wrapper.initialize_state()
             wrapper.write_metadata(wrapper.active_metadata("%1"))
             package = wrapper.home / "go/pkg/mod/example@v1"
@@ -184,7 +262,7 @@ class HerdrAutomationTests(unittest.TestCase):
 
     def test_close_can_retry_after_partial_removal_of_metadata(self):
         with tempfile.TemporaryDirectory(dir="/tmp") as parent:
-            wrapper = module.Wrapper(Path(parent) / "runtime", "demo")
+            wrapper = module.Wrapper(Path(parent) / "runtime", "demo", visual=True)
             wrapper.initialize_state()
             wrapper.write_metadata(wrapper.active_metadata("%1"))
             wrapper.run = Mock(side_effect=[
@@ -218,6 +296,10 @@ class HerdrAutomationTests(unittest.TestCase):
         nvim = (skills / "nvim-config/SKILL.md").read_text().lower()
         self.assertIn("prefer herdr-automation", herdr)
         self.assertIn("private home", herdr)
+        self.assertIn("create name --visual", herdr)
+        self.assertIn("without tmux", herdr)
+        self.assertIn("pane read --source visible", herdr)
+        self.assertIn("same implementation as tmux-automation, not the same live session", herdr)
         self.assertIn("prefer herdr-automation", tmux)
         self.assertIn("tmux-specific", tmux)
         self.assertIn("prefer herdr-automation", nvim)
