@@ -51,13 +51,20 @@ repository grouping workspaces with linked children, ordered by the most recent
 focus event in Herdr's server log. Each row is only the
 status-colored workspace name; the popup previews the selected workspace's pane
 and focuses it on Enter. `prefix+w` retains Herdr's native workspace navigation.
-From any workspace, `prefix+shift+g` first asks which open worktree group
-should receive the linked worktree. Only repository base workspaces that
-actually have linked children appear; a standalone Git workspace is not a
-group. If the current workspace belongs to a group, that group is selected by
+From any workspace, `prefix+shift+g` opens the creation/group picker, asking which
+open worktree group should receive the linked worktree or offering **New session**.
+New session prompts for the same repository argument as fish `clone` (for example
+`owner/repo` or `owner/repo.git`), creates `~/projects/` if needed, and clones there
+while streaming clone/setup output in the popup. It opens the bare repository
+container as a non-focused group parent, then opens and focuses the default-branch
+checkout as its linked child. Failures keep their output visible until Enter and
+leave cloned files intact. This option remains available with no open groups.
+Only repository base workspaces that actually have linked children appear among
+the existing groups; a standalone Git workspace is not a group. If the current
+workspace belongs to a group, that group is selected by
 default (Enter accepts it; arrows or search choose another). Outside a group,
-the selection starts empty and requires choosing a group. If none is open,
-creation cannot continue. After selection, it asks for a branch name and
+the selection starts empty and requires choosing an existing group or New session.
+After selecting an existing group, it asks for a branch name and
 fetches the default branch from `origin` before creating a focused worktree
 from `origin/HEAD` in the chosen repository container (the directory containing
 the shared Git directory). Named branches use a slash-to-hyphen slug for their

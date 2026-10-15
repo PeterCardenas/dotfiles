@@ -1207,7 +1207,7 @@ class HerdrConfigContractTest(unittest.TestCase):
                 text=True, capture_output=True, timeout=10,
             )
             self.assertNotEqual(result.returncode, 0)
-            self.assertEqual(choices.read_text().splitlines(), ["\tChoose a group", "w-group\tproject — /repo/project"])
+            self.assertEqual(choices.read_text().splitlines(), ["\tChoose a group", "w-group\tproject — /repo/project", ":new-session\tNew session"])
 
     def test_worktree_popup_requires_explicit_group_when_active_workspace_has_no_base(self):
         with tempfile.TemporaryDirectory() as bin_dir:
@@ -1525,7 +1525,7 @@ class HerdrConfigContractTest(unittest.TestCase):
             )
             herdr.chmod(0o755)
             fzf = bin_dir / "fzf"
-            fzf.write_text(f"#!/bin/sh\nIFS= read -r first\nprintf '%s\\n' \"$first\" > {root / 'default'}\ntail -n 1\n")
+            fzf.write_text(f"#!/bin/sh\nIFS= read -r first\nprintf '%s\\n' \"$first\" > {root / 'default'}\ngrep '^second[[:space:]]'\n")
             fzf.chmod(0o755)
             result = subprocess.run(
                 ["fish", "--no-config", "-c", f"set fish_function_path {CREATE_WORKTREE.parent}; herdr_new_worktree"],

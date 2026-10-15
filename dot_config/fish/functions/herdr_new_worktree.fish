@@ -24,10 +24,22 @@ function herdr_new_worktree --description "Create a Herdr worktree in a chosen r
     else
         set -p groups (printf '\tChoose a group')
     end
-    printf '%s\n' 'Group: choose a repository (Enter to continue; Escape to cancel)' >&2
+    set -a groups (printf ':new-session\tNew session')
+    printf '%s\n' 'Group: choose a repository or New session (Enter to continue; Escape to cancel)' >&2
     set -l choice (printf '%s\n' $groups | fzf --no-sort --layout=reverse --delimiter='\t' --with-nth=2 --prompt='Group> '); or return 1
     set -l group (string match -r '^[^\t]+' -- "$choice")
     test -n "$group"; or return 1
+    if test "$group" = :new-session
+        set -l repo (herdr_popup_read 'Repo to clone into ~/projects (same argument as clone, e.g. owner/repo):'); or return 1
+        set repo (string trim -- "$repo")
+        test -n "$repo"; or return 1
+        herdr_new_session "$repo"
+        set -l result $status
+        if test "$result" -ne 0
+            herdr_popup_read 'New session failed. Press Enter to close.' >/dev/null
+        end
+        return $result
+    end
 
     set -l listing (command herdr worktree list --workspace "$group" 2>/dev/null); or return 1
     set -l checkout (printf '%s\n' "$listing" | jq -r '.result.source.source_checkout_path // empty')
