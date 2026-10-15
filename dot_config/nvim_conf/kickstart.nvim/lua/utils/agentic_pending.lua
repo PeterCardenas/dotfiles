@@ -77,44 +77,104 @@ local function publish_herdr(state)
   flush_herdr()
 end
 
-function M.rename_workspace(title, tab_page_id, session_id)
-  if type(title) ~= 'string' then return false end
-  local workspace_title = vim.trim(vim.fn.strcharpart(vim.trim(title), 0, 20))
-  if workspace_title == '' then return false end
-  if vim.env.HERDR_ENV ~= '1' or not vim.env.HERDR_WORKSPACE_ID then return end
-  if tab_page_id ~= vim.api.nvim_get_current_tabpage() then return end
-  local registry = package.loaded['agentic.session_registry']
-  local session = registry and registry.sessions and registry.sessions[tab_page_id]
-  if not session or session.session_id ~= session_id then return end
+---Request a guarded async workspace rename; optional callback receives whether it succeeded.
+---@param callback? fun(success: boolean)
+function M.rename_workspace(title, tab_page_id, session_id, callback)
+  local Async = require('utils.async')
+  Async.void(function() ---@async
+    local renamed = false
+    local function rename() ---@async
+      if type(title) ~= 'string' then return end
+      local workspace_title = vim.trim(vim.fn.strcharpart(vim.trim(title), 0, 20))
+      if workspace_title == '' then return end
+      if vim.env.HERDR_ENV ~= '1' or not vim.env.HERDR_WORKSPACE_ID then return end
+      if tab_page_id ~= vim.api.nvim_get_current_tabpage() then return end
+      local registry = package.loaded['agentic.session_registry']
+      local session = registry and registry.sessions and registry.sessions[tab_page_id]
+      if not session or session.session_id ~= session_id then return end
 
-  local herdr = vim.env.HERDR_BIN_PATH or 'herdr'
-  local listed = vim.system({ herdr, 'workspace', 'list' }):wait(1000)
-  if not listed or listed.code ~= 0 then return false end
-  local ok, workspace_list = pcall(vim.json.decode, listed.stdout)
-  if not ok or type(workspace_list) ~= 'table' then return false end
-  local workspaces = workspace_list.result and workspace_list.result.workspaces or {}
-  local repo_key
-  for _, workspace in ipairs(workspaces) do
-    if workspace.workspace_id == vim.env.HERDR_WORKSPACE_ID then
-      local worktree = workspace.worktree
-      if not worktree or not worktree.is_linked_worktree then return false end
-      repo_key = worktree.repo_key
-      break
+      local herdr = vim.env.HERDR_BIN_PATH or 'herdr'
+      local workspace_id = vim.env.HERDR_WORKSPACE_ID
+      local pane_id = vim.env.HERDR_PANE_ID
+      local cwd = vim.uv.cwd()
+      local ok, output = require('utils.shell').async_cmd(herdr, { 'api', 'snapshot' }, nil)
+      if not ok then return end
+      local decoded, response = pcall(vim.json.decode, table.concat(output.stdout, '\n'))
+      local snapshot = decoded and type(response) == 'table' and response.result and response.result.snapshot or nil
+      if type(snapshot) ~= 'table' or type(snapshot.panes) ~= 'table' or type(snapshot.workspaces) ~= 'table' then return end
+
+      local pane_matches_workspace = false
+      for _, pane in ipairs(snapshot.panes or {}) do
+        if pane.pane_id == pane_id and pane.workspace_id == workspace_id then
+          pane_matches_workspace = true
+          break
+        end
+      end
+      if not pane_matches_workspace then return end
+
+      local target
+      for _, workspace in ipairs(snapshot.workspaces or {}) do
+        if workspace.workspace_id == workspace_id then
+          target = workspace
+          break
+        end
+      end
+      local worktree = target and target.worktree
+      if not worktree or not require('utils.workspace_context').matches_linked_worktree(cwd, worktree) then return end
+
+      local base_workspace_id
+      for _, workspace in ipairs(snapshot.workspaces) do
+        local base_worktree = workspace.worktree
+        if workspace.workspace_id ~= workspace_id and base_worktree
+          and base_worktree.repo_key == worktree.repo_key and base_worktree.is_linked_worktree == false
+        then
+          base_workspace_id = workspace.workspace_id
+          break
+        end
+      end
+      if not base_workspace_id then return end
+
+      if vim.env.HERDR_ENV ~= '1' or vim.env.HERDR_WORKSPACE_ID ~= workspace_id or vim.env.HERDR_PANE_ID ~= pane_id
+        or vim.uv.cwd() ~= cwd or tab_page_id ~= vim.api.nvim_get_current_tabpage()
+      then return end
+      registry = package.loaded['agentic.session_registry']
+      session = registry and registry.sessions and registry.sessions[tab_page_id]
+      if not session or session.session_id ~= session_id then return end
+
+      local fresh_ok, fresh_output = require('utils.shell').async_cmd(herdr, { 'api', 'snapshot' }, nil)
+      if not fresh_ok then return end
+      local fresh_decoded, fresh_response = pcall(vim.json.decode, table.concat(fresh_output.stdout, '\n'))
+      local fresh = fresh_decoded and type(fresh_response) == 'table' and fresh_response.result and fresh_response.result.snapshot or nil
+      if type(fresh) ~= 'table' or type(fresh.panes) ~= 'table' or type(fresh.workspaces) ~= 'table' then return end
+      local pane_still_associated = false
+      for _, pane in ipairs(fresh.panes) do
+        if pane.pane_id == pane_id and pane.workspace_id == workspace_id then pane_still_associated = true; break end
+      end
+      local target_still_same, base_still_present = false, false
+      for _, workspace in ipairs(fresh.workspaces) do
+        local fresh_worktree = workspace.worktree
+        if workspace.workspace_id == workspace_id and fresh_worktree
+          and fresh_worktree.checkout_path == worktree.checkout_path and fresh_worktree.repo_key == worktree.repo_key
+          and fresh_worktree.is_linked_worktree == true
+        then target_still_same = true end
+        if workspace.workspace_id == base_workspace_id and fresh_worktree
+          and fresh_worktree.repo_key == worktree.repo_key and fresh_worktree.is_linked_worktree == false
+        then base_still_present = true end
+      end
+      if not pane_still_associated or not target_still_same or not base_still_present then return end
+      if vim.env.HERDR_ENV ~= '1' or vim.env.HERDR_WORKSPACE_ID ~= workspace_id or vim.env.HERDR_PANE_ID ~= pane_id
+        or vim.uv.cwd() ~= cwd or tab_page_id ~= vim.api.nvim_get_current_tabpage()
+      then return end
+      registry = package.loaded['agentic.session_registry']
+      session = registry and registry.sessions and registry.sessions[tab_page_id]
+      if not session or session.session_id ~= session_id then return end
+
+      local success = require('utils.shell').async_cmd(herdr, { 'workspace', 'rename', workspace_id, workspace_title }, nil)
+      return success
     end
-  end
-  if not repo_key then return false end
-  -- A checkout can be open without belonging to a sidebar group; require its base workspace.
-  local has_base = false
-  for _, workspace in ipairs(workspaces) do
-    local worktree = workspace.worktree
-    if workspace.workspace_id ~= vim.env.HERDR_WORKSPACE_ID and worktree and worktree.repo_key == repo_key and worktree.is_linked_worktree == false then
-      has_base = true
-      break
-    end
-  end
-  if not has_base then return false end
-  local renamed = vim.system({ herdr, 'workspace', 'rename', vim.env.HERDR_WORKSPACE_ID, workspace_title }):wait(1000)
-  return renamed and renamed.code == 0
+    renamed = rename() == true
+    if callback then callback(renamed) end
+  end)
 end
 
 function M.mark_prompt(data)
