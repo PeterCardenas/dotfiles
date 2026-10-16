@@ -1,22 +1,122 @@
 [
-  {"query":"Reproduce this Herdr workspace resize bug in an isolated disposable session and clean it up afterward.","should_trigger":true},
-  {"query":"Benchmark Kitty image transport inside a temporary Herdr TUI without touching my default session.","should_trigger":true},
-  {"query":"Validate this modified Herdr config and keybinding in a fresh named test session.","should_trigger":true},
-  {"query":"Create a disposable Herdr session, drive ctrl+f, capture the screen, and remove all test state.","should_trigger":true},
-  {"query":"Use an isolated Herdr environment to test workspace switching end to end.","should_trigger":true},
-  {"query":"I need a temporary Herdr reproduction with a private HOME and deterministic cleanup.","should_trigger":true},
-  {"query":"Run Neovim within a throwaway Herdr session and measure its resize events.","should_trigger":true},
-  {"query":"Test Herdr startup failure handling while preserving diagnostics from the disposable session.","should_trigger":true},
-  {"query":"Inspect the agents currently running in my existing Herdr workspace.","should_trigger":false},
-  {"query":"Prompt the reviewer agent in the pane beside me using Herdr.","should_trigger":false},
-  {"query":"List the workspaces in my current Herdr session.","should_trigger":false},
-  {"query":"Close the currently focused Herdr workspace.","should_trigger":false},
-  {"query":"Test lazygit in a disposable tmux session; Herdr is not involved.","should_trigger":false},
-  {"query":"Automate Neovim in private tmux and capture its screen.","should_trigger":false},
-  {"query":"Explain how Herdr persistent sessions work without running one.","should_trigger":false},
-  {"query":"Review my Herdr config file statically and suggest improvements.","should_trigger":false},
-  {"query":"Start a permanent Herdr session for daily work.","should_trigger":false},
-  {"query":"Run a headless Herdr unit test with cargo; no interactive session is needed.","should_trigger":false},
-  {"query":"Connect to an existing Herdr session on a saved remote machine.","should_trigger":false},
-  {"query":"Take a browser screenshot of the Herdr documentation website.","should_trigger":false}
+  {
+    "query": "Reproduce this Herdr workspace resize bug in an isolated disposable session and clean it up afterward.",
+    "should_trigger": true
+  },
+  {
+    "query": "Benchmark Kitty image transport inside a temporary Herdr TUI without touching my default session.",
+    "should_trigger": true
+  },
+  {
+    "query": "Validate this modified Herdr config and keybinding in a fresh named test session.",
+    "should_trigger": true
+  },
+  {
+    "query": "Create a disposable Herdr session, drive ctrl+f, capture the screen, and remove all test state.",
+    "should_trigger": true
+  },
+  {
+    "query": "Use an isolated Herdr environment to test workspace switching end to end.",
+    "should_trigger": true
+  },
+  {
+    "query": "I need a temporary Herdr reproduction with a private HOME and deterministic cleanup.",
+    "should_trigger": true
+  },
+  {
+    "query": "Run Neovim within a throwaway Herdr session and measure its resize events.",
+    "should_trigger": true
+  },
+  {
+    "query": "Test Herdr startup failure handling while preserving diagnostics from the disposable session.",
+    "should_trigger": true
+  },
+  {
+    "query": "Inspect the agents currently running in my existing Herdr workspace.",
+    "should_trigger": false
+  },
+  {
+    "query": "Prompt the reviewer agent in the pane beside me using Herdr.",
+    "should_trigger": false
+  },
+  {
+    "query": "List the workspaces in my current Herdr session.",
+    "should_trigger": false
+  },
+  {
+    "query": "Close the currently focused Herdr workspace.",
+    "should_trigger": false
+  },
+  {
+    "query": "Test lazygit in a disposable tmux session; Herdr is not involved.",
+    "should_trigger": false
+  },
+  {
+    "query": "Automate Neovim in private tmux and capture its screen.",
+    "should_trigger": false
+  },
+  {
+    "query": "Explain how Herdr persistent sessions work without running one.",
+    "should_trigger": false
+  },
+  {
+    "query": "Review my Herdr config file statically and suggest improvements.",
+    "should_trigger": false
+  },
+  {
+    "query": "Start a permanent Herdr session for daily work.",
+    "should_trigger": false
+  },
+  {
+    "query": "Run a headless Herdr unit test with cargo; no interactive session is needed.",
+    "should_trigger": false
+  },
+  {
+    "query": "Connect to an existing Herdr session on a saved remote machine.",
+    "should_trigger": false
+  },
+  {
+    "query": "Take a browser screenshot of the Herdr documentation website.",
+    "should_trigger": false
+  },
+  {
+    "query": "Neovim sometimes renders too small after switching Herdr workspaces. Reproduce it in an isolated Herdr session and capture evidence.",
+    "should_trigger": true
+  },
+  {
+    "query": "I just run `nvim` in a Herdr pane, then quit and see this message. Figure out why and test the interactive reproduction.",
+    "should_trigger": true
+  },
+  {
+    "query": "The Herdr reproduction is still off; use Herdr itself, not the tmux wrapper, and don't use the default workspace.",
+    "should_trigger": true
+  },
+  {
+    "query": "Use my existing current Herdr session to inspect the reviewer agent output.",
+    "should_trigger": false
+  },
+  {
+    "query": "Connect to my existing remote Herdr session and read the pane I specify.",
+    "should_trigger": false
+  },
+  {
+    "query": "Run this explicitly tmux-specific keybinding test in a disposable tmux session.",
+    "should_trigger": false
+  },
+  {
+    "query": "Explain Herdr's workspace model without launching anything.",
+    "should_trigger": false
+  },
+  {
+    "query": "Run the headless cargo tests; do not launch a TUI.",
+    "should_trigger": false
+  },
+  {
+    "query": "Take a screenshot of the interactive CLI app so I can see its state.",
+    "should_trigger": true
+  },
+  {
+    "query": "There's HERDR_ENV in the shell; launch a fresh CLI agent, verify its prompt renders, and capture its output without disturbing my work.",
+    "should_trigger": true
+  }
 ]

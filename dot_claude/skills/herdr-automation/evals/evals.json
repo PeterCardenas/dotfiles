@@ -30,6 +30,48 @@
       "prompt": "Run Neovim in a disposable Herdr session, enter a deterministic marker, verify its visible terminal screen, then quit and clean up. I am testing Neovim, not Herdr's sidebar or client UI.",
       "expected_output": "Uses create without --visual and native Herdr pane run/send-text/send-keys/wait-output/read through the controller. Parses Herdr app pane IDs, bounds waits, reads evidence separately, and closes in a separate step. Never starts tmux or uses terminal/wait-screen.",
       "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "Neovim renders too small after switching Herdr workspaces. Reproduce it in an isolated Herdr session, drive the app, and capture evidence.",
+      "expected_output": "Triggers herdr-automation; creates a controller-owned disposable app-mode Herdr session, drives Neovim through native pane APIs, captures text evidence, and closes only its owned session. Does not use the ambient/default live session; explains that private Herdr state does not sandbox pane app writes.",
+      "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "The reproduction is still off; use Herdr itself, not the tmux wrapper. Don't use the default workspace.",
+      "expected_output": "Uses herdr-automation with a disposable named Herdr session and native pane APIs (or explicit --visual only if Herdr's own UI is under test). Neither the phrase 'use Herdr' nor inherited HERDR_ENV authorizes a live session. Never accesses a live session without an explicit request for that existing session.",
+      "files": []
+    },
+    {
+      "id": 8,
+      "prompt": "Use my existing current Herdr session to inspect the reviewer agent output.",
+      "expected_output": "Routes to the built-in Herdr skill because the user explicitly requested their existing live session; does not create a disposable herdr-automation session.",
+      "files": []
+    },
+    {
+      "id": 9,
+      "prompt": "Take a screenshot of the interactive CLI app for evidence.",
+      "expected_output": "Triggers herdr-automation for disposable interactive app work. Explicitly states that app-mode text capture is not a screenshot and that --visual is only for Herdr's own UI, not a general app screenshot mechanism. Reports graphical capture as unavailable unless a separately available suitable capture mechanism is identified; never claims text evidence satisfies the screenshot request.",
+      "files": []
+    },
+    {
+      "id": 10,
+      "prompt": "Run a tmux-specific keybinding test in a disposable tmux session.",
+      "expected_output": "Respects the explicit tmux request and uses tmux-automation; does not force herdr-automation.",
+      "files": []
+    },
+    {
+      "id": 11,
+      "prompt": "Review this Herdr config statically and explain its behavior; do not start an app.",
+      "expected_output": "Does not trigger herdr-automation; performs static analysis only.",
+      "files": []
+    },
+    {
+      "id": 12,
+      "prompt": "Run the headless cargo unit tests, with no interactive TUI session.",
+      "expected_output": "Does not trigger herdr-automation; runs the noninteractive tests directly.",
+      "files": []
     }
   ]
 }

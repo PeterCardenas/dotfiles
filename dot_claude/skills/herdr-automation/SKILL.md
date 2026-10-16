@@ -1,9 +1,11 @@
 ---
 name: herdr-automation
-description: Prefer this for disposable interactive CLI/TUI automation and testing (Neovim, lazygit, fzf, k9s, or Herdr itself) in an isolated Herdr session. Test apps with native Herdr pane APIs only; use the explicit --visual mode and private tmux transport only to test Herdr's own rendered UI. Herdr runs with private state while pane apps use the user's real HOME and config. Owns creation, input, output inspection, and cleanup. Use instead of tmux-automation except for tmux-specific tests or when Herdr is unavailable; never control the user's existing Herdr session, panes, or agents.
+description: Default for interactive CLI/TUI automation and testing (including reproductions, tests, launching/driving apps or agents, and screenshot/evidence requests) in an isolated disposable Herdr session. Test apps with native Herdr pane APIs only; use the explicit --visual mode and private tmux transport only to test Herdr's own rendered UI. Herdr runs with private state while pane apps use the user's real HOME and config. Owns creation, input, output inspection, and cleanup. Use instead of tmux-automation unless the user explicitly requests tmux-specific testing or Herdr is unavailable; never control the user's existing Herdr session, panes, or agents without an explicit request to use that existing live session.
 ---
 
 # Herdr automation
+
+Use this skill by default whenever a task needs an interactive CLI/TUI workflow: reproduce, test, launch or drive an app/agent, or collect interactive screen evidence. A request that merely says “Herdr,” asks for screenshots/evidence, or carries ambient Herdr environment variables does not authorize access to a live session; create a disposable session with this controller instead. Only an explicit user request to use their existing current or remote live Herdr session routes to the built-in Herdr skill. Never access a live Herdr session automatically. Explicit tmux-specific testing remains tmux-automation; static, conceptual, and noninteractive work does not trigger this skill. If Herdr is unavailable, use the documented tmux-automation fallback.
 
 Use `scripts/herdr_automation.py` as the sole lifecycle owner for disposable Herdr experiments. Choose the mode by **what is being tested**, not whether the application is a TUI:
 

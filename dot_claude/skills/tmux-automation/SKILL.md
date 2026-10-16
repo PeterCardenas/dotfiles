@@ -1,6 +1,6 @@
 ---
 name: tmux-automation
-description: Use for tmux-specific disposable TUI tests, or as a fallback for interactive CLI/TUI automation when an isolated Herdr session is unavailable. Prefer herdr-automation for ordinary disposable Neovim, lazygit, k9s, fzf, and other TUI workflows. Always use this skill for requests to inspect, attach, resize, rename, or kill an existing user tmux session so it can enforce the non-execution/refusal boundary; ordinary noninteractive commands and conceptual tmux explanations do not trigger it.
+description: Use for explicitly requested tmux-specific disposable TUI tests, or as a fallback for interactive CLI/TUI automation when an isolated Herdr session is unavailable. herdr-automation is the default for interactive CLI/TUI workflows. Always use this skill for requests to inspect, attach, resize, rename, or kill an existing user tmux session so it can enforce the non-execution/refusal boundary; ordinary noninteractive commands and conceptual tmux explanations do not trigger it.
 ---
 
 # tmux automation
