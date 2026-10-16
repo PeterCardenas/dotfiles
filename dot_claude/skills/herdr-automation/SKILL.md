@@ -7,7 +7,7 @@ description: Prefer this for disposable interactive CLI/TUI automation and testi
 
 Use `scripts/herdr_automation.py` as the sole lifecycle owner for disposable Herdr experiments. Choose the mode by **what is being tested**, not whether the application is a TUI:
 
-- **Apps inside Herdr (default):** `create NAME` starts a headless Herdr server, without tmux. Launch and drive Neovim, lazygit, fzf, agents, and other apps through native Herdr pane APIs. Read an app's terminal screen with `pane read --source visible`; an app screen assertion does not require visual mode.
+- **Apps inside Herdr (default):** `create NAME` starts a headless Herdr server, without tmux. Launch and drive Neovim, lazygit, fzf, agents, and other apps through native Herdr pane APIs. Use the wrapper's explicit `capture NAME PANE` command for agent-facing output; it defaults to the latest 200 unwrapped lines in plain text. Choose `--format ansi` only when terminal color/styling matters, or `--source visible|recent|detection` and `--lines N` when those capture boundaries are needed. An app screen assertion does not require visual mode.
 - **Herdr's own rendered UI:** `create NAME --visual` hosts the Herdr client in a private tmux terminal. Use this only for Herdr sidebar/rendering, outer-client keybindings, mouse interactions, or full-client resize/visual assertions. Native pane APIs do not exercise that outer UI.
 
 Both modes use a private HOME/XDG tree, exact named Herdr session, and private socket. New pane shells restore the account's real HOME/XDG paths, so Neovim, Pi, and other pane apps read and **may write** normal user config, caches, and credentials. Only Herdr's session is isolated—not the app filesystem or model context. Do not claim that prompts, downloads, plugin updates, or agent sessions are sandboxed. The launcher leaves `HERDR_CONFIG_PATH` and `HERDR_SOCKET_PATH` pointed at the private session so pane-local Herdr commands remain scoped. No credential files are copied.
@@ -57,6 +57,7 @@ Run every Herdr API/CLI command through `herdr`; the controller supplies the pri
 ```sh
 python3 "$script" herdr app-repro -- workspace list
 python3 "$script" herdr app-repro -- pane list
+python3 "$script" capture app-repro w1:p1
 ```
 
 If no workspace exists, create one with `herdr NAME -- workspace create --cwd /absolute/path`. Parse its output and `pane list` to obtain the app pane ID. Do not run plain `herdr workspace ...` during the experiment: ambient commands can target the user's default session.
@@ -74,7 +75,7 @@ python3 "$script" --timeout 12 herdr app-repro -- pane wait-output --match APP_R
 python3 "$script" herdr app-repro -- pane read --source visible "$pane"
 ```
 
-Keep waits finite at both layers: `pane wait-output --timeout` is in milliseconds, and the controller's global `--timeout` is in seconds. Keep the separate read after a successful wait when screen contents are evidence. Use native `pane resize`, `send-text`, `send-keys`, `read`, and `wait-output` as needed; check subcommand help for exact syntax. Do not create tmux or use `terminal`/`wait-screen` for app testing. Those actions reject app-mode sessions.
+Keep waits finite at both layers: `pane wait-output --timeout` is in milliseconds, and the controller's global `--timeout` is in seconds. Keep the separate read after a successful wait when screen contents are evidence. Use native `pane resize`, `send-text`, `send-keys`, `read`, and `wait-output` as needed; check subcommand help for exact syntax. The wrapper `capture` command is a concise agent-facing shortcut over `herdr pane read`; it emits rendered text, not structured content or a screenshot. `--format json` is not supported. Herdr has no pane screenshot/image capture in this headless workflow: do not claim pixel, image, or graphical evidence. Use `herdr NAME -- api snapshot` separately for structured session/layout metadata, not screen contents. Do not create tmux or use `terminal`/`wait-screen` for app testing. Those actions reject app-mode sessions.
 
 ### 3b. Herdr visual testing: private terminal transport
 

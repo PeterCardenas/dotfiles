@@ -426,6 +426,12 @@ def build_parser():
     for action in ("info", "close"):
         command = actions.add_parser(action)
         command.add_argument("name")
+    capture = actions.add_parser("capture", help="Read agent-consumable text from an app pane")
+    capture.add_argument("name")
+    capture.add_argument("pane")
+    capture.add_argument("--source", choices=("visible", "recent", "recent-unwrapped", "detection"), default="recent-unwrapped")
+    capture.add_argument("--lines", type=int, default=200)
+    capture.add_argument("--format", choices=("text", "ansi"), default="text")
     for action in ("herdr", "terminal"):
         command = actions.add_parser(action)
         command.add_argument("name")
@@ -444,6 +450,8 @@ def main(argv=None):
         value = getattr(args, key, None)
         if value is not None and (not math.isfinite(value) or value < 0):
             raise AutomationError(f"{key.replace('_', '-')} must be finite and >= 0")
+    if args.action == "capture" and args.lines <= 0:
+        raise AutomationError("lines must be > 0")
     wrapper = Wrapper(args.runtime_root, args.name, args.timeout, getattr(args, "config", None), getattr(args, "visual", False))
     if args.action == "close":
         if not wrapper.ensure_root(False):
@@ -460,9 +468,14 @@ def main(argv=None):
             print(json.dumps(wrapper.load_active()))
             return 0
         metadata = wrapper.load_active()
-        if args.action in ("terminal", "wait-screen") and metadata.get("mode", "visual") != "visual":
+        if args.action == "capture":
+            result = wrapper.run_herdr([
+                "pane", "read", args.pane, "--source", args.source,
+                "--lines", str(args.lines), "--format", args.format,
+            ])
+        elif args.action in ("terminal", "wait-screen") and metadata.get("mode", "visual") != "visual":
             raise AutomationError("Herdr UI commands require create --visual; use native pane APIs for app tests")
-        if args.action == "herdr":
+        elif args.action == "herdr":
             command = args.command[1:] if args.command[:1] == ["--"] else args.command
             if not command:
                 raise AutomationError("herdr requires a command")

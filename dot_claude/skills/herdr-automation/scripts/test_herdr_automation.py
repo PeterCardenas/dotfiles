@@ -304,6 +304,31 @@ class HerdrAutomationTests(unittest.TestCase):
         self.assertIn("tmux-specific", tmux)
         self.assertIn("prefer herdr-automation", nvim)
 
+    def test_capture_uses_recent_unwrapped_text_by_default(self):
+        parser = module.build_parser()
+        args = parser.parse_args(["capture", "demo", "w2:p1"])
+        self.assertEqual(args.action, "capture")
+        self.assertEqual(args.source, "recent-unwrapped")
+        self.assertEqual(args.lines, 200)
+        self.assertEqual(args.format, "text")
+
+    def test_capture_passes_supported_read_arguments_to_owned_session(self):
+        with tempfile.TemporaryDirectory(dir="/tmp") as parent:
+            wrapper = module.Wrapper(Path(parent) / "runtime", "demo")
+            wrapper.initialize_state()
+            metadata = wrapper.active_metadata(None)
+            wrapper.write_metadata(metadata)
+            expected = ["✓ PASS\\n"]
+            with patch.object(module.Wrapper, "run_herdr", return_value=subprocess.CompletedProcess([], 0, expected[0], "")) as read:
+                output = io.StringIO()
+                with contextlib.redirect_stdout(output):
+                    self.assertEqual(module.main(["--runtime-root", str(wrapper.root), "capture", "demo", "w2:p1", "--format", "text"]), 0)
+            self.assertEqual(output.getvalue(), expected[0])
+            self.assertEqual(read.call_args_list[0].args[0], ["workspace", "list"])
+            self.assertEqual(read.call_args_list[1].args[0], ["pane", "read", "w2:p1", "--source", "recent-unwrapped", "--lines", "200", "--format", "text"])
+            wrapper.run = Mock(return_value=subprocess.CompletedProcess([], 0, "", ""))
+            wrapper.close()
+
     def test_cli_names_herdr_operations_without_overloading_exec(self):
         parser = module.build_parser()
         self.assertEqual(parser.parse_args(["herdr", "demo", "--", "workspace", "list"]).action, "herdr")
