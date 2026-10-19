@@ -228,6 +228,7 @@ class HerdrConfigContractTest(unittest.TestCase):
             "switch_tab": "prefix+1..9",
             "close_tab": "prefix+ampersand",
             "copy_mode": "prefix+[",
+            "edit_scrollback": "",
             "focus_pane_left": "",
             "focus_pane_down": "",
             "focus_pane_up": "",
