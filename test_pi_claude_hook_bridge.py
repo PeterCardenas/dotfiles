@@ -60,11 +60,22 @@ class PiClaudeHookBridgeTest(unittest.TestCase):
         self.assertIn('const claudeInstructionsPath = join(homedir(), "CLAUDE.md");', source)
         self.assertNotIn('join(homedir(), ".claude", "CLAUDE.md")', source)
 
+    @staticmethod
+    def _write_pi_host_stub(directory: Path) -> Path:
+        """Stub the only runtime host export; Jiti still loads real extension source."""
+        module = directory / "pi-coding-agent-host.cjs"
+        module.write_text(
+            "exports.isToolCallEventType = (toolName, event) => event.toolName === toolName;\n",
+            encoding="utf-8",
+        )
+        return module
+
     def test_claude_compat_bridges_edit_tool_results(self) -> None:
         script = r'''const fs = require("node:fs");
 const path = require("node:path");
 const { createJiti } = require("jiti");
-const extension = createJiti(__filename)(process.argv[2]);
+const jiti = createJiti(__filename, { alias: { "@earendil-works/pi-coding-agent": process.env.PI_TEST_HOST_MODULE } });
+const extension = jiti(process.argv[2]);
 const handlers = new Map();
 const pi = { events: { on() {} }, on(name, fn) { handlers.set(name, fn); }, registerTool() {}, registerCommand() {}, registerEntryRenderer() {}, registerFlag() {}, registerMessageRenderer() {} };
 extension.default(pi);
@@ -73,6 +84,7 @@ handlers.get("tool_result")({toolName:"edit", input:{path:"tracked.txt"}, conten
 });'''
         workspace = EXTENSION.parent
         with tempfile.TemporaryDirectory(dir=workspace) as temp_dir, tempfile.TemporaryDirectory() as home:
+            host_module = self._write_pi_host_stub(Path(temp_dir))
             harness = Path(temp_dir) / "harness.cjs"
             harness.write_text(script, encoding="utf-8")
             bridge = Path(home) / ".local/bin/pi-claude-hook-bridge"
@@ -91,7 +103,7 @@ handlers.get("tool_result")({toolName:"edit", input:{path:"tracked.txt"}, conten
                     cwd=workspace,
                     capture_output=True,
                     text=True,
-                    env={**os.environ, "HOME": home},
+                    env={**os.environ, "HOME": home, "PI_TEST_HOST_MODULE": str(host_module)},
                 )
             finally:
                 harness.unlink(missing_ok=True)
@@ -161,7 +173,8 @@ handlers.get("tool_result")({toolName:"edit", input:{path:"tracked.txt"}, conten
         script = r'''const fs = require("node:fs");
 const path = require("node:path");
 const { createJiti } = require("jiti");
-const extension = createJiti(__filename)(process.argv[2]);
+const jiti = createJiti(__filename, { alias: { "@earendil-works/pi-coding-agent": process.env.PI_TEST_HOST_MODULE } });
+const extension = jiti(process.argv[2]);
 const handlers = new Map();
 const sent = [];
 const pi = { events: { on(name, fn) { handlers.set(name, fn); } }, on(name, fn) { handlers.set(name, fn); }, sendUserMessage(message, options) { sent.push({message, options}); }, registerTool() {}, registerCommand() {}, registerEntryRenderer() {}, registerFlag() {}, registerMessageRenderer() {} };
@@ -188,10 +201,11 @@ console.log(JSON.stringify({sent, payloads}));
         script = script.replace("__LIFECYCLE__", lifecycle)
         workspace = EXTENSION.parent
         with tempfile.TemporaryDirectory(dir=workspace) as temp_dir, tempfile.TemporaryDirectory() as home:
+            host_module = self._write_pi_host_stub(Path(temp_dir))
             harness = Path(temp_dir) / "harness.cjs"
             harness.write_text(script, encoding="utf-8")
             try:
-                result = subprocess.run(["node", str(harness), str(EXTENSION)], cwd=workspace, capture_output=True, text=True, env={**os.environ, "HOME": home})
+                result = subprocess.run(["node", str(harness), str(EXTENSION)], cwd=workspace, capture_output=True, text=True, env={**os.environ, "HOME": home, "PI_TEST_HOST_MODULE": str(host_module)})
             finally:
                 harness.unlink(missing_ok=True)
         self.assertEqual(result.returncode, 0, result.stderr)

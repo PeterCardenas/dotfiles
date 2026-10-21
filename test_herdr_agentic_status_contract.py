@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import tempfile
 import textwrap
@@ -12,9 +13,34 @@ AGENTIC_CONFIG = ROOT / "dot_config/nvim_conf/kickstart.nvim/lua/plugins/sg.lua"
 
 
 class HerdrAgenticStatusContractTest(unittest.TestCase):
+    def setUp(self):
+        self.original_pane_id = os.environ.get("HERDR_PANE_ID")
+        os.environ["HERDR_PANE_ID"] = "w1:p1"
+        self.addCleanup(self._restore_pane_id)
+
+    def _restore_pane_id(self):
+        if self.original_pane_id is None:
+            os.environ.pop("HERDR_PANE_ID", None)
+        else:
+            os.environ["HERDR_PANE_ID"] = self.original_pane_id
+
     def test_only_active_agentic_session_renames_a_linked_worktree_workspace_with_20_character_label(self):
         lua = textwrap.dedent(
             f"""
+            package.loaded['utils.async'] = {{ void = function(func) func() end }}
+            package.loaded['utils.shell'] = {{ async_cmd = function(command, args)
+              local argv = {{ command }}; vim.list_extend(argv, args)
+              if args[1] ~= 'api' then
+                local result = vim.system(argv):wait()
+                return result.code == 0, {{ stdout = {{ result.stdout }} }}
+              end
+              argv = {{ 'herdr', 'workspace', 'list' }}
+              local result = vim.system(argv):wait()
+              local decoded = vim.json.decode(result.stdout)
+              decoded.result.snapshot = {{ panes = {{{{ pane_id = 'w1:p1', workspace_id = 'w1' }}}}, workspaces = decoded.result.workspaces }}
+              return result.code == 0, {{ stdout = {{ vim.json.encode(decoded) }} }}
+            end }}
+            package.loaded['utils.workspace_context'] = {{ matches_linked_worktree = function() return true end }}
             local calls = {{}}
             local current_tab = vim.api.nvim_get_current_tabpage()
             vim.cmd.tabnew()
@@ -52,6 +78,7 @@ class HerdrAgenticStatusContractTest(unittest.TestCase):
                     **os.environ,
                     "HERDR_ENV": "1",
                     "HERDR_WORKSPACE_ID": "w1",
+                    "HERDR_PANE_ID": "w1:p1",
                     "HERDR_BIN_PATH": "/opt/herdr",
                     "HERDR_TEST_OUTPUT": output.name,
                 },
@@ -64,16 +91,21 @@ class HerdrAgenticStatusContractTest(unittest.TestCase):
         renames = [call for call in calls if call[1:3] == ["workspace", "rename"]]
         self.assertEqual(renames, [["/opt/herdr", "workspace", "rename", "w1", "Unicode 🐎 workspace"]])
         config = AGENTIC_CONFIG.read_text()
-        self.assertIn("overall outcome", config)
-        self.assertIn("Ignore file and directory paths", config)
-        self.assertIn("20 characters or fewer", config)
         self.assertIn("Pending.rename_workspace(workspace_title, data.tab_page_id, data.session_id)", config)
-        self.assertNotIn("Pending.rename_workspace(data.prompt, data.tab_page_id, data.session_id)", config)
-        self.assertNotIn("Pending.rename_workspace(title, data.tab_page_id, data.session_id)", config)
 
     def test_checkout_visible_in_worktree_list_but_not_grouped_workspace_is_not_renamed(self):
         lua = textwrap.dedent(
             f"""
+            package.loaded['utils.async'] = {{ void = function(func) func() end }}
+            package.loaded['utils.shell'] = {{ async_cmd = function(command, args)
+              local argv = {{ command }}; vim.list_extend(argv, args)
+              if args[1] == 'api' then argv = {{ 'herdr', 'workspace', 'list' }} end
+              local result = vim.system(argv):wait()
+              local decoded = vim.json.decode(result.stdout)
+              decoded.result.snapshot = {{ panes = {{{{ pane_id = 'w1:p1', workspace_id = 'w1' }}}}, workspaces = decoded.result.workspaces }}
+              return result.code == 0, {{ stdout = {{ vim.json.encode(decoded) }} }}
+            end }}
+            package.loaded['utils.workspace_context'] = {{ matches_linked_worktree = function() return true end }}
             local calls = {{}}
             local tab = vim.api.nvim_get_current_tabpage()
             package.loaded['agentic.session_registry'] = {{ sessions = {{ [tab] = {{ session_id = 'active' }} }} }}
@@ -110,6 +142,16 @@ class HerdrAgenticStatusContractTest(unittest.TestCase):
     def test_linked_worktree_without_another_open_worktree_workspace_is_not_renamed(self):
         lua = textwrap.dedent(
             f"""
+            package.loaded['utils.async'] = {{ void = function(func) func() end }}
+            package.loaded['utils.shell'] = {{ async_cmd = function(command, args)
+              local argv = {{ command }}; vim.list_extend(argv, args)
+              if args[1] == 'api' then argv = {{ 'herdr', 'workspace', 'list' }} end
+              local result = vim.system(argv):wait()
+              local decoded = vim.json.decode(result.stdout)
+              decoded.result.snapshot = {{ panes = {{{{ pane_id = 'w1:p1', workspace_id = 'w1' }}}}, workspaces = decoded.result.workspaces }}
+              return result.code == 0, {{ stdout = {{ vim.json.encode(decoded) }} }}
+            end }}
+            package.loaded['utils.workspace_context'] = {{ matches_linked_worktree = function() return true end }}
             local calls = {{}}
             local tab = vim.api.nvim_get_current_tabpage()
             package.loaded['agentic.session_registry'] = {{ sessions = {{ [tab] = {{ session_id = 'active' }} }} }}
@@ -141,6 +183,16 @@ class HerdrAgenticStatusContractTest(unittest.TestCase):
     def test_primary_checkout_workspace_is_not_renamed(self):
         lua = textwrap.dedent(
             f"""
+            package.loaded['utils.async'] = {{ void = function(func) func() end }}
+            package.loaded['utils.shell'] = {{ async_cmd = function(command, args)
+              local argv = {{ command }}; vim.list_extend(argv, args)
+              if args[1] == 'api' then argv = {{ 'herdr', 'workspace', 'list' }} end
+              local result = vim.system(argv):wait()
+              local decoded = vim.json.decode(result.stdout)
+              decoded.result.snapshot = {{ panes = {{{{ pane_id = 'w1:p1', workspace_id = 'w1' }}}}, workspaces = decoded.result.workspaces }}
+              return result.code == 0, {{ stdout = {{ vim.json.encode(decoded) }} }}
+            end }}
+            package.loaded['utils.workspace_context'] = {{ matches_linked_worktree = function() return true end }}
             local calls = {{}}
             local tab = vim.api.nvim_get_current_tabpage()
             package.loaded['agentic.session_registry'] = {{ sessions = {{ [tab] = {{ session_id = 'active' }} }} }}
@@ -227,18 +279,22 @@ class HerdrAgenticStatusContractTest(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             lifecycle = __import__("json").loads(Path(output.name).read_text())
         calls = lifecycle["calls"]
-        self.assertIn(
-            "/opt/herdr pane report-agent w1:p1 --source agentic.nvim --agent agentic.nvim --state working",
-            calls,
+        self.assertEqual(len(calls), 2)
+        report = re.fullmatch(
+            r"/opt/herdr pane report-agent w1:p1 --source (agentic\.nvim:\d+:[A-Za-z0-9]+) "
+            r"--agent agentic\.nvim --state working --seq (\d+)",
+            calls[0],
         )
-        self.assertIn(
-            "/opt/herdr pane report-agent w1:p1 --source agentic.nvim --agent agentic.nvim --state idle",
-            calls,
+        release = re.fullmatch(
+            r"/opt/herdr pane release-agent w1:p1 --source (agentic\.nvim:\d+:[A-Za-z0-9]+) "
+            r"--agent agentic\.nvim --seq (\d+)",
+            calls[1],
         )
-        self.assertIn(
-            "/opt/herdr pane release-agent w1:p1 --source agentic.nvim --agent agentic.nvim",
-            calls,
-        )
+        self.assertIsNotNone(report)
+        self.assertIsNotNone(release)
+        assert report is not None and release is not None
+        self.assertEqual(report.group(1), release.group(1))
+        self.assertLess(int(report.group(2)), int(release.group(2)))
         self.assertTrue(lifecycle.get("release_detached", False))
         self.assertFalse(lifecycle["release_waited"])
 

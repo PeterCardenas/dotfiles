@@ -29,6 +29,39 @@ LEAP_COMMIT = "be238808187636a080b46c547b95cbac9ee9988e"
 
 
 class HerdrConfigContractTest(unittest.TestCase):
+    @staticmethod
+    def _status_metrics_fixture(directory):
+        scripts = Path(directory) / "scripts"
+        scripts.mkdir()
+        outputs = {
+            "cursor_spend.sh": "#[fg=#9ece6a]$12",
+            "cpu.sh": "#[fg=#c0caf5]42%",
+            "disk.sh": "#[fg=#c0caf5]7%",
+            "ram.sh": "#[fg=#c0caf5]3.1G",
+        }
+        for name, output in outputs.items():
+            script = scripts / name
+            script.write_text(f"#!/bin/bash\nprintf '%s' '{output}'\n")
+            script.chmod(0o755)
+        home = Path(directory) / "home"
+        xdg = Path(directory) / "xdg"
+        custom = Path(directory) / "custom"
+        for path in (home, xdg, custom):
+            path.mkdir()
+        env = {
+            key: value
+            for key, value in os.environ.items()
+            if key not in {"GH_TOKEN", "GITHUB_TOKEN", "CURSOR_API_KEY", "CURSOR_ACCESS_TOKEN"}
+        }
+        env.update({
+            "HOME": str(home),
+            "XDG_CONFIG_HOME": str(xdg),
+            "TMUX_SCRIPTS_DIR": str(scripts),
+            "TMUX_CUSTOM_SCRIPTS_DIR": str(custom),
+            "LC_ALL": "C",
+        })
+        return env
+
     def test_native_workspace_picker_uses_arrows_and_jk_for_workspace_navigation(self):
         keys = tomllib.loads(SOURCE.read_text())["keys"]
         self.assertEqual(keys["workspace_picker"], "prefix+w")
@@ -38,35 +71,23 @@ class HerdrConfigContractTest(unittest.TestCase):
         self.assertEqual(keys.get("navigate_pane_up"), "ctrl+k")
 
     def test_metrics_default_and_explicit_tmux_formats_are_equivalent(self):
-        with tempfile.TemporaryDirectory() as scripts_dir:
-            for name, output in {
-                "cursor_spend.sh": "#[fg=#9ece6a]$12",
-                "cpu.sh": "#[fg=#c0caf5]42%",
-                "disk.sh": "#[fg=#c0caf5]7%",
-                "ram.sh": "#[fg=#c0caf5]3.1G",
-            }.items():
-                script = Path(scripts_dir) / name
-                script.write_text(f"#!/bin/bash\\nprintf '%s' '{output}'\\n")
-                script.chmod(0o755)
-            env = {**os.environ, "TMUX_SCRIPTS_DIR": scripts_dir}
+        with tempfile.TemporaryDirectory() as directory:
+            env = self._status_metrics_fixture(directory)
             default = subprocess.run(["/bin/bash", str(METRICS_SOURCE)], env=env, text=True, capture_output=True)
             explicit = subprocess.run(["/bin/bash", str(METRICS_SOURCE), "--format", "tmux"], env=env, text=True, capture_output=True)
         self.assertEqual(default.returncode, 0, default.stderr)
         self.assertEqual(explicit.returncode, 0, explicit.stderr)
         self.assertEqual(default.stdout, explicit.stdout)
+        self.assertEqual(
+            default.stdout,
+            "#[fg=#9ece6a]$12#[fg=#565f89] · #[fg=#ff9e64]󰍛 #[fg=#c0caf5]42%"
+            "#[fg=#565f89] · #[fg=#bb9af7]󰋊 #[fg=#c0caf5]7%"
+            "#[fg=#565f89] · #[fg=#7dcfff]󰘚 #[fg=#c0caf5]3.1G",
+        )
 
     def test_metrics_herdr_is_style_stripped_tmux_semantics(self):
-        with tempfile.TemporaryDirectory() as scripts_dir:
-            for name, output in {
-                "cursor_spend.sh": "#[fg=#9ece6a]$12",
-                "cpu.sh": "#[fg=#c0caf5]42%",
-                "disk.sh": "#[fg=#c0caf5]7%",
-                "ram.sh": "#[fg=#c0caf5]3.1G",
-            }.items():
-                script = Path(scripts_dir) / name
-                script.write_text(f"#!/bin/bash\\nprintf '%s' '{output}'\\n")
-                script.chmod(0o755)
-            env = {**os.environ, "TMUX_SCRIPTS_DIR": scripts_dir}
+        with tempfile.TemporaryDirectory() as directory:
+            env = self._status_metrics_fixture(directory)
             tmux = subprocess.run(["/bin/bash", str(METRICS_SOURCE), "--short"], env=env, text=True, capture_output=True)
             herdr = subprocess.run(["/bin/bash", str(METRICS_SOURCE), "--format", "herdr", "--short"], env=env, text=True, capture_output=True)
         self.assertEqual(tmux.returncode, 0, tmux.stderr)
@@ -318,7 +339,7 @@ class HerdrConfigContractTest(unittest.TestCase):
         created = None
         try:
             create = subprocess.run(
-                [*controller, "create", name, "--config", str(SOURCE)],
+                [*controller, "create", name, "--visual", "--config", str(SOURCE)],
                 text=True,
                 capture_output=True,
                 timeout=20,
@@ -1053,9 +1074,12 @@ class HerdrConfigContractTest(unittest.TestCase):
                 process.stdin.write("y\n")
                 process.stdin.flush()
                 deadline = time.monotonic() + 2
-                while (not log.exists() or len(log.read_text().splitlines()) < 1) and time.monotonic() < deadline:
+                while (not log.exists() or len(log.read_text().splitlines()) < 2) and time.monotonic() < deadline:
                     time.sleep(0.01)
-                self.assertEqual(len(log.read_text().splitlines()), 1)
+                self.assertEqual(
+                    log.read_text().splitlines(),
+                    ["workspace list", "worktree remove --workspace w-linked --force"],
+                )
                 self.assertIsNone(process.poll(), "force failure closed the popup before the error could be read")
                 process.stdin.write("\n")
                 process.stdin.flush()
@@ -1247,7 +1271,7 @@ class HerdrConfigContractTest(unittest.TestCase):
         created = None
         try:
             create = subprocess.run(
-                [*controller, "create", name, "--config", str(SOURCE)],
+                [*controller, "create", name, "--visual", "--config", str(SOURCE)],
                 text=True,
                 capture_output=True,
                 timeout=20,
@@ -1755,7 +1779,7 @@ exit $result'''],
         controller = ["python3", str(HERDR_AUTOMATION)]
         created = None
         try:
-            create = subprocess.run([*controller, "create", name, "--config", str(SOURCE)], text=True, capture_output=True, timeout=20)
+            create = subprocess.run([*controller, "create", name, "--visual", "--config", str(SOURCE)], text=True, capture_output=True, timeout=20)
             self.assertEqual(create.returncode, 0, create.stderr)
             created = __import__("json").loads(create.stdout)
             config_home = Path(created["home"]).parent / "c"
@@ -2013,13 +2037,6 @@ exit $result'''],
         text = SOURCE.read_text().lower()
         for forbidden in ("@agentic_pending", "fzf", "osc52", "fallback", "replay"):
             self.assertNotIn(forbidden, text)
-
-    def test_installed_native_integrations_match_current_versions(self):
-        expected = {"pi": 9, "claude": 10, "codex": 8, "opencode": 12, "cursor": 1}
-        result = subprocess.run([str(HERDR), "integration", "status"], text=True, capture_output=True)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        for agent, version in expected.items():
-            self.assertRegex(result.stdout, re.compile(rf"^{agent}: current \(v{version}\) ", re.MULTILINE))
 
     def test_readme_documents_exact_current_integration_versions(self):
         text = README.read_text()

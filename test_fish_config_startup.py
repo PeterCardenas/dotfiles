@@ -1,14 +1,37 @@
+import os
 from pathlib import Path
 import subprocess
+import tempfile
 import unittest
 
 
-INTERACTIVE_CONFIG = (
-    Path(__file__).resolve().parent / "dot_config" / "fish" / "interactive_config.fish"
-).read_text()
+ROOT = Path(__file__).resolve().parent
+INTERACTIVE_CONFIG = (ROOT / "dot_config" / "fish" / "interactive_config.fish").read_text()
+FISH_CONFIG = ROOT / "dot_config" / "fish" / "config.fish"
 
 
 class FishConfigStartupTests(unittest.TestCase):
+    def test_managed_startup_exports_no_bytecode_to_child_processes(self) -> None:
+        with tempfile.TemporaryDirectory() as home:
+            config_dir = Path(home) / ".config" / "fish"
+            config_dir.mkdir(parents=True)
+            (config_dir / "config.fish").symlink_to(FISH_CONFIG)
+            env = {
+                key: value
+                for key, value in os.environ.items()
+                if key != "PYTHONDONTWRITEBYTECODE"
+            }
+            env.update({"HOME": home, "XDG_CONFIG_HOME": str(Path(home) / ".config")})
+            result = subprocess.run(
+                ["fish", "-c", "python3 -c 'import os; print(os.environ[\"PYTHONDONTWRITEBYTECODE\"])'"],
+                env=env,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "1")
+
     def test_wsl_check_uses_builtin_match(self) -> None:
         self.assertTrue(
             "if string match -q -- '*WSL2*' (uname -a)" in INTERACTIVE_CONFIG,

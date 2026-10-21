@@ -41,12 +41,6 @@ class PyCompileBlockHookTest(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertEqual(self._run_hook(command), {})
 
-    def test_shell_sources_export_no_bytecode_on_first_line(self) -> None:
-        fish = Path(__file__).parent / "dot_config/fish/config.fish"
-        nvim = Path(__file__).parent / "dot_config/nvim_conf/kickstart.nvim/init.lua"
-        self.assertEqual(fish.read_text().splitlines()[0], "set -gx PYTHONDONTWRITEBYTECODE 1")
-        self.assertEqual(nvim.read_text().splitlines()[0], "vim.env.PYTHONDONTWRITEBYTECODE = '1'")
-
 
 if __name__ == "__main__":
     unittest.main()

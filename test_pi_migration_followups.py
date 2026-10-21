@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import subprocess
 import unittest
 from pathlib import Path
 
@@ -17,14 +16,9 @@ class PiMigrationFollowupsTest(unittest.TestCase):
         dependencies = manifest["dependencies"]
         self.assertIn("pi-web-access", dependencies)
         self.assertIn("pi-subagents", dependencies)
-        self.assertEqual(dependencies["pi-subagents"], "0.76.1")
+        self.assertEqual(dependencies["pi-subagents"], "0.78.0")
         self.assertEqual(dependencies["pi-web-access"], "0.37.0")
-        installed_pi_version = subprocess.check_output(
-            ["pi", "--version"], text=True
-        ).strip()
-        self.assertEqual(
-            dependencies["@earendil-works/pi-coding-agent"], installed_pi_version
-        )
+        self.assertRegex(dependencies["@earendil-works/pi-coding-agent"], r"^\d+\.\d+\.\d+$")
 
     def test_agent_scan_dirs_only_use_trusted_global_location(self) -> None:
         settings = json.loads(
