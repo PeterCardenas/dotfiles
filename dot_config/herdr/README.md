@@ -64,13 +64,24 @@ the existing groups; a standalone Git workspace is not a group. If the current
 workspace belongs to a group, that group is selected by
 default (Enter accepts it; arrows or search choose another). Outside a group,
 the selection starts empty and requires choosing an existing group or New session.
-After selecting an existing group, it asks for a branch name and
-fetches the default branch from `origin` before creating a focused worktree
-from `origin/HEAD` in the chosen repository container (the directory containing
-the shared Git directory). Named branches use a slash-to-hyphen slug for their
-directory name. Leaving the branch name empty asks for confirmation, then opens
-a detached worktree at the latest default-branch commit in a unique directory.
-If `origin/HEAD` is missing or the fetch fails, creation stops rather than using
+After selecting an existing group, it accepts a branch name or GitHub PR URL.
+A branch name fetches the default branch from `origin` before creating a focused
+worktree from `origin/HEAD` in the chosen repository container (the directory
+containing the shared Git directory). Named branches use a slash-to-hyphen slug
+for their directory name. A URL such as `https://github.com/owner/repo/pull/123`
+uses `gh` to resolve the PR's actual branch name, fetches that repository's PR
+head (including fork PRs), and creates a focused worktree with that branch checked
+out at the fetched commit, without switching any existing checkout. The directory
+name uses the same slash-to-hyphen slug as named branches. The PR lookup runs
+through the Fish `gh` override in the selected group's checkout, so its `origin`
+SSH alias selects the work/personal account. The caller's directory and directory
+stack are restored even when authentication fails. GitHub/Gist HTTPS credential
+helpers also use the override, so fetching a private PR uses that same account.
+PR URLs with tab paths, query strings, or fragments are accepted; other URLs are
+rejected. PR checkout does not require `origin/HEAD`. Leaving the branch name
+empty asks for confirmation, then opens a detached worktree at the latest
+default-branch commit in a unique directory. If `origin/HEAD` is missing for a
+default-branch checkout, or any fetch fails, creation stops rather than using
 a stale local commit. `prefix+shift+d` asks for confirmation, removes the checkout when
 the active workspace is a linked worktree, and otherwise performs a normal
 workspace close. Confirmed deletion selects the workspace immediately above it

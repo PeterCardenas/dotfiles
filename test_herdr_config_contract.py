@@ -1435,6 +1435,90 @@ class HerdrConfigContractTest(unittest.TestCase):
             self.assertEqual(len(calls), 1)
             self.assertIn("--branch feature/new --base origin/main", calls[0])
 
+    def test_worktree_popup_uses_git_function_override(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            checkout, _ = self._worktree_popup_remote(root)
+            result, _ = self._run_worktree_popup(root, checkout, "feature/override\n")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            git_calls = root / "calls.git"
+            self.assertTrue(git_calls.exists(), "Popup bypassed the git function")
+            self.assertIn(f"-C {checkout} fetch origin main", git_calls.read_text().splitlines())
+
+    def test_worktree_popup_checks_out_github_pull_request_url(self):
+        for suffix in ("", "/files", "?diff=split#discussion"):
+            with self.subTest(suffix=suffix), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                checkout, _ = self._worktree_popup_remote(root)
+                other = root / "other"
+                subprocess.run(["git", "-C", str(other), "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-q", "--allow-empty", "-m", "PR head"], check=True)
+                head = subprocess.check_output(["git", "-C", str(other), "rev-parse", "HEAD"], text=True).strip()
+                subprocess.run(["git", "-C", str(other), "push", "-q", "origin", "HEAD:refs/pull/42/head"], check=True)
+                subprocess.run(["git", "-C", str(checkout), "config", f"url.{root / 'remote.git'}.insteadOf", "https://github.com/owner/repo.git"], check=True)
+                subprocess.run(["git", "-C", str(checkout), "symbolic-ref", "--delete", "refs/remotes/origin/HEAD"], check=True)
+
+                result, calls = self._run_worktree_popup(root, checkout, f"https://github.com/owner/repo/pull/42{suffix}\n")
+
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("GitHub PR URL", result.stderr)
+                self.assertEqual(calls, [
+                    f"worktree create --workspace w-parent --branch feature/review --base {head} --path {checkout / 'feature-review'} --focus"
+                ])
+                self.assertEqual((root / "calls.gh").read_text().strip(),
+                                 "pr view https://github.com/owner/repo/pull/42 --json headRefName --jq .headRefName")
+
+    def test_worktree_popup_stops_if_pull_request_fetch_fails(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            checkout, _ = self._worktree_popup_remote(root)
+            subprocess.run(["git", "-C", str(checkout), "config", f"url.{root / 'remote.git'}.insteadOf", "https://github.com/owner/repo.git"], check=True)
+            result, calls = self._run_worktree_popup(root, checkout, "https://github.com/owner/repo/pull/404\n")
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(calls, [])
+            self.assertIn("refs/pull/404/head", result.stderr)
+
+    def test_worktree_popup_uses_selected_repository_gh_auth(self):
+        for alias, user in (("work-github.com", "peter-cardenas-ai"), ("personal-github.com", "PeterCardenas")):
+            for bare in (False, True):
+                with self.subTest(alias=alias, bare=bare), tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    checkout, _ = self._worktree_popup_remote(root)
+                    subprocess.run(["git", "-C", str(root / "other"), "push", "-q", "origin", "HEAD:refs/pull/42/head"], check=True)
+                    if bare:
+                        subprocess.run(["git", "clone", "-q", "--bare", str(checkout), str(root / "bare")], check=True)
+                        checkout = root / "bare"
+                    subprocess.run(["git", "-C", str(checkout), "remote", "set-url", "origin", f"{alias}:owner/repo"], check=True)
+                    subprocess.run(["git", "-C", str(checkout), "config", f"url.{root / 'remote.git'}.insteadOf", "https://github.com/owner/repo.git"], check=True)
+
+                    result, calls = self._run_worktree_popup(root, checkout, "https://github.com/owner/repo/pull/42\n")
+
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(len(calls), 1)
+                    self.assertEqual((root / "calls.auth").read_text().strip(), f"auth token --user {user}")
+                    self.assertEqual((root / "calls.context").read_text().splitlines(), [str(checkout), f"token-{user}"])
+
+    def test_worktree_popup_stops_if_pr_branch_lookup_fails(self):
+        for branch in ("", "error", "invalid branch", "auth-error"):
+            with self.subTest(branch=branch), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                checkout, _ = self._worktree_popup_remote(root)
+                subprocess.run(["git", "-C", str(root / "other"), "push", "-q", "origin", "HEAD:refs/pull/42/head"], check=True)
+                subprocess.run(["git", "-C", str(checkout), "config", f"url.{root / 'remote.git'}.insteadOf", "https://github.com/owner/repo.git"], check=True)
+                result, calls = self._run_worktree_popup(root, checkout, "https://github.com/owner/repo/pull/42\n", pr_branch=branch)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(calls, [])
+                self.assertFalse((checkout / "pr-42").exists())
+
+    def test_worktree_popup_rejects_unsupported_urls(self):
+        for url in ("https://github.com/owner/repo/issues/42", "https://example.com/owner/repo/pull/42"):
+            with self.subTest(url=url), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                checkout, _ = self._worktree_popup_remote(root)
+                result, calls = self._run_worktree_popup(root, checkout, f"{url}\n")
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(calls, [])
+                self.assertIn("Expected a branch name or GitHub PR URL", result.stderr)
+
     def test_worktree_popup_stops_if_fetch_fails(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -1474,7 +1558,7 @@ class HerdrConfigContractTest(unittest.TestCase):
         latest = subprocess.check_output(["git", "-C", str(other), "rev-parse", "HEAD"], text=True).strip()
         return checkout, latest
 
-    def _run_worktree_popup(self, root, checkout, answer):
+    def _run_worktree_popup(self, root, checkout, answer, pr_branch="feature/review"):
         bin_dir = root / "bin"
         bin_dir.mkdir(exist_ok=True)
         log = root / "calls"
@@ -1492,11 +1576,40 @@ class HerdrConfigContractTest(unittest.TestCase):
         fzf = bin_dir / "fzf"
         fzf.write_text("#!/bin/sh\nhead -n 1\n")
         fzf.chmod(0o755)
-        result = subprocess.run(
-            ["fish", "--no-config", "-c", f"set fish_function_path {CREATE_WORKTREE.parent}; herdr_new_worktree"],
-            input=answer, text=True, capture_output=True, timeout=10,
-            env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "CHECKOUT": str(checkout), "CALLS": str(log), "HERDR_ACTIVE_WORKSPACE_ID": "w-child"},
+        gh = bin_dir / "gh"
+        gh.write_text(
+            '#!/bin/sh\n'
+            'if [ "$1 $2" = "auth token" ]; then\n'
+            '  printf "%s\\n" "$*" > "$CALLS.auth"\n'
+            '  [ "$PR_BRANCH" != auth-error ] || exit 1\n'
+            '  printf "token-%s\\n" "$4"\n'
+            'else\n'
+            '  printf "%s\\n" "$*" > "$CALLS.gh"\n'
+            '  printf "%s\\n" "$PWD" "$GH_TOKEN" > "$CALLS.context"\n'
+            '  [ "$PR_BRANCH" != error ] || exit 1\n'
+            '  printf "%s\\n" "$PR_BRANCH"\n'
+            'fi\n'
         )
+        gh.chmod(0o755)
+        result = subprocess.run(
+            ["fish", "--no-config", "-c", f'''set fish_function_path {CREATE_WORKTREE.parent}
+set -l original_pwd "$PWD"
+set -l original_dirs $dirstack
+function git
+    printf '%s\\n' "$argv" >> "$CALLS.git"
+    command git $argv
+end
+herdr_new_worktree
+set -l result $status
+if test "$PWD" != "$original_pwd"; or test "$dirstack" != "$original_dirs"
+    printf '%s\\n' 'Popup changed caller directory or directory stack' >&2
+    exit 99
+end
+exit $result'''],
+            cwd=root, input=answer, text=True, capture_output=True, timeout=10,
+            env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "CHECKOUT": str(checkout), "CALLS": str(log), "HERDR_ACTIVE_WORKSPACE_ID": "w-child", "PR_BRANCH": pr_branch},
+        )
+        self.assertNotEqual(result.returncode, 99, result.stderr)
         return result, log.read_text().splitlines() if log.exists() else []
 
     def test_worktree_popup_can_override_default_group(self):

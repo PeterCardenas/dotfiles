@@ -44,23 +44,43 @@ function herdr_new_worktree --description "Create a Herdr worktree in a chosen r
     set -l listing (command herdr worktree list --workspace "$group" 2>/dev/null); or return 1
     set -l checkout (printf '%s\n' "$listing" | jq -r '.result.source.source_checkout_path // empty')
     test -n "$checkout"; or return 1
-    set -l branch (herdr_popup_read 'Branch name: (empty for detached default commit)'); or return 1
+    set -l branch (herdr_popup_read 'Branch name: (or GitHub PR URL; empty for detached default commit)'); or return 1
     set branch (string trim -- "$branch")
 
-    set -l base (command git -C "$checkout" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)
-    if not string match -qr '^origin/.+' -- "$base"
-        printf '%s\n' 'Cannot determine origin default branch (origin/HEAD is missing).' >&2
-        return 1
-    end
-    if test -z "$branch"
-        set -l confirmation (herdr_popup_read "Use latest $base commit without a branch? [y/N]"); or return 1
-        test (string lower -- (string trim -- "$confirmation")) = y; or return 1
+    set -l base
+    set -l default_name
+    set -l pull_request (string match -gr '^https://github\.com/([^/]+/[^/]+)/pull/([1-9][0-9]*)(?:[/?#].*)?$' -- "$branch")
+    if test (count $pull_request) -eq 2
+        # gh selects its account from origin; restore the caller's directory even if auth fails.
+        pushd "$checkout" >/dev/null; or return 1
+        set branch (gh pr view "https://github.com/$pull_request[1]/pull/$pull_request[2]" --json headRefName --jq .headRefName)
+        set -l gh_status $status
+        popd >/dev/null
+        test "$gh_status" -eq 0; or return 1
+        git check-ref-format --branch "$branch" >/dev/null; or return 1
+        # Fetch the PR ref from its URL's repository, including fork PRs, without switching an existing checkout.
+        git -C "$checkout" fetch "https://github.com/$pull_request[1].git" "refs/pull/$pull_request[2]/head"; or return 1
+        set base (git -C "$checkout" rev-parse --verify FETCH_HEAD); or return 1
+    else
+        if string match -q '*://*' -- "$branch"
+            printf '%s\n' 'Expected a branch name or GitHub PR URL (https://github.com/owner/repo/pull/123).' >&2
+            return 1
+        end
+        set base (git -C "$checkout" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)
+        if not string match -qr '^origin/.+' -- "$base"
+            printf '%s\n' 'Cannot determine origin default branch (origin/HEAD is missing).' >&2
+            return 1
+        end
+        if test -z "$branch"
+            set -l confirmation (herdr_popup_read "Use latest $base commit without a branch? [y/N]"); or return 1
+            test (string lower -- (string trim -- "$confirmation")) = y; or return 1
+        end
+
+        set default_name (string replace 'origin/' '' -- "$base")
+        git -C "$checkout" fetch origin "$default_name"; or return 1
     end
 
-    set -l default_name (string replace 'origin/' '' -- "$base")
-    command git -C "$checkout" fetch origin "$default_name"; or return 1
-
-    set -l common_dir (command git -C "$checkout" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
+    set -l common_dir (git -C "$checkout" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
     test -n "$common_dir"; or return 1
     set -l worktree_dir (path dirname "$common_dir")
     if test -n "$branch"
@@ -70,7 +90,7 @@ function herdr_new_worktree --description "Create a Herdr worktree in a chosen r
         # Herdr create invents a branch when --branch is omitted; Git must make the detached checkout.
         set -l default_slug (string replace --all / - -- "$default_name")
         set -l worktree_path (command mktemp -d "$worktree_dir/$default_slug-XXXXXX"); or return 1
-        if not command git -C "$checkout" worktree add --detach "$worktree_path" "$base"
+        if not git -C "$checkout" worktree add --detach "$worktree_path" "$base"
             command rmdir "$worktree_path" 2>/dev/null
             return 1
         end

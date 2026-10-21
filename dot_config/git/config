@@ -52,7 +52,7 @@
 	name = Peter Cardenas
 [credential "https://github.com"]
 	helper = 
-	helper = !/usr/bin/gh auth git-credential
+	helper = !fish -c 'gh auth git-credential $argv'
 [credential "https://gist.github.com"]
 	helper = 
-	helper = !/usr/bin/gh auth git-credential
+	helper = !fish -c 'gh auth git-credential $argv'
