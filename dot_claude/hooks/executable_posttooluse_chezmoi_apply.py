@@ -90,9 +90,44 @@ def _main() -> None:
 
     source_root = Path(source_path)
     edited = Path(absolute_path)
+    try:
+        managed_result = subprocess.run(
+            [
+                "chezmoi",
+                "--source",
+                source_path,
+                "managed",
+                "--path-style=source-absolute",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as error:
+        json.dump(
+            deny_hook_response(
+                f"chezmoi managed source query failed: {error}", "PostToolUse"
+            ),
+            sys.stdout,
+        )
+        return
+    if managed_result.returncode != 0:
+        details = (managed_result.stderr or managed_result.stdout).strip()
+        json.dump(
+            deny_hook_response(
+                "chezmoi managed source query failed: "
+                f"{details or 'unknown error'}",
+                "PostToolUse",
+            ),
+            sys.stdout,
+        )
+        return
+    managed_paths = set(managed_result.stdout.splitlines())
+
     if edited.is_relative_to(source_root / SHARED_TEMPLATE_DIR):
-        apply_paths = _shared_template_dependents(source_root, edited)
-        if not apply_paths:
+        dependent_paths = _shared_template_dependents(source_root, edited)
+        if not dependent_paths:
             json.dump(
                 deny_hook_response(
                     f"No source entry includes {absolute_path}; nothing to apply.",
@@ -101,8 +136,19 @@ def _main() -> None:
                 sys.stdout,
             )
             return
+        apply_paths = [path for path in dependent_paths if path in managed_paths]
     else:
-        apply_paths = [absolute_path]
+        apply_paths = [absolute_path] if absolute_path in managed_paths else []
+
+    if not apply_paths:
+        json.dump(
+            deny_hook_response(
+                f"Skipped chezmoi apply for unmanaged source path(s): {absolute_path}",
+                "PostToolUse",
+            ),
+            sys.stdout,
+        )
+        return
 
     for apply_path in apply_paths:
         try:

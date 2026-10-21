@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import base64
+import io
 import json
 import os
+import runpy
 import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 
@@ -36,6 +40,31 @@ class PostToolUseChezmoiApplyTest(unittest.TestCase):
         self.assertEqual(decoded, source_dir)
 
     @staticmethod
+    def _fake_chezmoi(root: Path) -> tuple[Path, Path, dict[str, str]]:
+        fake_bin = root / "bin"
+        fake_bin.mkdir()
+        log = root / "chezmoi.log"
+        fake = fake_bin / "chezmoi"
+        fake.write_text(
+            "#!/bin/sh\n"
+            "printf '%s\\n' \"$*\" >> \"$CHEZMOI_TEST_LOG\"\n"
+            "if [ \"$3\" = managed ]; then\n"
+            "  [ \"$CHEZMOI_TEST_MANAGED_ERROR\" != 1 ] || { printf 'managed lookup failed\\n' >&2; exit 8; }\n"
+            "  printf '%s\\n' \"$CHEZMOI_TEST_MANAGED_PATHS\"\n"
+            "  exit 0\n"
+            "fi\n"
+            "[ \"$CHEZMOI_TEST_APPLY_ERROR\" != 1 ] || { printf 'apply failed\\n' >&2; exit 9; }\n",
+            encoding="utf-8",
+        )
+        fake.chmod(0o755)
+        return fake_bin, log, {
+            "CHEZMOI_TEST_LOG": str(log),
+            "CHEZMOI_TEST_MANAGED_PATHS": "",
+            "CHEZMOI_TEST_MANAGED_ERROR": "0",
+            "CHEZMOI_TEST_APPLY_ERROR": "0",
+        }
+
+    @staticmethod
     def _reject_duplicate_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
         result: dict[str, object] = {}
         for key, value in pairs:
@@ -44,12 +73,12 @@ class PostToolUseChezmoiApplyTest(unittest.TestCase):
             result[key] = value
         return result
 
-    def test_applies_successful_source_edit(self) -> None:
+    def test_skips_unmanaged_source_file(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             source = root / "source"
             source.mkdir()
-            edited = source / "tracked.txt"
+            edited = source / "ignored.txt"
             edited.write_text("changed", encoding="utf-8")
             log = root / "chezmoi.log"
             fake_bin = root / "bin"
@@ -58,16 +87,162 @@ class PostToolUseChezmoiApplyTest(unittest.TestCase):
             fake.write_text(
                 "#!/bin/sh\n"
                 "printf '%s\\n' \"$*\" >> \"$CHEZMOI_TEST_LOG\"\n"
-                "if [ \"$1\" = source-path ]; then printf '%s\\n' \"$CHEZMOI_TEST_SOURCE\"; fi\n",
+                "if [ \"$3\" = managed ]; then exit 0; fi\n",
                 encoding="utf-8",
             )
             fake.chmod(0o755)
+            result = subprocess.run(
+                [sys.executable, str(HOOK), "--source-base64", base64.b64encode(str(source).encode()).decode()],
+                input=json.dumps({"tool_name": "Edit", "tool_input": {"file_path": str(edited)}, "tool_result": {"is_error": False}}),
+                text=True,
+                capture_output=True,
+                env={**os.environ, "PATH": f"{fake_bin}:{os.environ['PATH']}", "CHEZMOI_TEST_LOG": str(log)},
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(
+                log.read_text(encoding="utf-8").splitlines(),
+                [f"--source {source} managed --path-style=source-absolute"],
+            )
+            self.assertNotIn(" apply ", log.read_text(encoding="utf-8"))
+
+    def test_native_managed_query_skips_ignored_files_and_applies_into_isolated_destination(self) -> None:
+        chezmoi = shutil.which("chezmoi")
+        self.assertIsNotNone(chezmoi)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source"
+            destination = root / "destination"
+            source.mkdir()
+            destination.mkdir()
+            (source / ".chezmoiignore").write_text("ignored.txt\n", encoding="utf-8")
+            managed = source / "managed.txt"
+            managed.write_text("managed content\n", encoding="utf-8")
+            ignored = source / "ignored.txt"
+            ignored.write_text("ignored content\n", encoding="utf-8")
+            result = subprocess.run(
+                [chezmoi, "--source", str(source), "--destination", str(destination), "managed", "--path-style=source-absolute"],
+                text=True, capture_output=True, check=True,
+            )
+            managed_paths = set(result.stdout.splitlines())
+            self.assertIn(str(managed), managed_paths)
+            self.assertNotIn(str(ignored), managed_paths)
+
+            fake_bin = root / "bin"
+            fake_bin.mkdir()
+            wrapper = fake_bin / "chezmoi"
+            wrapper.write_text(
+                "#!/bin/sh\n"
+                "if [ \"$1\" = --source ]; then shift 2; fi\n"
+                "exec \"$CHEZMOI_TEST_REAL\" --source \"$CHEZMOI_TEST_SOURCE\" --destination \"$CHEZMOI_TEST_DESTINATION\" \"$@\"\n",
+                encoding="utf-8",
+            )
+            wrapper.chmod(0o755)
             env = {
+                key: value
+                for key, value in os.environ.items()
+                if key not in {"PYTHONDONTWRITEBYTECODE", "GH_TOKEN", "GITHUB_TOKEN"}
+            }
+            env.update({
+                "HOME": str(root / "home"),
+                "XDG_CONFIG_HOME": str(root / "xdg"),
+                "PATH": f"{fake_bin}:{os.environ['PATH']}",
+                "CHEZMOI_TEST_REAL": chezmoi,
+                "CHEZMOI_TEST_SOURCE": str(source),
+                "CHEZMOI_TEST_DESTINATION": str(destination),
+            })
+            (root / "home").mkdir()
+            (root / "xdg").mkdir()
+            def invoke(path: Path) -> subprocess.CompletedProcess[str]:
+                return subprocess.run(
+                    [sys.executable, str(HOOK), "--source-base64", base64.b64encode(str(source).encode()).decode()],
+                    input=json.dumps({"tool_name": "Edit", "tool_input": {"file_path": str(path)}, "tool_result": {"is_error": False}}),
+                    text=True, capture_output=True, env=env, check=False,
+                )
+            applied = invoke(managed)
+            self.assertIn("Synced", applied.stdout)
+            self.assertEqual((destination / "managed.txt").read_text(encoding="utf-8"), "managed content\n")
+            skipped = invoke(ignored)
+            self.assertIn("unmanaged", skipped.stdout.lower())
+            self.assertFalse((destination / "ignored.txt").exists())
+
+    def test_reports_managed_query_failure_without_applying(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source"
+            source.mkdir()
+            edited = source / "tracked.txt"
+            edited.write_text("changed", encoding="utf-8")
+            fake_bin, log, env = self._fake_chezmoi(root)
+            env.update({**os.environ, "PATH": f"{fake_bin}:{os.environ['PATH']}", "CHEZMOI_TEST_MANAGED_ERROR": "1"})
+            result = subprocess.run(
+                [sys.executable, str(HOOK), "--source-base64", base64.b64encode(str(source).encode()).decode()],
+                input=json.dumps({"tool_name": "Edit", "tool_input": {"file_path": str(edited)}, "tool_result": {"is_error": False}}),
+                text=True, capture_output=True, env=env, check=False,
+            )
+            self.assertIn("managed source query failed", result.stdout)
+            self.assertIn("managed lookup failed", result.stdout)
+            self.assertEqual(log.read_text(encoding="utf-8").splitlines(), [f"--source {source} managed --path-style=source-absolute"])
+
+    def test_reports_managed_query_timeout_without_applying(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory)
+            edited = source / "tracked.txt"
+            edited.write_text("changed", encoding="utf-8")
+            payload = json.dumps({
+                "tool_name": "Edit",
+                "tool_input": {"file_path": str(edited)},
+                "tool_result": {"is_error": False},
+            })
+            with patch("sys.path", [str(HOOK.parent), *sys.path]):
+                main = runpy.run_path(str(HOOK))["_main"]
+            with (
+                patch("sys.argv", [str(HOOK), "--source-base64", base64.b64encode(str(source).encode()).decode()]),
+                patch("sys.stdin", io.StringIO(payload)),
+                patch("sys.stdout", io.StringIO()) as output,
+                patch("subprocess.run", side_effect=subprocess.TimeoutExpired("chezmoi managed", 30)),
+            ):
+                main()
+            self.assertIn("managed source query failed", output.getvalue())
+            self.assertIn("timed out", output.getvalue())
+
+    def test_reports_apply_failure_for_managed_file(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source"
+            source.mkdir()
+            edited = source / "tracked.txt"
+            edited.write_text("changed", encoding="utf-8")
+            fake_bin, log, env = self._fake_chezmoi(root)
+            env.update({**os.environ, "PATH": f"{fake_bin}:{os.environ['PATH']}", "CHEZMOI_TEST_MANAGED_PATHS": str(edited), "CHEZMOI_TEST_APPLY_ERROR": "1"})
+            result = subprocess.run(
+                [sys.executable, str(HOOK), "--source-base64", base64.b64encode(str(source).encode()).decode()],
+                input=json.dumps({"tool_name": "Edit", "tool_input": {"file_path": str(edited)}, "tool_result": {"is_error": False}}),
+                text=True, capture_output=True, env=env, check=False,
+            )
+            self.assertIn("chezmoi apply failed", result.stdout)
+            self.assertIn("apply failed", result.stdout)
+            self.assertEqual(
+                log.read_text(encoding="utf-8").splitlines(),
+                [
+                    f"--source {source} managed --path-style=source-absolute",
+                    f"--source {source} apply --source-path {edited}",
+                ],
+            )
+
+    def test_applies_successful_source_edit(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source"
+            source.mkdir()
+            edited = source / "tracked.txt"
+            edited.write_text("changed", encoding="utf-8")
+            fake_bin, log, env = self._fake_chezmoi(root)
+            env.update({
                 **os.environ,
                 "PATH": f"{fake_bin}:{os.environ['PATH']}",
-                "CHEZMOI_TEST_LOG": str(log),
-                "CHEZMOI_TEST_SOURCE": str(source),
-            }
+                "CHEZMOI_TEST_MANAGED_PATHS": str(edited),
+            })
             result = subprocess.run(
                 [sys.executable, str(HOOK), "--source-base64", base64.b64encode(str(source).encode()).decode()],
                 input=json.dumps(
@@ -86,7 +261,10 @@ class PostToolUseChezmoiApplyTest(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(
                 log.read_text(encoding="utf-8").splitlines(),
-                [f"--source {source} apply --source-path {edited}"],
+                [
+                    f"--source {source} managed --path-style=source-absolute",
+                    f"--source {source} apply --source-path {edited}",
+                ],
             )
 
     def test_applies_entries_that_include_an_edited_shared_template(self) -> None:
@@ -100,15 +278,13 @@ class PostToolUseChezmoiApplyTest(unittest.TestCase):
             including = source / "dot_pi/private_agent/modify_models.json.tmpl"
             including.write_text('{{ template "shared-fragment.json" . }}\n', encoding="utf-8")
             unrelated = source / "dot_pi/private_agent/modify_settings.json.tmpl"
-            unrelated.write_text('{{ template "other-fragment.json" . }}\n', encoding="utf-8")
-            log = root / "chezmoi.log"
-            fake_bin = root / "bin"
-            fake_bin.mkdir()
-            fake = fake_bin / "chezmoi"
-            fake.write_text(
-                "#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$CHEZMOI_TEST_LOG\"\n", encoding="utf-8"
-            )
-            fake.chmod(0o755)
+            unrelated.write_text('{{ template "shared-fragment.json" . }}\n', encoding="utf-8")
+            fake_bin, log, env = self._fake_chezmoi(root)
+            env.update({
+                **os.environ,
+                "PATH": f"{fake_bin}:{os.environ['PATH']}",
+                "CHEZMOI_TEST_MANAGED_PATHS": str(including),
+            })
             result = subprocess.run(
                 [sys.executable, str(HOOK), "--source-base64", base64.b64encode(str(source).encode()).decode()],
                 input=json.dumps(
@@ -120,13 +296,16 @@ class PostToolUseChezmoiApplyTest(unittest.TestCase):
                 ),
                 text=True,
                 capture_output=True,
-                env={**os.environ, "PATH": f"{fake_bin}:{os.environ['PATH']}", "CHEZMOI_TEST_LOG": str(log)},
+                env=env,
                 check=False,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(
                 log.read_text(encoding="utf-8").splitlines(),
-                [f"--source {source} apply --source-path {including}"],
+                [
+                    f"--source {source} managed --path-style=source-absolute",
+                    f"--source {source} apply --source-path {including}",
+                ],
             )
             self.assertNotIn(str(unrelated), result.stdout)
 
@@ -160,7 +339,10 @@ class PostToolUseChezmoiApplyTest(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertFalse(log.exists())
+            self.assertEqual(
+                log.read_text(encoding="utf-8").splitlines(),
+                [f"--source {source} managed --path-style=source-absolute"],
+            )
             self.assertIn("nothing to apply", result.stdout)
 
     def test_ignores_symlink_inside_source_resolving_outside(self) -> None:
