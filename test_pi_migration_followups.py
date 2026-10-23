@@ -16,9 +16,17 @@ class PiMigrationFollowupsTest(unittest.TestCase):
         dependencies = manifest["dependencies"]
         self.assertIn("pi-web-access", dependencies)
         self.assertIn("pi-subagents", dependencies)
-        self.assertEqual(dependencies["pi-subagents"], "0.78.0")
-        self.assertEqual(dependencies["pi-web-access"], "0.37.0")
-        self.assertRegex(dependencies["@earendil-works/pi-coding-agent"], r"^\d+\.\d+\.\d+$")
+        self.assertEqual(dependencies["pi-subagents"], "0.81.0")
+        self.assertEqual(dependencies["pi-web-access"], "0.44.0")
+        self.assertEqual(dependencies["@earendil-works/pi-coding-agent"], "1.4.0")
+
+    def test_extension_development_sdk_matches_managed_runtime(self) -> None:
+        runtime = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        development = json.loads(
+            (ROOT / "dot_pi/private_agent/extensions/package.json").read_text(encoding="utf-8")
+        )
+        package = "@earendil-works/pi-coding-agent"
+        self.assertEqual(development["devDependencies"][package], runtime["dependencies"][package])
 
     def test_agent_scan_dirs_only_use_trusted_global_location(self) -> None:
         settings = json.loads(
