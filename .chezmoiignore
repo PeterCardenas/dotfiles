@@ -5,6 +5,8 @@ README.md
 .gitignore
 gnome-settings.conf
 setup.sh
+# Prototypes are source-only; do not install experiments into $HOME.
+/prototypes
 # Repo-root test suites belong to the source tree, not to $HOME. Anchored so
 # tests shipping next to real scripts (hooks, skills) keep reaching the target.
 /test_*.py

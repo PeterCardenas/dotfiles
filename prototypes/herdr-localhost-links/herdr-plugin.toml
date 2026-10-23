@@ -1,0 +1,18 @@
+id = "local.herdr-localhost-links"
+name = "Herdr localhost links"
+version = "0.1.0"
+min_herdr_version = "0.9.3"
+description = "Open remote Herdr localhost links from the client browser"
+platforms = ["linux", "macos"]
+
+[[actions]]
+id = "open-localhost-link"
+title = "Open localhost link on client"
+contexts = ["global"]
+command = ["python3", "link_handler.py"]
+
+[[link_handlers]]
+id = "http-loopback"
+title = "Open HTTP localhost link on client"
+pattern = '(?i)^https?://(?:localhost\.?|127\.0\.0\.1|\[::1\])(?::[0-9]+)?(?:[/?#].*)?$'
+action = "open-localhost-link"
