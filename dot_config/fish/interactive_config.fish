@@ -77,7 +77,8 @@ set -l os (uname -s)
 if string match -q -- '*WSL2*' (uname -a)
     set -gx BROWSER "/mnt/c/Program\ Files/Mozilla\ Firefox/firefox.exe"
 else if test $os = Darwin
-    set -gx BROWSER "/Applications/Arc.app/Contents/MacOS/Arc"
+    # Let Launch Services resolve the current default browser when opening a URL.
+    set -gx BROWSER /usr/bin/open
 end
 
 # Set default editor to neovim.
