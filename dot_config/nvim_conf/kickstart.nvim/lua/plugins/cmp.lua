@@ -334,6 +334,14 @@ return {
       return Config.USE_BLINK_CMP
     end,
     config = function()
+      local function normalize_directory_match(item)
+        local match_text = item.filterText or item.label
+        -- A matching slash makes Blink scan back into the parent in apps_platform/platform.
+        -- Keep the slash in the label and insertion, but match only the directory name.
+        if match_text:sub(-1) == '/' then
+          item.filterText = match_text:sub(1, -2)
+        end
+      end
       local function maybe_get_dap()
         local is_enabled = vim.bo.filetype ~= 'prompt' or require('cmp_dap').is_dap_buffer()
         if is_enabled then
@@ -463,12 +471,33 @@ return {
               module = 'lazydev.integrations.blink',
               score_offset = 100,
             },
+            cmdline = {
+              transform_items = function(ctx, items)
+                local utils = require('blink.cmp.sources.cmdline.utils')
+                if not utils.is_path_completion(utils.get_completion_type(ctx.mode), ctx.line) then
+                  return items
+                end
+                for _, item in ipairs(items) do
+                  normalize_directory_match(item)
+                end
+                return items
+              end,
+            },
             path = {
               module = 'blink.cmp.sources.path',
               async = true,
               opts = {
                 show_hidden_files_by_default = true,
               },
+              transform_items = function(_, items)
+                local folder = require('blink.cmp.types').CompletionItemKind.Folder
+                for _, item in ipairs(items) do
+                  if item.kind == folder then
+                    normalize_directory_match(item)
+                  end
+                end
+                return items
+              end,
             },
             async_path = {
               name = 'async_path',
