@@ -63,7 +63,7 @@ esac
 
     def pick(self, response="owner/example.git\n", **env):
         return subprocess.run(
-            ["fish", "--no-config", "-c", f"set fish_function_path {FUNCTIONS} /usr/share/fish/functions; function print_error; echo $argv >&2; end; herdr_new_worktree"],
+            ["fish", "--no-config", "-c", f"set fish_function_path {FUNCTIONS} /usr/share/fish/functions; function print_error; echo $argv >&2; end; herdr_popup_run herdr_new_worktree"],
             cwd=self.remote, env={**self.env, **env}, input=response,
             text=True, capture_output=True, timeout=15,
         )
@@ -130,7 +130,8 @@ esac
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual((repo / "keep").read_text(), "existing work")
         self.assertEqual(self.calls.read_text().splitlines(), ["workspace list", "worktree list --workspace w-active"])
-        self.assertIn("Press Enter", result.stderr)
+        self.assertIn("herdr_new_worktree failed (exit 1).", result.stderr)
+        self.assertIn("Press Enter to close.", result.stderr)
 
     def test_workspace_create_failure_does_not_open_checkout(self):
         result = self.pick(FAIL_CREATE="1")
@@ -146,7 +147,8 @@ esac
         result = self.pick(FAIL_OPEN="1")
         self.assertNotEqual(result.returncode, 0)
         self.assertTrue((self.projects / "example/main/.git").is_file())
-        self.assertIn("Press Enter", result.stderr)
+        self.assertIn("herdr_new_worktree failed (exit 1).", result.stderr)
+        self.assertIn("Press Enter to close.", result.stderr)
 
     def test_projects_path_failure_never_clones_or_creates_workspace(self):
         self.projects.write_text("not a directory")
@@ -154,7 +156,8 @@ esac
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(self.projects.read_text(), "not a directory")
         self.assertEqual(self.calls.read_text().splitlines(), ["workspace list", "worktree list --workspace w-active"])
-        self.assertIn("Press Enter", result.stderr)
+        self.assertIn("herdr_new_worktree failed (exit 1).", result.stderr)
+        self.assertIn("Press Enter to close.", result.stderr)
 
 
 if __name__ == "__main__":

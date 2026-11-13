@@ -1,7 +1,10 @@
 function herdr_new_worktree --description "Create a Herdr worktree in a chosen repository group"
-    set -q HERDR_ACTIVE_WORKSPACE_ID; or return 1
+    if not set -q HERDR_ACTIVE_WORKSPACE_ID
+        printf '%s\n' 'No active Herdr workspace in popup context.' >&2
+        return 1
+    end
 
-    set -l workspaces (command herdr workspace list 2>/dev/null); or return 1
+    set -l workspaces (command herdr workspace list); or return 1
     # A Git checkout alone is not a sidebar group; only bases with linked children qualify.
     set -l group_ids (printf '%s\n' "$workspaces" | jq -r '
         .result.workspaces as $all | $all[] | . as $base
@@ -26,25 +29,25 @@ function herdr_new_worktree --description "Create a Herdr worktree in a chosen r
     end
     set -a groups (printf ':new-session\tNew session')
     printf '%s\n' 'Group: choose a repository or New session (Enter to continue; Escape to cancel)' >&2
-    set -l choice (printf '%s\n' $groups | fzf --no-sort --layout=reverse --delimiter='\t' --with-nth=2 --prompt='Group> '); or return 1
+    set -l choice (printf '%s\n' $groups | fzf --no-sort --layout=reverse --delimiter='\t' --with-nth=2 --prompt='Group> '); or return
     set -l group (string match -r '^[^\t]+' -- "$choice")
-    test -n "$group"; or return 1
+    # The placeholder row has no id; picking it is a cancel, not an error.
+    test -n "$group"; or return 130
     if test "$group" = :new-session
-        set -l repo (herdr_popup_read 'Repo to clone into ~/projects (same argument as clone, e.g. owner/repo):'); or return 1
+        set -l repo (herdr_popup_read 'Repo to clone into ~/projects (same argument as clone, e.g. owner/repo):'); or return
         set repo (string trim -- "$repo")
-        test -n "$repo"; or return 1
+        test -n "$repo"; or return 130
         herdr_new_session "$repo"
-        set -l result $status
-        if test "$result" -ne 0
-            herdr_popup_read 'New session failed. Press Enter to close.' >/dev/null
-        end
-        return $result
+        return
     end
 
-    set -l listing (command herdr worktree list --workspace "$group" 2>/dev/null); or return 1
+    set -l listing (command herdr worktree list --workspace "$group"); or return 1
     set -l checkout (printf '%s\n' "$listing" | jq -r '.result.source.source_checkout_path // empty')
-    test -n "$checkout"; or return 1
-    set -l branch (herdr_popup_read 'Branch name: (or GitHub PR URL; empty for detached default commit)'); or return 1
+    if test -z "$checkout"
+        printf 'Group %s has no source checkout.\n' "$group" >&2
+        return 1
+    end
+    set -l branch (herdr_popup_read 'Branch name: (or GitHub PR URL; empty for detached default commit)'); or return
     set branch (string trim -- "$branch")
 
     set -l base
@@ -58,22 +61,31 @@ function herdr_new_worktree --description "Create a Herdr worktree in a chosen r
         popd >/dev/null
         test "$gh_status" -eq 0; or return 1
         git check-ref-format --branch "$branch" >/dev/null; or return 1
+    else if string match -q '*://*' -- "$branch"
+        printf '%s\n' 'Expected a branch name or GitHub PR URL (https://github.com/owner/repo/pull/123).' >&2
+        return 1
+    end
+
+    # Git allows a branch in only one worktree, so reuse that checkout's workspace instead of failing.
+    if test -n "$branch"; and contains -- "branch refs/heads/$branch" (git -C "$checkout" worktree list --porcelain)
+        printf 'Branch %s is already checked out; switching to its workspace.\n' "$branch" >&2
+        herdr_worktree_command open --workspace "$group" --branch "$branch" --focus
+        return
+    end
+
+    if test (count $pull_request) -eq 2
         # Fetch the PR ref from its URL's repository, including fork PRs, without switching an existing checkout.
         git -C "$checkout" fetch "https://github.com/$pull_request[1].git" "refs/pull/$pull_request[2]/head"; or return 1
         set base (git -C "$checkout" rev-parse --verify FETCH_HEAD); or return 1
     else
-        if string match -q '*://*' -- "$branch"
-            printf '%s\n' 'Expected a branch name or GitHub PR URL (https://github.com/owner/repo/pull/123).' >&2
-            return 1
-        end
         set base (git -C "$checkout" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)
         if not string match -qr '^origin/.+' -- "$base"
             printf '%s\n' 'Cannot determine origin default branch (origin/HEAD is missing).' >&2
             return 1
         end
         if test -z "$branch"
-            set -l confirmation (herdr_popup_read "Use latest $base commit without a branch? [y/N]"); or return 1
-            test (string lower -- (string trim -- "$confirmation")) = y; or return 1
+            set -l confirmation (herdr_popup_read "Use latest $base commit without a branch? [y/N]"); or return
+            test (string lower -- (string trim -- "$confirmation")) = y; or return 130
         end
 
         set default_name (string replace 'origin/' '' -- "$base")
@@ -85,7 +97,7 @@ function herdr_new_worktree --description "Create a Herdr worktree in a chosen r
     set -l worktree_dir (path dirname "$common_dir")
     if test -n "$branch"
         set -l worktree_path "$worktree_dir"/(string replace --all / - -- "$branch")
-        command herdr worktree create --workspace "$group" --branch "$branch" --base "$base" --path "$worktree_path" --focus
+        herdr_worktree_command create --workspace "$group" --branch "$branch" --base "$base" --path "$worktree_path" --focus
     else
         # Herdr create invents a branch when --branch is omitted; Git must make the detached checkout.
         set -l default_slug (string replace --all / - -- "$default_name")
@@ -94,9 +106,18 @@ function herdr_new_worktree --description "Create a Herdr worktree in a chosen r
             command rmdir "$worktree_path" 2>/dev/null
             return 1
         end
-        if not command herdr worktree open --workspace "$group" --path "$worktree_path" --focus
+        if not herdr_worktree_command open --workspace "$group" --path "$worktree_path" --focus
             printf 'Detached checkout remains at %s\n' "$worktree_path" >&2
             return 1
         end
     end
+end
+
+function herdr_worktree_command --description 'Run a herdr worktree subcommand and print only its readable error'
+    set -l output (command herdr worktree $argv 2>&1 | string collect)
+    set -l command_status $pipestatus[1]
+    if test $command_status -ne 0
+        herdr_error_message "$output" >&2
+    end
+    return $command_status
 end

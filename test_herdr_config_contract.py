@@ -1,4 +1,5 @@
 """Contract tests for the approved Herdr 0.9.1 configuration boundary."""
+import json
 import os
 import re
 import shutil
@@ -25,6 +26,8 @@ PREVIEW_HERDR = ROOT / "dot_config/fish/functions/preview_herdr_target.fish"
 CREATE_WORKTREE = ROOT / "dot_config/fish/functions/herdr_new_worktree.fish"
 CLOSE_WORKSPACE = ROOT / "dot_config/fish/functions/herdr_close_workspace.fish"
 POPUP_READ = ROOT / "dot_config/fish/functions/herdr_popup_read.fish"
+POPUP_RUN = ROOT / "dot_config/fish/functions/herdr_popup_run.fish"
+ERROR_MESSAGE = ROOT / "dot_config/fish/functions/herdr_error_message.fish"
 LEAP_COMMIT = "be238808187636a080b46c547b95cbac9ee9988e"
 
 
@@ -369,7 +372,8 @@ class HerdrConfigContractTest(unittest.TestCase):
             functions.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(CLOSE_WORKSPACE, functions / CLOSE_WORKSPACE.name)
             shutil.copyfile(CREATE_WORKTREE, functions / CREATE_WORKTREE.name)
-            shutil.copyfile(POPUP_READ, functions / POPUP_READ.name)
+            for source in (POPUP_READ, POPUP_RUN, ERROR_MESSAGE):
+                shutil.copyfile(source, functions / source.name)
 
             def herdr(*arguments):
                 return subprocess.run(
@@ -566,7 +570,7 @@ class HerdrConfigContractTest(unittest.TestCase):
             )
             self.assertNotEqual(result.returncode, 0)
             self.assertFalse(log.exists(), "a failed lookup must not close a linked workspace")
-            self.assertIn("press Enter", result.stderr)
+            self.assertIn("checkout identity could not be verified", result.stderr)
 
     def test_close_popup_recovers_pointerless_checkout_after_native_removal_failure(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -1065,7 +1069,7 @@ class HerdrConfigContractTest(unittest.TestCase):
             )
             herdr.chmod(0o755)
             process = subprocess.Popen(
-                ["fish", "--no-config", "-c", f"set fish_function_path {CLOSE_WORKSPACE.parent}; herdr_close_workspace"],
+                ["fish", "--no-config", "-c", f"set fish_function_path {CLOSE_WORKSPACE.parent}; herdr_popup_run herdr_close_workspace"],
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
                 env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "HERDR_ACTIVE_WORKSPACE_ID": "w-linked"},
             )
@@ -1086,7 +1090,8 @@ class HerdrConfigContractTest(unittest.TestCase):
                 stdout, stderr = process.communicate(timeout=5)
                 self.assertNotEqual(process.returncode, 0, stdout)
                 self.assertIn("locked checkout", stderr)
-                self.assertIn("Press Enter to dismiss", stderr)
+                self.assertIn("herdr_close_workspace failed (exit 1).", stderr)
+                self.assertIn("Press Enter to close", stderr)
                 self.assertIn("inspect their current state before retrying", stderr)
                 self.assertNotIn("files and workspace were retained", stderr)
             finally:
@@ -1299,7 +1304,8 @@ class HerdrConfigContractTest(unittest.TestCase):
             functions = config_home / "fish/functions"
             functions.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(CREATE_WORKTREE, functions / CREATE_WORKTREE.name)
-            shutil.copyfile(POPUP_READ, functions / POPUP_READ.name)
+            for source in (POPUP_READ, POPUP_RUN, ERROR_MESSAGE):
+                shutil.copyfile(source, functions / source.name)
 
             def herdr(*arguments):
                 return subprocess.run(
@@ -1459,6 +1465,46 @@ class HerdrConfigContractTest(unittest.TestCase):
             self.assertEqual(len(calls), 1)
             self.assertIn("--branch feature/new --base origin/main", calls[0])
 
+    def test_worktree_popup_switches_to_workspace_when_branch_is_already_checked_out(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            checkout, _ = self._worktree_popup_remote(root)
+            subprocess.run(["git", "-C", str(checkout), "worktree", "add", "-q", "-b", "feature/used", str(root / "used")], check=True)
+            result, calls = self._run_worktree_popup(root, checkout, "feature/used\n")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Branch feature/used is already checked out", result.stderr)
+            self.assertEqual(calls, ["worktree open --workspace w-parent --branch feature/used --focus"])
+            self.assertNotIn("fetch", (root / "calls.git").read_text())
+
+    def test_worktree_popup_reports_readable_herdr_create_error(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            checkout, _ = self._worktree_popup_remote(root)
+            error = json.dumps({"error": {"code": "worktree_create_failed", "message": "fatal: '/repo/x' already exists"}})
+            result, calls = self._run_worktree_popup(root, checkout, "feature/new\n", herdr_error=error)
+            self.assertEqual(result.returncode, 1, result.stderr)
+            self.assertEqual(len(calls), 1)
+            self.assertIn("fatal: '/repo/x' already exists", result.stderr)
+            self.assertNotIn("worktree_create_failed", result.stderr)
+
+    def test_popup_run_pauses_on_failure_but_not_on_cancel(self):
+        for body, code, paused in (("return 0", 0, False), ("return 130", 130, False), ("echo boom >&2; return 2", 2, True)):
+            with self.subTest(code=code):
+                result = subprocess.run(
+                    ["fish", "--no-config", "-c", f"set fish_function_path {POPUP_RUN.parent}; function popup_step; {body}; end; herdr_popup_run popup_step"],
+                    input="\n", text=True, capture_output=True, timeout=10,
+                )
+                self.assertEqual(result.returncode, code, result.stderr)
+                self.assertEqual("Press Enter to close." in result.stderr, paused, result.stderr)
+                if paused:
+                    self.assertIn("boom", result.stderr)
+                    self.assertIn("popup_step failed (exit 2).", result.stderr)
+
+    def test_worktree_tools_popups_run_through_failure_wrapper(self):
+        plugin = tomllib.loads(WORKTREE_PLUGIN.read_text())
+        for pane in plugin["panes"]:
+            self.assertRegex(pane["command"][-1], r"herdr_popup_run \w+$", pane["id"])
+
     def test_worktree_popup_uses_git_function_override(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -1582,7 +1628,7 @@ class HerdrConfigContractTest(unittest.TestCase):
         latest = subprocess.check_output(["git", "-C", str(other), "rev-parse", "HEAD"], text=True).strip()
         return checkout, latest
 
-    def _run_worktree_popup(self, root, checkout, answer, pr_branch="feature/review"):
+    def _run_worktree_popup(self, root, checkout, answer, pr_branch="feature/review", herdr_error=""):
         bin_dir = root / "bin"
         bin_dir.mkdir(exist_ok=True)
         log = root / "calls"
@@ -1593,7 +1639,7 @@ class HerdrConfigContractTest(unittest.TestCase):
             "case \"$1 $2\" in\n"
             "  'workspace list') printf '%s\\n' '{\"result\":{\"workspaces\":[{\"workspace_id\":\"w-parent\",\"label\":\"repo\",\"worktree\":{\"repo_key\":\"repo\",\"is_linked_worktree\":false}},{\"workspace_id\":\"w-child\",\"worktree\":{\"repo_key\":\"repo\",\"is_linked_worktree\":true}}]}}' ;;\n"
             "  'worktree list') printf '%s\\n' \"{\\\"result\\\":{\\\"source\\\":{\\\"source_workspace_id\\\":\\\"w-parent\\\",\\\"source_checkout_path\\\":\\\"$CHECKOUT\\\"}}}\" ;;\n"
-            "  *) printf '%s\\n' \"$*\" >> \"$CALLS\" ;;\n"
+            "  *) printf '%s\\n' \"$*\" >> \"$CALLS\"; [ -z \"$HERDR_ERROR\" ] || { printf '%s\\n' \"$HERDR_ERROR\"; exit 1; } ;;\n"
             "esac\n"
         )
         herdr.chmod(0o755)
@@ -1631,7 +1677,7 @@ if test "$PWD" != "$original_pwd"; or test "$dirstack" != "$original_dirs"
 end
 exit $result'''],
             cwd=root, input=answer, text=True, capture_output=True, timeout=10,
-            env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "CHECKOUT": str(checkout), "CALLS": str(log), "HERDR_ACTIVE_WORKSPACE_ID": "w-child", "PR_BRANCH": pr_branch},
+            env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "CHECKOUT": str(checkout), "CALLS": str(log), "HERDR_ACTIVE_WORKSPACE_ID": "w-child", "PR_BRANCH": pr_branch, "HERDR_ERROR": herdr_error},
         )
         self.assertNotEqual(result.returncode, 99, result.stderr)
         return result, log.read_text().splitlines() if log.exists() else []
@@ -1787,7 +1833,7 @@ exit $result'''],
             shutil.copytree(WORKTREE_PLUGIN.parent, plugin)
             functions = config_home / "fish/functions"
             functions.mkdir(parents=True, exist_ok=True)
-            for source in (MANAGE_HERDR, PREVIEW_HERDR):
+            for source in (MANAGE_HERDR, PREVIEW_HERDR, POPUP_READ, POPUP_RUN):
                 shutil.copyfile(source, functions / source.name)
 
             def herdr(*arguments):

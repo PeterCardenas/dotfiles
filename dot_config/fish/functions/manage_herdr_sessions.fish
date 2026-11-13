@@ -55,7 +55,7 @@ function manage_herdr_sessions -d "Navigate Herdr workspaces"
     end
 
     set -l selection (printf '%s\n' $rows | fzf --ansi --cycle --wrap=word --layout=reverse --delimiter='\t' --with-nth=2 --preview-window="right,$preview_percent%,border-left,nowrap,follow,<65(down,50%,border-top)" --preview-label=' Preview ' --preview 'preview_herdr_target workspace {1}')
-    test -n "$selection"; or return
+    test -n "$selection"; or return 130
 
     set -l fields (string split \t -- "$selection")
     command herdr workspace focus "$fields[1]"

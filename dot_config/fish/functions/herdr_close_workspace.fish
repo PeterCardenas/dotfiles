@@ -1,5 +1,8 @@
 function herdr_close_workspace --description "Close a workspace and remove linked worktree checkouts"
-    set -q HERDR_ACTIVE_WORKSPACE_ID; or return 1
+    if not set -q HERDR_ACTIVE_WORKSPACE_ID
+        printf '%s\n' 'No active Herdr workspace in popup context.' >&2
+        return 1
+    end
 
     # Snapshot sidebar order before removal makes Herdr fall back to the group parent.
     set -l workspaces (command herdr workspace list 2>/dev/null)
@@ -18,29 +21,28 @@ function herdr_close_workspace --description "Close a workspace and remove linke
             set -l checkout (printf '%s\n' "$workspaces" | jq -r --arg id "$HERDR_ACTIVE_WORKSPACE_ID" '.result.workspaces[] | select(.workspace_id == $id) | .worktree.checkout_path // empty')
             set -l repo_key (printf '%s\n' "$workspaces" | jq -r --arg id "$HERDR_ACTIVE_WORKSPACE_ID" '.result.workspaces[] | select(.workspace_id == $id) | .worktree.repo_key // empty')
             if herdr_is_unregistered_worktree "$checkout" "$repo_key"
-                set -l confirm (herdr_popup_read "Git no longer lists linked checkout $checkout. Force delete its remaining files and close workspace? [y/N]"); or return 1
+                set -l confirm (herdr_popup_read "Git no longer lists linked checkout $checkout. Force delete its remaining files and close workspace? [y/N]"); or return
                 if string match --quiet --regex '^[Yy]$' "$confirm"
                     herdr_purge_unregistered_worktree "$HERDR_ACTIVE_WORKSPACE_ID" "$checkout" "$repo_key" "$previous_workspace"; and return 0
                 end
-                herdr_popup_read 'Checkout was not removed; press Enter to dismiss.' >/dev/null
-                return 1
+                printf '%s\n' 'Checkout was not removed.' >&2
+                return 130
             end
             if herdr_can_remove_pointerless_worktree "$HERDR_ACTIVE_WORKSPACE_ID" "$checkout" "$repo_key"
-                set -l confirm (herdr_popup_read "Git no longer lists linked checkout $checkout. Permanently delete all remaining checkout files and close workspace? [y/N]"); or return 1
-                string match --quiet --regex '^[Yy]$' "$confirm"; or return 1
+                set -l confirm (herdr_popup_read "Git no longer lists linked checkout $checkout. Permanently delete all remaining checkout files and close workspace? [y/N]"); or return
+                string match --quiet --regex '^[Yy]$' "$confirm"; or return 130
                 herdr_remove_pointerless_worktree "$HERDR_ACTIVE_WORKSPACE_ID" "$checkout" "$repo_key" "$previous_workspace"; and return 0
-                herdr_popup_read 'Removal failed; press Enter to dismiss.' >/dev/null
+                printf '%s\n' 'Removal failed.' >&2
                 return 1
             end
             printf '%s\n' 'Cannot safely close linked workspace; checkout identity could not be verified.' >&2
-            herdr_popup_read 'Removal failed; press Enter to dismiss.' >/dev/null
             return 1
         end
     end
 
     if test -n "$linked_path"
         set -l confirm (herdr_popup_read "Force-remove linked worktree $linked_path? [y/N] This terminates its pane processes and permanently deletes uncommitted or ignored files; unsaved work will be lost."); or return
-        string match --quiet --regex '^[Yy]$' "$confirm"; or return
+        string match --quiet --regex '^[Yy]$' "$confirm"; or return 130
         herdr_focus_previous_workspace "$previous_workspace"; or return $status
         set -l removal (command herdr worktree remove --workspace "$HERDR_ACTIVE_WORKSPACE_ID" --force 2>&1)
         set -l removal_status $status
@@ -51,16 +53,16 @@ function herdr_close_workspace --description "Close a workspace and remove linke
         if test -n "$previous_workspace"
             command herdr workspace focus "$HERDR_ACTIVE_WORKSPACE_ID" >/dev/null 2>&1
         end
-        set -l error_message (herdr_worktree_removal_error_message "$removal")
+        set -l error_message (herdr_error_message "$removal")
         herdr_popup_read "Worktree removal failed: $error_message. Press Enter to continue." >/dev/null; or return $removal_status
         set -l repo_key (printf '%s\n' "$listing" | jq -r '.result.source.repo_key // empty')
         herdr_recover_failed_worktree_removal "$HERDR_ACTIVE_WORKSPACE_ID" "$linked_path" "$repo_key" "$error_message" "$previous_workspace"; and return 0
-        herdr_popup_read 'Recovery did not complete. The checkout or workspace may have changed; inspect their current state before retrying. Press Enter to dismiss.' >/dev/null
+        printf '%s\n' 'Recovery did not complete. The checkout or workspace may have changed; inspect their current state before retrying.' >&2
         return $removal_status
     end
 
     set -l confirm (herdr_popup_read 'Close workspace? [y/N]'); or return
-    string match --quiet --regex '^[Yy]$' "$confirm"; or return
+    string match --quiet --regex '^[Yy]$' "$confirm"; or return 130
     herdr_close_workspace_with_previous "$HERDR_ACTIVE_WORKSPACE_ID" "$previous_workspace"
 end
 
@@ -98,28 +100,17 @@ function herdr_is_unregistered_worktree --argument-names checkout repo_key
     return 0
 end
 
-function herdr_worktree_removal_error_message --argument-names output
-    set -l message (printf '%s\n' "$output" | jq -er '.error.message | strings | select(length > 0)' 2>/dev/null)
-    if test $status -eq 0
-        printf '%s\n' "$message"
-    else if not printf '%s\n' "$output" | jq -e . >/dev/null 2>&1
-        printf '%s\n' "$output"
-    else
-        printf '%s\n' 'Herdr returned an error without a message.'
-    end
-end
-
 function herdr_recover_failed_worktree_removal --argument-names workspace_id checkout repo_key error_message previous_workspace
     if herdr_is_unregistered_worktree "$checkout" "$repo_key"
-        set -l confirm (herdr_popup_read "Git has unregistered checkout $checkout but files remain. Git removal cannot be relied on to delete them; a concurrent writer can cause Directory not empty. Force delete remaining files and close workspace? [y/N]"); or return 1
-        string match --quiet --regex '^[Yy]$' "$confirm"; or return 1
+        set -l confirm (herdr_popup_read "Git has unregistered checkout $checkout but files remain. Git removal cannot be relied on to delete them; a concurrent writer can cause Directory not empty. Force delete remaining files and close workspace? [y/N]"); or return
+        string match --quiet --regex '^[Yy]$' "$confirm"; or return 130
         herdr_purge_unregistered_worktree "$workspace_id" "$checkout" "$repo_key" "$previous_workspace"
         return $status
     end
 
     if herdr_can_remove_pointerless_worktree "$workspace_id" "$checkout" "$repo_key"
-        set -l confirm (herdr_popup_read "Git has unregistered checkout $checkout but files remain. Git removal cannot be relied on to delete them; a concurrent writer can cause Directory not empty. Permanently delete all remaining checkout files and close workspace? [y/N]"); or return 1
-        string match --quiet --regex '^[Yy]$' "$confirm"; or return 1
+        set -l confirm (herdr_popup_read "Git has unregistered checkout $checkout but files remain. Git removal cannot be relied on to delete them; a concurrent writer can cause Directory not empty. Permanently delete all remaining checkout files and close workspace? [y/N]"); or return
+        string match --quiet --regex '^[Yy]$' "$confirm"; or return 130
         herdr_remove_pointerless_worktree "$workspace_id" "$checkout" "$repo_key" "$previous_workspace"
         return $status
     end

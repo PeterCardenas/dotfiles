@@ -11,7 +11,7 @@ title = "Workspace switcher"
 placement = "popup"
 width = "90%"
 height = "85%"
-command = ["fish", "-c", "manage_herdr_sessions"]
+command = ["fish", "-c", "herdr_popup_run manage_herdr_sessions"]
 
 [[panes]]
 id = "close-workspace"
@@ -19,7 +19,7 @@ title = "Close workspace"
 placement = "popup"
 width = "60%"
 height = "40%"
-command = ["fish", "-c", "set -lx HERDR_ACTIVE_WORKSPACE_ID (printf '%s\\n' \"$HERDR_PLUGIN_CONTEXT_JSON\" | jq -r '.workspace_id // empty'); herdr_close_workspace"]
+command = ["fish", "-c", "set -lx HERDR_ACTIVE_WORKSPACE_ID (printf '%s\\n' \"$HERDR_PLUGIN_CONTEXT_JSON\" | jq -r '.workspace_id // empty'); herdr_popup_run herdr_close_workspace"]
 
 [[panes]]
 id = "new-worktree"
@@ -27,4 +27,4 @@ title = "New linked worktree"
 placement = "popup"
 width = "60%"
 height = "40%"
-command = ["fish", "-c", "set -lx HERDR_ACTIVE_WORKSPACE_ID (printf '%s\\n' \"$HERDR_PLUGIN_CONTEXT_JSON\" | jq -r '.workspace_id // empty'); herdr_new_worktree"]
+command = ["fish", "-c", "set -lx HERDR_ACTIVE_WORKSPACE_ID (printf '%s\\n' \"$HERDR_PLUGIN_CONTEXT_JSON\" | jq -r '.workspace_id // empty'); herdr_popup_run herdr_new_worktree"]
