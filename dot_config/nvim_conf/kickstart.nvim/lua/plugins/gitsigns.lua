@@ -500,6 +500,9 @@ return {
         end
       end
       require('octo.utils').state_icon_map.COMMENTED = ' '
+      -- Octo's goto_issue opens in the current window, which swallows the issue
+      -- inside floats; disable it everywhere and route through our handler.
+      local disabled_goto_issue = { lhs = '' }
       require('octo').setup({
         timeout = math.huge,
         enable_native_completion = false,
@@ -533,6 +536,9 @@ return {
           auto_show_threads = false,
         },
         mappings = {
+          global = {
+            goto_issue = disabled_goto_issue,
+          },
           discussion = {
             -- Remove conflict with <C-y> for scrolling
             copy_url = { lhs = '<leader>di', desc = 'copy url to system clipboard' },
@@ -542,6 +548,7 @@ return {
             copy_url = { lhs = '<leader>pu', desc = 'copy url to system clipboard' },
             copy_sha = { lhs = '<leader>ph', desc = 'copy sha to system clipboard' },
             approve_pr = { lhs = '<leader>pa', desc = 'approve pr' },
+            goto_issue = disabled_goto_issue,
             -- Remove conflict with <C-r> for for redo
             reload = { lhs = '<leader>r<C-r>', desc = 'reload' },
           },
@@ -549,11 +556,13 @@ return {
             -- Remove conflict with <C-y> for scrolling
             copy_url = { lhs = '<leader>iu', desc = 'copy url to system clipboard' },
             add_assignee = { lhs = '<leader>ia', desc = 'add assignee' },
+            goto_issue = disabled_goto_issue,
             -- Remove conflict with <C-r> for for redo
             reload = { lhs = '<leader>r<C-r>', desc = 'reload' },
           },
           review_thread = {
             add_suggestion = { lhs = '<leader>cs', desc = 'add suggestion' },
+            goto_issue = disabled_goto_issue,
           },
           review_diff = {
             add_review_suggestion = { lhs = '<leader>cs', desc = 'add suggestion' },
@@ -569,6 +578,8 @@ return {
         },
       })
       require('local.octo_visibility').setup()
+      -- Global so agentic.nvim's buffer-local <leader>gi still takes precedence in its windows.
+      vim.keymap.set('n', '<leader>gi', require('local.octo_goto_issue').go_to_issue, { desc = 'Open issue or PR under cursor' })
     end,
   },
   {
