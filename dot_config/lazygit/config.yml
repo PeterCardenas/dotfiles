@@ -5,17 +5,7 @@ gui:
   splitDiff: "always"
   scrollPastBottom: true
   animateExplosion: true
-  authorColors:
-    "Peter Cardenas": "yellow"
-    "PeterCardenas": "yellow"
-    "PeterPCardenas": "yellow"
-    "peter-cardenas-ai": "yellow"
-    "*": "white"
   nerdFontsVersion: '3'
-  branchColors:
-    "pcardenas": "yellow"
-    "master": "#9ece6a"
-    "main": "#9ece6a"
   theme:
     selectedLineBgColor:
       - "#374261"
@@ -41,6 +31,16 @@ gui:
       - "#db4b4b"
     defaultFgColor:
       - "#c0caf5"
+    authorColors:
+      "Peter Cardenas": "yellow"
+      "PeterCardenas": "yellow"
+      "PeterPCardenas": "yellow"
+      "peter-cardenas-ai": "yellow"
+      "*": "white"
+    branchColorPatterns:
+      "^pcardenas(/|$)": "yellow"
+      "^master(/|$)": "#9ece6a"
+      "^main(/|$)": "#9ece6a"
 keybinding:
   # TODO: Push/pull branches that are not checked out
   files:
