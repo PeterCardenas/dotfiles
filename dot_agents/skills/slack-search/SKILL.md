@@ -27,7 +27,9 @@ Download a known attachment after the user asks for it:
 slack-search --download-file <Slack file ID> --output <local path>
 ```
 
-Read the JSON `result` field as the delegated answer. Download mode itself materializes and verifies connector output; it does not grant the delegate shell or file-writing tools. If the required read-only Slack tool is denied, report the exact denial rather than substituting broader permissions.
+Read the JSON `result` field as the delegated answer. Download mode reads the file bytes straight from the raw `slack_read_file` tool result in the delegate's event stream (a saved blob path, or an inline `image`/`document` block); it never asks the model to transcribe a path or base64, so images, PDFs, and archives all go through the same path, and parallel downloads are safe. It does not grant the delegate shell or file-writing tools. If the required read-only Slack tool is denied, report the exact denial rather than substituting broader permissions.
+
+The download result includes `source` (`blob` or `inline`) and `mime_type`. If it includes `note`, the file arrived as an inline image and may be downscaled or re-encoded: use it for visual inspection, but don't treat it as the original's bytes or resolution.
 
 ## Workflow
 
@@ -40,4 +42,4 @@ Read the JSON `result` field as the delegated answer. Download mode itself mater
 
 ## Failure Cases
 
-If `slack-search` is not installed, authentication is missing, connector access is unavailable, or download mode returns no verified file, stop and report that blocker. Do not pretend to have searched or downloaded through another path.
+If `slack-search` is not installed, authentication is missing, connector access is unavailable, or download mode returns no verified file, stop and report that blocker along with the exact stderr. Download errors name the cause (tool error text, block types returned, or missing `slack_read_file` call), so do not retry the same file ID blindly or switch to asking the delegate to "describe" the file as a substitute for downloading it. Do not pretend to have searched or downloaded through another path.

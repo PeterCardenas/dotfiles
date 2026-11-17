@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import hashlib
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 
@@ -31,7 +32,13 @@ ALLOWED_TOOLS = (
     "mcp__claude_ai_Slack__slack_search_users",
 )
 
-DOWNLOAD_TOOLS = ("mcp__claude_ai_Slack__slack_read_file",)
+READ_FILE_TOOL = "mcp__claude_ai_Slack__slack_read_file"
+DOWNLOAD_TOOLS = (READ_FILE_TOOL,)
+
+# The connector spills large binaries to disk and reports the path in a text block.
+_SAVED_TO_PATTERN = re.compile(r"\bsaved to (\S+)")
+_MIME_TYPE_PATTERN = re.compile(r"^MIME Type:\s*(\S+)", re.MULTILINE)
+_INLINE_BLOCK_TYPES = ("image", "document")
 
 
 @dataclass(frozen=True)
@@ -54,56 +61,134 @@ def parse_download_request(argv: list[str]) -> DownloadRequest:
     )
 
 
+@dataclass(frozen=True)
+class DownloadPayload:
+    """Exactly one of blob_path or inline_base64 is set."""
+
+    blob_path: str | None
+    inline_base64: str | None
+    mime_type: str | None
+
+
 def build_download_prompt(request: DownloadRequest) -> str:
+    # The file bytes are read from the raw tool result in the event stream, never
+    # from model output: the model cannot transcribe image blocks or large base64.
     return (
-        f"Call slack_read_file once for Slack file ID {request.file_id}. Do not inspect "
-        "or interpret the file content. The connector may return either a local blob "
-        "path or inline base64. Return exactly one JSON object and no other text: "
-        '`{"blob_path":"<absolute path from the tool result>"}` or '
-        '`{"base64_payload":"<exact base64 from the tool result>"}`.'
+        f"Call slack_read_file exactly once for Slack file ID {request.file_id}. "
+        "Do not describe or interpret the file. Then reply with only: DONE"
     )
 
 
-def extract_download_payload(stdout: str) -> dict[str, str]:
-    envelope = json.loads(stdout)
-    result = envelope.get("result")
-    if not isinstance(result, str):
-        raise ValueError("Slack delegate returned no result")
-    start = result.find("{")
-    end = result.rfind("}")
-    if start < 0 or end < start:
-        raise ValueError("Slack delegate did not return a JSON download payload")
-    payload = json.loads(result[start : end + 1])
-    if not isinstance(payload, dict):
-        raise ValueError("Slack download payload must be an object")
-    blob_path = payload.get("blob_path")
-    base64_payload = payload.get("base64_payload")
-    if isinstance(blob_path, str) and not base64_payload:
-        return {"blob_path": blob_path}
-    if isinstance(base64_payload, str) and not blob_path:
-        return {"base64_payload": base64_payload}
-    raise ValueError("Slack download payload must contain exactly one supported source")
+def extract_download_payload(stream: str) -> DownloadPayload:
+    read_file_call_ids: set[str] = set()
+    tool_results: list[dict[str, object]] = []
+    for line in stream.splitlines():
+        if not line.strip():
+            continue
+        event = json.loads(line)
+        if not isinstance(event, dict):
+            continue
+        for block in _message_blocks(event):
+            if block.get("type") == "tool_use" and block.get("name") == READ_FILE_TOOL:
+                read_file_call_ids.add(str(block.get("id")))
+            elif (
+                block.get("type") == "tool_result"
+                and block.get("tool_use_id") in read_file_call_ids
+            ):
+                tool_results.append(block)
+
+    if not tool_results:
+        raise ValueError("Slack delegate never returned a slack_read_file result")
+    if len(tool_results) > 1:
+        raise ValueError(f"Slack delegate called slack_read_file {len(tool_results)} times")
+    return _payload_from_tool_result(tool_results[0])
 
 
-def materialize_download(payload: dict[str, str], output: Path) -> dict[str, int | str]:
-    if "blob_path" in payload:
-        source = Path(payload["blob_path"]).expanduser().resolve(strict=True)
+def _message_blocks(event: dict[str, object]) -> list[dict[str, object]]:
+    message = event.get("message")
+    if not isinstance(message, dict):
+        return []
+    content = message.get("content")
+    if not isinstance(content, list):
+        return []
+    return [block for block in content if isinstance(block, dict)]
+
+
+def _payload_from_tool_result(tool_result: dict[str, object]) -> DownloadPayload:
+    raw_content = tool_result.get("content")
+    blocks: list[dict[str, object]] = []
+    if isinstance(raw_content, str):
+        blocks = [{"type": "text", "text": raw_content}]
+    elif isinstance(raw_content, list):
+        blocks = [block for block in raw_content if isinstance(block, dict)]
+    texts = [str(block.get("text", "")) for block in blocks if block.get("type") == "text"]
+    if tool_result.get("is_error"):
+        raise ValueError(f"slack_read_file failed: {' '.join(texts).strip()[:500]}")
+
+    blob_paths = [match.group(1) for text in texts for match in _SAVED_TO_PATTERN.finditer(text)]
+    inline_sources = [
+        block["source"]
+        for block in blocks
+        if block.get("type") in _INLINE_BLOCK_TYPES
+        and isinstance(block.get("source"), dict)
+        and block["source"].get("type") == "base64"
+    ]
+    source_count = len(blob_paths) + len(inline_sources)
+    if source_count == 0:
+        block_types = sorted({str(block.get("type")) for block in blocks})
+        raise ValueError(
+            f"slack_read_file returned no file content (blocks: {block_types}; "
+            f"text: {' '.join(texts).strip()[:300]!r})"
+        )
+    if source_count > 1:
+        raise ValueError(f"slack_read_file returned {source_count} file sources; expected one")
+
+    mime_matches = [match.group(1) for text in texts if (match := _MIME_TYPE_PATTERN.search(text))]
+    declared_mime_type = mime_matches[0] if mime_matches else None
+    if blob_paths:
+        return DownloadPayload(
+            blob_path=blob_paths[0], inline_base64=None, mime_type=declared_mime_type
+        )
+    inline_source = inline_sources[0]
+    media_type = inline_source.get("media_type")
+    if declared_mime_type is None and isinstance(media_type, str):
+        declared_mime_type = media_type
+    return DownloadPayload(
+        blob_path=None,
+        inline_base64=str(inline_source.get("data", "")),
+        mime_type=declared_mime_type,
+    )
+
+
+def materialize_download(payload: DownloadPayload, output: Path) -> dict[str, int | str]:
+    if payload.blob_path is not None:
+        source = Path(payload.blob_path).expanduser().resolve(strict=True)
         if "tool-results" not in source.parts:
             raise ValueError("Slack delegate returned a path outside its tool-results directory")
         content = source.read_bytes()
+    elif payload.inline_base64 is not None:
+        content = base64.b64decode(payload.inline_base64, validate=True)
     else:
-        content = base64.b64decode(payload["base64_payload"], validate=True)
+        raise ValueError("Slack download payload has no source")
 
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary_output = output.with_name(f".{output.name}.tmp")
     temporary_output.write_bytes(content)
     temporary_output.replace(output)
-    return {
+    metadata: dict[str, int | str] = {
         "output": str(output),
         "size": len(content),
         "sha256": hashlib.sha256(content).hexdigest(),
         "signature": content[:4].hex(),
+        "source": "blob" if payload.blob_path is not None else "inline",
     }
+    if payload.mime_type is not None:
+        metadata["mime_type"] = payload.mime_type
+    if payload.inline_base64 is not None and (payload.mime_type or "").startswith("image/"):
+        # Inline image results arrive downscaled (observed: a 709 KB Slack PNG came back
+        # as 2000x840 / 157 KB), so callers must not treat them as the original bytes.
+        metadata["note"] = "inline image may be resized/re-encoded; not byte-identical to Slack original"
+    return metadata
 
 
 def run_download(request: DownloadRequest) -> int:
@@ -111,6 +196,7 @@ def run_download(request: DownloadRequest) -> int:
         allowed_tools=DOWNLOAD_TOOLS,
         prompt=build_download_prompt(request),
         max_budget_usd=request.max_budget_usd,
+        output_format="stream-json",
     )
     delegate = subprocess.run(
         command,
