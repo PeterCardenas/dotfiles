@@ -56,7 +56,7 @@ esac
 printf '%s|%s|%s\\n' "$*" "$PWD" "$STOL_ROOT" >> '{self.calls}.stol'
 case "$1" in
   new) name=$(printf '%s' "$3" | sed 's|/|--|g'); git -C .repo worktree add -q "$PWD/$name" "$3" >&2 && printf '%s\\n' "$PWD/$name" ;;
-  rm) git -C .repo worktree remove --force "$PWD/$2" >&2 ;;
+  rm) [ -n "$STOL_RM_FAIL" ] && exit 1; git -C .repo worktree remove --force "$PWD/$2" >&2 && printf 'stol rm %s\\n' "$2" >> '{self.calls}' ;;
 esac
 """)
         self.executable(bin_dir / "fzf", "head -n 1\n")
@@ -117,7 +117,17 @@ esac
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.lines(".stol"), [f"rm task --force|{self.project}|{self.stol_root}"])
         self.assertFalse((self.project / "task").exists())
-        self.assertEqual(self.lines(), ["workspace focus w-parent", "workspace close w-child"])
+        # Focus stays on the closing workspace until the slow stol rm finishes.
+        self.assertEqual(self.lines(), ["stol rm task", "workspace focus w-parent", "workspace close w-child"])
+
+    def test_failed_stol_rm_keeps_focus_and_workspace(self):
+        self.git("-C", str(self.repo), "worktree", "add", "-q", "-b", "task", str(self.project / "task"), "main")
+        listing = (f'{{"result":{{"worktrees":[{{"open_workspace_id":"w-child","path":"{self.project}/task",'
+                   '"is_linked_worktree":true,"is_bare":false}]}}')
+        result = self.popup("herdr_close_workspace", "y\n\n", WORKTREE_LIST=listing, STOL_RM_FAIL="1")
+        self.assertEqual(result.returncode, 1)
+        self.assertTrue((self.project / "task").is_dir())
+        self.assertEqual(self.lines(), [])
 
     def test_close_never_removes_a_stol_template(self):
         listing = (f'{{"result":{{"worktrees":[{{"open_workspace_id":"w-child","path":"{self.project}/00-main",'

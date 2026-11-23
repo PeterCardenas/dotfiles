@@ -82,7 +82,7 @@ function herdr_close_stol_worktree --argument-names workspace_id project checkou
     end
     set -l confirm (herdr_popup_read "Force-remove stol worktree $name with stol rm? [y/N] This terminates its pane processes and permanently deletes uncommitted or ignored files; unsaved work will be lost."); or return
     string match --quiet --regex '^[Yy]$' "$confirm"; or return 130
-    herdr_focus_previous_workspace "$previous_workspace"; or return $status
+    printf 'Removing %s...\n' "$name" >&2
     # stol rm runs the project's pre-remove hook (worktree cleanup); git worktree remove would skip it.
     pushd "$project" >/dev/null; or return 1
     set -lx STOL_ROOT (path dirname (path dirname "$project"))
@@ -90,13 +90,11 @@ function herdr_close_stol_worktree --argument-names workspace_id project checkou
     set -l removal_status $status
     popd >/dev/null
     if test $removal_status -ne 0
-        if test -n "$previous_workspace"
-            command herdr workspace focus "$workspace_id" >/dev/null 2>&1
-        end
         herdr_popup_read "stol rm failed for $name (exit $removal_status). Press Enter to continue." >/dev/null
         return $removal_status
     end
-    command herdr workspace close "$workspace_id"
+    # Removal keeps the popup alive, so stay on the workspace until it finishes; only the close needs prior focus.
+    herdr_close_workspace_with_previous "$workspace_id" "$previous_workspace"
 end
 
 function herdr_close_workspace_with_previous --argument-names workspace_id previous_workspace
