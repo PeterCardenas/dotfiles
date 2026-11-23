@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Cross-platform root filesystem free space remaining.
+# Cross-platform free space for / plus any local filesystem mounted under $HOME.
 export LC_ALL=C
 
 cache="/tmp/tmux-disk-$(id -u)"
@@ -12,51 +12,32 @@ if [ -f "$cache" ]; then
   fi
 fi
 
-gib=$((1024 * 1024 * 1024))
+# -P keeps one line per mount and identical columns on Linux and macOS; -l skips
+# network mounts that can hang the status bar.
+result=$(df -kPl 2>/dev/null | awk -v home="$HOME" '
+  function human(kib, units, i) {
+    units = "KMGTP"
+    for (i = 1; kib >= 1024 && i < length(units); i++) kib /= 1024
+    return sprintf(kib < 10 && i > 1 ? "%.1f%s" : "%.0f%s", kib, substr(units, i, 1))
+  }
+  function color(kib, gib) {
+    gib = kib / 1048576
+    if (gib < 50) return "#f7768e"
+    if (gib < 250) return "#ff9e64"
+    if (gib < 500) return "#e0af68"
+    return "#9ece6a"
+  }
+  NR > 1 {
+    # Mount points may contain spaces, so drop the five leading columns instead of using $NF.
+    mount = $0
+    for (i = 1; i <= 5; i++) sub(/^[^ ]+ +/, "", mount)
+    if (mount == "/") label = "/"
+    else if (index(mount, home "/") == 1) label = "~/" substr(mount, length(home) + 2)
+    else next
+    out = out (out == "" ? "" : " ") "#[fg=#c0caf5]" label ":#[fg=" color($4) "]" human($4)
+  }
+  END { print out }
+')
 
-avail_color() {
-  local avail_bytes="$1"
-
-  if [ "$avail_bytes" -lt $((50 * gib)) ]; then
-    printf '#f7768e'
-  elif [ "$avail_bytes" -lt $((250 * gib)) ]; then
-    printf '#ff9e64'
-  elif [ "$avail_bytes" -lt $((500 * gib)) ]; then
-    printf '#e0af68'
-  else
-    printf '#9ece6a'
-  fi
-}
-
-mount_point="/"
-df_flags=(-h)
-
-case "$(uname -s)" in
-Darwin)
-  df_flags=(-H)
-  avail_bytes=$(df -k "$mount_point" | awk 'NR==2 {print $4 * 1024}')
-  ;;
-Linux)
-  avail_bytes=$(df -B1 --output=avail "$mount_point" | tail -1)
-  ;;
-*)
-  avail_bytes=$(df -k "$mount_point" | awk 'NR==2 {print $4 * 1024}')
-  ;;
-esac
-
-read -r avail <<EOF
-$(df "${df_flags[@]}" "$mount_point" | awk 'NR==2 {
-  gsub(/i/, "", $4)
-  print $4
-}')
-EOF
-
-case "${avail_bytes:-0}" in
-'' | *[!0-9]*)
-  avail_bytes=0
-  ;;
-esac
-
-result="#[fg=$(avail_color "$avail_bytes")]${avail:-0}"
 printf '%s\n%s' "$now" "$result" >"$cache"
 printf '%s' "$result"
