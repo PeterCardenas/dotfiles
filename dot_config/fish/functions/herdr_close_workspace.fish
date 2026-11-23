@@ -41,6 +41,11 @@ function herdr_close_workspace --description "Close a workspace and remove linke
     end
 
     if test -n "$linked_path"
+        set -l stol_project (stol_project_dir "$linked_path")
+        if test -n "$stol_project"
+            herdr_close_stol_worktree "$HERDR_ACTIVE_WORKSPACE_ID" "$stol_project" "$linked_path" "$previous_workspace"
+            return
+        end
         set -l confirm (herdr_popup_read "Force-remove linked worktree $linked_path? [y/N] This terminates its pane processes and permanently deletes uncommitted or ignored files; unsaved work will be lost."); or return
         string match --quiet --regex '^[Yy]$' "$confirm"; or return 130
         herdr_focus_previous_workspace "$previous_workspace"; or return $status
@@ -64,6 +69,34 @@ function herdr_close_workspace --description "Close a workspace and remove linke
     set -l confirm (herdr_popup_read 'Close workspace? [y/N]'); or return
     string match --quiet --regex '^[Yy]$' "$confirm"; or return 130
     herdr_close_workspace_with_previous "$HERDR_ACTIVE_WORKSPACE_ID" "$previous_workspace"
+end
+
+function herdr_close_stol_worktree --argument-names workspace_id project checkout previous_workspace
+    set -l name (path basename "$checkout")
+    # 00-* checkouts are the reflink templates every new stol worktree copies; never delete them from a popup.
+    if string match --quiet -- '00-*' "$name"
+        set -l confirm (herdr_popup_read "$name is a stol template; close its workspace without removing the checkout? [y/N]"); or return
+        string match --quiet --regex '^[Yy]$' "$confirm"; or return 130
+        herdr_close_workspace_with_previous "$workspace_id" "$previous_workspace"
+        return
+    end
+    set -l confirm (herdr_popup_read "Force-remove stol worktree $name with stol rm? [y/N] This terminates its pane processes and permanently deletes uncommitted or ignored files; unsaved work will be lost."); or return
+    string match --quiet --regex '^[Yy]$' "$confirm"; or return 130
+    herdr_focus_previous_workspace "$previous_workspace"; or return $status
+    # stol rm runs the project's pre-remove hook (worktree cleanup); git worktree remove would skip it.
+    pushd "$project" >/dev/null; or return 1
+    set -lx STOL_ROOT (path dirname (path dirname "$project"))
+    stol rm "$name" --force
+    set -l removal_status $status
+    popd >/dev/null
+    if test $removal_status -ne 0
+        if test -n "$previous_workspace"
+            command herdr workspace focus "$workspace_id" >/dev/null 2>&1
+        end
+        herdr_popup_read "stol rm failed for $name (exit $removal_status). Press Enter to continue." >/dev/null
+        return $removal_status
+    end
+    command herdr workspace close "$workspace_id"
 end
 
 function herdr_close_workspace_with_previous --argument-names workspace_id previous_workspace

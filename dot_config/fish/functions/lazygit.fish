@@ -1,34 +1,45 @@
 function lazygit --wraps lazygit
-    git rev-parse --is-inside-work-tree 2>/dev/null | read -l inside_worktree
-    set -l git_status $pipestatus[1]
+    set -l worktrees
+    set -l excluded
+    set -l stol_project (stol_project_dir "$PWD" 2>/dev/null)
+    if test -n "$stol_project"; and test "$stol_project" = (path resolve -- "$PWD")
+        # A stol project dir is not a checkout; skip .repo and the 00-* templates stol reflinks from.
+        print_info "stol project detected, discovering worktrees..."
+        set worktrees (git -C .repo worktree list --porcelain | string replace --filter --regex '^worktree ' '')
+        set excluded "$stol_project/.repo" "$stol_project"/00-*
+    else
+        git rev-parse --is-inside-work-tree 2>/dev/null | read -l inside_worktree
+        set -l git_status $pipestatus[1]
 
-    if test $git_status -ne 0
-        command lazygit $argv
-        return
+        if test $git_status -ne 0
+            command lazygit $argv
+            return
+        end
+
+        if test "$inside_worktree" = true
+            command lazygit $argv
+            return
+        end
+
+        # We're in a bare repo — list worktrees and let the user pick one
+        print_info "Bare repo detected, discovering worktrees..."
+        set worktrees (git worktree list --porcelain | string replace --filter --regex '^worktree ' '')
+
+        # Filter out the bare repo root itself
+        set -l bare_dir (git rev-parse --git-dir)
+        print_info "Bare repo root: $bare_dir"
+        set excluded $bare_dir
     end
-
-    if test "$inside_worktree" = true
-        command lazygit $argv
-        return
-    end
-
-    # We're in a bare repo — list worktrees and let the user pick one
-    print_info "Bare repo detected, discovering worktrees..."
-    set -l worktrees (git worktree list --porcelain | string replace --filter --regex '^worktree ' '')
-
-    # Filter out the bare repo root itself
-    set -l bare_dir (git rev-parse --git-dir)
-    print_info "Bare repo root: $bare_dir"
     set -l choices
     for wt in $worktrees
-        if test "$wt" != "$bare_dir"
+        if not contains -- "$wt" $excluded
             print_info "Found worktree: $wt"
             set choices $choices $wt
         end
     end
 
     if test (count $choices) -eq 0
-        print_error "No worktrees found in this bare repo."
+        print_error "No worktrees found."
         return 1
     end
 

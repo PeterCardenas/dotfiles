@@ -8,6 +8,7 @@ description: Use whenever creating, cloning, or setting up a Git repository, inc
 Read the installed fish functions `clone`, `clone-work`, `clone-common`, `git-init`, `git-init-work`, and `git-init-common` before acting; they are the source of truth.
 
 - **Remote already exists:** run `clone OWNER/REPO` (personal) or `clone-work OWNER/REPO` (work) in fish from the desired parent directory. Match `gh` to the function's SSH identity; if necessary scope `GH_TOKEN` from `gh auth token --user PeterCardenas` to a personal invocation without printing it.
+- **Large repository for reflinked stol worktrees:** add `--stol` (e.g. `clone-work OWNER/REPO --stol`) to `stol import` it under `$STOL_ROOT/projects/REPO` with the same identity, signing and `gh` setup on its shared `.repo`. A repo already managed by stol must not be cloned again; use `scd -e <branch> REPO`.
 - **New local repository:** run `git-init NAME` (personal) or `git-init-work NAME` (work) in fish from its parent directory. These create the local repo, configure its SSH origin and signing; they **do not create a GitHub repository**. Confirm owner and visibility before creating the matching remote, then push. Do not precreate-and-clone merely to avoid `git-init`.
 - **Local repository already initialized:** from inside it, run `git-init` or `git-init-work` with no name **only when it has no origin**. If it already has an origin, preserve it and compare the matching function's configuration rather than re-cloning or running `git remote add` twice.
 

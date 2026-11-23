@@ -24,7 +24,7 @@ class GhAuthTest(unittest.TestCase):
             "HOME": str(self.home),
             "XDG_CONFIG_HOME": str(self.home / ".config"),
             "PATH": f"{self.bin}:{os.environ['PATH']}",
-            "GIT_CONFIG_GLOBAL": str(ROOT / "dot_config/git/config"),
+            "GIT_CONFIG_GLOBAL": str(ROOT / ".chezmoitemplates/git-config"),
             "GIT_CONFIG_NOSYSTEM": "1",
             "GIT_TERMINAL_PROMPT": "0",
             "GH_CONFIG_DIR": str(self.home / ".config/gh"),

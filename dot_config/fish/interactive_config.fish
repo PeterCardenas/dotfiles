@@ -29,6 +29,11 @@ set -gx LESS "--mouse --wheel-lines=3 -R"
 # Make null color more visible.
 set -gx JQ_COLORS "0;36:0;39:0;39:0;39:0;32:1;39:1;39"
 
+# stol's scd needs to cd the calling shell, so it is a sourced function.
+if test -f $HOME/.local/share/stol/stol.fish
+    source $HOME/.local/share/stol/stol.fish
+end
+
 source $HOME/.config/fish/completion_utils.fish
 
 # Keep one stable agent socket path across tmux and Herdr sessions. Outside

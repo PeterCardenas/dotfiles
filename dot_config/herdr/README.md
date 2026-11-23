@@ -82,7 +82,20 @@ rejected. PR checkout does not require `origin/HEAD`. Leaving the branch name
 empty asks for confirmation, then opens a detached worktree at the latest
 default-branch commit in a unique directory. If `origin/HEAD` is missing for a
 default-branch checkout, or any fetch fails, creation stops rather than using
-a stale local commit. `prefix+shift+d` asks for confirmation, removes the checkout when
+a stale local commit.
+
+**stol groups.** When the group's checkout lives in a stol project
+(`<STOL_ROOT>/projects/<name>/.repo`),
+the popup creates worktrees with `stol new --existing <branch>` instead of
+`herdr worktree create`, so they are reflinked from the `00-*` template (seconds, near-zero
+disk) and named stol-style (`/` becomes `--`). Branches origin lacks are first created from
+the fetched default branch (or PR head); templates are fast-forwarded to their upstream first
+so new worktrees do not re-download changed blobs and LFS files. stol has no detached mode,
+so an empty branch is rejected. Closing a stol worktree runs `stol rm <name> --force` (firing
+the project's `pre-remove` hook; the fish `stol` wrapper links the shared, separately managed
+`~/.config/stol/hooks` into projects without hooks) and never deletes a `00-*` template, only its workspace. `clone` and New
+session refuse repos already managed by stol. Group anchors are opened on `.repo`, the only
+non-linked checkout in a stol project. `prefix+shift+d` asks for confirmation, removes the checkout when
 the active workspace is a linked worktree, and otherwise performs a normal
 workspace close. Confirmed deletion selects the workspace immediately above it
 in sidebar order, including the previous linked sibling rather than always the

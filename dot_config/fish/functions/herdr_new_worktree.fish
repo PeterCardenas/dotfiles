@@ -47,8 +47,18 @@ function herdr_new_worktree --description "Create a Herdr worktree in a chosen r
         printf 'Group %s has no source checkout.\n' "$group" >&2
         return 1
     end
-    set -l branch (herdr_popup_read 'Branch name: (or GitHub PR URL; empty for detached default commit)'); or return
+    set -l stol_project (stol_project_dir "$checkout")
+    set -l branch_prompt 'Branch name: (or GitHub PR URL; empty for detached default commit)'
+    if test -n "$stol_project"
+        set branch_prompt 'Branch name: (or GitHub PR URL)'
+    end
+    set -l branch (herdr_popup_read $branch_prompt); or return
     set branch (string trim -- "$branch")
+    if test -n "$stol_project"; and test -z "$branch"
+        # stol new reflinks a template and checks out a branch; it has no detached mode.
+        printf '%s\n' 'stol worktrees need a branch name or GitHub PR URL.' >&2
+        return 1
+    end
 
     set -l base
     set -l default_name
@@ -92,6 +102,11 @@ function herdr_new_worktree --description "Create a Herdr worktree in a chosen r
         git -C "$checkout" fetch origin "$default_name"; or return 1
     end
 
+    if test -n "$stol_project"
+        herdr_stol_new_worktree "$group" "$stol_project" "$branch" "$base"
+        return
+    end
+
     set -l common_dir (git -C "$checkout" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
     test -n "$common_dir"; or return 1
     set -l worktree_dir (path dirname "$common_dir")
@@ -111,6 +126,31 @@ function herdr_new_worktree --description "Create a Herdr worktree in a chosen r
             return 1
         end
     end
+end
+
+function herdr_stol_new_worktree --description 'Create a branch worktree with stol and open it in a Herdr group' -a group project branch base
+    set -l repo "$project/.repo"
+    # Templates are what stol new reflinks; a stale one makes every worktree re-download changed blobs and LFS files.
+    for template in "$project"/00-*
+        git -C "$template" merge --ff-only --quiet '@{upstream}' >/dev/null 2>&1
+        or printf 'Could not fast-forward stol template %s; the new worktree will update it itself.\n' "$template" >&2
+    end
+    # stol new --existing tracks origin/<branch> itself; only branches origin lacks need a local start point.
+    if not git -C "$repo" show-ref --verify --quiet "refs/heads/$branch"; and not git -C "$repo" ls-remote --exit-code --heads origin "$branch" >/dev/null
+        git -C "$repo" branch --no-track "$branch" "$base"; or return 1
+    end
+    # stol new must run from the project dir; derive STOL_ROOT from it so popups need no inherited env.
+    pushd "$project" >/dev/null; or return 1
+    set -lx STOL_ROOT (path dirname (path dirname "$project"))
+    set -l worktree_path (stol new --existing "$branch")
+    set -l stol_status $status
+    popd >/dev/null
+    test $stol_status -eq 0; or return $stol_status
+    if not test -d "$worktree_path"
+        printf 'stol new did not report a worktree path (got: %s).\n' "$worktree_path" >&2
+        return 1
+    end
+    herdr_worktree_command open --workspace "$group" --path "$worktree_path" --focus
 end
 
 function herdr_worktree_command --description 'Run a herdr worktree subcommand and print only its readable error'

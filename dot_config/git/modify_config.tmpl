@@ -1,0 +1,10 @@
+#!/bin/bash
+# Several chezmoi sources contribute to the global git config: each writes its
+# fragment to config.d, and the file is their concatenation (repeated sections
+# are valid git config), so no source overwrites another's settings.
+cat > /dev/null
+mkdir -p "$HOME/.config/git/config.d"
+cat > "$HOME/.config/git/config.d/{{ base .chezmoi.sourceDir }}" <<'FRAGMENT'
+{{ template "git-config" . }}
+FRAGMENT
+cat "$HOME/.config/git/config.d"/*

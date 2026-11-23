@@ -99,6 +99,39 @@ pwd > $HOME/clone-pwd
             capture_output=True,
         )
 
+    def test_clone_refuses_repos_managed_by_stol(self):
+        stol_root = self.home / "work"
+        (stol_root / "projects/example/.repo").mkdir(parents=True)
+        self.env["STOL_ROOT"] = str(stol_root)
+        result = self.clone()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("managed by stol", result.stderr)
+        self.assertFalse((self.projects / "example").exists())
+
+    def test_stol_clone_imports_and_configures_the_shared_repo(self):
+        stol_root = self.home / "work"
+        bin_dir = self.home / "bin"
+        bin_dir.mkdir()
+        stol = bin_dir / "stol"
+        # Emulates stol import's layout; the real one needs a reflink filesystem.
+        stol.write_text(
+            '#!/bin/sh\n[ "$1 $3" = "import --name" ] || exit 2\n'
+            'git clone -q "$2" "$STOL_ROOT/projects/$4/.repo"\n'
+        )
+        stol.chmod(0o755)
+        self.env["STOL_ROOT"] = str(stol_root)
+        self.env["PATH"] = f"{bin_dir}:{self.env['PATH']}"
+        result = self.clone("--stol")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        repo = stol_root / "projects/example/.repo"
+        self.assertFalse((self.projects / "example").exists())
+        self.assertEqual((self.home / "clone-pwd").read_text().strip(), str(repo.parent))
+        self.assertEqual(self.git("-C", str(repo), "config", "--local", "user.email"), "peter@example.com")
+        self.assertEqual(self.git("-C", str(repo), "config", "--local", "user.signingkey"), "test-key")
+        self.assertEqual(self.git("-C", str(repo), "config", "--local", "user.name"), "Peter Cardenas")
+        self.assertEqual(self.git("-C", str(repo), "config", "--local", "commit.gpgSign"), "true")
+        self.assertEqual((self.home / "default-repo").read_text().strip(), "owner/example")
+
     def test_default_clone_creates_bare_repo_and_enters_default_branch_worktree(self):
         result = self.clone()
         self.assertEqual(result.returncode, 0, result.stderr)
