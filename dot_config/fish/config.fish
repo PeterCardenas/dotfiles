@@ -10,10 +10,6 @@ if set -q TMUX
     end
 end
 
-# Non-interactive shells (Herdr popups, agents) create stol worktrees too.
-set -gx STOL_ROOT "$HOME/work"
-set -gx STOL_PREFIX pcardenas
-
 if status is-interactive
     source $HOME/.config/fish/interactive_config.fish
 end
